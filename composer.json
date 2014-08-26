@@ -1,0 +1,66 @@
+{
+	"name": "laravel/laravel",
+	"description": "The Laravel Framework.",
+	"keywords": ["framework", "laravel"],
+	"license": "MIT",
+	"require": {
+		"laravel/framework": "4.2.*",
+		"cartalyst/sentry": "2.1.*",
+                "artdarek/oauth-4-laravel": "dev-master",
+                "intervention/image": "2.*",
+                "cboden/ratchet": "0.3.*",
+                "react/zmq": "0.2.*|0.3.*",
+                "simonstamm/laravel-pjax": "dev-master",
+                "vespakoen/menu": "dev-master",
+                "barryvdh/laravel-ide-helper": "1.*",
+                "dflydev/markdown":"1.0.*",
+                "erusev/parsedown":"0.7.*",
+                "doctrine/dbal":"2.3.*",
+                "mrjuliuss/syntara": "1.2.*",
+                "liebig/cron": "dev-master",
+                "codesleeve/laravel-stapler": "1.0.*",
+                "aws/aws-sdk-php": "2.4.*@dev",
+                "venturecraft/revisionable": "dev-master",
+                "pichkrement/messenger": "dev-master"
+	},
+        "repositories": [
+            {
+                "type": "composer",
+                "url": "http://packages.cartalyst.com"
+            },
+            {
+                "type": "vcs",
+                "url": "https://github.com/mysteryos/revisionable/"
+            }
+        ],
+	"autoload": {
+		"classmap": [
+			"app/commands",
+			"app/controllers",
+			"app/models",
+			"app/database/migrations",
+			"app/database/seeds",
+			"app/tests/TestCase.php"
+		],
+                "psr-0": {
+                    "Swift": "app/lib/"
+                }
+	},
+	"scripts": {
+		"post-install-cmd": [
+			"php artisan clear-compiled",
+			"php artisan optimize"
+		],
+		"post-update-cmd": [
+			"php artisan clear-compiled",
+			"php artisan optimize"
+		],
+		"post-create-project-cmd": [
+			"php artisan key:generate"
+		]
+	},
+	"config": {
+		"preferred-install": "dist"
+	},
+	"minimum-stability": "stable"
+}

@@ -45,7 +45,7 @@ class WorkflowActivity {
         }
         
         //Start a new activity
-        $wa = new SwiftWorkflowActivity(['workflow_type_id'=>$workflowType->id]);
+        $wa = new SwiftWorkflowActivity(['workflow_type_id'=>$workflowType->id,'status'=>\SwiftWorkflowActivity::INPROGRESS]);
         
         return $relation_object->workflow()->save($wa);
         
@@ -55,7 +55,7 @@ class WorkflowActivity {
      * Update Workflow Activity & Node Activity
      */
     
-    public function update($relation_object,$workflow_name)
+    public function update($relation_object,$workflow_name=false)
     {
         //Check if relation is indeed an object
         if(!is_object($relation_object))
@@ -77,61 +77,67 @@ class WorkflowActivity {
             }
         }
         
-        //We have workflow object, get Da Nodes
-        $nodeInProgress = \NodeActivity::inProgress($workflow->id);
-        if(!count($nodeInProgress))
+        if($workflow->status === \SwiftWorkflowActivity::INPROGRESS)
         {
-            //Check if Nodes Exists
-            $latestNode = SwiftNodeActivity::getLatestByWorkflow($workflow->id);
-            if(count($latestNode))
+            //We have workflow object, get Da Nodes
+            $nodeInProgress = \NodeActivity::inProgress($workflow->id);
+            if(!count($nodeInProgress))
             {
-                foreach($latestNode as $l)
+                //Check if Nodes Exists
+                $latestNode = SwiftNodeActivity::getLatestByWorkflow($workflow->id);
+                if(count($latestNode))
                 {
-                    \NodeActivity::process($l,SwiftNodeActivity::$FLOW_FORWARD);
-                }
-            }
-            else
-            {
-                //No Nodes, Let's get it starteddd
-                $startNodeDef = \NodeDefinition::getStartNodeDefinition($workflow_name);
-                if($startNodeDef)
-                {
-                    $startNodeActivity = \NodeActivity::create($workflow->id, $startNodeDef);
-                    if($startNodeActivity)
+                    foreach($latestNode as $l)
                     {
-                        \NodeActivity::process($startNodeActivity,SwiftNodeActivity::$FLOW_FORWARD);
-                    }
-                    else
-                    {
-                        throw new \Exception ("Workflow activity failed: Unable to save start node.");
+                        \NodeActivity::process($l,SwiftNodeActivity::$FLOW_FORWARD);
                     }
                 }
                 else
                 {
-                    throw new \Exception ("Workflow activity failed: No Start node.");
-                }                     
+                    //No Nodes, Let's get it starteddd
+                    $startNodeDef = \NodeDefinition::getStartNodeDefinition($workflow_name);
+                    if($startNodeDef)
+                    {
+                        $startNodeActivity = \NodeActivity::create($workflow->id, $startNodeDef);
+                        if($startNodeActivity)
+                        {
+                            \NodeActivity::process($startNodeActivity,SwiftNodeActivity::$FLOW_FORWARD);
+                        }
+                        else
+                        {
+                            throw new \Exception ("Workflow activity failed: Unable to save start node.");
+                        }
+                    }
+                    else
+                    {
+                        throw new \Exception ("Workflow activity failed: No Start node.");
+                    }                     
+                }
             }
-        }
-        else
-        {
-            foreach($nodeInProgress as $n)
+            else
             {
-                $n->load('definition');
-                \NodeActivity::process($n,SwiftNodeActivity::$FLOW_FORWARD);
+                foreach($nodeInProgress as $n)
+                {
+                    $n->load('definition');
+                    \NodeActivity::process($n,SwiftNodeActivity::$FLOW_FORWARD);
+                }
+            }
+
+            //Check if workflow is complete
+            //Get Latest Node Activity
+            $latestNode = SwiftNodeActivity::getLatestByWorkflow($workflow->id)->first();
+            if(count($latestNode))
+            {
+                $latestNode->load('definition');
+                if($latestNode->definition->type == SwiftNodeDefinition::$T_NODE_END && $latestNode->user_id != 0)
+                {
+                    $workflow->status = SwiftWorkflowActivity::COMPLETE;
+                    $workflow->save();
+                }
             }
         }
         
-        //Check if workflow is complete
-        $latestNode = SwiftNodeActivity::getLatestByWorkflow($workflow->id)->first();
-        if(count($latestNode))
-        {
-            $latestNode->load('definition');
-            if($latestnode->definition->type == SwiftNodeDefinition::$T_NODE_END)
-            {
-                $workflow->status = SwiftWorkflowActivity::COMPLETE;
-                $workflow->save();
-            }
-        }
+        return true;
     }
     
     /*

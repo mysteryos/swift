@@ -70,7 +70,9 @@ class SwiftFreight extends Eloquent{
         'freight_eta' => 'Freight ETA',
     );
     
-    protected $keepCreateRevision = true;    
+    protected $keepCreateRevision = true;   
+    
+    protected $revisionClassName = "Freight";
     
     /*
      * Revision - Accessors

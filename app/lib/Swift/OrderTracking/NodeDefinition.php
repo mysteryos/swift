@@ -32,7 +32,7 @@ Class NodeDefinition {
                     {
                         foreach($d->tag as $tag)
                         {
-                            if($tag->type == SwiftTag::OT_BILL_OF_LADING)
+                            if($tag->type == \SwiftTag::OT_BILL_OF_LADING)
                             {
                                 $tagfound = true;
                                 break;
@@ -81,7 +81,7 @@ Class NodeDefinition {
                     {
                         foreach($d->tag as $tag)
                         {
-                            if($tag->type == SwiftTag::OT_NOTICE_OF_ARRIVAL)
+                            if($tag->type == \SwiftTag::OT_NOTICE_OF_ARRIVAL)
                             {
                                 $tagfound = true;
                                 break;
@@ -126,7 +126,7 @@ Class NodeDefinition {
                     {
                         foreach($d->tag as $tag)
                         {
-                            if($tag->type == SwiftTag::OT_BILL_OF_ENTRY)
+                            if($tag->type == \SwiftTag::OT_BILL_OF_ENTRY)
                             {
                                 $tagfound = true;
                                 break;
@@ -166,12 +166,12 @@ Class NodeDefinition {
             /*
              * Check if freight is land and if pickup date has been set
              */
-            $freight = $order->freight()->all();
+            $freight = $order->freight()->get();
             if(count($freight))
             {
                 foreach($freight as $f)
                 {
-                    if($f->freight_type == SwiftFreight::TYPE_LAND && $f->freight_etd != "")
+                    if($f->freight_type == \SwiftFreight::TYPE_LAND && $f->freight_etd != "")
                     {
                         return true;
                     }
@@ -179,7 +179,7 @@ Class NodeDefinition {
                     /*
                      * Check if incoterm is DAT/DAP, local pickup will arranged by foreign company
                      */
-                    if((int)$f->incoterm !== 0 && in_array($f->incoterm,array(SwiftFreight::INCOTERM_DAT,SwiftFreight::INCOTERM_DAP)))
+                    if((int)$f->incoterm !== 0 && in_array($f->incoterm,array(\SwiftFreight::INCOTERM_DAT,\SwiftFreight::INCOTERM_DAP)))
                     {
                         return true;
                     }
@@ -210,7 +210,7 @@ Class NodeDefinition {
                     {
                         foreach($d->tag as $tag)
                         {
-                            if($tag->type == SwiftTag::OT_GRN)
+                            if($tag->type == \SwiftTag::OT_GRN)
                             {
                                 $tagfound = true;
                                 break;
@@ -234,7 +234,7 @@ Class NodeDefinition {
                     }
                 }
                 
-                return $tagFound;
+                return $tagfound;
             }
         }        
     }
@@ -258,7 +258,7 @@ Class NodeDefinition {
                     {
                         foreach($d->tag as $tag)
                         {
-                            if($tag->type == SwiftTag::OT_COSTING)
+                            if($tag->type == \SwiftTag::OT_COSTING)
                             {
                                 $tagfound = true;
                                 break;
@@ -271,7 +271,7 @@ Class NodeDefinition {
                     }
                 }
                 
-                return $tagFound;
+                return $tagfound;
             }
         }
         

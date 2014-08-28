@@ -49,7 +49,7 @@ class Helper {
 
         foreach($arrayClass as $relation)
         {
-            $rel = $obj->{$relation}()->get();
+            $rel = $obj->{$relation}()->withTrashed()->get();
             foreach($rel as $r)
             {
                 $revision = array_merge($revision,$r->revisionHistory()->get()->all());

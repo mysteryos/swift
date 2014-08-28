@@ -283,7 +283,7 @@ class OrderTrackingController extends UserController {
         
         $order_id = Crypt::decrypt(Input::get('pk'));
         $order = SwiftOrder::find($order_id);
-        if($order)
+        if(count($order))
         {
             /*
              * Manual Validation
@@ -618,7 +618,7 @@ class OrderTrackingController extends UserController {
         /*
          * Manual Validation
          */
-        if($order)
+        if(count($order))
         {
             /*
              * New Purchase Order
@@ -716,7 +716,7 @@ class OrderTrackingController extends UserController {
         /*
          * Manual Validation
          */
-        if($order)
+        if(count($order))
         {
             /*
              * New Reception
@@ -837,7 +837,7 @@ class OrderTrackingController extends UserController {
         /*
          * Manual Validation
          */
-        if($order)
+        if(count($order))
         {
             if(Input::file('file'))
             {

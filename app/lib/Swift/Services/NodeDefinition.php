@@ -26,7 +26,7 @@ class NodeDefinition {
         if(count($workflow))
         {
         
-            return SwiftNodeDefinition::getByType($workflow->id,SwiftNodeDefinition::$T_NODE_START)->first();
+            return SwiftNodeDefinition::getByType($workflow->id,\SwiftNodeDefinition::$T_NODE_START)->first();
 
         }
         else

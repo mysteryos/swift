@@ -106,6 +106,6 @@ class SwiftNodeActivity extends Eloquent
     
     public static function getLatestByWorkflow($workflow_activity_id)
     {
-        return self::where('workflow_activity_id','=',$workflow_activity_id)->orderBy('updated_at','desc')->get();
+        return self::where('workflow_activity_id','=',$workflow_activity_id)->orderBy('created_at','desc')->get();
     }
 }

@@ -37,7 +37,9 @@ class SwiftOrder extends Eloquent {
         'business_unit' => 'Business Unit'
     );
     
-    protected $keepCreateRevision = true;
+    protected $revisionClassName = "Order Process";
+    
+    protected $saveCreateRevision = true;
     
     /*
      * Accessors

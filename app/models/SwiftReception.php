@@ -36,6 +36,8 @@ class SwiftReception extends Eloquent {
         'reception_user' => 'Received By'
     );
     
+    protected $revisionClassName = "Reception";
+    
     protected $keepCreateRevision = true;     
     
     /*
@@ -52,22 +54,22 @@ class SwiftReception extends Eloquent {
      * Revision Accessor
      */
     
-    public function getReceptionUserRevisionAttribute($value)
-    {
-        if($value != "")
-        {
-            $user = Sentry::findUserById($value);
-            if($user)
-            {
-                return $user->first_name." ".$user->last_name;
-            }
-            else
-            {
-                return "(Unknown)";
-            }
-        }
-        return "";
-    }
+//    public function getReceptionUserRevisionAttribute($value)
+//    {
+//        if($value != "")
+//        {
+//            $user = Sentry::findUserById($value);
+//            if($user)
+//            {
+//                return $user->first_name." ".$user->last_name;
+//            }
+//            else
+//            {
+//                return "(Unknown)";
+//            }
+//        }
+//        return "";
+//    }
     
     /*
      * Relationships

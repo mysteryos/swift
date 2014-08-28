@@ -39,6 +39,8 @@ class SwiftCustomsDeclaration extends Eloquent {
         'customs_status'=>'Customs status'
     );
     
+    protected $revisionClassName = "Customs Declaration";
+    
     protected $keepCreateRevision = true;
     
     const FILLED = 1;

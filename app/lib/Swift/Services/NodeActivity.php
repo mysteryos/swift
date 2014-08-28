@@ -31,7 +31,7 @@ class NodeActivity {
      */
     public function create($workflow_activity_id,$node_definition)
     {
-        $nodeCheck = SwiftNodeActivity::where('node_definition_id','!=',$node_definition->id)->get();
+        $nodeCheck = SwiftNodeActivity::getByWorkflowAndDefinition($workflow_activity_id,$node_definition->id);
         //If node with same definition doesn't exists
         if(!count($nodeCheck))
         {
@@ -96,29 +96,27 @@ class NodeActivity {
             return array('success'=>0,'msg'=>"You don't have access to this action");
         }
         
-        /*
-         * Check if node activity has been processed
-         */
-        if($nodeActivity->user_id != 0)
-        {
-            return true;
-        }
-        
         switch($nodeActivity->definition->type)
         {
             case SwiftNodeDefinition::$T_NODE_START:
                 if($flow !=SwiftNodeActivity::$FLOW_BACKWARD)
                 {
                     /*
-                     * Call Utility Function
+                     * Check if node activity has been processed
                      */
-                    $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));                    
-                    if(is_callable($function))
+                    if($nodeActivity->user_id == 0)
                     {
-                        call_user_func_array($function,array($nodeActivity));
+                        /*
+                         * Call Utility Function
+                         */
+                        $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));                    
+                        if(is_callable($function))
+                        {
+                            call_user_func_array($function,array($nodeActivity));
+                        }
+
+                        self::save($nodeActivity,$flow);
                     }
-                    
-                    self::save($nodeActivity,$flow);
                     /*
                      * As per flow, create other nodes
                      */
@@ -143,18 +141,23 @@ class NodeActivity {
                 }
                 break;
             case SwiftNodeDefinition::$T_NODE_END:
-                
                 /*
-                 * Call Utility Function
+                 * Check if node activity has been processed
                  */
-                $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));                    
-                if(is_callable($function))
-                {
-                    call_user_func_array($function,array($nodeActivity));
-                }                
+                if($nodeActivity->user_id == 0)
+                {                
+                    /*
+                     * Call Utility Function
+                     */
+                    $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));                    
+                    if(is_callable($function))
+                    {
+                        call_user_func_array($function,array($nodeActivity));
+                    }                
                 
-                //Save Current
-                self::save($nodeActivity,SwiftNodeActivity::$FLOW_STOP);
+                    //Save Current
+                    self::save($nodeActivity,SwiftNodeActivity::$FLOW_STOP);
+                }
                 break;
             case SwiftNodeDefinition::$T_NODE_CONDITION:                
             case SwiftNodeDefinition::$T_NODE_INPUT:
@@ -167,8 +170,14 @@ class NodeActivity {
                      */
                     if(call_user_func_array($function,array($nodeActivity)))
                     {
-                        //Save Current
-                        self::save($nodeActivity,$flow);
+                        /*
+                         * Check if node activity has been processed
+                         */
+                        if($nodeActivity->user_id == 0)
+                        {                        
+                            //Save Current
+                            self::save($nodeActivity,$flow);
+                        }
                         /*
                          * As per flow, create other nodes
                          */
@@ -243,7 +252,7 @@ class NodeActivity {
                     if(count($nextNodes) == 1)
                     {
                         //Fetch children
-                        $nextNodeDefinition = SwiftNodeDefinition::find($nextNodes->first()->children_id);
+                        $nextNodeDefinition = $nextNodes->first()->childNode;
                         if(count($nextNodeDefinition))
                         {
                             $newNodeActivity = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinition);
@@ -251,10 +260,6 @@ class NodeActivity {
                             {
                                 $insertedNodesArray[] = $newNodeActivity;
                                 self::join($currentNodeActivity->id,$newNodeActivity->id);
-                            }
-                            else
-                            {
-                                throw new \Exception("Node Activity: Failed to create one");
                             }
                         }
                         else
@@ -283,11 +288,7 @@ class NodeActivity {
                             {
                                 $insertedNodesArray[] = $newNodeActivity;
                                 self::join($currentNodeActivity->id,$newNodeActivity->id);
-                            }
-                            else
-                            {
-                                throw new \Exception("Node Activity: Failed to create one");
-                            }                                
+                            }                              
                         }
                     }
                     else
@@ -330,7 +331,7 @@ class NodeActivity {
                                     /*
                                      * If exists, we check branching condition
                                      */
-                                    $func = $n->php_function."::".studly_case($n->name);
+                                    $func = $n->php_function."::".lcfirst(studly_case($n->name));
                                     if(is_callable($func))
                                     {
                                         if(!call_user_func_array($func,array($parentNodeActivity)))
@@ -338,11 +339,11 @@ class NodeActivity {
                                             $conditionAnd = false;
                                             break;
                                         }
-                                        else
-                                        {
-                                            throw new \RuntimeException("Function '{$func}' is not callable.");
-                                        }                                        
                                     }
+                                    else
+                                    {
+                                        throw new \RuntimeException("Function '{$func}' is not callable.");
+                                    }                                     
                                 }
                                 else
                                 {
@@ -363,7 +364,7 @@ class NodeActivity {
                                 /*
                                  * Node is expected to be solely one.
                                  */
-                                $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodes->childNode);
+                                $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodes->first()->childNode);
                                 if($insertedNode)
                                 {
                                     $insertedNodesArray[] = $insertedNode;
@@ -417,7 +418,7 @@ class NodeActivity {
                                     /*
                                      * If exists, we check branching condition
                                      */
-                                    $func = $n->php_function."::".studly_case($n->name);
+                                    $func = $n->php_function."::".lcfirst(studly_case($n->name));
                                     if(is_callable($func))
                                     {
                                         if(call_user_func_array($func,array($parentNodeActivity)))
@@ -446,7 +447,7 @@ class NodeActivity {
                             /*
                              * Node is expected to be solely one.
                              */
-                            $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodes->childNode);
+                            $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodes->first()->childNode);
                             if($insertedNode)
                             {
                                 $insertedNodesArray[] = $insertedNode;

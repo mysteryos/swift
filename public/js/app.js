@@ -2392,7 +2392,7 @@ var main = {
             $('.editable:not(.dummy)').editable();
             
             //Customs
-            $('.customs-editable,.freight-editable,.purchaseorder-editable').on('save',function(e,params){
+            $('.customs-editable,.freight-editable,.purchaseorder-editable,.reception-editable').on('save',function(e,params){
                 //First time save, set primary key
                 if($(this).attr('data-pk') == "0")
                 {

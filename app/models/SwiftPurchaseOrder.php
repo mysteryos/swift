@@ -4,10 +4,8 @@
  * Description:
  */
 
-use Illuminate\Database\Eloquent\SoftDeletingTrait;
-
 class SwiftPurchaseOrder extends Eloquent {
-    
+    use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
     
     protected $table = "swift_purchase_order";
@@ -27,15 +25,20 @@ class SwiftPurchaseOrder extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'reference','published_at'
+        'reference','published_at','deleted_at'
     );
     
     protected $keepCreateRevision = true;
+    protected $softDelete = true;
     
     protected $revisionFormattedFieldNames = array(
         'reference' => 'Purchase Order No',
         'published_at' => 'PO - Published at'
     );
+    
+    protected $revisionClassName = "Purchase Order";
+    
+    protected $revisionPrimaryIdentifier = "reference";
     
     /*
      * Relationships

@@ -35,17 +35,17 @@ Class NodeDefinitionJoin {
     
     public static function pickupToReception($nodeActivity)
     {
-        //Check and condition :)
+        return true;
     }
     
     public static function costingToReception($nodeActivity)
     {
-        
+        return true;
     }
     
     public static function receptionToEnd($nodeActivity)
     {
-        
+        return true;
     }
     
 }

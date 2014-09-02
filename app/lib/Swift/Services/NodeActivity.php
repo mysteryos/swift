@@ -505,12 +505,12 @@ class NodeActivity {
             return true;
         }
         
-        $nodeDefinition = SwiftNodeDefinition::find($node_definition_id)->permission()->first();
-        if(count($nodeDefinition) && count($nodeDefinition->permission))
+        $nodeDefinitionPermission = SwiftNodeDefinition::find($node_definition_id)->permission()->get()->all();
+        if(count($nodeDefinitionPermission))
         {
             $arrayPermission = array_map(function($p){
                 return $p->permission_name;
-            },$nodeDefinition->permission);
+            },$nodeDefinitionPermission);
             return Sentry::getUser()->hasAnyAccess((array)$arrayPermission);
         }
         

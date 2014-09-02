@@ -6,6 +6,12 @@
         var topmsg;
         //Container for Upload message
         var uploadmsg;
+        
+        /*
+         * Fix conflict between bootstrap tooltip & jqueryui
+         */
+        $.widget.bridge('uitooltip', $.ui.tooltip);        
+        
 	// Impacts the responce rate of some of the responsive elements (lower value affects CPU but improves speed)
 	$.throttle_delay = 350;
 	
@@ -80,6 +86,7 @@
         var pusher = new Pusher('d34044dc68acb4ac2833',{authEndpoint : '/pusher/auth'});
         //Presence Channel for current page
         var presenceChannelCurrent = null;
+        var presenceChannelCurrentSubscriptions = [];
         
 /* ~ END: CHECK MOBILE DEVICE */
 
@@ -127,32 +134,80 @@ function pusher_global()
 
 function pusherSubscribeCurrentPresenceChannel(xeditable)
 {
-    if(presenceChannelCurrent)
-    {
-        presenceChannelCurrent = null;
-    }
-    
+    presenceChannelCurrentSubscriptions.push('presence-'+document.getElementById('channel_name').value);
     presenceChannelCurrent = pusher.subscribe('presence-'+document.getElementById('channel_name').value);
     presenceChannelCurrent.bind('pusher:subscription_succeeded', function() {
+        //Loop through members and add them to whos-online
+        presenceChannelCurrent.members.each(function(member) {
+            if(member.id != presenceChannelCurrent.members.me.id)
+            {
+                $('#whos-online').append('<i id="user_'+member.id+'" rel="tooltip" data-original-title="'+member.info.name+'" data-placement="bottom" class="avatar avatar-sm avatar-color-'+member.info.avatarColor+'">'+member.info.avatarLetter+'</i>')
+                $('#whos-online .avatar').tooltip();
+            }
+        });
+        presenceChannelCurrent.bind('pusher:member_added',function(member){
+            $('#whos-online').append('<i id="user_'+member.id+'" rel="tooltip" data-original-title="'+member.info.name+'" data-placement="bottom" class="avatar avatar-sm avatar-color-'+member.info.avatarColor+'">'+member.info.avatarLetter+'</i>')
+            $('#whos-online .avatar').tooltip();
+        });
+        presenceChannelCurrent.bind('pusher:member_removed',function(member){
+            $('#user_'+member.id).tooltip('destroy');
+            $('#user_'+member.id).remove();
+        });
         if(typeof xeditable !== "undefined" && xeditable)
         {
+            presenceChannelCurrent.bind('pusher:member_added',function(member){
+                var $editableOpen = $('.editable-open');
+                if($editableOpen.length)
+                {
+                    presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me , id: $editableOpen.attr('id')});
+                }
+            });
+            presenceChannelCurrent.bind('pusher:member_removed',function(member){
+                var $editableInUse = $('.editable[pusher-user="'+member.id+'"]');
+                if($editableInUse.length)
+                {
+                    $editableInUse.tooltip('destroy');
+                    $editableInUse.removeClass('editable-color-'+member.info.avatarColor);
+                    $editableInUse.removeAttr('pusher-user');
+                    $editableInUse.editable('enable');
+                }
+            });            
             presenceChannelCurrent.bind('client-editable-shown',function(data){
                 //An editable has been opened by another user. Lock it down
-                console.log('bind-shown');
-                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('disable');
+                var $element = $("#"+data.id);
+                if($element.length)
+                {
+                    $element.attr('pusher-user',data.user.id);
+                    $element.addClass('editable-color-'+data.user.info.avatarColor);
+                    $element.tooltip({title:'<i class="fa fa-edit" title="Editing"></i> '+data.user.info.name,
+                                    animation: false,
+                                    html: true,
+                                    placement: "right",
+                                    trigger: 'manual',
+                                    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner avatar-color-'+data.user.info.avatarColor+'"></div></div>'
+                                    });
+                    $element.tooltip('show');
+                    $element.editable('disable');
+                }
             });
             presenceChannelCurrent.bind('client-editable-hidden',function(data){
                 //An editable has been closed by another user. open it up
-                console.log('bind-hidden');
-                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('enable');
+                var $element = $("#"+data.id);
+                $element.tooltip('hide');
+                $element.tooltip('destroy');
+                $element.removeClass('editable-color-'+data.user.info.avatarColor);
+                $element.removeAttr('pusher-user');
+                $element.editable('enable');
             });
             presenceChannelCurrent.bind('client-editable-save',function(data){
                 //An Editable has changed value, reflect the change
-                console.log('bind-save');
-                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('setValue',data.newValue,true);
+                var $element = $("#"+data.id);
+                $element.stop();
+                $element.editable('setValue',data.newValue,true);
+                $element.effect("highlight", {color: "lightgreen"}, 1000);
             });        
-
-        }        
+            
+        }
     });
     
 }
@@ -920,7 +975,6 @@ function loadScript(scriptName, callback) {
 		body.appendChild(script);
 
 	} else if (callback) {// changed else to else if(callback)
-		//console.log("JS file already added!");
 		//execute function
 		callback();
 	}
@@ -1020,7 +1074,6 @@ function checkURL() {
 
 		// change page title from global var
 		document.title = (title || document.title);
-		//console.log("page title: " + document.title);
 
 		// parse url to jquery
 		loadURL(url + location.search, container);
@@ -1039,8 +1092,6 @@ function checkURL() {
 // LOAD AJAX PAGES
 
 function loadURL(url, container) {
-	//console.log(container)
-
 	$.ajax({
 		type : "GET",
 		url : url,
@@ -1082,15 +1133,12 @@ function loadURL(url, container) {
 		},
 		async : false
 	});
-
-	//console.log("ajax request sent");
 }
 
 // UPDATE BREADCRUMB
 function drawBreadCrumb() {
 	var nav_elems = $('nav li.active > a'), count = nav_elems.length;
 	
-	//console.log("breadcrumb")
 	$.bread_crumb.empty();
 	$.bread_crumb.append($("<li>Home</li>"));
 	nav_elems.each(function() {
@@ -1122,6 +1170,11 @@ $.document_.pjax('a.pjax', '#main');
  * After HTML Replace
  */
 $.document_.on('pjax:success, pjax:end',function(){
+    //Reset Current Pusher Channel
+    !presenceChannelCurrentSubscriptions.length || $.each(presenceChannelCurrentSubscriptions,function(index,value){
+        presenceChannelCurrent.unsubscribe(value);
+        presenceChannelCurrentSubscriptions.splice(index,1);
+    });
     //Execute Javascript
     if(typeof $('#content').attr('data-js') !== "undefined")
     {
@@ -1293,7 +1346,6 @@ function pageSetUp() {
 		if ($this.find('.badge').hasClass('bg-color-red')) {
 			$this.find('.badge').removeClassPrefix('bg-color-');
 			$this.find('.badge').text("0");
-			// console.log("Ajax call for activity")
 		}
 
 		if (!$this.next('.ajax-dropdown').is(':visible')) {
@@ -1305,7 +1357,6 @@ function pageSetUp() {
 		}
 
 		var mytest = $this.next('.ajax-dropdown').find('.btn-group > .active > input').attr('id');
-		//console.log(mytest)
 
 		e.preventDefault();
 	});
@@ -2078,7 +2129,6 @@ var main = {
                                                 height : "hide"
                                         }, 100, "swing", function() {
                                                 $row.remove();
-                                                //console.log($row.attr("id") +" was deleted");
                                                 if (callback) {
                                                         return callback();
                                                 }
@@ -2141,7 +2191,6 @@ var main = {
 		getMail($this);
 	})
 	function getMail($this) {
-		//console.log($this.closest("tr").attr("id"));
 		loadURL("ajax/email-opened.html", $('#inbox-content > .table-wrap'));
 	}
 
@@ -2439,20 +2488,19 @@ var main = {
             
             //Bind pusher channel
             pusherSubscribeCurrentPresenceChannel(true);
-            
             //Turn on inline Mode
             $.fn.editable.defaults.mode = 'inline';
             $.fn.editable.defaults.ajaxOptions = {type: "put"};
             
             //General Info
             $('.editable:not(.dummy)').editable().on('shown',function(e){
-                presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+                presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me , id: this.id});
             }).on('hidden',function(e,reason){
-                presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+                presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, id: this.id});
             }).on('save',function(e,params){
                 if($(this).editable('option','pk') !== "0")
                 {
-                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue})
+                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, id: this.id, newValue: params.newValue});
                 }
             });
             
@@ -2461,9 +2509,14 @@ var main = {
                 //First time save, set primary key
                 if($(this).attr('data-pk') == "0")
                 {
+                    var response = $.parseJSON(params.response);
                     $thisfieldset = $(this).parents('fieldset');
-                    $thisfieldset.find('a.editable').editable('option', 'pk', params.response);
-                    $thisfieldset.find('a.editable').attr('data-pk',params.response);
+                    $thisfieldset.find('a.editable').editable('option', 'pk', response.encrypted_id);
+                    $thisfieldset.find('a.editable').attr('data-pk',response.encrypted_id);
+                    $thisfieldset.find('a.editable').each(function(){
+                        $this=$(this);
+                        $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+response.id); 
+                    });
                 }
             });
             
@@ -2482,18 +2535,23 @@ var main = {
                         //First time save, set primary key
                         if($(this).attr('data-pk') == "0")
                         {
+                            var response = $.parseJSON(params.response);
                             $thisfieldset = $(this).parents('fieldset');
-                            $thisfieldset.find('a.editable').editable('option', 'pk', params.response);
-                            $thisfieldset.find('a.editable').attr('data-pk',params.response);
+                            $thisfieldset.find('a.editable').editable('option', 'pk', response.encrypted_id);
+                            $thisfieldset.find('a.editable').attr('data-pk',response.encrypted_id);
+                            $thisfieldset.find('a.editable').each(function(){
+                                $this=$(this);
+                                $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+response.id); 
+                            });
                         }
                     }).on('shown',function(e){
-                        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+                        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me, id: this.id})
                     }).on('hidden',function(e,reason){
-                        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+                        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, id: this.id})
                     }).on('save',function(e,params){
                         if($(this).editable('option','pk') !== "0")
                         {
-                            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue})
+                            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, id: this.id, newValue: params.newValue})
                         }
                     });
                     
@@ -2851,7 +2909,6 @@ var main = {
                                                 height : "hide"
                                         }, 100, "swing", function() {
                                                 $row.remove();
-                                                //console.log($row.attr("id") +" was deleted");
                                                 if (callback) {
                                                         return callback();
                                                 }
@@ -2913,7 +2970,6 @@ var main = {
 	});
         
         $("#inbox-table a.markstar").on('click',function(){
-            console.log('hey');
             var $this = $(this);
             
             if(typeof $this.data('ajax') !== "undefined")
@@ -3006,7 +3062,6 @@ var main = {
                                                 height : "hide"
                                         }, 100, "swing", function() {
                                                 $row.remove();
-                                                //console.log($row.attr("id") +" was deleted");
                                                 if (callback) {
                                                         return callback();
                                                 }
@@ -3068,7 +3123,6 @@ var main = {
 	});
         
         $("#inbox-table a.markstar").on('click',function(){
-            console.log('hey');
             var $this = $(this);
             
             if(typeof $this.data('ajax') !== "undefined")

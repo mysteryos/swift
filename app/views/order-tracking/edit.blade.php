@@ -11,8 +11,7 @@
             <a class="btn btn-default" rel="tooltip" data-original-title="Send" data-placement="bottom"><i class="fa fa-lg fa-mail-forward"></i></a>
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
-        <div class="pull-right hidden-xs whos-online">
-            
+        <div class="pull-right hidden-xs" id="whos-online">
         </div>
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="/order-tracking/forms" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
@@ -26,6 +25,11 @@
 
 <!-- MAIN CONTENT -->
 <div id="content" data-js="@if($edit){{"ot_edit"}}@else{{"ot_view"}}@endif">
+    <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($order->id) }}" />
+    <input type="hidden" name="last_update" id="last_update" value="{{ $order->updated_at }}" />
+    <input type="hidden" name="channel_name" id="channel_name" value="ot_{{ $order->id }}" />
+    <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
+    <input type="hidden" id="project-name" value='<i class="fa-fw fa fa-map-marker"></i> {{ $order->name }} (ID: {{ $order->id }})'/>    
     <div id="draghover" class="text-align-center">
         <div class="circle bg-color-blue">
             <i class="fa fa-cloud-upload fa-4x"></i><br>
@@ -78,32 +82,7 @@
 					<!-- widget content -->
 					<div class="widget-body">
                                             <form class="form-horizontal">
-                                                <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($order->id) }}" />
-                                                <input type="hidden" name="last_update" id="last_update" value="{{ $order->updated_at }}" />
-                                                <input type="hidden" name="channel_name" id="channel_name" value="ot_{{ $order->id }}" />
-                                                <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
-                                                <input type="hidden" id="project-name" value='<i class="fa-fw fa fa-map-marker"></i> {{ $order->name }} (ID: {{ $order->id }})'/>
-                                                <fieldset>
-                                                        <div class="form-group">
-                                                            <label class="col-md-2 control-label">Business Unit*</label>
-                                                            <div class="col-md-10">
-                                                                <a href="#" id="business_unit" class="editable" data-type="select" data-name="business_unit" data-pk="{{ Crypt::encrypt($order->id) }}" data-url="/order-tracking/generalinfo" data-title="Select Business Unit" data-value="{{ $order->business_unit }}" data-source='{{ $business_unit }}'></a>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label class="col-md-2 control-label">Name*</label>
-                                                            <div class="col-md-10">
-                                                                <a href="#" id="name" class="editable" data-type="text" data-name="name" data-pk="{{ Crypt::encrypt($order->id) }}" data-url="/order-tracking/generalinfo" data-value="{{ $order->name }}"></a>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-group">
-                                                                <label class="col-md-2 control-label">Description</label>
-                                                                <div class="col-md-10">
-                                                                    <a href="#" id="description" class="editable" data-type="textarea" data-name="description" data-pk="{{ Crypt::encrypt($order->id) }}" data-url="/order-tracking/generalinfo" data-original-title="Enter a description for this form" @if($order->description != "") data-value="{{ $order->description }}" @endif></a>
-                                                                </div>
-                                                        </div>
-                                                </fieldset>
+                                                @include('order-tracking.edit_generalinfo',array('order'=>$order))
                                             </form>
                                         </div>
                                         <!-- end widget content -->

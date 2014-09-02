@@ -4,7 +4,7 @@
 		<meta charset="utf-8"/>
 		<!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">-->
 
-		<title>{{ Config::get('website.name') }} - {{ $pageTitle }} </title>
+		<title>{{ $pageTitle }} - {{ Config::get('website.name') }}</title>
 		<meta name="description" content="Scott Swift">
 		<meta name="author" content="Pudaruth Keshav">
 		

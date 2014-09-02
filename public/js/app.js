@@ -73,6 +73,14 @@
         $.pjax.defaults.timeout = 10000;
         $.pjax.defaults.container = "#main";
         
+        /*
+         * Pusher Main
+         */
+        
+        var pusher = new Pusher('d34044dc68acb4ac2833',{authEndpoint : '/pusher/auth'});
+        //Presence Channel for current page
+        var presenceChannelCurrent = null;
+        
 /* ~ END: CHECK MOBILE DEVICE */
 
 /*
@@ -103,6 +111,50 @@ function messenger_hidenotiftop()
     {
         topmsg.hide();
     }
+}
+
+/*
+ * Pusher Global Channel
+ */
+
+function pusher_global()
+{
+    var presenceChannelGlobal = pusher.subscribe('presence-global'); 
+    presenceChannelGlobal.bind('pusher:subscription_succeeded', function(users) {
+        //Do Something here
+    });
+}
+
+function pusherSubscribeCurrentPresenceChannel(xeditable)
+{
+    if(presenceChannelCurrent)
+    {
+        presenceChannelCurrent = null;
+    }
+    
+    presenceChannelCurrent = pusher.subscribe('presence-'+document.getElementById('channel_name').value);
+    presenceChannelCurrent.bind('pusher:subscription_succeeded', function() {
+        if(typeof xeditable !== "undefined" && xeditable)
+        {
+            presenceChannelCurrent.bind('client-editable-shown',function(data){
+                //An editable has been opened by another user. Lock it down
+                console.log('bind-shown');
+                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('disable');
+            });
+            presenceChannelCurrent.bind('client-editable-hidden',function(data){
+                //An editable has been closed by another user. open it up
+                console.log('bind-hidden');
+                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('enable');
+            });
+            presenceChannelCurrent.bind('client-editable-save',function(data){
+                //An Editable has changed value, reflect the change
+                console.log('bind-save');
+                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('setValue',data.newValue,true);
+            });        
+
+        }        
+    });
+    
 }
 
 /*
@@ -2384,12 +2436,25 @@ var main = {
          */
         function runFormEditable()
         {
+            
+            //Bind pusher channel
+            pusherSubscribeCurrentPresenceChannel(true);
+            
             //Turn on inline Mode
             $.fn.editable.defaults.mode = 'inline';
             $.fn.editable.defaults.ajaxOptions = {type: "put"};
             
             //General Info
-            $('.editable:not(.dummy)').editable();
+            $('.editable:not(.dummy)').editable().on('shown',function(e){
+                presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+            }).on('hidden',function(e,reason){
+                presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+            }).on('save',function(e,params){
+                if($(this).editable('option','pk') !== "0")
+                {
+                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue})
+                }
+            });
             
             //Customs
             $('.customs-editable,.freight-editable,.purchaseorder-editable,.reception-editable').on('save',function(e,params){
@@ -2421,7 +2486,17 @@ var main = {
                             $thisfieldset.find('a.editable').editable('option', 'pk', params.response);
                             $thisfieldset.find('a.editable').attr('data-pk',params.response);
                         }
+                    }).on('shown',function(e){
+                        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+                    }).on('hidden',function(e,reason){
+                        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+                    }).on('save',function(e,params){
+                        if($(this).editable('option','pk') !== "0")
+                        {
+                            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue})
+                        }
                     });
+                    
                     $thiswidget.find('form').append($clone);
                 }
                 else
@@ -3040,6 +3115,116 @@ var main = {
         //Hide Loading Message
         messenger_hidenotiftop();
     },    
+    
+    /*
+     *  Freight Company - Create Form
+     */
+    fc_create: function () {
+        
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+	pageSetUp();
+	
+	
+	// PAGE RELATED SCRIPTS
+
+	// Load form valisation dependency 
+	// Load form valisation dependency 
+        var myqueue = new createjs.LoadQueue(false);
+        myqueue.on("complete",runFormValidation,this);
+        myqueue.loadManifest(["/js/plugin/jquery-form/jquery-form.min.js"]);      
+        
+	function runFormValidation() {
+		
+                var $orderTrackingCreateForm = $('#freight-company-create-form').validate({
+                    rules : {
+                        name: {
+                                required: true
+                        },
+                        email: {
+                            email: true
+                        }
+                    },
+                    messages: {
+                        name: {
+                            required: 'Please enter a name to identify this freight company'
+                        }
+                    },
+                    
+                    // Ajax form submition
+                    submitHandler : function(form) {
+                            var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
+                                            message: 'Saving freight company',
+                                            type: 'info',
+                                            id: 'notif-top'
+                                          });
+                            $('#save-draft').attr('disabled','disabled').addClass('disable');
+                            $(form).ajaxSubmit({
+                                    dataType: 'json',
+                                    success : function(data) {
+                                        savemsg.update({
+                                            type: 'success',
+                                            message: 'Save Success!',
+                                        });
+                                        $.pjax({
+                                            container: '#main',
+                                            url: data.url,
+                                            beforeReplace: function()
+                                            {
+                                                savemsg.hide();
+                                            }
+                                        });
+                                    },
+                                    error: function (data) {
+                                        $('#save-draft').removeAttr('disabled').removeClass('disable');
+                                        savemsg.update({
+                                            type: 'error',
+                                            message: 'Save Failed! Please retry.',
+                                            hideAfter: 5,
+                                        });
+                                    }
+                            });
+
+                            return false;
+                    }
+                }); 
+            //Hide Loading Message
+            messenger_hidenotiftop();            
+        }
+    },
+    
+    /*
+     *  Freight company - Edit Form
+     */
+    fc_edit: function() {
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+	pageSetUp();
+        
+	// PAGE RELATED SCRIPTS
+        messenger_notiftop('Loading..','info',0);
+	// Load form valisation dependency 
+        var myqueue = new createjs.LoadQueue(false);
+        myqueue.on("complete",runFormEditable,this);
+        myqueue.loadManifest(["/js/plugin/x-editable/x-editable.js"]);
+        myqueue.on("error",function(e){
+            messenger_notiftop('Failed to load page. <a class="pjax" href="'+document.URL+'">Click here to reload</a>','error',0)
+        });
+        
+/*
+         * Run function after script load
+         */
+        function runFormEditable()
+        {
+            //Turn on inline Mode
+            $.fn.editable.defaults.mode = 'inline';
+            $.fn.editable.defaults.ajaxOptions = {type: "put"};
+            
+            //General Info
+            $('.editable:not(.dummy)').editable();
+            
+            //Hide Loading Message
+            messenger_hidenotiftop();            
+        }        
+    },
     
     /*
      * Nespresso CRM - Machine Create

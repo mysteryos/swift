@@ -26,7 +26,7 @@ class OrderTrackingController extends UserController {
         if(count($order))
         {
             $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight'),$order);
-            $this->pageTitle = "{$order->name} (ID: $order->id) ";
+            $this->pageTitle = "{$order->name} (ID: $order->id)";
             $this->data['incoterms'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$incoterms));
             $this->data['freight_type'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$type));
             $this->data['business_unit'] = json_encode(Helper::jsonobject_encode(SwiftOrder::$business_unit));
@@ -62,7 +62,11 @@ class OrderTrackingController extends UserController {
     
     public function getView($id)
     {
-        if(Sentry::getUser()->hasAccess(['ot-edit','ot-admin','ot-view'],false))
+        if(Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']))
+        {
+            return Redirect::action('OrderTrackingController@getEdit',array('id'=>$id));
+        }
+        elseif(Sentry::getUser()->hasAnyAccess(['ot-view']))
         {
             return $this->form($id,false);
         }
@@ -74,9 +78,13 @@ class OrderTrackingController extends UserController {
     
     public function getEdit($id)
     {
-        if(Sentry::getUser()->hasAccess(['ot-edit','ot-admin'],false))
+        if(Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']))
         {
             return $this->form($id,true);
+        }
+        elseif(Sentry::getUser()->hasAnyAccess(['ot-view']))
+        {
+            return Redirect::action('OrderTrackingController@getView',array('id'=>$id));
         }
         else
         {
@@ -197,12 +205,79 @@ class OrderTrackingController extends UserController {
     
     public function postFreightcompanyform()
     {
+        //Saving new freight companies
+        $validator = Validator::make(Input::all(),
+                    array('name'=>'required',
+                          'type'=>array('required','in:'.implode(',',array_keys(SwiftFreightCompany::$type)))
+                        )
+                );
         
+        if($validator->fails())
+        {
+            return json_encode(['success'=>0,'errors'=>$validator->errors()]);
+        }
+        else
+        {
+            $fc = new SwiftFreightCompany(Input::All());
+            if($fc->save())
+            {
+                $fc_id = Crypt::encrypt($fc->id);
+                //Success
+                echo json_encode(['success'=>1,'url'=>"/order-tracking/freightcompanyform/$fc_id"]);
+            }
+            else
+            {
+                echo "";
+                return false;                
+            }
+        }        
     }
     
     public function putFreightcompanyform()
     {
-        
+        $fc_id = Crypt::decrypt(Input::get('pk'));
+        $fc = SwiftFreightCompany::find($fc_id);
+        if(count($fc))
+        {
+            /*
+             * Manual Validation
+             */
+            
+            //Name
+            if(Input::get('name') == 'name' && trim(Input::get('value')==""))
+            {
+                return Response::make('Please enter a name',400);
+            }
+            
+            //Business Unit
+            if(Input::get('name') == 'type' && !array_key_exists((int)Input::get('value'),SwiftFreightCompany::$type))
+            {
+                return Response::make('Please select a valid business unit',400);
+            }
+            
+            //Email
+            if(Input::get('name') == 'email' && Input::get('value') != "" && filter_var(Input::get('value'), FILTER_VALIDATE_EMAIL))
+            {
+                return Response::make('Please enter a valid email address',400);
+            }
+            
+            /*
+             * Save
+             */
+            $fc->{Input::get('name')} = Input::get('value');
+            if($fc->save())
+            {
+                return Response::make('Success', 200);
+            }
+            else
+            {
+                return Response::make('Failed to save. Please retry',400);
+            }
+        }
+        else
+        {
+            return Response::make('Freight Company not found',404);
+        }        
     }
     
     public function deleteFreightcompanyform($fc_id)
@@ -210,11 +285,25 @@ class OrderTrackingController extends UserController {
         
     }
     
-    public function getFreightcompanyform($fc_id)
+    public function getFreightcompanyform($id)
     {
-        
+        $fc_id = Crypt::decrypt($id);
+        $fc = SwiftFreightCompany::getById($fc_id);
+        if(count($fc))
+        {
+            $this->data['activity'] = $fc->revisionHistory()->orderBy('created_at','desc')->get()->all();
+            $this->pageTitle = "{$fc->name} (ID: $fc->id) ";
+            $this->data['type'] = json_encode(Helper::jsonobject_encode(SwiftFreightCompany::$type));
+            $this->data['fc'] = $fc;
+            $this->data['ticker'] = $fc->freight;
+            
+            return $this->makeView('freight-company/edit');
+        }
+        else
+        {
+            return parent::notfound();
+        }        
     }
-
     
     /*
      * POST Create Form
@@ -232,7 +321,8 @@ class OrderTrackingController extends UserController {
         
         $validator = Validator::make(Input::all(),
                     array('name'=>'required',
-                          'business_unit'=>array('required','in:'.implode(',',array_keys(SwiftOrder::$business_unit)))
+                          'business_unit'=>array('required','in:'.implode(',',array_keys(SwiftOrder::$business_unit))),
+                          'email'=>'email'
                         )
                 );
         

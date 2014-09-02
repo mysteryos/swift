@@ -3,7 +3,7 @@
         <div class="form-group">
             <label class="col-md-2 control-label">Purchase Order number*</label>
             <div class="col-md-10">
-                <a href="#" class="editable purchaseorder-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="text" data-name="reference" data-pk="{{ $p->id or 0 }}" data-url="/order-tracking/purchaseorder/{{ Crypt::encrypt($order->id) }}" data-value="{{ $p->reference or "" }}"></a>
+                <a href="#" class="editable purchaseorder-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="text" data-context="freight" data-name="reference" data-pk="{{ $p->id or 0 }}" data-url="/order-tracking/purchaseorder/{{ Crypt::encrypt($order->id) }}" data-value="{{ $p->reference or "" }}"></a>
             </div>                                                                                        
         </div>
     </div>

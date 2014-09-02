@@ -44,7 +44,7 @@ class UserController extends Controller {
             {
                 $this->data['assets'] = "\"".implode('", "', array_merge($this->data['css'],$this->data['js']))."\"";
             }
-            $this->data['pageTitle'] = $this->pageName.($this->pageName != "" ? " - ".$this->pageName : "");
+            $this->data['pageTitle'] = ($this->pageTitle != "" ? $this->pageTitle." - " : "").$this->pageName;
             return View::make($view,$this->data);
         }
         

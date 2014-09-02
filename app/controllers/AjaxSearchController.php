@@ -40,7 +40,23 @@ Class AjaxSearchController extends UserController {
      */
     public function getFreightcompany()
     {
+        $limit = 5;
+        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
+
+        $searchresult = SwiftFreightCompany::getByName(Input::get('term'),$offset,$limit);
         
+        if(count($searchresult))
+        {
+            foreach($searchresult as $s)
+            {
+                $result[] = array('id'=>$s->id,'text'=>$s->name);
+            }
+            echo json_encode($result);
+        }
+        else
+        {
+            echo "";
+        }       
     }
     
     /*

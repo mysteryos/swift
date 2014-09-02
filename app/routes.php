@@ -40,6 +40,9 @@ Route::group(array('before' => array('auth')), function()
     //Ajax Search
     Route::controller('ajaxsearch','AjaxSearchController');
     
+    //Pusher
+    Route::controller('pusher','PusherController');
+    
 //  Route::controller('user', 'UserController');
 });
 

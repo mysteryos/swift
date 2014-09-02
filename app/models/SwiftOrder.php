@@ -90,6 +90,11 @@ class SwiftOrder extends Eloquent {
         return $this->MorphMany('SwiftDocument','document');
     }
     
+    public function flag()
+    {
+        return $this->MorphMany('SwiftFlag','flaggable');
+    }
+    
     /*
      * Polymorphic Relation
      */

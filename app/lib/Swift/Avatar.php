@@ -51,7 +51,7 @@ Class Avatar {
             //Assign Color
             $avatars[$user->email] = $randcolor;
             Cache::forever('avatars',$avatars);
-                        
+            
             //Place Avatar information in session
             Session::put('avatar_color',$avatars[$user->email]);
             Session::put('avatar_letter',$user->email[0]);

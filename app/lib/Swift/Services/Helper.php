@@ -21,13 +21,13 @@ class Helper {
         return $converted_array;
     }
     
-    public function getUserName($user_id,$current_user)
+    public function getUserName($user_id,$current_user,$me=true)
     {
         $user = User::find($user_id);
         if($user)
         {
             
-            if($user->id == $current_user->id)
+            if($user->id == $current_user->id && $me)
             {
                 return "Me";
             }
@@ -61,6 +61,15 @@ class Helper {
         
         return $revision;
         
+    }
+    
+    public function getOrderTrackingLink($order)
+    {
+        $html = "<a class=\"pjax\" href=\"/order-tracking/view/".(\Crypt::encrypt($order->id))."\" data-original-title=\"Click to view order process\" data-placement=\"placement\" rel=\"bottom\"><i class=\"fa fa-lg- fa-map-marker\"></i>&nbsp;";
+        $html.= trim($order->name);
+        $html.="</a>";
+        
+        return $html;
     }
     
 }

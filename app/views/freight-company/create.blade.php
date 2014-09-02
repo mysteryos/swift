@@ -28,7 +28,7 @@
     </div>
     
     <!-- widget grid -->
-    <section id="widget-grid" class="">
+    <section id="widget-grid">
 
 	<!-- START ROW -->
 
@@ -49,7 +49,7 @@
 				<div>
 					<!-- widget content -->
 					<div class="widget-body no-padding">
-                                            <form action="/order-tracking/freightcompany" method="POST" id="freight-company-create-form" enctype="multipart/form-data" class="form-horizontal" name="freight-company-create" novalidate="novalidate">                                            
+                                            <form action="/order-tracking/freightcompanyform" method="POST" id="freight-company-create-form" enctype="multipart/form-data" class="form-horizontal" name="freight-company-create" novalidate="novalidate">                                            
                                                 <input type="hidden" name="id" value="" />
                                                 <div class="panel-group smart-accordion-default" id="accordion">
 							<div class="panel panel-default" id="generalInfo">
@@ -84,7 +84,24 @@
                                                                                                  <input type="text" class="form-control" name="name" placeholder="Type in a name" />
                                                                                             </div>
                                                                                         </div>
-
+                                                                                </fieldset>
+                                                                        </div>
+								</div>
+							</div>
+                                                    
+                                                        <div class="panel panel-default" id="businessInfo">
+								<div class="panel-heading">
+									<h4 class="panel-title">
+                                                                                <a data-toggle="collapse" href="#accordion-2"> 
+                                                                                    <i class="fa fa-lg fa-angle-down pull-right"></i> 
+                                                                                    <i class="fa fa-lg fa-angle-up pull-right"></i> 
+                                                                                     Business info 
+                                                                                </a>
+                                                                        </h4>
+								</div>
+								<div id="accordion-2" class="panel-collapse collapse in">
+                                                                        <div class="panel-body">
+                                                                                <fieldset>
                                                                                         <div class="form-group">
                                                                                                 <label class="col-md-2 control-label">BRN</label>
                                                                                                 <div class="col-md-10">
@@ -98,7 +115,23 @@
                                                                                                     <input type="text" class="form-control" name="vat_no" placeholder="Type in vat number" />
                                                                                                 </div>
                                                                                         </div>                                                                                             
-
+                                                                                </fieldset>
+                                                                        </div>
+								</div>
+							</div>
+                                                        <div class="panel panel-default" id="contactInfo">
+								<div class="panel-heading">
+									<h4 class="panel-title">
+                                                                                <a data-toggle="collapse" href="#accordion-3"> 
+                                                                                    <i class="fa fa-lg fa-angle-down pull-right"></i> 
+                                                                                    <i class="fa fa-lg fa-angle-up pull-right"></i> 
+                                                                                     Contact info 
+                                                                                </a>
+                                                                        </h4>
+								</div>
+								<div id="accordion-3" class="panel-collapse collapse in">
+                                                                        <div class="panel-body">
+                                                                                <fieldset>
                                                                                         <div class="form-group">
                                                                                                 <label class="col-md-2 control-label">Address</label>
                                                                                                 <div class="col-md-10">
@@ -125,21 +158,20 @@
                                                                                                 <div class="col-md-10">
                                                                                                     <input type="email" class="form-control" name="email" placeholder="Type in email" />
                                                                                                 </div>
-                                                                                        </div>
-
+                                                                                        </div>                                                                                                                                                                                    
                                                                                 </fieldset>
                                                                         </div>
 								</div>
 							</div>
                                                     <div class="form-actions">
-                                                    <div class="row">
-                                                        <div class="col-md-12">
-                                                            <button class="btn btn-default" id="save-draft" type="submit">
-                                                                    Save
-                                                            </button>
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                <button class="btn btn-default" id="save-draft" type="submit">
+                                                                        Save
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
                                                 </div>
                                             </form>
 					</div>

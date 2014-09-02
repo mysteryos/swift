@@ -331,28 +331,28 @@ Order Tracking - Forms
 Order Tracking - Edit Form
 */
 
-#activity-container{
+.activity-container{
     height:290px; 
     overflow-y: scroll;
 }
 
-#jarviswidget-fullscreen-mode #activity-container{
+#jarviswidget-fullscreen-mode .activity-container{
     height:100%;
 }
 
-#activity-container table.table tr:first-child > td {
+.activity-container table.table tr:first-child > td {
     border-top: none;
 }
 
-#activity-container span.activity-add {
+.activity-container span.activity-add {
     color: darkgreen;
 }
 
-#activity-container span.activity-delete {
+.activity-container span.activity-delete {
     color: darkred;
 }
 
-#activity-container span.activity-change {
+.activity-container span.activity-change {
     color: darkblue;
 }
 
@@ -373,6 +373,10 @@ Order Tracking - Edit Form
 
 .page-title span {
     vertical-align: 0px;
+}
+
+.editable-select2 div.select2-container {
+    width:200px;
 }
 
 /*

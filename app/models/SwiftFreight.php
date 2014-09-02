@@ -68,6 +68,7 @@ class SwiftFreight extends Eloquent{
         'incoterms' => 'Incoterms',
         'freight_etd' => 'Freight ETD',
         'freight_eta' => 'Freight ETA',
+        'freight_company' => 'Freight Company'
     );
     
     protected $keepCreateRevision = true;   
@@ -118,7 +119,16 @@ class SwiftFreight extends Eloquent{
             return Carbon::parse($val)->toDateString();
         }
         return "";
-    }    
+    }
+    
+    public function getFreightCompanyIdRevisionAttribute($val)
+    {
+        if($val != "")
+        {
+            return SwiftFreightCompany::find($val)->first()->name;
+        }
+        return "";
+    }
     
     /*
      * Relationships

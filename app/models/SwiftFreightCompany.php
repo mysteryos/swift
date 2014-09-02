@@ -25,6 +25,11 @@ class SwiftFreightCompany extends Eloquent {
         'name','address','tel', 'fax', 'email', 'brn', 'vat_no', 'type'
     );
     
+    protected $revisionFormattedFieldNames = array(
+        'vat_no' => 'VAT number',
+        'brn'   => 'BRN'
+    );
+    
 //    protected $revisionFormattedFieldNames = array(
 //        'freight_type' => 'Freight Type',
 //        'bol_no' => 'Bill of Lading Number',
@@ -33,8 +38,6 @@ class SwiftFreightCompany extends Eloquent {
 //        'freight_etd' => 'Freight ETD',
 //        'freight_eta' => 'Freight ETA',
 //    );
-    
-    protected $keepCreateRevision = true;      
     
     /*
      * General Attributes
@@ -73,6 +76,20 @@ class SwiftFreightCompany extends Eloquent {
     public function freight()
     {
         return $this->hasMany('SwiftFreight','freight_company_id');
+    }
+    
+    /*
+     * Helper Functions
+     */
+    
+    public static function getById($id)
+    {
+        return self::with('freight')->find($id);
+    }
+    
+    public static function getByName($term,$offset,$limit)
+    {
+        return self::where('name','LIKE',"%$term%")->limit($limit)->offset($offset)->get();
     }
     
 }

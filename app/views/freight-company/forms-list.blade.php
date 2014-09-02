@@ -22,9 +22,9 @@
                                             <span>{{ $c->name }}</span>
                                         </div>
                                 </td>
-                                <td class="inbox-data-message">
+                                <td>
                                         <div>
-                                            <span>{{ SwiftFreightCompany::$type[$c->type] || "Unknown" }}</span>
+                                            <span>{{ SwiftFreightCompany::$type[$c->type] }}</span>
                                         </div>
                                 </td>
 

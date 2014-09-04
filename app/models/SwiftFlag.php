@@ -8,7 +8,7 @@ class SwiftFlag extends eloquent {
     
     protected $table = "swift_flag";
     
-    protected $fillable = array('type');
+    protected $fillable = array('type','active');
     
     protected $guarded = array('id');
     
@@ -16,8 +16,24 @@ class SwiftFlag extends eloquent {
     
     protected $dates = ['deleted_at'];
     
+    
+    //Active
+    const ACTIVE = 1;
+    const INACTIVE = 0;
+    
+    //Type
     const IMPORTANT = 1;
     const STARRED = 2;
+    
+    public static function boot() {
+        parent::boot();
+        /*
+         * Set User Id on create
+         */
+        static::creating(function($model){
+            $model->user_id = Sentry::getUser()->id;
+        });
+    }
     
     /*
      * Relationships

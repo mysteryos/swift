@@ -13,6 +13,8 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
     
     use EloquentTrait;
     
+    use \Venturecraft\Revisionable\RevisionableTrait;    
+    
     protected $table = "swift_document";
     
     protected $guarded = array('id');
@@ -22,6 +24,22 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
     public $timestamps = true;
     
     protected $dates = ['deleted_at'];
+    
+    /* Revisionable */
+    
+    protected $revisionEnabled = true;
+    
+    protected $keepRevisionOf = array(
+        'document_file_name',
+    );
+    
+    protected $revisionFormattedFieldNames = array(
+        'document_file_name' => 'Document Name',
+    );    
+    
+    protected $revisionClassName = "Document";
+    
+    protected $saveCreateRevision = true;
     
     public function __construct(array $attributes = array())
     {
@@ -45,9 +63,9 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
         parent:: boot();
         
         /*
-         * Set User Id on Save
+         * Set User Id on create
          */
-        static::saving(function($model){
+        static::creating(function($model){
             $model->user_id = Sentry::getUser()->id;
         });
 

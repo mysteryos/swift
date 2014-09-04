@@ -51,7 +51,9 @@
                     //Pace options
                     window.paceOptions = {
                         ghostTime: 500,
-                        restartOnPushState: true
+                        restartOnPushState: true,
+                        restartOnRequestAfter: false,
+                        eventLag: true
                     }
                     //Preloader Script
                     var queue = new createjs.LoadQueue(false);

@@ -11,9 +11,7 @@
             <a class="btn btn-default" rel="tooltip" data-original-title="Send" data-placement="bottom"><i class="fa fa-lg fa-mail-forward"></i></a>
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
-        <div class="pull-right hidden-xs whos-online">
-            
-        </div>
+        <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="/order-tracking/forms" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>

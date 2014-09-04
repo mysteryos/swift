@@ -41,7 +41,7 @@ class OrderTrackingController extends UserController {
         {
             return parent::notfound();
         }
-    }    
+    }
     
     /*
      * GET Pages
@@ -90,6 +90,21 @@ class OrderTrackingController extends UserController {
         {
             return parent::forbidden();
         }
+    }
+    
+    public function getActivity($id)
+    {
+        $order_id = Crypt::decrypt($id);
+        $order = SwiftOrder::getById($order_id);
+        if(count($order))
+        {
+            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight'),$order);
+            return $this->makeView('order-tracking/edit_activity');
+        }
+        else
+        {
+            return parent::notfound();
+        }        
     }
     
     public function getInbox()
@@ -892,13 +907,24 @@ class OrderTrackingController extends UserController {
     {
         if($id != 0)
         {
-            switch($type)
+            $order_id = Crypt::decrypt($id);
+            $order = SwiftOrder::find(Crypt::decrypt($order_id));
+            if(count($order))
             {
-                case "star":
-                    
-                    break;
-                case "important":
-                    break;
+                switch($type)
+                {
+                    case "star":
+                        $flag = new SwiftFlag(['type'=>SwiftFlag::STARRED]);
+                        break;
+                    case "important":
+                        $flag = new SwiftFlag(['type'=>SwiftFlag::IMPORTANT]);
+                        break;
+                }
+                $order->flag->save($flag);
+            }
+            else
+            {
+                return Response::make('Order process form not found',404);
             }
         }
         else

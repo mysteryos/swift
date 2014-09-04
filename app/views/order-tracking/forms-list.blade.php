@@ -13,7 +13,7 @@
                                 <td class="inbox-table-icon">
                                     <div>
                                         <label>
-                                            <a href="/order-track/mark/star/{{ Crypt::encrypt($o->id) }}" class="markstar"><i class="fa fa-lg fa-star-o"></i></a>
+                                            <a href="/order-track/mark/{{ SwiftFlag::STARRED }}/{{ Crypt::encrypt($o->id) }}" class="markstar"><i class="fa fa-lg fa-star-o"></i></a>
                                         </label>
                                     </div>
                                 </td>

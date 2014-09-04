@@ -13,7 +13,7 @@ class SwiftFreightCompany extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('name','address','tel','fax','email','brn','vat_no','data');
+    protected $fillable = array('name','address','tel','fax','email','brn','vat_no','data','type');
     
     public $timestamps = true;
     

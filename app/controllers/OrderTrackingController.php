@@ -159,7 +159,7 @@ class OrderTrackingController extends UserController {
         }
         
         $this->data['type'] = $type;
-        $this->data['edit_access'] = Sentry::getUser()->hasAccess(['ot-edit','ot-admin'],false);
+        $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']);
         $this->data['orders'] = $orders;
         $this->data['count'] = $orderquery->count();
         $this->data['page'] = $page;
@@ -485,7 +485,7 @@ class OrderTrackingController extends UserController {
                 if($order->customsDeclaration()->save($customsDeclaration))
                 {
                     WorkflowActivity::update($order);
-                    return Response::make(Crypt::encrypt($customsDeclaration->id));
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($customsDeclaration->id),'id'=>$customsDeclaration->id]));
                 }
                 else
                 {
@@ -616,7 +616,7 @@ class OrderTrackingController extends UserController {
                 if($order->freight()->save($freight))
                 {
                     WorkflowActivity::update($order);
-                    return Response::make(Crypt::encrypt($freight->id));
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($freight->id),'id'=>$freight->id]));
                 }
                 else
                 {
@@ -736,7 +736,7 @@ class OrderTrackingController extends UserController {
                 if($order->purchaseOrder()->save($po))
                 {
                     WorkflowActivity::update($order);
-                    return Response::make(Crypt::encrypt($po->id));
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($po->id),'id'=>$po->id]));
                 }
                 else
                 {
@@ -834,7 +834,7 @@ class OrderTrackingController extends UserController {
                 if($order->reception()->save($reception))
                 {
                     WorkflowActivity::update($order);
-                    return Response::make(Crypt::encrypt($reception->id));
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($reception->id),'id'=>$reception->id]));
                 }
                 else
                 {

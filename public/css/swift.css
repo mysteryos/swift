@@ -99,6 +99,95 @@
     background-color: #bdc3c7;
 }
 
+.editable-color-1 {
+    border-bottom:1px dashed #1abc9c !important;
+    color: #1abc9c !important;
+}
+
+.editable-color-2 {
+    border-bottom:1px dashed #2ecc71 !important;
+    color: #2ecc71 !important;
+}
+
+.editable-color-3{
+    border-bottom:1px dashed #3498db !important;
+    color: #3498db !important;
+}
+
+.editable-color-4{
+    border-bottom:1px dashed #9b59b6 !important;
+    color: #9b59b6 !important;
+}
+
+.editable-color-5{
+    border-bottom:1px dashed #34495e !important;
+    color: #34495e !important;
+}
+
+.editable-color-6{
+    border-bottom:1px dashed #16a085 !important;
+    color: #16a085 !important;
+}
+
+.editable-color-7{
+    border-bottom:1px dashed #27ae60 !important;
+    color: #27ae60 !important;
+}
+
+.editable-color-8{
+    border-bottom:1px dashed #2980b9 !important;
+    color: #2980b9 !important;
+}
+
+.editable-color-9{
+    border-bottom:1px dashed #8e44ad !important;
+    color: #8e44ad !important;
+}
+
+.editable-color-10{
+    border-bottom:1px dashed #2c3e50 !important;
+    color: #2c3e50 !important;
+}
+
+.editable-color-11{
+    border-bottom:1px dashed #f1c40f !important;
+    color: #f1c40f !important;
+}
+
+.editable-color-12{
+    border-bottom:1px dashed #e67e22 !important;
+    color: #e67e22 !important;
+}
+
+.editable-color-13{
+    border-bottom:1px dashed #e74c3c !important;
+    color: #e74c3c !important;
+}
+
+.editable-color-14{
+    border-bottom:1px dashed #95a5a6 !important;
+    color: #95a5a6 !important;
+}
+
+.editable-color-15{
+    border-bottom:1px dashed #f39c12 !important;
+    color: #f39c12 !important;
+}
+.editable-color-16{
+    border-bottom:1px dashed #d35400 !important;
+    color: #d35400 !important;
+}
+
+.editable-color-17{
+    border-bottom:1px dashed #c0392b !important;
+    color: #c0392b !important;
+}
+
+.editable-color-18{
+    border-bottom:1px dashed #bdc3c7 !important;
+    color: #bdc3c7 !important;
+}
+
 /*
 * Text Color Utility Class
 */
@@ -285,6 +374,14 @@ ul.messenger.messenger-fixed.messenger-on-top {
     width:100%;
     top:10%;
     left:0;
+}
+
+/*
+*  Whos Online
+*/
+
+#whos-online .avatar {
+    margin-left: 5px;
 }
 
 /*

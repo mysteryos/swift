@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <a class="btn btn-default" href="javascript:void(0);"><i class="fa fa-gear"></i> Icon Left</a>
+            <!--<a class="btn btn-default" href="javascript:void(0);"><i class="fa fa-gear"></i> Icon Left</a>-->
 <!--            <span id="search" class="btn btn-ribbon hidden-xs" data-title="search"><i class="fa fa-grid"></i> Change Grid</span>
             <span id="add" class="btn btn-ribbon hidden-xs" data-title="add"><i class="fa fa-plus"></i> Add</span>
             <span id="search" class="btn btn-ribbon" data-title="search"><i class="fa fa-search"></i> <span class="hidden-mobile">Search</span></span>-->
@@ -60,11 +60,11 @@
                     <h6> Quick Access <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a></h6>
 
                     <ul class="inbox-menu-sm">
-                            <li>
-                                    <a href="javascript:void(0);" class="form-pjax-filter pjax"><i class="fa fa-star-o"></i>Starred</a>
+                            <li @if($type=="starred"){{"class=\"active\""}}@endif >
+                                    <a href="/order-tracking/forms/starred" class="form-pjax-filter pjax"><i class="fa fa-star"></i>Starred</a>
                             </li>
-                            <li>
-                                    <a href="javascript:void(0);" class="form-pjax-filter pjax"><i class="fa fa-exclamation-triangle"></i>Important</a>
+                            <li @if($type=="important"){{"class=\"active\""}}@endif >
+                                    <a href="/order-tracking/forms/important" class="form-pjax-filter pjax"><i class="fa fa-exclamation-triangle"></i>Important</a>
                             </li>
                     </ul>
 
@@ -80,8 +80,8 @@
                     @endif
                     @if($count)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/order-tracking/forms/"}}{{$page-1}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/order-tracking/forms/"}}{{$page+1}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".$page-1}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".$page+1}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">

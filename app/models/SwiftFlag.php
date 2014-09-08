@@ -24,6 +24,7 @@ class SwiftFlag extends eloquent {
     //Type
     const IMPORTANT = 1;
     const STARRED = 2;
+    const READ = 3;
     
     public static function boot() {
         parent::boot();

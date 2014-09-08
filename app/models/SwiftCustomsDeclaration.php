@@ -16,7 +16,7 @@ class SwiftCustomsDeclaration extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('order_id','customs_reference','customs_processed_at','customs_filled_at','customs_status');
+    protected $fillable = array('order_id','customs_reference','customs_processed_at','customs_filled_at','customs_under_verification_at','customs_cleared_at','customs_status');
     
     public $timestamps = true;
     
@@ -45,13 +45,15 @@ class SwiftCustomsDeclaration extends Eloquent {
     
     const FILLED = 1;
     const PROCESSING = 2;
-    const CLEARED = 3;
+    const VERIFICATION = 3;
+    const CLEARED = 4;
     
     /*
      * Public Attributes
      */
     public static $status = array(self::FILLED=>'Filled on system',
-                                    self::PROCESSING=>'Processing',
+                                    self::PROCESSING=>'Sent/Processed',
+                                    self::VERIFICATION=>'Under Verification',
                                     self::CLEARED=>'Cleared');
     
     /*

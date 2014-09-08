@@ -324,6 +324,10 @@ fieldset.multi a.top-left,fieldset.multi a.top-left:active,fieldset.multi a.top-
     top:0px !important;
 }
 
+.unread td {
+    font-weight: 700;
+}
+
 /*
 *   Extend Hubspot Messenger
 */

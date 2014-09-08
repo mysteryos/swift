@@ -22,7 +22,7 @@
                                             <span>{{ $c->name }}</span>
                                         </div>
                                 </td>
-                                <td>
+                                <td class="inbox-data-type">
                                         <div>
                                             <span>{{ SwiftFreightCompany::$type[$c->type] }}</span>
                                         </div>

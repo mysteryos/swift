@@ -2,6 +2,8 @@
 	 * VARIABLES
 	 * Description: All Global Vars
 	 */
+        //JS loaded files
+        var jsArray = {};
         //Container for Top message
         var topmsg;
         //Container for Upload message
@@ -80,6 +82,8 @@
         var pusher = new Pusher('d34044dc68acb4ac2833',{authEndpoint : '/pusher/auth'});
         //Presence Channel for current page
         var presenceChannelCurrent = null;
+        //List of presence channels subscribed to
+        var presenceChannelCurrentSubscriptions = [];
         
 /* ~ END: CHECK MOBILE DEVICE */
 
@@ -128,32 +132,156 @@ function pusher_global()
 /*
  * Pusher Current Presence Channel
  */
-function pusherSubscribeCurrentPresenceChannel(xeditable)
+function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
 {
-    if(presenceChannelCurrent)
-    {
-        presenceChannelCurrent = null;
-    }
-    
+    presenceChannelCurrentSubscriptions.push('presence-'+document.getElementById('channel_name').value);
     presenceChannelCurrent = pusher.subscribe('presence-'+document.getElementById('channel_name').value);
     presenceChannelCurrent.bind('pusher:subscription_succeeded', function() {
+        //Loop through members and add them to whos-online
+        presenceChannelCurrent.members.each(function(member) {
+            if(member.id != presenceChannelCurrent.members.me.id)
+            {
+                $('#whos-online').append(avatarHTML(member))
+                $('#whos-online .avatar').tooltip();
+            }
+        });
+        presenceChannelCurrent.bind('pusher:member_added',function(member){
+            $('#whos-online').append(avatarHTML(member))
+            $('#whos-online .avatar').tooltip();
+        });
+        presenceChannelCurrent.bind('pusher:member_removed',function(member){
+            $('#user_'+member.id).tooltip('destroy');
+            $('#user_'+member.id).remove();
+        });
         if(typeof xeditable !== "undefined" && xeditable)
         {
+            presenceChannelCurrent.bind('pusher:member_added',function(member){
+                var $editableOpen = $('.editable-open');
+                if($editableOpen.length)
+                {
+                    presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me , id: $editableOpen.attr('id')});
+                }
+            });
+            presenceChannelCurrent.bind('pusher:member_removed',function(member){
+                console.log('justran');
+                var $editableInUse = $('.editable[pusher-user="'+member.id+'"]');
+                if($editableInUse.length)
+                {
+                    $editableInUse.tooltip('destroy');
+                    $editableInUse.removeClass('editable-color-'+member.info.avatarColor);
+                    $editableInUse.removeAttr('pusher-user');
+                    $editableInUse.editable('enable');
+                }
+            });            
             presenceChannelCurrent.bind('client-editable-shown',function(data){
                 //An editable has been opened by another user. Lock it down
-                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('disable');
+                var $element = $("#"+data.id);
+                console.log($element);
+                if($element.length)
+                {
+                    $element.attr('pusher-user',data.user.id);
+                    $element.addClass('editable-color-'+data.user.info.avatarColor);
+                    $element.tooltip({title:'<i class="fa fa-edit" title="Editing"></i> '+data.user.info.name,
+                                    animation: false,
+                                    html: true,
+                                    placement: "right",
+                                    trigger: 'manual',
+                                    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner avatar-color-'+data.user.info.avatarColor+'"></div></div>'
+                                    });
+                    $element.tooltip('show');
+                    $element.editable('disable');
+                }
             });
             presenceChannelCurrent.bind('client-editable-hidden',function(data){
                 //An editable has been closed by another user. open it up
-                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('enable');
+                var $element = $("#"+data.id);
+                $element.tooltip('hide');
+                $element.tooltip('destroy');
+                $element.removeClass('editable-color-'+data.user.info.avatarColor);
+                $element.removeAttr('pusher-user');
+                $element.editable('enable');
             });
             presenceChannelCurrent.bind('client-editable-save',function(data){
                 //An Editable has changed value, reflect the change
-                $('a.editable').find("[data-name='"+data.name+"']").find("[data-pk='"+data.pk+"']").editable('setValue',data.newValue,true);
+                var $element = $("#"+data.id);
+                $element.stop();
+                $element.editable('setValue',data.newValue,true);
+                $element.effect("highlight", {color: "lightgreen"}, 1000);
             });
-            
-        }        
+            if(typeof multi_xeditable !== "undefined" && multi_xeditable)
+            {
+                presenceChannelCurrent.bind('client-multi-add',function(data){
+                    var $dummy = $('fieldset.dummy[data-name="'+data.context+'"]');
+                    if($dummy.length)
+                    {
+                        addMulti($dummy,data.pk);
+                        Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
+                            showCloseButton: true,
+                            type: 'info',
+                            message: avatarHTML(data.user)+" has added "+data.context+" (ID:"+data.pk.id+") - <i>just now</i>",
+                            hideAfter: 5
+                        });                        
+                    }
+                });
+                
+                presenceChannelCurrent.bind('client-multi-delete',function(data){
+                    var $editable = $('#'+data.id);
+                    var $fieldset = $editable.parents('fieldset.multi');
+                    if($fieldset.length)
+                    {
+                        Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
+                            showCloseButton: true,
+                            type: 'info',
+                            message: avatarHTML(data.user)+" has deleted "+data.context+" (ID:"+$editable.split("_").slice(-1)[0]+") - <i>just now</i>",
+                            hideAfter: 5
+                        });                         
+                        $fieldset.slideUp('500',function(){
+                            $(this).remove();
+                        });
+                    }
+                });                
+            }
+        }
     });
+}
+
+/*
+ * JS Loader
+ */
+
+function jsLoader(files)
+{
+    $.each(files,function(key,val){
+	if (!jsArray[val]) {
+		jsArray[val] = true;
+        }
+        else
+        {
+            files.splice(key,1);
+        }
+    });
+    
+    if(files.length)
+    {
+        messenger_notiftop('Loading..','info',0);
+        // Load form validation dependency 
+        var myqueue = new createjs.LoadQueue(false);
+        myqueue.maintainScriptOrder = true;
+        myqueue.loadManifest(files);
+        myqueue.on('complete',pageSetUp,this);
+        myqueue.on("error",function(e){
+            messenger_notiftop('Failed to load page. <a class="pjax" href="'+document.URL+'">Click here to reload</a>','error',0)
+        });
+    }
+}
+
+/*
+ * Avatar HTML
+ */
+
+function avatarHTML(user)
+{
+    return '<i id="user_'+user.id+'" rel="tooltip" data-original-title="'+user.info.name+'" data-placement="bottom" class="avatar avatar-sm avatar-color-'+user.info.avatarColor+'">'+user.info.avatarLetter+'</i>';
 }
 
 /*
@@ -1195,6 +1323,15 @@ $.document_.on('pjax:beforeSend',function(){
     messenger_notiftop('Loading..','info',0);
 });
 
+//PJAX
+
+$.document_.on('pjax:beforeReplace',function(){
+   if(presenceChannelCurrent && document.getElementById('channel_name') !== null)
+   {
+       presenceChannelCurrent.unsubscribe('presence-'+document.getElementById('channel_name').value);
+   }
+});
+
 /* ~ END: APP AJAX REQUEST SETUP */
 
 /*Form Validation Setup*/
@@ -1548,14 +1685,22 @@ var main = {
      * Dashboard Index Js
      */
     dashboard: function () {
-        jsLoader(['/js/plugin/easy-pie-chart/jquery.easy-pie-chart.min.js',
-        '/js/plugin/sparkline/jquery.sparkline.min.js',
-        '/js/plugin/flot/jquery.flot.cust.js',
-        '/js/plugin/flot/jquery.flot.resize.js',
-        '/js/plugin/flot/jquery.flot.tooltip.js',
-        '/js/plugin/vectormap/jquery-jvectormap-1.2.2.min.js',
-        '/js/plugin/vectormap/jquery-jvectormap-world-mill-en.js',
-        '/js/plugin/fullcalendar/jquery.fullcalendar.min.js', 'js/swift/swift.dashboard.js']);
+        if(typeof window['dashboard'] === "undefined")
+        {
+            jsLoader(['/js/plugin/easy-pie-chart/jquery.easy-pie-chart.min.js',
+            '/js/plugin/sparkline/jquery.sparkline.min.js',
+            '/js/plugin/flot/jquery.flot.cust.js',
+            '/js/plugin/flot/jquery.flot.resize.js',
+            '/js/plugin/flot/jquery.flot.tooltip.js',
+            '/js/plugin/vectormap/jquery-jvectormap-1.2.2.min.js',
+            '/js/plugin/vectormap/jquery-jvectormap-world-mill-en.js',
+            '/js/plugin/fullcalendar/jquery.fullcalendar.min.js', 'js/swift/swift.dashboard.js']);            
+        }
+        else
+        {
+            pageSetUp();
+            dashboard();
+        }
     },
     
     /*
@@ -1641,51 +1786,115 @@ var main = {
      * Order Tracking : Create JS
      */
     ot_create: function() {
-        jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.ot_view.js"]);
+        if(typeof window['ot_create'] === "undefined")
+        {
+            jsLoader(["/js/plugin/jquery-form/jquery-form.min.js","/js/swift/swift.ot_create.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            ot_create();
+        }
     },
     ot_view: function() {
-        jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.ot_view.js"]);
+        if(typeof window['ot_view'] === "undefined")
+        {
+            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.ot_view.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            ot_view();
+        }
     },
     
     /**
      * Order Tracking - Edit Form
      */
     ot_edit: function() {
-        jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.ot_edit.js"]);
+        if(typeof window['ot_edit'] === "undefined")
+        {
+            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.ot_edit.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            ot_edit();
+        }
     },
     
     /*
      * Order Tracking - Forms List
      */
     ot_forms: function () {
-        jsLoader(["/js/swift/swift.ot_forms.js"]);
+        if(typeof window['ot_forms'] === "undefined")
+        {        
+            jsLoader(["/js/swift/swift.ot_forms.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            ot_forms();
+        }
     },
     
     /*
      * Freight Company - Forms
      */
     fc_forms: function () {
-        jsLoader(["/js/swift/swift.fc_forms.js"]);
+        if(typeof window['fc_forms'] === "undefined")
+        {         
+            jsLoader(["/js/swift/swift.fc_forms.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            fc_forms();            
+        }
     },    
     
     /*
      *  Freight Company - Create Form
      */
     fc_create: function () {
-        jsLoader(["/js/plugin/jquery-form/jquery-form.min.js","/js/swift/swift.fc_create.js"]);
+        if(typeof window['fc_create'] === "undefined")
+        {         
+            jsLoader(["/js/plugin/jquery-form/jquery-form.min.js","/js/swift/swift.fc_create.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            fc_create();            
+        }
     },
     
     /*
      *  Freight company - Edit Form
      */
     fc_edit: function() {
-        jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.fc_edit.js"]);
+        if(typeof window['fc_edit'] === "undefined")
+        {        
+            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.fc_edit.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            fc_edit();            
+        }
     },
     
     /*
      * Nespresso CRM - Machine Create
     */
     ncrm_machinecreate: function() {
-        jsLoader(["/js/swift/swift.ncrm_machinecreate.js"]);
+        if(typeof window['ncrm_machinecreate'] === "undefined")
+        {
+            jsLoader(["/js/swift/swift.ncrm_machinecreate.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            ncrm_machinecreate();            
+        }
     }
 }

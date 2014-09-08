@@ -21,21 +21,28 @@
                     <a href="#" @if(isset($f->id)) {{ "id=\"freight_incoterms_".Crypt::decrypt($f->id)."\"" }} @endif class="editable freight-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="freight" data-type="select" data-name="incoterms" data-pk="{{ $f->id or 0 }}" data-url="/order-tracking/freight/{{ Crypt::encrypt($order->id) }}" data-title="Select incoterm" data-value="{{ $f->incoterms or "" }}" data-source='{{ $incoterms }}'></a>
                 </div>
             </div>
-
         </div>
         <div class="row">
             <div class="form-group col-md-6">
-                <label class="col-md-4 control-label">Vessel No</label>
+                <label class="col-md-4 control-label">Vessel Name</label>
                 <div class="col-md-8">
-                    <a href="#" @if(isset($f->id)) {{ "id=\"freight_vessel_no_".Crypt::decrypt($f->id)."\"" }} @endif class="editable freight-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="freight" data-type="text" data-name="vessel_no" data-pk="{{ $f->id or 0 }}" data-url="/order-tracking/freight/{{ Crypt::encrypt($order->id) }}" data-value="{{ $f->vessel_no or "" }}"></a>
+                    <a href="#" @if(isset($f->id)) {{ "id=\"freight_vessel_name_".Crypt::decrypt($f->id)."\"" }} @endif class="editable freight-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="freight" data-type="text" data-name="vessel_name" data-pk="{{ $f->id or 0 }}" data-url="/order-tracking/freight/{{ Crypt::encrypt($order->id) }}" data-value="{{ $f->vessel_name or "" }}"></a>
                 </div>
             </div>
+            <div class="form-group col-md-6">
+                <label class="col-md-4 control-label">Vessel Voyage</label>
+                <div class="col-md-8">
+                    <a href="#" @if(isset($f->id)) {{ "id=\"freight_vessel_voyage_".Crypt::decrypt($f->id)."\"" }} @endif class="editable freight-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="freight" data-type="text" data-name="vessel_voyage" data-pk="{{ $f->id or 0 }}" data-url="/order-tracking/freight/{{ Crypt::encrypt($order->id) }}" data-value="{{ $f->vessel_voyage or "" }}"></a>
+                </div>
+            </div>
+        </div>
+        <div class="row">
             <div class="form-group col-md-6">
                 <label class="col-md-4 control-label">Bill of Lading No</label>
                 <div class="col-md-8">
                     <a href="#" @if(isset($f->id)) {{ "id=\"freight_bol_no_".Crypt::decrypt($f->id)."\"" }} @endif class="editable freight-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="freight" data-type="text" data-name="bol_no" data-pk="{{ $f->id or 0 }}" data-url="/order-tracking/freight/{{ Crypt::encrypt($order->id) }}" data-value="{{ $f->bol_no or "" }}"></a>
                 </div>
-            </div>
+            </div>        
         </div>
         <div class="row">
             <div class="form-group col-md-6">

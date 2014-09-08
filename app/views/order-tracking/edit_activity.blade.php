@@ -17,13 +17,13 @@
                             echo " <span class=\"activity-add\">created</span> <i>".$a->className()."</i> (ID: {$a->revisionable_id})</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::INSERT:
-                            echo " <span class=\"activity-add\">added</span> <i>".$a->fieldName()."</i> as <b>".$a->newValue()."</b>";
+                            echo " <span class=\"activity-add\">added</span> <i>".ucfirst($a->fieldName())."</i> as <b>".$a->newValue()."</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::UPDATE:
-                            echo " <span class=\"activity-change\">changed</span> <i>".$a->fieldName()."</i> from <b>".$a->oldValue()."</b> to <b>".$a->newValue()."</b>";
+                            echo " <span class=\"activity-change\">changed</span> <i>".ucfirst($a->fieldName())."</i> from <b>".$a->oldValue()."</b> to <b>".$a->newValue()."</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::DELETE:
-                            echo " <span class=\"activity-delete\">deleted</span> <i>".$a->fieldName()."</i>, previously being <b>".$a->oldValue()."</b>";
+                            echo " <span class=\"activity-delete\">deleted</span> <i>".ucfirst($a->fieldName())."</i>, previously being <b>".$a->oldValue()."</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::REMOVE:
                             echo " <span class=\"activity-delete\">removed</span> <i>".$a->className()."</i> (".$a->primaryIdentifierName().": ".$a->primaryIdentifierValue().")</b>";

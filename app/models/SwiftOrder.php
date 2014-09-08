@@ -21,7 +21,11 @@ class SwiftOrder extends Eloquent {
     
     public $dates = ['deleted_at'];
     
-    public static $business_unit = array(1=>'Scott Consumer',2=>'Scott Health',3=>'Sebna');
+    public static $business_unit = array(self::SCOTT_CONSUMER=>'Scott Consumer',self::SCOTT_HEALTH=>'Scott Health',self::SEBNA=>'Sebna');
+    
+    const SCOTT_CONSUMER = 1;
+    const SCOTT_HEALTH = 2;
+    const SEBNA = 3;
     
     /* Revisionable */
     
@@ -76,6 +80,11 @@ class SwiftOrder extends Eloquent {
         return $this->hasMany('SwiftFreight','order_id');
     }
     
+    public function shipment()
+    {
+        return $this->hasMany('SwiftShipment','order_id');
+    }
+    
     public function customsDeclaration()
     {
         return $this->hasMany('SwiftCustomsDeclaration','order_id');
@@ -115,7 +124,7 @@ class SwiftOrder extends Eloquent {
     
     public static function getById($id)
     {
-        return self::with('purchaseOrder','reception','freight','customsDeclaration','document')->find($id);
+        return self::with('purchaseOrder','reception','freight','shipment','customsDeclaration','document')->find($id);
     }
     
 }

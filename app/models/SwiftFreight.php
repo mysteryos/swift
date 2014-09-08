@@ -12,7 +12,7 @@ class SwiftFreight extends Eloquent{
     
     protected $guarded = array('id');
     
-    protected $fillable = array('order_id','freight_company_id','freight_type','bol_no','vessel_no','incoterms','freight_etd','freight_eta');
+    protected $fillable = array('order_id','freight_company_id','freight_type','bol_no','vessel_name','vessel_voyage','incoterms','freight_etd','freight_eta','shipment_type','volume');
     
     public $timestamps = true;
     
@@ -33,6 +33,8 @@ class SwiftFreight extends Eloquent{
     
     public static $type = array(self::TYPE_SEA=>'Sea',self::TYPE_AIR=>'Air',self::TYPE_LAND=>'Land');
     
+    
+    
     //Freight Type constants
     const TYPE_SEA = 1;
     const TYPE_AIR = 2;
@@ -49,8 +51,6 @@ class SwiftFreight extends Eloquent{
     const INCOTERM_CIP = 8;
     const INCOTERM_DAT = 9;
     const INCOTERM_DAP = 10;
-
-
     
     
     /* Revisionable Attributes */
@@ -68,7 +68,7 @@ class SwiftFreight extends Eloquent{
         'incoterms' => 'Incoterms',
         'freight_etd' => 'Freight ETD',
         'freight_eta' => 'Freight ETA',
-        'freight_company' => 'Freight Company'
+        'freight_company' => 'Freight Company',
     );
     
     protected $keepCreateRevision = true;   

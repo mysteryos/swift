@@ -66,6 +66,22 @@ class SwiftFreightCompany extends Eloquent {
     }
     
     /*
+     * Revisionable Accessors
+     */
+    
+    public function getTypeRevisionAttribute($val)
+    {
+        if(key_exists($val,self::$type))
+        {
+            return self::$type[$val];
+        }
+        else
+        {
+            return "";
+        }        
+    }
+    
+    /*
      * Getter/Setter Methods for Data Field -- END
      */    
     

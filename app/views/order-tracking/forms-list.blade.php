@@ -2,7 +2,7 @@
 	<tbody>
                 @if(count($orders) != 0)
                     @foreach($orders as $o)
-                        <tr class="orderform" data-pk="{{ Crypt::encrypt($o->id) }}" data-view="/order-tracking/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($o->id) }}">
+                        <tr class="orderform @if(!$o->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($o->id) }}" data-view="/order-tracking/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($o->id) }}">
                                 <td class="inbox-table-icon">
                                         <div class="checkbox">
                                                 <label>
@@ -11,9 +11,16 @@
                                         </div>
                                 </td>
                                 <td class="inbox-table-icon">
+                                    @if($o->flag_important)
+                                    <span>
+                                        <i class="fa fa-exclamation-triangle" title="important"></i>
+                                    </span>
+                                    @endif
+                                </td>
+                                <td class="inbox-table-icon">
                                     <div>
                                         <label>
-                                            <a href="/order-track/mark/{{ SwiftFlag::STARRED }}/{{ Crypt::encrypt($o->id) }}" class="markstar"><i class="fa fa-lg fa-star-o"></i></a>
+                                            <a href="/order-tracking/mark/{{ SwiftFlag::STARRED }}?id={{ urlencode(Crypt::encrypt($o->id)) }}" class="markstar"><i class="fa fa-lg @if($o->flag_starred) {{ "fa-star" }} @else {{ "fa-star-o"}} @endif "></i></a>
                                         </label>
                                     </div>
                                 </td>
@@ -66,7 +73,19 @@
                                                         break;
                                                     
                                                 }
-                                            ?>"></i> {{ $o->name }}</span> <span class="{{ $o->current_activity['status_class'] }}">{{ $o->current_activity['label'] }}</span>
+                                                switch($o->business_unit)
+                                                {
+                                                    case SwiftOrder::SCOTT_CONSUMER:
+                                                        echo " txt-color-orangeDark";
+                                                        break;
+                                                    case SwiftOrder::SCOTT_HEALTH;
+                                                        echo " txt-color-green";
+                                                        break;
+                                                    case SwiftOrder::SEBNA:
+                                                        echo " txt-color-blue";
+                                                        break;
+                                                }
+                                            ?>"></i></span> <i title="ID">{{ $o->id }}.</i></span> <span>{{ $o->name }}</span> - <span class="{{ $o->current_activity['status_class'] }}">{{ $o->current_activity['label'] }}</span>
                                         </div>
                                 </td>
  

@@ -1,4 +1,4 @@
-<fieldset  data-name="general_info">
+<fieldset data-name="general_info">
         <div class="form-group">
             <label class="col-md-2 control-label">Business Unit*</label>
             <div class="col-md-10">

@@ -25,15 +25,28 @@ class OrderTrackingController extends UserController {
         $order = SwiftOrder::getById($order_id);
         if(count($order))
         {
-            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight'),$order);
+            /*
+             * Set Read
+             */
+            
+            if(!Flag::isRead($order))
+            {
+                Flag::setRead($order);
+            }
+            
+            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment'),$order);
             $this->pageTitle = "{$order->name} (ID: $order->id)";
             $this->data['incoterms'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$incoterms));
             $this->data['freight_type'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$type));
             $this->data['business_unit'] = json_encode(Helper::jsonobject_encode(SwiftOrder::$business_unit));
+            $this->data['customs_status'] = json_encode(Helper::jsonobject_encode(SwiftCustomsDeclaration::$status));
+            $this->data['shipment_type'] = json_encode(Helper::jsonobject_encode(SwiftShipment::$type));
             $this->data['order'] = $order;
             $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
             $this->data['current_activity'] = WorkflowActivity::progress($order,'order_tracking');
             $this->data['edit'] = $edit;
+            $this->data['flag_important'] = Flag::isImportant($order);
+            $this->data['flag_starred'] = Flag::isStarred($order);
             
             return $this->makeView('order-tracking/edit');
         }
@@ -144,7 +157,17 @@ class OrderTrackingController extends UserController {
                 $orderquery->whereHas('workflow',function($q){
                    return $q->where('status','=',SwiftWorkflowActivity::COMPLETE); 
                 });                
-                break;                
+                break;
+            case 'starred':
+                $orderquery->whereHas('flag',function($q){
+                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',Sentry::getUser()->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
+                });                
+                break;
+            case 'important':
+                $orderquery->whereHas('flag',function($q){
+                   return $q->where('type','=',SwiftFlag::IMPORTANT,'AND'); 
+                });                
+                break;
         }
         
         $orders = $orderquery->get();
@@ -154,11 +177,18 @@ class OrderTrackingController extends UserController {
          */
         foreach($orders as &$o)
         {
+            //Set Revision
             $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight'),$o);
+            //Set Current Workflow Activity
             $o->current_activity = WorkflowActivity::progress($o);
+            //Set Starred/important
+            $o->flag_starred = Flag::isStarred($o);
+            $o->flag_important = Flag::isImportant($o);
+            $o->flag_read = Flag::isRead($o);
         }
         
         $this->data['type'] = $type;
+        $this->data['isAdmin'] = Sentry::getUser()->hasAnyAccess(['ot-admin']);
         $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']);
         $this->data['orders'] = $orders;
         $this->data['count'] = $orderquery->count();
@@ -672,7 +702,7 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Order process form not found',404);
-        }        
+        }
     }
     
     public function deleteFreight()
@@ -703,6 +733,123 @@ class OrderTrackingController extends UserController {
         {
             return Response::make('Freight entry not found',400);
         }
+    }
+    
+    /*
+     * Shipment: REST
+     */
+    
+    public function putShipment($order_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        {
+            return parent::forbidden();
+        }        
+        
+        $order = SwiftOrder::find(Crypt::decrypt($order_id));
+        if(count($order))
+        {
+            /*
+             * Manual Validation
+             */
+            switch(Input::get('name'))
+            {
+                case 'type':
+                    if(!array_key_exists(Input::get('value'),SwiftShipment::$type))
+                    {
+                        return Response::make('Please select a valid shipment type',400);
+                    }
+                    break;
+                case 'volume':
+                    if(Input::get('value') != "" && !is_numeric(Input::get('value')))
+                    {
+                        return Response::make('Please enter a valid volume',400);
+                    }
+                    
+                    if(is_numeric(Input::get('value')) && (int)Input::get('value') < 0)
+                    {
+                        return Response::make('Please enter a positive value',400);
+                    }
+                    break;                    
+            }       
+
+            /*
+             * New Freight
+             */
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $shipment = new SwiftShipment();
+                $shipment->{Input::get('name')} = Input::get('value');
+                if($order->shipment()->save($shipment))
+                {
+                    WorkflowActivity::update($order);
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($shipment->id),'id'=>$shipment->id]));
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }
+                
+            }
+            else
+            {
+                $shipment = SwiftShipment::find(Crypt::decrypt(Input::get('pk')));
+                if($shipment)
+                {
+                    $shipment->{Input::get('name')} = Input::get('value');
+                    if($shipment->save())
+                    {
+                        WorkflowActivity::update($order);
+                        return Response::make('Success');
+                    }
+                    else
+                    {
+                        return Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return Response::make('Error saving shipment: Invalid PK',400);
+                }
+            }
+        }
+        else
+        {
+            return Response::make('Order process form not found',404);
+        }        
+    }
+    
+    public function deleteShipment()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        {
+            return parent::forbidden();
+        }        
+        
+        $shipment_id = Crypt::decrypt(Input::get('pk'));
+        $shipment = SwiftShipment::find($shipment_id);
+        if(count($shipment))
+        {
+            if($shipment->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return Response::make('Freight entry not found',400);
+        }        
     }
     
     /*
@@ -876,7 +1023,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!Sentry::getUser()->hasAnyAccess(['ot-admin','ot-edit']))
         {
             return parent::forbidden();
         }        
@@ -903,24 +1050,42 @@ class OrderTrackingController extends UserController {
     /*
      * Mark Items
      */
-    public function putMark($type,$id=0)
+    public function putMark($type)
     {
-        if($id != 0)
+        if(Input::has('id'))
         {
-            $order_id = Crypt::decrypt($id);
-            $order = SwiftOrder::find(Crypt::decrypt($order_id));
+            $order_id = Crypt::decrypt(Input::get('id'));
+            $order = SwiftOrder::find($order_id);
             if(count($order))
             {
                 switch($type)
                 {
-                    case "star":
-                        $flag = new SwiftFlag(['type'=>SwiftFlag::STARRED]);
+                    case SwiftFlag::STARRED:
+                        if(Flag::toggleStarred($order))
+                        {
+                            return Response::make('success');
+                        }
                         break;
-                    case "important":
-                        $flag = new SwiftFlag(['type'=>SwiftFlag::IMPORTANT]);
+                    case SwiftFlag::IMPORTANT:
+                        if(Sentry::getUser()->hasAnyAccess(['ot-admin']))
+                        {
+                            if(Flag::toggleImportant($order))
+                            {
+                                return Response::make('success');
+                            }
+                        }
+                        else
+                        {
+                            return Response::make('No permission for this action',400);
+                        }
+                    case SwiftFlag::READ:
+                        if(Flag::toggleRead($order))
+                        {
+                            return Response::make('success');
+                        }                        
                         break;
                 }
-                $order->flag->save($flag);
+                return Response::make('Unable to process your request',400);
             }
             else
             {

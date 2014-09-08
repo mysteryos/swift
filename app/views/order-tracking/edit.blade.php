@@ -8,15 +8,15 @@
         <div class="ribbon-button-alignment hidden-xs">
             <a class="btn btn-default pjax" href="/order-tracking/forms" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            <a class="btn btn-default" rel="tooltip" data-original-title="Send" data-placement="bottom"><i class="fa fa-lg fa-mail-forward"></i></a>
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if(Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="/order-tracking/forms" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            <a class="btn btn-default" rel="tooltip" data-original-title="Send" data-placement="bottom"><i class="fa fa-lg fa-mail-forward"></i></a>
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if(Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif            
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>    
 
 </div>
@@ -156,6 +156,40 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget freight -->                        
+                        
+            <!-- Widget Shipment Start-->
+			<div class="jarviswidget" id="ot-shipment" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				
+				<header>
+					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                                        <h2>Shipment </h2>
+                                        @if($edit)
+                                            <div class="widget-toolbar" role="menu">
+                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                                            </div>
+                                        @endif
+				</header>
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body">
+                                            <form class="form-horizontal">
+                                                    @if(count($order->shipment))
+                                                        @foreach($order->shipment as &$s)
+                                                            <?php $s->id = Crypt::encrypt($s->id); ?>
+                                                            @include('order-tracking.edit_shipment',array('s'=>$s))
+                                                        @endforeach
+                                                    @else
+                                                        @include('order-tracking.edit_shipment')
+                                                    @endif
+                                                    @include('order-tracking.edit_shipment',array('dummy'=>true,'s'=>null))
+                                            </form>
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>
+                        <!-- end widget shipment -->                        
                         
                         <!-- Widget Customs START-->
 			<div class="jarviswidget" id="ot-customs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">

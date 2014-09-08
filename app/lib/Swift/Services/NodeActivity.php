@@ -40,6 +40,35 @@ class NodeActivity {
             $nodeActivity->workflow_activity_id = $workflow_activity_id;
             if($nodeActivity->save())
             {
+                //New Node Created - Send Mail to responsible parties
+                if($node_definition->php_mail_function != "")
+                {
+                    //Get list of permissions
+                    $node_definition->load('permission');
+                    if(count($node_definition->permission))
+                    {
+                        $permissions = array();
+                        foreach($node_definition->permission as $p)
+                        {
+                            //responsible for Node  = mail sent
+                            if($p->permission_type == SwiftNodePermission::RESPONSIBLE)
+                            {
+                                $permissions[] = $p->permission_name;
+                            }
+                        }
+                        if(!empty($permissions))
+                        {
+                            if(is_callable($node_definition->php_mail_function."::sendMail"))
+                            {
+                                call_user_func_array($node_definition->php_mail_function."::sendMail",array($workflow_activity_id,$permissions));
+                            }
+                            else
+                            {
+                                throw new \Exception("Mail php function '{$node_definition->php_mail_function}::sendMail' is not callable");
+                            }
+                        }
+                    }
+                }
                 return $nodeActivity;
             }
         }

@@ -11,6 +11,21 @@ class OrderTrackingController extends UserController {
         $this->pageName = "Order Process";
     }
     
+    
+    /*
+     * Overview
+     */
+    
+    public function getOverview()
+    {
+        $this->pageTitle = 'Overview';
+        
+        $this->data['order_inprogress'] = SwiftOrder::orderBy('updated_at','desc')->whereHas('workflow',function($q){
+                                            return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS); 
+                                          });
+//        $this->data['order_inprogress_important'] = 
+    }
+    
     /*
      * Private Functions
      */
@@ -31,9 +46,12 @@ class OrderTrackingController extends UserController {
             
             if(!Flag::isRead($order))
             {
-                Flag::setRead($order);
+                Flag::toggleRead($order);
             }
             
+            /*
+             * Data
+             */
             $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment'),$order);
             $this->pageTitle = "{$order->name} (ID: $order->id)";
             $this->data['incoterms'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$incoterms));

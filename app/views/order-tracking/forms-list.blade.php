@@ -13,7 +13,7 @@
                                 <td class="inbox-table-icon">
                                     @if($o->flag_important)
                                     <span>
-                                        <i class="fa fa-exclamation-triangle" title="important"></i>
+                                        <i class="fa fa-exclamation-triangle" title="Important"></i>
                                     </span>
                                     @endif
                                 </td>

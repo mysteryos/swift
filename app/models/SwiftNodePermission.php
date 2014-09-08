@@ -16,6 +16,13 @@ Class SwiftNodePermission extends Eloquent
     public $timestamps = false;
     
     /*
+     * Permission Type Constants
+     */
+    
+    const ACCESS = 1;
+    const RESPONSIBLE = 2;
+    
+    /*
      * Relationship: Node
      */
     

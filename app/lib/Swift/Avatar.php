@@ -9,7 +9,6 @@ Namespace Swift;
 
 use Cache;
 use Sentry;
-use Session;
 
 Class Avatar {
     
@@ -51,18 +50,9 @@ Class Avatar {
             //Assign Color
             $avatars[$user->email] = $randcolor;
             Cache::forever('avatars',$avatars);
-            
-            //Place Avatar information in session
-            Session::put('avatar_color',$avatars[$user->email]);
-            Session::put('avatar_letter',$user->email[0]);
-            return $avatars[$user->email];
-        }
-        else
-        {
-            return $avatars[$user->email];
         }
         
-
+        return $avatars[$user->email];
     }
     
     public static function forget()
@@ -70,17 +60,13 @@ Class Avatar {
         $avatars = (array)Cache::get('avatars');
         unset($avatars[Sentry::getUser()->email]);
         Cache::forever('avatars',$avatars);
-        
-        Session::forget('avatarColor');
-        Session::forget('avatarLetter');
     }
     
     public static function get($user=false)
     {
         if(is_object($user))
         {
-            $avatarColor = self::set($user);
-            return array('letter'=>$user->email[0],'color'=>$avatarColor);
+            return array('letter'=>$user->email[0],'color'=>self::getColor($user));
         }
         else
         {
@@ -113,11 +99,13 @@ Class Avatar {
     
     public static function getLetter()
     {
-        return Session::get('avatar_letter');
+        $user = Sentry::getUser();
+        return $user->email[0];
     }
     
-    public static function getColor()
+    public static function getColor($user=false)
     {
-        return Session::get('avatar_color');
+        $avatarColor = self::set($user);
+        return $avatarColor;
     }
 }

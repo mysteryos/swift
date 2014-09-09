@@ -106,5 +106,5 @@
         @endif
     </div>
 @else
-    <h1><i class="fa fa-smile-o"></i> No order process in progress right now.</h1>
+    <h1 class="text-align-center"><i class="fa fa-smile-o"></i> No order process in progress right now.</h1>
 @endif

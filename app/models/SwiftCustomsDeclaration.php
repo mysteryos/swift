@@ -22,7 +22,7 @@ class SwiftCustomsDeclaration extends Eloquent {
     
     protected $touches = array('order');
     
-    public $dates = ['customs_processed_at','customs_filled_at','deleted_at'];
+    public $dates = ['customs_processed_at','customs_filled_at','customs_under_verification_at','customs_cleared_at','deleted_at'];
     
     /* Revisionable Attributes */
     
@@ -36,6 +36,8 @@ class SwiftCustomsDeclaration extends Eloquent {
         'customs_reference'=>'Bill of entry number',
         'customs_processed_at'=>'Customs processed at',
         'customs_filled_at'=>'Customs filled at',
+        'customs_cleared_at'=> 'Customs cleared at',
+        'customs_under_verification_at' => 'Customs under verification at',
         'customs_status'=>'Customs status'
     );
     

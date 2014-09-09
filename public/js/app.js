@@ -141,13 +141,13 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
         presenceChannelCurrent.members.each(function(member) {
             if(member.id != presenceChannelCurrent.members.me.id)
             {
-                $('#whos-online').append(avatarHTML(member))
-                $('#whos-online .avatar').tooltip();
+                $('.whos-online').append(avatarHTML(member))
+                $('.whos-online .avatar').tooltip();
             }
         });
         presenceChannelCurrent.bind('pusher:member_added',function(member){
-            $('#whos-online').append(avatarHTML(member))
-            $('#whos-online .avatar').tooltip();
+            $('.whos-online').append(avatarHTML(member))
+            $('.whos-online .avatar').tooltip();
         });
         presenceChannelCurrent.bind('pusher:member_removed',function(member){
             $('#user_'+member.id).tooltip('destroy');
@@ -163,7 +163,6 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 }
             });
             presenceChannelCurrent.bind('pusher:member_removed',function(member){
-                console.log('justran');
                 var $editableInUse = $('.editable[pusher-user="'+member.id+'"]');
                 if($editableInUse.length)
                 {
@@ -176,16 +175,16 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
             presenceChannelCurrent.bind('client-editable-shown',function(data){
                 //An editable has been opened by another user. Lock it down
                 var $element = $("#"+data.id);
-                console.log($element);
                 if($element.length)
                 {
                     $element.attr('pusher-user',data.user.id);
                     $element.addClass('editable-color-'+data.user.info.avatarColor);
-                    $element.tooltip({title:'<i class="fa fa-info" title="Transit Info"></i> ',
+                    $element.tooltip({title:'<i class="fa fa-edit" title="Editing"></i> '+data.user.info.name,
                                     animation: false,
                                     html: true,
                                     placement: "right",
                                     trigger: 'manual',
+                                    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner avatar-color-'+data.user.info.avatarColor+'"></div></div>'
                                     });
                     $element.tooltip('show');
                     $element.editable('disable');
@@ -203,8 +202,21 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
             presenceChannelCurrent.bind('client-editable-save',function(data){
                 //An Editable has changed value, reflect the change
                 var $element = $("#"+data.id);
-                $element.stop();
-                $element.editable('setValue',data.newValue,true);
+                if($element.attr('data-type')=="date")
+                {
+                    if(data.newValue === null)
+                    {
+                        $element.editable('setValue',null);
+                    }
+                    else
+                    {
+                        $element.editable('setValue',moment(data.newValue, "YYYY-MM-DDTHH:mm:ssZ").toDate(),true);                        
+                    }
+                }
+                else
+                {
+                    $element.editable('setValue',data.newValue,true);
+                }
                 $element.effect("highlight", {color: "lightgreen"}, 1000);
             });
             if(typeof multi_xeditable !== "undefined" && multi_xeditable)
@@ -231,9 +243,9 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                         Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
                             showCloseButton: true,
                             type: 'info',
-                            message: avatarHTML(data.user)+" has deleted "+data.context+" (ID:"+$editable.split("_").slice(-1)[0]+") - <i>just now</i>",
+                            message: avatarHTML(data.user)+" has deleted "+data.context+" (ID:"+data.id.split("_").slice(-1)[0]+") - <i>just now</i>",
                             hideAfter: 5
-                        });                         
+                        });
                         $fieldset.slideUp('500',function(){
                             $(this).remove();
                         });

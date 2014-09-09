@@ -17,16 +17,17 @@ function addMulti($dummy,pk)
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
             //Trigger Channel Event
             presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
+            //Trigger Single Value Save as well
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
         }
-
     }).on('shown',function(e){
-        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
     }).on('hidden',function(e,reason){
-        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
     }).on('save',function(e,params){
         if($(this).editable('option','pk') !== "0")
         {
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue})
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
         }
     });
     if(typeof pk !== "undefined")
@@ -149,7 +150,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     //Bind pusher channel
-    pusherSubscribeCurrentPresenceChannel(true);
+    pusherSubscribeCurrentPresenceChannel(true,true);
 
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
@@ -157,14 +158,19 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
     //General Info
     $('.editable:not(.dummy)').editable().on('shown',function(e){
-        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+        return true;
     }).on('hidden',function(e,reason){
-        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk')})
+        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+        return true;
     }).on('save',function(e,params){
         if($(this).editable('option','pk') !== "0")
         {
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue})
+            //Bug fix for disappearing pks - Weird
+            $(this).editable('option','pk',$(this).attr('data-pk'));
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
         }
+        return true;
     });
 
     //Customs
@@ -177,7 +183,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
             //Trigger Channel Event
             presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $(this).parents('fieldset').attr('data-name')});
+            //Trigger Single Value Save as well
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
         }
+        return true;
     });
 
     /*

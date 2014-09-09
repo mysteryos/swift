@@ -406,7 +406,7 @@ class OrderTrackingController extends UserController {
             /*
              * Save
              */
-            $fc->{Input::get('name')} = Input::get('value');
+            $fc->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($fc->save())
             {
                 return Response::make('Success', 200);
@@ -536,7 +536,7 @@ class OrderTrackingController extends UserController {
             /*
              * Save
              */
-            $order->{Input::get('name')} = Input::get('value');
+            $order->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($order->save())
             {
                 WorkflowActivity::update($order);
@@ -608,7 +608,7 @@ class OrderTrackingController extends UserController {
             {
                 //All Validation Passed, let's save
                 $customsDeclaration = new SwiftCustomsDeclaration();
-                $customsDeclaration->{Input::get('name')} = Input::get('value');
+                $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->customsDeclaration()->save($customsDeclaration))
                 {
                     WorkflowActivity::update($order);
@@ -620,12 +620,12 @@ class OrderTrackingController extends UserController {
                 }
                 
             }
-            else
+            else 
             {
                 $customsDeclaration = SwiftCustomsDeclaration::find(Crypt::decrypt(Input::get('pk')));
                 if($customsDeclaration)
                 {
-                    $customsDeclaration->{Input::get('name')} = Input::get('value');
+                    $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($customsDeclaration->save())
                     {
                         WorkflowActivity::update($order);
@@ -739,7 +739,7 @@ class OrderTrackingController extends UserController {
             {
                 //All Validation Passed, let's save
                 $freight = new SwiftFreight();
-                $freight->{Input::get('name')} = Input::get('value');
+                $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->freight()->save($freight))
                 {
                     WorkflowActivity::update($order);
@@ -779,7 +779,7 @@ class OrderTrackingController extends UserController {
                             break;
                     }                    
                     
-                    $freight->{Input::get('name')} = Input::get('value');
+                    $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($freight->save())
                     {
                         WorkflowActivity::update($order);
@@ -880,7 +880,7 @@ class OrderTrackingController extends UserController {
             {
                 //All Validation Passed, let's save
                 $shipment = new SwiftShipment();
-                $shipment->{Input::get('name')} = Input::get('value');
+                $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->shipment()->save($shipment))
                 {
                     WorkflowActivity::update($order);
@@ -897,7 +897,7 @@ class OrderTrackingController extends UserController {
                 $shipment = SwiftShipment::find(Crypt::decrypt(Input::get('pk')));
                 if($shipment)
                 {
-                    $shipment->{Input::get('name')} = Input::get('value');
+                    $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($shipment->save())
                     {
                         WorkflowActivity::update($order);
@@ -976,7 +976,7 @@ class OrderTrackingController extends UserController {
             {
                 //All Validation Passed, let's save
                 $po = new SwiftPurchaseOrder();
-                $po->{Input::get('name')} = Input::get('value');
+                $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->purchaseOrder()->save($po))
                 {
                     WorkflowActivity::update($order);
@@ -993,7 +993,7 @@ class OrderTrackingController extends UserController {
                 $po = SwiftPurchaseOrder::find(Crypt::decrypt(Input::get('pk')));
                 if($po)
                 {
-                    $po->{Input::get('name')} = Input::get('value');
+                    $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($po->save())
                     {
                         WorkflowActivity::update($order);
@@ -1074,7 +1074,7 @@ class OrderTrackingController extends UserController {
             {
                 //All Validation Passed, let's save
                 $reception = new SwiftReception();
-                $reception->{Input::get('name')} = Input::get('value');
+                $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->reception()->save($reception))
                 {
                     WorkflowActivity::update($order);
@@ -1091,7 +1091,7 @@ class OrderTrackingController extends UserController {
                 $reception = SwiftReception::find(Crypt::decrypt(Input::get('pk')));
                 if($reception)
                 {
-                    $reception->{Input::get('name')} = Input::get('value');
+                    $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($reception->save())
                     {
                         WorkflowActivity::update($order);

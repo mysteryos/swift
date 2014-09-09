@@ -31,13 +31,64 @@
 	<div class="row">
 
 		<!-- NEW COL START -->
-		<article class="col-md-8 col-xs-12">
-                    
+		<article class="col-md-6 col-xs-12">
+			<!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="ot-overview-inprogress" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				<header>
+					<span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
+                                        <h2>Work Spot </h2>
+				</header>
+                                <!-- widget div-->
+				<div class="no-padding">
+					<!-- widget content -->
+					<div class="widget-body">
+                                                @include('order-tracking.overview_inprogress')
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>     
+                        
+			<!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="ot-overview-transit" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				<header>
+					<span class="widget-icon"> <i class="fa fa-plane"></i> </span>
+                                        <h2>Transit Calendar </h2>
+                                        <div class="widget-toolbar">
+                                                <!-- add: non-hidden - to disable auto hide -->
+                                                <div class="btn-group">
+                                                        <button class="btn dropdown-toggle btn-xs btn-default" data-toggle="dropdown">
+                                                                Showing <i class="fa fa-caret-down"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu js-status-update pull-right">
+                                                                <li>
+                                                                        <a href="javascript:void(0);" id="transit_calendar_mt">Month</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a href="javascript:void(0);" id="transit_calendar_ag">Agenda</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a href="javascript:void(0);" id="transit_calendar_td">Today</a>
+                                                                </li>
+                                                        </ul>
+                                                </div>
+                                        </div>                                        
+				</header>
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body">
+                                                @include('order-tracking.overview_transit')
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>                         
                 </article>
                 <!-- NEW COL END -->
                 
                 <!-- NEW COL START -->
-                <article class="col-md-4 col-xs-12">   
+                <article class="col-md-6 col-xs-12">   
                     
                 </article>
                 <!-- NEW COL END -->

@@ -181,12 +181,11 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 {
                     $element.attr('pusher-user',data.user.id);
                     $element.addClass('editable-color-'+data.user.info.avatarColor);
-                    $element.tooltip({title:'<i class="fa fa-edit" title="Editing"></i> '+data.user.info.name,
+                    $element.tooltip({title:'<i class="fa fa-info" title="Transit Info"></i> ',
                                     animation: false,
                                     html: true,
                                     placement: "right",
                                     trigger: 'manual',
-                                    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner avatar-color-'+data.user.info.avatarColor+'"></div></div>'
                                     });
                     $element.tooltip('show');
                     $element.editable('disable');
@@ -1780,6 +1779,22 @@ var main = {
         
         //Hide Loading Message
         messenger_hidenotiftop();
+    },
+    
+    /*
+     * Order Tracking: Overview
+     */
+    
+    ot_overview: function() {
+        if(typeof window['ot_overview'] === "undefined")
+        {
+            jsLoader(["/js/plugin/fullcalendar/jquery.fullcalendar.min.js","/js/swift/swift.ot_overview.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            ot_overview();
+        }
     },
     
     /*

@@ -20,10 +20,89 @@ class OrderTrackingController extends UserController {
     {
         $this->pageTitle = 'Overview';
         
-        $this->data['order_inprogress'] = SwiftOrder::orderBy('updated_at','desc')->whereHas('workflow',function($q){
+        /*
+         * Order in Progress
+         */
+        
+        $nodeResponsible = SwiftNodePermission::getByPermission(Sentry::getUser()->getMergedPermissions(),SwiftNodePermission::RESPONSIBLE);
+        if(count($nodeResponsible))
+        {
+            foreach($nodeResponsible as $nr)
+            {
+                $nodeResponsibleNodeDefinitionId[] = $nr->node_definition_id;
+            }
+        }
+        else
+        {
+            $nodeResponsibleNodeDefinitionId = array();
+        }
+        $order_inprogress = SwiftOrder::orderBy('updated_at','desc')->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
                                             return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS); 
-                                          });
-//        $this->data['order_inprogress_important'] = 
+                            })->get();
+        $order_inprogress_important = $order_inprogress_responsible = $order_inprogress_important_responsible = array();
+        
+        if(count($order_inprogress))
+        {
+            $this->data['in_progress_count'] = count($order_inprogress);
+            //Loop in orders
+            foreach($order_inprogress as $key=>$o)
+            {
+                $o->current_activity = WorkflowActivity::progress($o,'order_tracking');
+                //check if flag important
+                if(Flag::isImportant($o))
+                {
+                    array_push($order_inprogress_important,$o);
+                    //Check if user is responsible for node
+                    foreach($o->workflow->nodes as $n)
+                    {
+                        //see if node is in progress and user is responsible
+                        if($n->user_id == 0 && in_array($n->node_definition_id,$nodeResponsibleNodeDefinitionId))
+                        {
+                            $order_inprogress_important_responsible[] = $o;
+                            //Pop important array to make sure no duplicates are present
+                            array_pop($order_inprogress_important);
+                            break;
+                        }
+                    }
+                    unset($order_inprogress[$key]);
+                }
+                else
+                {
+                    foreach($o->workflow->nodes as $n)
+                    {
+                        //see if node is in progress and user is responsible
+                        if($n->user_id == 0 && in_array($n->node_definition_id,$nodeResponsibleNodeDefinitionId))
+                        {
+                            $order_inprogress_responsible[] = $o;
+                            unset($order_inprogress[$key]);
+                            //Pop important array to make sure no duplicates are present
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        foreach(array($order_inprogress,$order_inprogress_responsible,$order_inprogress_important,$order_inprogress_important_responsible) as $orderarray)
+        {
+            foreach($orderarray as &$o)
+            {
+                $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment'),$o);
+            }
+        }
+        
+        /*
+         * In Transit Dates
+         */
+        
+        $this->data['order_inprogress'] = $order_inprogress;
+        $this->data['order_inprogress_responsible'] = $order_inprogress_responsible;
+        $this->data['order_inprogress_important'] = $order_inprogress_important;
+        $this->data['order_inprogress_important_responsible'] = $order_inprogress_important_responsible;
+        $this->data['isAdmin'] = Sentry::getUser()->hasAccess(array('ot-admin'));
+        $this->data['node_responsible'] = $nodeResponsible;                                         
+        
+        return $this->makeView('order-tracking/overview');
     }
     
     /*
@@ -1357,6 +1436,77 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Order process form not found',404);
+        }
+    }
+    
+    /*
+     * Transit Calendar data
+     */
+    
+    public function postTransitcalendar()
+    {
+        $startdate = gmdate("Y-m-d",Input::get('start'));
+        $enddate = gmdate("Y-m-d",Input::get('end'));
+        
+        $freight = SwiftFreight::where('freight_eta','>=',$startdate,'and')
+                    ->where('freight_eta','<=',$enddate)
+                    ->with('order','order.workflow')
+                    ->whereHas('order',function($q){
+                        return $q->whereHas('workflow',function($q2){
+                            return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                        });
+                    })->get()->all();
+        if(count($freight))
+        {
+            $freightresponse = array();
+            foreach($freight as $f)
+            {
+                switch($f->order->business_unit)
+                {
+                    case SwiftOrder::SCOTT_CONSUMER:
+                        $className = "bg-color-orange";
+                        break;
+                    case SwiftOrder::SCOTT_HEALTH;
+                        $className = "bg-color-green";
+                        break;
+                    case SwiftOrder::SEBNA:
+                        $className = "bg-color-blue";
+                        break;
+                }
+                
+                switch($f->freight_type)
+                {
+                    case SwiftFreight::TYPE_AIR:
+                        $vesselIcon = '<i class="fa fa-lg fa-plane" title="air"></i>';
+                        break;
+                    case SwiftFreight::TYPE_LAND:
+                        $vesselIcon = '<i class="fa fa-lg fa-truck" title="land"></i>';
+                        break;
+                    case SwiftFreight::TYPE_SEA:
+                        $vesselIcon = '<i class="fa fa-lg fa-anchor" title="sea"></i>';
+                        break;
+                    default:
+                        $vesselIcon = '<i class="fa fa-lg fa-question" title="unknown"></i>';  
+                        break;
+                }
+                
+                $freightresponse[] = array(
+                                        'title'=>$f->order->name." (ID: ".$f->order->id,
+                                        'allDay'=>true,
+                                        'start'=>strtotime($f->freight_eta),
+                                        'url'=>'/order-tracking/view/'.Crypt::encrypt($f->order->id),
+                                        'className'=> $className." pjax",
+                                        'vesselVoyage' => ($f->vessel_voyage!="" ? $f->vessel_voyage : '<i class="fa fa-question"></i>'),
+                                        'vesselName' => ($f->vessel_name!="" ? $f->vessel_name : '<i class="fa fa-question"></i>'),
+                                        'vesselIcon' => $vesselIcon,
+                                    );
+            }
+            
+            return Response::json($freightresponse);
+        }
+        else
+        {
+            return Response::make("");
         }
     }
     

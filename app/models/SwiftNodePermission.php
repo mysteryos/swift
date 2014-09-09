@@ -30,4 +30,9 @@ Class SwiftNodePermission extends Eloquent
     {
         return $this->belongsTo('SwiftNodeType','node_type_id');
     }
+    
+    public static function getByPermission($permission_name,$type=1)
+    {
+        return self::whereIn('permission_name',array_keys($permission_name),'or')->where('permission_type','=',$type)->get();
+    }
 }

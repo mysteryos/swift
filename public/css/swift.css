@@ -407,6 +407,19 @@ Inbox
 }
 
 /*
+ Order Tracking - Overview
+*/
+
+.panel-compressed .panel-body {
+    max-height: 400px;
+    overflow-y: scroll;
+}
+
+#jarviswidget-fullscreen-mode .panel-compressed .panel-body {
+    max-height: none;
+}
+
+/*
 Order Tracking - Forms
 */
 

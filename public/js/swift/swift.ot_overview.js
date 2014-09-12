@@ -12,6 +12,7 @@
     });    
     
     //Setup calendar
+    $('#transit_calendar').html('');
     $('#transit_calendar').fullCalendar({
         editable : false,
         draggable : false,

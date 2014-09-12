@@ -2,7 +2,7 @@
 <html lang="en-us">
 	<head>
 		<meta charset="utf-8"/>
-		<!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">-->
+		<meta http-equiv="x-ua-compatible" content="IE=Edge">
 
 		<title>{{ $pageTitle }} - {{ Config::get('website.name') }}</title>
 		<meta name="description" content="Scott Swift">

@@ -3,6 +3,16 @@
  * Description: All custom styles related to swift goes here.
  */
 
+/*
+* Plugin: At Who
+*/
+
+.atwho-view{position:absolute;top:0;left:0;display:none;margin-top:18px;background:#fff;border:1px solid #DDD;border-radius:3px;box-shadow:0 0 5px rgba(0,0,0,.1);min-width:120px;z-index:11110!important}.atwho-view .cur{background:#36F;color:#fff}.atwho-view .cur small{color:#fff}.atwho-view strong{color:#36F}.atwho-view .cur strong{color:#fff;font:700}.atwho-view ul{list-style:none;padding:0;margin:auto}.atwho-view ul li{display:block;padding:5px 10px;border-bottom:1px solid #DDD;cursor:pointer}.atwho-view small{font-size:smaller;color:#777;font-weight:400}
+
+/*
+* Swift Avatar
+*/
+
 .avatar {
     position: relative;
     top: 1px;
@@ -389,6 +399,55 @@ ul.messenger.messenger-fixed.messenger-on-top {
 }
 
 /*
+* Swift Chat
+*/
+
+.chat-body li.message .comment-text time {
+    color: #afafaf;
+    font-size: 10px;
+    line-height: 10px;
+    position: absolute;
+    right: 0;
+    top: 1px;
+}
+
+.chat-body li.message .comment-text a.username {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 14px;
+    margin-bottom: 4px;
+    text-decoration: none !important;
+    vertical-align: top;
+}
+
+.inputor {
+  height: 100%;
+  min-height:50px;
+  width: 100%;
+  outline: 0 none;
+  background: white;
+  font-size: inherit;
+}
+
+.inputor:empty:not(:focus):before{
+        content:attr(data-ph)
+}
+
+#jarviswidget-fullscreen-mode .chat-body {
+    height: 100%;
+    margin-bottom:300px;
+}
+
+#jarviswidget-fullscreen-mode .chat-footer {
+    position:absolute;
+    bottom: 1px;
+    padding: 0 10px;
+    width: 100%;
+}
+
+/*
 Inbox
 */
 
@@ -417,6 +476,7 @@ Inbox
 
 #jarviswidget-fullscreen-mode .panel-compressed .panel-body {
     max-height: none;
+    overflow-y: auto;
 }
 
 /*
@@ -439,6 +499,14 @@ Order Tracking - Forms
 
 #upload-preview div.row.dz-processing:first-child, #upload-preview div.row.dz-success:first-child {
     border-top: none;
+}
+
+#jarviswidget-fullscreen-mode .widget-body {
+    height: 100%;
+}
+
+ul.filter-nav li.dropdown {
+    margin-right:10px;
 }
 
 /*

@@ -28,7 +28,7 @@
     <input type="hidden" name="last_update" id="last_update" value="{{ $order->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="ot_{{ $order->id }}" />
     <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
-    <input type="hidden" id="project-name" value='<i class="fa-fw fa fa-map-marker"></i> {{ $order->name }} (ID: {{ $order->id }})'/>    
+    <input type="hidden" id="project-name" value='<i class="fa-fw fa fa-map-marker"></i> {{ $order->name }} (ID: {{ $order->id }})'/>
     <div id="draghover" class="text-align-center">
         <div class="circle bg-color-blue">
             <i class="fa fa-cloud-upload fa-4x"></i><br>
@@ -289,6 +289,25 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
+                        
+                         <!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="ot-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				
+				<header>
+					<span class="widget-icon"> <i class="fa fa-comment"></i> </span>
+                                        <h2>Chat </h2>			
+				</header>
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body widget-hide-overflow no-padding">
+                                            @include('comments', array('commentable' => $order, 'comments' => $comments))
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>
+                        <!-- end widget -->                          
                         
                         <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="ot-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">

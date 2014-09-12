@@ -43,6 +43,9 @@ Route::group(array('before' => array('auth')), function()
     //Pusher
     Route::controller('pusher','PusherController');
     
+    //Comment
+    Route::controller('comment','CommentController');
+    
 //  Route::controller('user', 'UserController');
 });
 

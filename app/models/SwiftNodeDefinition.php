@@ -128,4 +128,11 @@ class SwiftNodeDefinition extends Eloquent {
     {
         return self::find($node_definition_id)->parent()->parentNode()->get();
     }
+    
+    public static function getByWorkflowType($workflow_type_id)
+    {
+        return self::where('workflow_type_id','=',$workflow_type_id)
+                    ->whereIn('type',array(SwiftNodeDefinition::$T_NODE_START,SwiftNodeDefinition::$T_NODE_END),'and',true)
+                    ->get();
+    }
 }

@@ -77,5 +77,11 @@ class UserController extends Controller {
             $view = self::makeView('general.notfound');
             return Response::make($view,404);
         }
+        
+        public function comment($commentable)
+        {
+            $this->data['commentKey'] = Comment::makeKey($commentable);
+            $this->data['comments'] = $commentable->comments()->orderBy('created_at','DESC')->get();
+        }
 
 }

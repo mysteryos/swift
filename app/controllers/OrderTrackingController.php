@@ -129,6 +129,11 @@ class OrderTrackingController extends UserController {
             }
             
             /*
+             * Enable Commenting
+             */
+            $this->comment($order);
+            
+            /*
              * Data
              */
             $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment'),$order);
@@ -267,6 +272,43 @@ class OrderTrackingController extends UserController {
                 break;
         }
         
+        //Filters
+        if(Input::has('filter'))
+        {
+            
+            if(Session::has('ot_form_filter'))
+            {
+                $filter = Session::get('ot_form_filter');
+            }
+            else
+            {
+                $filter = array();
+            }
+            
+            switch(Input::get('filter_name'))
+            {
+                case 'business_unit':
+                    $orderquery->where('business_unit','=',Input::get('filter_value'));
+                    break;
+                case 'node_definition_id':
+                    $orderquery->whereHas('workflow',function($q){
+                       return $q->whereHas('nodes',function($q){
+                           return $q->where('node_definition_id','=',Input::get('filter_value'));
+                       });
+                    });                    
+                    break;
+            }            
+            
+            $filter[Input::get('filter_name')] = Input::get('filter_value');
+            
+            Session::flash('ot_form_filter',$filter);
+
+        }
+        else
+        {
+            Session::forget('ot_form_filter');
+        }
+        
         $orders = $orderquery->get();
         
         /*
@@ -284,6 +326,16 @@ class OrderTrackingController extends UserController {
             $o->flag_read = Flag::isRead($o);
         }
         
+        //Get node definition list
+        $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','order_tracking')->first()->id)->all();
+        $node_definition_list = array();
+        foreach($node_definition_result as $v)
+        {
+            $node_definition_list[$v->id] = $v->label;
+        }
+        
+        
+        //The Data
         $this->data['type'] = $type;
         $this->data['isAdmin'] = Sentry::getUser()->hasAnyAccess(['ot-admin']);
         $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']);
@@ -292,6 +344,8 @@ class OrderTrackingController extends UserController {
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
+        $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
+        $this->data['node_definition_list'] = $node_definition_list;
         
         return $this->makeView('order-tracking/forms');
     }

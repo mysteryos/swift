@@ -8,6 +8,8 @@ Namespace Swift\Services;
  */
 
 Use User;
+Use Crypt;
+Use Session;
 
 class Helper {
     
@@ -70,6 +72,29 @@ class Helper {
         $html.="</a>";
         
         return $html;
+    }
+    
+    public function generateUrl($obj)
+    {
+        $class = get_class($obj);
+        switch($class)
+        {
+            case "SwiftOrder":
+                return "/order-tracking/view/".Crypt::encrypt($obj->id);
+                break;
+        }
+    }
+    
+    public function sessionHasFilter($session_variable,$filter_name,$filter_value='')
+    {
+        if($filter_value)
+        {
+            return Session::has($session_variable) && isset(Session::get($session_variable)[$filter_name]) && Session::get($session_variable)[$filter_name] == $filter_value;
+        }
+        else
+        {
+            return Session::has($session_variable) && isset(Session::get($session_variable)[$filter_name]);
+        }
     }
     
 }

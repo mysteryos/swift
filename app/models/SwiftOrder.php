@@ -61,6 +61,11 @@ class SwiftOrder extends Eloquent {
         }        
     }
     
+    public function getClassName()
+    {
+        return $this->revisionClassName;
+    }
+    
     /*
      * Relationships
      */
@@ -117,6 +122,11 @@ class SwiftOrder extends Eloquent {
     {
         return $this->morphMany('SwiftMessage','messageable');
     }
+    
+    public function comments()
+    {
+        return $this->morphMany('SwiftComment', 'commentable');
+    }    
     
     /*
      * Functions

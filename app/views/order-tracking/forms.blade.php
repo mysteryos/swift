@@ -75,13 +75,40 @@
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="row">
                 <div class="col-xs-12">
+                    <div class="hidden-tablet pull-left">
+                        <ul class="nav nav-pills filter-nav">
+                            <li>
+                                <a href="javascript:void(0);"><i>Filter By: </i></a>
+                            </li>
+                            <li class="dropdown">
+                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','business_unit')) {{ SwiftOrder::$business_unit[Session::get('ot_form_filter')['business_unit']] }} @else {{ "Business Unit" }} @endif<i class="fa fa-angle-down"></i></a>                        
+                                <ul class="dropdown-menu">
+                                    @foreach(SwiftOrder::$business_unit as $bu_key => $bu_val)
+                                        <li @if(Helper::sessionHasFilter('ot_form_filter','business_unit',$bu_key)){{ 'class="active"' }}@endif>
+                                            <a href="{{ URL::current()."?filter=1&filter_name=business_unit&filter_value=".urlencode($bu_key) }}" class="pjax">{{ $bu_val }}</a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','node_definition_id')) {{ $node_definition_list[Session::get('ot_form_filter')['node_definition_id']] }} @else {{ "Current Step" }} @endif<i class="fa fa-angle-down"></i></a>
+                                <ul class="dropdown-menu">
+                                    @foreach($node_definition_list as $node_key => $node_val)
+                                        <li @if(Helper::sessionHasFilter('ot_form_filter','node_definition_id',$node_key)){{ 'class="active"' }}@endif>
+                                            <a href="{{ URL::current()."?filter=1&filter_name=node_definition_id&filter_value=".urlencode($node_key) }}" class="pjax">{{ $node_val }}</a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
                     @if(Sentry::getUser()->hasAccess('ot-admin'))
                         <a href="/order-tracking/create" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
                     @endif
                     @if($count)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".$page-1}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".$page+1}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">

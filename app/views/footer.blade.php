@@ -53,7 +53,11 @@
                         ghostTime: 500,
                         restartOnPushState: true,
                         restartOnRequestAfter: false,
-                        eventLag: true
+                        eventLag: true,
+                        ajax: {
+                            trackWebSockets: false,
+                            ignoreURLs: [/pusher/]
+                        }
                     }
                     //Preloader Script
                     var queue = new createjs.LoadQueue(false);

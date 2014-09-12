@@ -295,6 +295,33 @@ function avatarHTML(user)
     return '<i id="user_'+user.id+'" rel="tooltip" data-original-title="'+user.info.name+'" data-placement="bottom" class="avatar avatar-sm avatar-color-'+user.info.avatarColor+'">'+user.info.avatarLetter+'</i>';
 }
 
+function maintainRecentProject()
+{
+    //We have projects in the list
+    //See if we need to add current project to list
+    if(!!document.getElementById('project-url')&& !!document.getElementById('project-name'))
+    {
+        //project exists, shuffle to top
+        if($('#project-context ul.dropdown-menu a[href="'+document.getElementById('project-url').value+'"]').length)
+        {
+            var detached = $('#project-context ul.dropdown-menu a[href="'+document.getElementById('project-url').value+'"]').parents('li.project').detach();
+            console.log(detached);
+            $('#project-context ul.dropdown-menu').prepend(detached);
+        }
+        else
+        {
+            $('#project-context ul.dropdown-menu').prepend('<li class="project"><a href="'+document.getElementById('project-url').value+'" class="pjax">'+document.getElementById('project-name').value+'</a></li>');
+            $('#project-context ul.dropdown-menu li.project:gt(4)').remove();
+        }
+
+    }
+}
+
+function clearRecentProject()
+{
+    $('#project-context ul.dropdown-menu li.project').remove();
+}
+
 /*
  * RESIZER WITH THROTTLE
  * Source: http://benalman.com/code/projects/jquery-resize/examples/resize/
@@ -1124,6 +1151,105 @@ function loadScript(scriptName, callback) {
 
 }
 
+function enableComments()
+{
+    var $commentForm = $('#commentsContainer');
+    if($commentForm.length)
+    {
+        //Tagging users
+        $('#comment-textarea').atwho({
+            at: "@",
+            data: '/ajaxsearch/userall',
+            search_key: 'name',
+            limit: 5,
+            delay: 300,
+            tpl: '<li data-value="${name}">${name} <small>${email}</small></li>',
+            insert_tpl: '<input type="button" value="@${name}" data-id="${id}" title="${email}" class="usermention btn btn-default btn-xs" />',
+            show_the_at: true
+                    
+        });        
+        
+        //Send Comment
+        $commentForm.on('submit',function(e){
+            
+            if($.trim($('#comment-textarea').text()) !== "")
+            {
+                e.preventDefault();
+                
+                var $formdata = $commentForm.serialize();
+                var $usermention = $('#comment-textarea').find('.usermention').map(function(){
+                                        return $(this).attr('data-id');
+                                    }).get();
+                $formdata += "&usermention="+encodeURIComponent($usermention);
+                //Find all user tags and convert to text
+                var $comment = $('#comment-textarea').clone();
+                $comment.find('.usermention').each(function(){
+                   $(this).append('<span>'+this.attributes.value.value+'</span>');
+                });
+                //Append to formdata
+                $formdata += "&comment="+encodeURIComponent($comment.text());
+                
+                //Disable the buttons
+                $('#comment-textarea').attr('disabled','disabled');
+                $('#comment-submit').attr('disabled','disabled');
+                
+                //Send to server
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                    id: 'notif-top',
+                    errorMessage: 'Error posting comment',
+                    successMessage: 'Comment posted',
+                    progressMessage: 'Posting comment..',
+                    action: $.ajax,
+                },
+                {
+                    type:'POST',
+                    url: $commentForm.attr('action'),
+                    data: $formdata,
+                    success:function()
+                    {
+                        if(presenceChannelCurrent && document.getElementById('channel_name') !== null)
+                        {
+                            presenceChannelCurrent.trigger('client-new-chat',{user: presenceChannelCurrent.members.me, msg: encodeURIComponent($comment.text()), mentions: encodeURIComponent($usermention)});
+                        }
+                        
+                        $('#chat-body').load('/comment/listcomment/'+document.getElementById('commentable_key').value,function(){
+                            $('#comment-textarea').html('');
+                            $('#comment-textarea').removeAttr('disabled');
+                            $('#comment-submit').removeAttr('disabled');                              
+                        });
+                  
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        $('#comment-textarea').removeAttr('disabled');
+                        $('#comment-submit').removeAttr('disabled');                      
+                        return xhr.responseText;
+                    }
+                });
+            }
+            else
+            {
+                alert('You cannot send an empty comment');
+            }
+            return false;
+        });
+        
+        if(presenceChannelCurrent && document.getElementById('channel_name') !== null)
+        {
+            presenceChannelCurrent.bind('client-new-chat',function(data){
+                $('#chat-body').load('/comment/listcomment/'+document.getElementById('commentable_key').value,function(){
+                    Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
+                        showCloseButton: true,
+                        type: 'info',
+                        message: avatarHTML(data.user)+" has commented \""+data.msg+"\" - <i>just now</i>",
+                        hideAfter: 10
+                    });                      
+                });                
+            });
+        }
+    }
+}
+
 /* ~ END: LOAD SCRIPTS */
 
 /*
@@ -1283,31 +1409,6 @@ function loadURL(url, container) {
 	//console.log("ajax request sent");
 }
 
-// UPDATE BREADCRUMB
-function drawBreadCrumb() {
-	var nav_elems = $('nav li.active > a'), count = nav_elems.length;
-	
-	//console.log("breadcrumb")
-	$.bread_crumb.empty();
-	$.bread_crumb.append($("<li>Home</li>"));
-	nav_elems.each(function() {
-		$.bread_crumb.append($("<li></li>").html($.trim($(this).clone().children(".badge").remove().end().text())));
-		// update title when breadcrumb is finished...
-		if (!--count) document.title = $.bread_crumb.find("li:last-child").text();
-	});
-
-}
-
-//Init Dropzone Notif box & Events
-
-function initDropzone() {
-    Dropzone.options.theAwesomeDropZone = {
-      init: function() {
-        
-      }
-    };    
-}
-
 //PJAX Setup
 
 /*
@@ -1320,6 +1421,7 @@ $.document_.pjax('a.pjax', '#main');
  */
 $.document_.on('pjax:success, pjax:end',function(){
     //Execute Javascript
+    $('.popover, .tooltip').remove();    
     if(typeof $('#content').attr('data-js') !== "undefined")
     {
         main[$('#content').attr('data-js').toString()]();
@@ -1400,6 +1502,12 @@ function pageSetUp() {
 	
 		// run form elements
 		runAllForms();
+                
+                //set Recent projects
+                maintainRecentProject();
+                $('#clear-project').on('click',function(){
+                   clearRecentProject(); 
+                });
 
 	} else {
 		
@@ -1637,9 +1745,6 @@ function pageSetUp() {
 		}, 200, "easeOutCirc")
 		$.root_.addClass('shortcut-on');
 	}
-        
-        //DropZone
-        initDropzone();
 
 // Fix page and nav height
 function nav_page_height() {
@@ -1841,7 +1946,10 @@ var main = {
     ot_edit: function() {
         if(typeof window['ot_edit'] === "undefined")
         {
-            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.ot_edit.js"]);
+            jsLoader(["/js/plugin/x-editable/x-editable.js",
+                        "/js/plugin/jquery-caret/jquery.caret.min.js",
+                        "/js/plugin/jquery-atwho/jquery.atwho.min.js",
+                        "/js/swift/swift.ot_edit.js"]);
         }
         else
         {

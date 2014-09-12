@@ -112,5 +112,35 @@ Class AjaxSearchController extends UserController {
         {
             echo json_encode(array('total'=>0));
         }          
-    }    
+    }
+    
+    public function getUserbyname()
+    {
+        $term = Input::get('term');
+        $users = User::where('first_name','LIKE','%'.$term.'%','OR')->where('last_name','LIKE','%'.$term.'%')->get();
+        if(count($users))
+        {
+            $result = array();
+            foreach($users as $u)
+            {
+                $result[] = array('uid'=>$u->id,'value'=>$u->first_name." ".$u->last_name);
+            }
+            return Response::json($result);
+        }
+        
+        return Response::json(array());
+        
+    }
+    
+    public function getUserall()
+    {
+        $users = User::where('id','!=',Sentry::getUser()->id)->get();
+        $userArray = array();
+        foreach($users as $u)
+        {
+            $userArray[] = array('username'=>$u->first_name.".".$u->last_name,'name'=>$u->first_name." ".$u->last_name,'id'=>$u->id,'email'=>$u->email);
+        }
+        
+        return Response::json($userArray);
+    }
 }

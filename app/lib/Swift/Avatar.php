@@ -76,7 +76,7 @@ Class Avatar {
 
     }
     
-    public static function getHTML($user=false,$tooltip=false)
+    public static function getHTML($user=false,$tooltip=false,$size='medium')
     {
         if($user === false)
         {
@@ -93,7 +93,15 @@ Class Avatar {
         {
             $tooltip_html = "data-placement=\"bottom\" data-original-title=\"".(\Helper::getUserName($user->id,\Sentry::getUser()))."\" rel=\"tooltip\"";
         }
-        $html = "<i class=\"avatar avatar-sm avatar-color-{$avatar['color']}\" ".($tooltip ? $tooltip_html : "").">{$avatar['letter']}</i>";
+        if($size == "medium")
+        {
+            $avatarSize = "avatar-sm";
+        }
+        else
+        {
+            $avatarSize = "";
+        }
+        $html = "<i class=\"avatar {$avatarSize} avatar-color-{$avatar['color']}\" ".($tooltip ? $tooltip_html : "").">{$avatar['letter']}</i>";
         return $html;
     }
     

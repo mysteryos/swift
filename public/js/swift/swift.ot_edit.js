@@ -504,7 +504,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
        return false;
     });
-
+    
+    //Enable Commenting
+    enableComments();
+    
     //Hide Loading Message
     messenger_hidenotiftop();
 })();

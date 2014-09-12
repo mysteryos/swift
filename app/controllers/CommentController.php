@@ -1,0 +1,54 @@
+<?php
+
+class CommentController extends UserController {
+
+	/**
+	 * Saves a comment
+	 *
+	 * @throws Exception
+	 * @return \Redirect
+	 */
+	public function postCreate()
+	{
+		try {
+			list($commentableType, $commentableId) = Comment::getKey(Input::get('commentable'));
+                        
+			$data = array(
+				'commentable_type' => $commentableType,
+				'commentable_id' => $commentableId,
+				'comment' => Input::get('comment'),
+				'user_id' => Sentry::getUser()->id,
+			);
+                        $comment = new SwiftComment;
+			$comment->fill($data);
+			$comment->save();
+			$newCommentId = $comment->id;
+                        
+                        //alert users if they have been tagged
+                        if(trim(Input::get('usermention')) != "")
+                        {
+                            $userMentions = explode(',',Input::get('usermention'));
+                            $userMentions = array_unique((array)$userMentions);
+                            Comment::mailNotify($comment,$userMentions);
+                        }
+			return Response::make($newCommentId);
+
+		} catch (\Exception $e) {
+
+                    return Response::Make($e->getMessage());
+		}
+
+	}
+        
+        public function getListcomment($commentable)
+        {
+            list($commentableType, $commentableId) = Comment::getKey($commentable);
+            
+            $classObj = new $commentableType;
+            $classObj = $classObj::find($commentableId);
+            
+            return View::make('comments_list',array('comments'=>$classObj->comments()->orderBy('created_at','DESC')->get()));
+            
+        }
+
+}

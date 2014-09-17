@@ -49,20 +49,23 @@ Class LoginController extends Controller
                     {
                         Sentry::register(array(
                             'email' => $result['email'],
-                            'password' => "oauth79283647254",
+                            'password' => "oauth".rand('10000','9999999999'),
                             'first_name' => $result['given_name'],
-                            'last_name' => $result['family_name']
+                            'last_name' => $result['family_name'],
+                            'username'  => $result['given_name'][0].$result['family_name']
                         ),Config::get('website.sentry_autoactivate',false));
                             
-                        //Sentry doesn't return user object on register, let's search for the obvious
-                        $user = Sentry::findUserByLogin($result['email']);
-                        Sentry::login($user, true);
-                        
                         //Freshly registered users are not activated by default or is it...
                         if(!Config::get('website.sentry_autoactivate'))
                         {
                             Session::flash('login-email', $result['email']);
                             return self::getDomainnotallowed();
+                        }
+                        else
+                        {
+                            //Sentry doesn't return user object on register, let's search for the obvious and login
+                            $user = Sentry::findUserByLogin($result['email']);
+                            Sentry::login($user, true);                            
                         }
                     }
                     else

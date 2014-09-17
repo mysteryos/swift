@@ -20,7 +20,8 @@
                 "codesleeve/laravel-stapler": "1.0.*",
                 "aws/aws-sdk-php": "2.4.*@dev",
                 "venturecraft/revisionable": "dev-master",
-                "shift31/laravel-elasticsearch": "1.0.*@dev"
+                "shift31/laravel-elasticsearch": "1.0.*@dev",
+                "codeception/codeception":"*"
 	},
         "repositories": [
             {

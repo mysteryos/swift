@@ -82,13 +82,6 @@
                                                                 <a href="#" class="editable" data-type="text" data-name="name" data-pk="{{ Crypt::encrypt($fc->id) }}" data-url="/order-tracking/freightcompanyform" data-value="{{ $fc->name }}"></a>
                                                             </div>
                                                         </div>
-
-                                                        <div class="form-group">
-                                                                <label class="col-md-2 control-label">Description</label>
-                                                                <div class="col-md-10">
-                                                                    <a href="#" id="description" class="editable" data-type="textarea" data-name="description" data-pk="{{ Crypt::encrypt($fc->id) }}" data-url="/order-tracking/generalinfo" data-original-title="Enter a description for this form" @if($fc->description != "") data-value="{{ $fc->description }}" @endif></a>
-                                                                </div>
-                                                        </div>
                                                 </fieldset>
                                             </form>
                                         </div>

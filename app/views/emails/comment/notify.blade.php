@@ -75,7 +75,7 @@
                                       <tr>
                                           <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ Helper::generateUrl($obj)."#C".$comment->id }}" target="_blank">Click here to view this comment</a>                                                 
+                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ Helper::generateUrl($obj,true)."#C".$comment->id }}" target="_blank">Click here to view this comment</a>                                                 
                                              </p>
                                           </td>
                                       </tr>

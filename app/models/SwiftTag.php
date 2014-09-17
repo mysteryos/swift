@@ -42,7 +42,8 @@ class SwiftTag extends eloquent {
     const OT_BILL_OF_ENTRY = 11;
     const OT_NOTICE_OF_ARRIVAL = 12;
     const OT_COSTING = 13;
-    const OT_GRN = 14;     
+    const OT_GRN = 14;
+    const OT_PACKING_LIST = 15;
     
     /*
      * Compilation of Order Tracking Tags
@@ -51,6 +52,7 @@ class SwiftTag extends eloquent {
                                             self::OT_PURCHASE_ORDER => "Purchase Order",
                                             self::OT_FINAL_INVOICE => "Final Invoice",
                                             self::OT_BILL_OF_LADING=>"Bill of Lading",
+                                            self::OT_PACKING_LIST=>"Packing List",
                                             self::OT_NOTICE_OF_ARRIVAL=>"Notice of Arrival",
                                             self::OT_BILL_OF_ENTRY=>"Bill of Entry",
                                             self::OT_COSTING=>"Costing",

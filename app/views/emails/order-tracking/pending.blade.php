@@ -105,7 +105,7 @@
                                       <tr>
                                           <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}/order-tracking/edit/{{ Crypt::encrypt($order->id) }}" target="_blank">Click here to view this order process form</a>                                                 
+                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ Helper::generateUrl($order,true) }}" target="_blank">Click here to view this order process form</a>                                                 
                                              </p>
                                           </td>
                                       </tr>

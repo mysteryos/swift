@@ -10,6 +10,7 @@ Namespace Swift\Services;
 Use User;
 Use Crypt;
 Use Session;
+Use Config;
 
 class Helper {
     
@@ -74,15 +75,21 @@ class Helper {
         return $html;
     }
     
-    public function generateUrl($obj)
+    public function generateUrl($obj,$absoluteaddress =false)
     {
         $class = get_class($obj);
         switch($class)
         {
             case "SwiftOrder":
-                return "/order-tracking/view/".Crypt::encrypt($obj->id);
+                $url = "/order-tracking/view/".Crypt::encrypt($obj->id);
                 break;
         }
+        
+        if($absoluteaddress)
+        {
+           $url = Config::get('app.url').$url; 
+        }
+        return $url;
     }
     
     public function sessionHasFilter($session_variable,$filter_name,$filter_value='')

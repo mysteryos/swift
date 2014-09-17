@@ -63,7 +63,7 @@
                                         echo implode(",",$tag);
                                     }
 
-                                ?>" data-source='{{ $tags }}' data-emptytext="No tags" data-name="type" data-mode="popup" data-type="checklist" data-url="/order-tracking/tag" data-pk="{{Crypt::encrypt($d->id)}}" class="editable tags"></a>
+                                ?>" data-source='{{ $tags }}' data-emptytext="No tags" data-name="type" data-mode="popup" data-placement="bottom" data-type="checklist" data-url="/order-tracking/tag" data-pk="{{Crypt::encrypt($d->id)}}" class="editable tags"></a>
                     </div>
                 </div>
             </div>

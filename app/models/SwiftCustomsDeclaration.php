@@ -59,6 +59,22 @@ class SwiftCustomsDeclaration extends Eloquent {
                                     self::CLEARED=>'Cleared');
     
     /*
+     * Accessors
+     */
+    
+    public function getCustomsStatusRevisionAttribute($val)
+    {
+        if(key_exists($val,self::$status))
+        {
+            return self::$status[$val];
+        }
+        else
+        {
+            return "";
+        }         
+    }
+    
+    /*
      * Functions
      */
     public function order()

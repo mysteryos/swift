@@ -28,5 +28,10 @@ class PusherController extends UserController {
             return Response::make('Forbidden',403);
         }
     }
+    
+    public function getAuth()
+    {
+        Redirect::to('/dashboard');
+    }
 }
 

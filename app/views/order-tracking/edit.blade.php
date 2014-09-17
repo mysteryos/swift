@@ -29,6 +29,7 @@
     <input type="hidden" name="channel_name" id="channel_name" value="ot_{{ $order->id }}" />
     <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
     <input type="hidden" id="project-name" value='<i class="fa-fw fa fa-map-marker"></i> {{ $order->name }} (ID: {{ $order->id }})'/>
+    <input type="hidden" id="project-id" value='ot_{{ $order->id }}' />
     <div id="draghover" class="text-align-center">
         <div class="circle bg-color-blue">
             <i class="fa fa-cloud-upload fa-4x"></i><br>

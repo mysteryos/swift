@@ -299,18 +299,17 @@ function maintainRecentProject()
 {
     //We have projects in the list
     //See if we need to add current project to list
-    if(!!document.getElementById('project-url')&& !!document.getElementById('project-name'))
+    if(!!document.getElementById('project-url')&& !!document.getElementById('project-name') && !! document.getElementById('project-url'))
     {
         //project exists, shuffle to top
-        if($('#project-context ul.dropdown-menu a[href="'+document.getElementById('project-url').value+'"]').length)
+        if($('#project-context ul.dropdown-menu').find('a#project_'+document.getElementById('project-id').value).length)
         {
-            var detached = $('#project-context ul.dropdown-menu a[href="'+document.getElementById('project-url').value+'"]').parents('li.project').detach();
-            console.log(detached);
+            var detached = $('#project-context ul.dropdown-menu').find('a#project_'+document.getElementById('project-id').value).parents('li.project').detach();
             $('#project-context ul.dropdown-menu').prepend(detached);
         }
         else
         {
-            $('#project-context ul.dropdown-menu').prepend('<li class="project"><a href="'+document.getElementById('project-url').value+'" class="pjax">'+document.getElementById('project-name').value+'</a></li>');
+            $('#project-context ul.dropdown-menu').prepend('<li class="project"><a id="project_'+document.getElementById('project-id').value+'" href="'+document.getElementById('project-url').value+'" class="pjax">'+document.getElementById('project-name').value+'</a></li>');
             $('#project-context ul.dropdown-menu li.project:gt(4)').remove();
         }
 

@@ -43,19 +43,17 @@
                 <td>
                     <span>
                         {{ Helper::getOrderTrackingLink($t->order)."'s freight" }}&nbsp;<?php 
-                        if($t->freight_etd != "" && Carbon::now()->diffInSeconds($t->freight_etd,false) < 0)
-                        {
-                            echo "has yet to <span class=\"txt-color-red\">depart</span>";
-                        }
-                        
-                        elseif($t->freight_eta != "" && Carbon::now()->diffInSeconds($t->freight_eta, false) > 0)
-                        {
-                            echo "has already <span class=\"txt-color-green\">arrived</span>";
-                        }
-                        
-                        elseif($t->freight_eta != "" && $t->freight_etd != "" && Carbon::now()->diffInSeconds($t->freight_etd, false) > 0 && Carbon::now()->diffInSeconds($t->freight_eta, false) < 0)
+                        if($t->freight_eta != "" && $t->freight_etd != "" && Carbon::now()->diffInSeconds($t->freight_etd, false) < 0 && Carbon::now()->diffInSeconds($t->freight_eta, false) > 0)
                         {
                             echo "is in <span class=\"txt-color-orange\">transit</span>";
+                        }
+                        elseif($t->freight_eta != "" && Carbon::now()->diffInSeconds($t->freight_eta, false) < 0)
+                        {
+                            echo "has already <span class=\"txt-color-green\">arrived</span>";
+                        }                        
+                        elseif($t->freight_etd != "" && Carbon::now()->diffInSeconds($t->freight_etd,false) > 0)
+                        {
+                            echo "has yet to <span class=\"txt-color-red\">depart</span>";
                         }
                         else
                         {

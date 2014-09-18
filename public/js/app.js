@@ -1420,7 +1420,7 @@ $.document_.pjax('a.pjax', '#main');
  */
 $.document_.on('pjax:success, pjax:end',function(){
     //Execute Javascript
-    $('.popover, .tooltip').remove();    
+    $('.popover, .tooltip').remove();
     if(typeof $('#content').attr('data-js') !== "undefined")
     {
         main[$('#content').attr('data-js').toString()]();

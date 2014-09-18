@@ -401,6 +401,15 @@ class OrderTrackingController extends UserController {
     
     public function postFreightcompanyform()
     {
+        
+        /*
+         * Check Permission
+         */
+        if(!Sentry::getUser()->hasAnyAccess(array('ot-admin','ot-edit')))
+        {
+            return parent::forbidden();
+        }        
+        
         //Saving new freight companies
         $validator = Validator::make(Input::all(),
                     array('name'=>'required',
@@ -431,6 +440,15 @@ class OrderTrackingController extends UserController {
     
     public function putFreightcompanyform()
     {
+        
+        /*
+         * Check Permission
+         */
+        if(!Sentry::getUser()->hasAnyAccess(array('ot-admin','ot-edit')))
+        {
+            return parent::forbidden();
+        }        
+        
         $fc_id = Crypt::decrypt(Input::get('pk'));
         $fc = SwiftFreightCompany::find($fc_id);
         if(count($fc))

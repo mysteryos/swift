@@ -37,6 +37,9 @@ Route::group(array('before' => array('auth')), function()
     //Nespresso CRM
     Route::controller('nespresso-crm','NespressoCrmController');
     
+    //A&P request
+    Route::controller('aprequest','APRequestController');
+    
     //Ajax Search
     Route::controller('ajaxsearch','AjaxSearchController');
     

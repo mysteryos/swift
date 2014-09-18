@@ -24,7 +24,7 @@
     </div>
     <div class="row">
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
-            @if(Sentry::getUser()->hasAccess('ot-admin'))
+            @if(Sentry::getUser()->hasAnyAccess(array('ot-admin','ot-edit')))
                 <div class="row">
                     <div class="col-xs-12">
                         <a href="/order-tracking/createfreightcompanyform" class="btn btn-primary btn-block pjax @if(!Sentry::getUser()->hasAccess('ot-admin')){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            

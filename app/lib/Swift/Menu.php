@@ -36,7 +36,7 @@ class Menu {
         $this->html .= "<ul>";
         foreach($main as $m)
         {
-            if(($m['uri'] == '#' || $m['uri'] === false) || $this->getPermission($m))
+            if($this->getPermission($m))
             {
                 $this->generateItem($m);
             }

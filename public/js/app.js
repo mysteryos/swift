@@ -141,13 +141,19 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
         presenceChannelCurrent.members.each(function(member) {
             if(member.id != presenceChannelCurrent.members.me.id)
             {
-                $('.whos-online').append(avatarHTML(member))
-                $('.whos-online .avatar').tooltip();
+                if(!$('.whos-online').find('#user_'+member.id).length)
+                {
+                    $('.whos-online').append(avatarHTML(member))
+                    $('.whos-online .avatar').tooltip();
+                }
             }
         });
         presenceChannelCurrent.bind('pusher:member_added',function(member){
-            $('.whos-online').append(avatarHTML(member))
-            $('.whos-online .avatar').tooltip();
+            if(!$('.whos-online').find('#user_'+member.id).length)
+            {
+                $('.whos-online').append(avatarHTML(member))
+                $('.whos-online .avatar').tooltip();
+            }
         });
         presenceChannelCurrent.bind('pusher:member_removed',function(member){
             $('#user_'+member.id).tooltip('destroy');

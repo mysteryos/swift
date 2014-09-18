@@ -75,13 +75,16 @@ class Helper {
         return $html;
     }
     
-    public function generateUrl($obj,$absoluteaddress =false)
+    public function generateUrl($obj,$absoluteaddress=false)
     {
         $class = get_class($obj);
         switch($class)
         {
             case "SwiftOrder":
                 $url = "/order-tracking/view/".Crypt::encrypt($obj->id);
+                break;
+            case "SwiftAPRequest":
+                $url = "/aprequest/view".Crypt::encrypt($obj->id);
                 break;
         }
         

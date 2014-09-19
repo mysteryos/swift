@@ -285,21 +285,27 @@ class OrderTrackingController extends UserController {
                 $filter = array();
             }
             
-            switch(Input::get('filter_name'))
-            {
-                case 'business_unit':
-                    $orderquery->where('business_unit','=',Input::get('filter_value'));
-                    break;
-                case 'node_definition_id':
-                    $orderquery->whereHas('workflow',function($q){
-                       return $q->whereHas('nodes',function($q){
-                           return $q->where('node_definition_id','=',Input::get('filter_value'));
-                       });
-                    });                    
-                    break;
-            }            
-            
             $filter[Input::get('filter_name')] = Input::get('filter_value');
+            
+            /*
+             * loop & Apply all filters
+             */
+            foreach($filter as $f_name => $f_val)
+            {
+                switch($f_name)
+                {
+                    case 'business_unit':
+                        $orderquery->where('business_unit','=',$f_val);
+                        break;
+                    case 'node_definition_id':
+                        $orderquery->whereHas('workflow',function($q) use($f_val){
+                           return $q->whereHas('nodes',function($q) use($f_val){
+                               return $q->where('node_definition_id','=',$f_val);
+                           });
+                        });
+                        break;
+                }
+            }
             
             Session::flash('ot_form_filter',$filter);
 
@@ -314,7 +320,7 @@ class OrderTrackingController extends UserController {
         /*
          * Fetch latest history;
          */
-        foreach($orders as &$o)
+        foreach($orders as $k => &$o)
         {
             //Set Revision
             $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight'),$o);
@@ -324,6 +330,13 @@ class OrderTrackingController extends UserController {
             $o->flag_starred = Flag::isStarred($o);
             $o->flag_important = Flag::isImportant($o);
             $o->flag_read = Flag::isRead($o);
+            if(isset($filter) && isset($filter['node_definition_id']))
+            {
+                if(!isset($o->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$o->current_activity['definition']))
+                {
+                    unset($orders[$k]);
+                }
+            }
         }
         
         //Get node definition list
@@ -340,7 +353,7 @@ class OrderTrackingController extends UserController {
         $this->data['isAdmin'] = Sentry::getUser()->hasAnyAccess(['ot-admin']);
         $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']);
         $this->data['orders'] = $orders;
-        $this->data['count'] = $orderquery->count();
+        $this->data['count'] = isset($filter) ? count($orders) : $orderquery->count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);

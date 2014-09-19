@@ -180,19 +180,20 @@ class WorkflowActivity {
                     $n->load('definition');
                     if($n->definition->type == SwiftNodeDefinition::$T_NODE_END && $n->user_id != 0)
                     {
-                        return array('label'=>$n->definition->label,'status'=>1,'status_class'=>'color-green');
+                        return array('label'=>$n->definition->label,'status'=>SwiftWorkflowActivity::COMPLETE,'status_class'=>'color-green','definition'=>array($n->definition->id));
                     }
                 }
             }
         }
         else
         {
-            $label = array();
+            $label = $definition_array = array();
             foreach($nodeInProgress as $n)
             {
                 $label[] = $n->definition->label;
+                $definition_array[] = $n->definition->id;
             }
-            return array('label'=>implode(" / ",$label),'status'=>SwiftWorkflowActivity::INPROGRESS,'status_class'=>'color-orange');
+            return array('label'=>implode(" / ",$label),'status'=>SwiftWorkflowActivity::INPROGRESS,'status_class'=>'color-orange', 'definition'=>$definition_array);
         }
         
         return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');        

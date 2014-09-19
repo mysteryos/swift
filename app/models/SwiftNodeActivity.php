@@ -18,7 +18,7 @@ class SwiftNodeActivity extends Eloquent
     
     protected $dates = ['deleted_at'];
     
-    protected $touches = array('workflow_activity');
+    protected $touches = array('workflowactivity');
     
     /*
      * Flow Constants
@@ -75,7 +75,7 @@ class SwiftNodeActivity extends Eloquent
         return $this->hasOne('SwiftNodeDefinition','id','node_definition_id');
     }
     
-    public function workflow_activity()
+    public function workflowactivity()
     {
         return $this->belongsTo('SwiftWorkflowActivity','workflow_activity_id');
     }

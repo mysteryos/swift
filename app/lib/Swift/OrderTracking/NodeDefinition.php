@@ -15,7 +15,7 @@ Class NodeDefinition {
     
     public static function otPreparation($nodeActivity)
     {
-        $order = $nodeActivity->workflow_activity()->first()->workflowable()->first();
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
             //Check if bill of lading has been uploaded
@@ -64,7 +64,7 @@ Class NodeDefinition {
     
     public static function otTransit($nodeActivity)
     {
-        $order = $nodeActivity->workflow_activity()->first()->workflowable()->first();
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
             //Check if bill of lading has been uploaded
@@ -109,7 +109,7 @@ Class NodeDefinition {
     
     public static function otCustoms($nodeActivity)
     {
-        $order = $nodeActivity->workflow_activity()->first()->workflowable()->first();
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
             //Check if bill of lading has been uploaded
@@ -160,7 +160,7 @@ Class NodeDefinition {
     
     public static function otPickup($nodeActivity)
     {
-        $order = $nodeActivity->workflow_activity()->first()->workflowable()->first();
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
             /*
@@ -193,7 +193,7 @@ Class NodeDefinition {
     
     public static function otReception($nodeActivity)
     {
-        $order = $nodeActivity->workflow_activity()->first()->workflowable()->first();
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
             //Check if bill of lading has been uploaded
@@ -241,7 +241,7 @@ Class NodeDefinition {
     
     public static function otCosting($nodeActivity)
     {
-        $order = $nodeActivity->workflow_activity()->first()->workflowable()->first();
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
             //Check if bill of lading has been uploaded

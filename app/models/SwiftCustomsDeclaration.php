@@ -42,8 +42,9 @@ class SwiftCustomsDeclaration extends Eloquent {
     );
     
     protected $revisionClassName = "Customs Declaration";
-    
+    protected $revisionPrimaryIdentifier = "id";    
     protected $keepCreateRevision = true;
+    protected $softDelete = true;
     
     const FILLED = 1;
     const PROCESSING = 2;

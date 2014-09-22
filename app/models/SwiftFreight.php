@@ -71,10 +71,11 @@ class SwiftFreight extends Eloquent{
         'freight_company' => 'Freight Company',
     );
     
-    protected $keepCreateRevision = true;   
+    protected $keepCreateRevision = true;
+    protected $softDelete = true;
     
     protected $revisionClassName = "Freight";
-    
+    protected $revisionPrimaryIdentifier = "id";
     /*
      * Revision - Accessors
      */

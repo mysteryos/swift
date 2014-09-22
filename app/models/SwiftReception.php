@@ -38,7 +38,8 @@ class SwiftReception extends Eloquent {
     
     protected $revisionClassName = "Reception";
     
-    protected $keepCreateRevision = true;     
+    protected $keepCreateRevision = true;
+    protected $softDelete = true;
     
     /*
      * Mutator

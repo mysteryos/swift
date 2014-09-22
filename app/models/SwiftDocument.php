@@ -13,7 +13,7 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
     
     use EloquentTrait;
     
-    use \Venturecraft\Revisionable\RevisionableTrait;    
+    use \Venturecraft\Revisionable\RevisionableTrait;
     
     protected $table = "swift_document";
     
@@ -34,12 +34,13 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
     );
     
     protected $revisionFormattedFieldNames = array(
-        'document_file_name' => 'Document Name',
+        'document_file_name' => 'Document',
     );    
     
     protected $revisionClassName = "Document";
-    
-    protected $saveCreateRevision = true;
+    protected $revisionPrimaryIdentifier = "document_file_name";    
+    protected $keepCreateRevision = true;
+    protected $softDelete = true;
     
     public function __construct(array $attributes = array())
     {
@@ -70,6 +71,8 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
         });
 
         static::bootStapler();
+        
+        static::bootRevisionable();
         
     }
     

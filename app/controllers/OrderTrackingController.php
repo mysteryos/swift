@@ -87,7 +87,7 @@ class OrderTrackingController extends UserController {
         {
             foreach($orderarray as &$o)
             {
-                $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment'),$o);
+                $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
             }
         }
         
@@ -136,7 +136,7 @@ class OrderTrackingController extends UserController {
             /*
              * Data
              */
-            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment'),$order);
+            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$order);
             $this->pageTitle = "{$order->name} (ID: $order->id)";
             $this->data['incoterms'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$incoterms));
             $this->data['freight_type'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$type));
@@ -213,7 +213,7 @@ class OrderTrackingController extends UserController {
         $order = SwiftOrder::getById($order_id);
         if(count($order))
         {
-            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight'),$order);
+            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$order);
             return $this->makeView('order-tracking/edit_activity');
         }
         else
@@ -323,7 +323,7 @@ class OrderTrackingController extends UserController {
         foreach($orders as $k => &$o)
         {
             //Set Revision
-            $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight'),$o);
+            $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
             //Set Current Workflow Activity
             $o->current_activity = WorkflowActivity::progress($o);
             //Set Starred/important

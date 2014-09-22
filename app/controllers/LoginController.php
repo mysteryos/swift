@@ -59,7 +59,7 @@ Class LoginController extends Controller
                         if(!Config::get('website.sentry_autoactivate'))
                         {
                             Session::flash('login-email', $result['email']);
-                            return self::getDomainnotallowed();
+                            return self::getNotactivated();
                         }
                         else
                         {
@@ -71,7 +71,7 @@ Class LoginController extends Controller
                     else
                     {
                         Session::flash('login-email', $result['email']);
-                        return self::getNotactivated();
+                        return self::getDomainnotallowed();
                     }
                     //Redirect::to('/login/notactivated');
                 }

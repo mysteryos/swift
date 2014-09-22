@@ -34,6 +34,7 @@
                                 break;
                             case SwiftFreight::TYPE_SEA:
                                 echo '<i class="fa fa-lg fa-anchor" title="sea"></i>';
+                                break;
                             default:
                                 echo '<i class="fa fa-lg fa-question" title="unknown"></i>';
                                 break;

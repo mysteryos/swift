@@ -40,14 +40,16 @@
             @endif
             <div class="row">
                 <div class="col-xs-12 inbox-side-bar">
-                    <h6> Filters <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a></h6>
+                    <h6> Filters <!-- <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a>--> </h6>
 
                     <ul class="inbox-menu-lg">
+                            @if($edit_access)
+                                <li @if($type=="inprogress"){{"class=\"active\""}}@endif >
+                                        <a href="/order-tracking/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
+                                </li>
+                            @endif
                             <li @if($type=="all"){{"class=\"active\""}}@endif >
                                     <a href="/order-tracking/forms/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All</a>
-                            </li>
-                            <li @if($type=="inprogress"){{"class=\"active\""}}@endif >
-                                    <a href="/order-tracking/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
                             </li>
                             <li @if($type=="completed"){{"class=\"active\""}}@endif >
                                     <a href="/order-tracking/forms/completed" class="form-pjax-filter pjax"><i class="fa fa-check"></i>Completed</a>
@@ -57,7 +59,7 @@
                             </li>
                     </ul>
 
-                    <h6> Quick Access <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a></h6>
+                    <h6> Quick Access <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a>--> </h6>
 
                     <ul class="inbox-menu-sm">
                             <li @if($type=="starred"){{"class=\"active\""}}@endif >
@@ -90,16 +92,18 @@
                                     @endforeach
                                 </ul>
                             </li>
-                            <li class="dropdown">
-                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','node_definition_id')) {{ $node_definition_list[Session::get('ot_form_filter')['node_definition_id']] }} @else {{ "Current Step" }} @endif<i class="fa fa-angle-down"></i></a>
-                                <ul class="dropdown-menu">
-                                    @foreach($node_definition_list as $node_key => $node_val)
-                                        <li @if(Helper::sessionHasFilter('ot_form_filter','node_definition_id',$node_key)){{ 'class="active"' }}@endif>
-                                            <a href="{{ URL::current()."?filter=1&filter_name=node_definition_id&filter_value=".urlencode($node_key) }}" class="pjax">{{ $node_val }}</a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </li>
+                            @if($type != 'inprogress')
+                                <li class="dropdown">
+                                    <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','node_definition_id')) {{ $node_definition_list[Session::get('ot_form_filter')['node_definition_id']] }} @else {{ "Current Step" }} @endif<i class="fa fa-angle-down"></i></a>
+                                    <ul class="dropdown-menu">
+                                        @foreach($node_definition_list as $node_key => $node_val)
+                                            <li @if(Helper::sessionHasFilter('ot_form_filter','node_definition_id',$node_key)){{ 'class="active"' }}@endif>
+                                                <a href="{{ URL::current()."?filter=1&filter_name=node_definition_id&filter_value=".urlencode($node_key) }}" class="pjax">{{ $node_val }}</a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                     @if(Sentry::getUser()->hasAccess('ot-admin'))

@@ -9,6 +9,9 @@ Namespace Swift\Services;
 
 Use SwiftFlag;
 Use Sentry;
+Use Input;
+Use Crypt;
+Use Response;
 
 class Flag {
     
@@ -184,6 +187,54 @@ class Flag {
         
         $obj->flag()->save($flag);
         return true;
+    }
+    
+    public function set($type,$class,$adminPermission)
+    {
+        if(Input::has('id'))
+        {
+            $id = Crypt::decrypt(Input::get('id'));
+            $obj = $class::find($id);
+            if(count($obj))
+            {
+                switch($type)
+                {
+                    case SwiftFlag::STARRED:
+                        if(self::toggleStarred($obj))
+                        {
+                            return Response::make('success');
+                        }
+                        break;
+                    case SwiftFlag::IMPORTANT:
+                        if(Sentry::getUser()->hasAccess([$adminPermission]))
+                        {
+                            if(self::toggleImportant($obj))
+                            {
+                                return Response::make('success');
+                            }
+                        }
+                        else
+                        {
+                            return Response::make('No permission for this action',400);
+                        }
+                    case SwiftFlag::READ:
+                        if(self::toggleRead($obj))
+                        {
+                            return Response::make('success');
+                        }                        
+                        break;
+                }
+                return Response::make('Unable to process your request',400);
+            }
+            else
+            {
+                return Response::make('Order process form not found',404);
+            }
+        }
+        else
+        {
+            return Response::make('Unable to process: Form ID invalid',400);
+        }        
     }
     
 }

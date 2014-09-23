@@ -16,7 +16,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="ot_forms">
+<div id="content" data-js="apr_forms">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
             <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>            
@@ -31,10 +31,10 @@
     </div>
     <div class="row">
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
-            @if(Sentry::getUser()->hasAccess(['ot-admin']))
+            @if(Sentry::getUser()->hasAccess(['apr-admin']))
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/order-tracking/create" class="btn btn-primary btn-block pjax @if(!Sentry::getUser()->hasAccess('ot-admin')){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                        <a href="/order-tracking/create" class="btn btn-primary btn-block pjax @if(!Sentry::getUser()->hasAccess('apr-admin')){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
                     </div>
                 </div>
             @endif
@@ -81,20 +81,10 @@
                                 <a href="javascript:void(0);"><i>Filter By: </i></a>
                             </li>
                             <li class="dropdown">
-                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','business_unit')) {{ SwiftOrder::$business_unit[Session::get('ot_form_filter')['business_unit']] }} @else {{ "Business Unit" }} @endif<i class="fa fa-angle-down"></i></a>                        
-                                <ul class="dropdown-menu">
-                                    @foreach(SwiftOrder::$business_unit as $bu_key => $bu_val)
-                                        <li @if(Helper::sessionHasFilter('ot_form_filter','business_unit',$bu_key)){{ 'class="active"' }}@endif>
-                                            <a href="{{ URL::current()."?filter=1&filter_name=business_unit&filter_value=".urlencode($bu_key) }}" class="pjax">{{ $bu_val }}</a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </li>
-                            <li class="dropdown">
-                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','node_definition_id')) {{ $node_definition_list[Session::get('ot_form_filter')['node_definition_id']] }} @else {{ "Current Step" }} @endif<i class="fa fa-angle-down"></i></a>
+                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('apr_form_filter','node_definition_id')) {{ $node_definition_list[Session::get('apr_form_filter')['node_definition_id']] }} @else {{ "Current Step" }} @endif<i class="fa fa-angle-down"></i></a>
                                 <ul class="dropdown-menu">
                                     @foreach($node_definition_list as $node_key => $node_val)
-                                        <li @if(Helper::sessionHasFilter('ot_form_filter','node_definition_id',$node_key)){{ 'class="active"' }}@endif>
+                                        <li @if(Helper::sessionHasFilter('apr_form_filter','node_definition_id',$node_key)){{ 'class="active"' }}@endif>
                                             <a href="{{ URL::current()."?filter=1&filter_name=node_definition_id&filter_value=".urlencode($node_key) }}" class="pjax">{{ $node_val }}</a>
                                         </li>
                                     @endforeach
@@ -102,7 +92,7 @@
                             </li>
                         </ul>
                     </div>
-                    @if(Sentry::getUser()->hasAccess('ot-admin'))
+                    @if(Sentry::getUser()->hasAccess('apr-admin'))
                         <a href="/order-tracking/create" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
                     @endif
                     @if($count)
@@ -121,7 +111,7 @@
             </div>
             <div class="row">
                 <div class="col-xs-12 table-wrap custom-scroll animated fast fadeInRight">
-                    @include('order-tracking.forms-list',array('orders'=>$orders))                    
+                    @include('aprequest.forms-list',array('forms'=>$forms))                    
                 </div>
             </div>
         </div>

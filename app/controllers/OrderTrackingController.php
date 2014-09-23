@@ -9,6 +9,10 @@ class OrderTrackingController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "Order Process";
+        $this->rootURL = "order-tracking";
+        $this->adminPermission = "ot-admin";
+        $this->viewPermission = "ot-view";
+        $this->editPermission = "ot-edit";
     }
     
     
@@ -24,7 +28,7 @@ class OrderTrackingController extends UserController {
          * Order in Progress
          */
         
-        $nodeResponsible = SwiftNodePermission::getByPermission(Sentry::getUser()->getMergedPermissions(),SwiftNodePermission::RESPONSIBLE);
+        $nodeResponsible = SwiftNodePermission::getByPermission($this->currentUser->getMergedPermissions(),SwiftNodePermission::RESPONSIBLE);
         if(count($nodeResponsible))
         {
             foreach($nodeResponsible as $nr)
@@ -99,7 +103,7 @@ class OrderTrackingController extends UserController {
         $this->data['order_inprogress_responsible'] = $order_inprogress_responsible;
         $this->data['order_inprogress_important'] = $order_inprogress_important;
         $this->data['order_inprogress_important_responsible'] = $order_inprogress_important_responsible;
-        $this->data['isAdmin'] = Sentry::getUser()->hasAccess(array('ot-admin'));
+        $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
         $this->data['node_responsible'] = $nodeResponsible;                                         
         
         return $this->makeView('order-tracking/overview');
@@ -177,11 +181,11 @@ class OrderTrackingController extends UserController {
     
     public function getView($id)
     {
-        if(Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']))
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return Redirect::action('OrderTrackingController@getEdit',array('id'=>$id));
         }
-        elseif(Sentry::getUser()->hasAnyAccess(['ot-view']))
+        elseif($this->currentUser->hasAnyAccess(['ot-view']))
         {
             return $this->form($id,false);
         }
@@ -193,11 +197,11 @@ class OrderTrackingController extends UserController {
     
     public function getEdit($id)
     {
-        if(Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']))
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return $this->form($id,true);
         }
-        elseif(Sentry::getUser()->hasAnyAccess(['ot-view']))
+        elseif($this->currentUser->hasAnyAccess(['ot-view']))
         {
             return Redirect::action('OrderTrackingController@getView',array('id'=>$id));
         }
@@ -232,15 +236,44 @@ class OrderTrackingController extends UserController {
     /*
      * Lists all forms
      */
-    public function getForms($type='all',$page=1)
+    public function getForms($type='inprogress',$page=1)
     {
         $limitPerPage = 30;
-        
         $this->pageTitle = 'Forms';
-        $orderquery = SwiftOrder::take($limitPerPage)->orderBy('updated_at','desc');
-        if($page > 1)
+        
+        //Check Edit Access
+        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);        
+        
+        //Check user group
+        if(!$this->data['edit_access'] && $type='inprogress')
         {
-            $orderquery->offset(($page-1)*$limitPerPage);
+            $type='all';
+        }
+        
+        /*
+         * Let's Start Order Query
+         */
+        $orderquery = SwiftOrder::orderBy('updated_at','desc');
+        
+        if($type != 'inprogress')
+        {
+            /*
+             * If not in progress, we limit rows
+             */
+            $orderquery->take($limitPerPage);
+            if($page > 1)
+            {
+                $orderquery->offset(($page-1)*$limitPerPage);
+            }
+            
+            //Get node definition list
+            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','order_tracking')->first()->id)->all();
+            $node_definition_list = array();
+            foreach($node_definition_result as $v)
+            {
+                $node_definition_list[$v->id] = $v->label;
+            }
+            $this->data['node_definition_list'] = $node_definition_list;            
         }
         
         switch($type)
@@ -262,7 +295,7 @@ class OrderTrackingController extends UserController {
                 break;
             case 'starred':
                 $orderquery->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',Sentry::getUser()->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
+                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
                 });                
                 break;
             case 'important':
@@ -322,43 +355,66 @@ class OrderTrackingController extends UserController {
          */
         foreach($orders as $k => &$o)
         {
-            //Set Revision
-            $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
             //Set Current Workflow Activity
             $o->current_activity = WorkflowActivity::progress($o);
+            
+            //If in progress, we filter
+            if($type == 'inprogress')
+            {
+                $hasAccess = false;
+                /*
+                 * Loop through node definition and check access
+                 */
+                foreach($o->current_activity['definition'] as $d)
+                {
+                    if(NodeActivity::hasAccess($d,SwiftNodePermission::RESPONSIBLE))
+                    {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                
+                /*
+                 * No Access : We Remove order from list
+                 */
+                if(!$hasAccess)
+                {
+                    unset($orders[$k]);
+                    continue;
+                }
+            }
+            else
+            {
+                if(isset($filter) && isset($filter['node_definition_id']))
+                {
+                    if(!isset($o->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$o->current_activity['definition']))
+                    {
+                        unset($orders[$k]);
+                        break;
+                    }
+                }
+            }
+
+           //Set Revision
+            $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);            
+                        
             //Set Starred/important
             $o->flag_starred = Flag::isStarred($o);
             $o->flag_important = Flag::isImportant($o);
             $o->flag_read = Flag::isRead($o);
-            if(isset($filter) && isset($filter['node_definition_id']))
-            {
-                if(!isset($o->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$o->current_activity['definition']))
-                {
-                    unset($orders[$k]);
-                }
-            }
+
         }
-        
-        //Get node definition list
-        $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','order_tracking')->first()->id)->all();
-        $node_definition_list = array();
-        foreach($node_definition_result as $v)
-        {
-            $node_definition_list[$v->id] = $v->label;
-        }
-        
         
         //The Data
         $this->data['type'] = $type;
-        $this->data['isAdmin'] = Sentry::getUser()->hasAnyAccess(['ot-admin']);
-        $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess(['ot-edit','ot-admin']);
+        $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
+        
         $this->data['orders'] = $orders;
         $this->data['count'] = isset($filter) ? count($orders) : $orderquery->count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
-        $this->data['node_definition_list'] = $node_definition_list;
         
         return $this->makeView('order-tracking/forms');
     }
@@ -418,7 +474,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permission
          */
-        if(!Sentry::getUser()->hasAnyAccess(array('ot-admin','ot-edit')))
+        if(!$this->currentUser->hasAnyAccess(array($this->adminPermission,$this->editPermission)))
         {
             return parent::forbidden();
         }        
@@ -457,7 +513,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permission
          */
-        if(!Sentry::getUser()->hasAnyAccess(array('ot-admin','ot-edit')))
+        if(!$this->currentUser->hasAnyAccess(array($this->adminPermission,$this->editPermission)))
         {
             return parent::forbidden();
         }        
@@ -541,7 +597,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permission
          */
-        if(!Sentry::getUser()->hasAccess('ot-admin') || !NodeActivity::hasStartAccess('order_tracking'))
+        if(!$this->currentUser->hasAccess($this->adminPermission) || !NodeActivity::hasStartAccess('order_tracking'))
         {
             return parent::forbidden();
         }
@@ -593,7 +649,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */        
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }
@@ -646,7 +702,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */        
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }
@@ -738,7 +794,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -770,7 +826,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -893,7 +949,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -926,7 +982,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1010,7 +1066,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1043,7 +1099,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1107,7 +1163,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1141,7 +1197,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1205,7 +1261,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAnyAccess(['ot-admin','ot-edit']))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1234,51 +1290,7 @@ class OrderTrackingController extends UserController {
      */
     public function putMark($type)
     {
-        if(Input::has('id'))
-        {
-            $order_id = Crypt::decrypt(Input::get('id'));
-            $order = SwiftOrder::find($order_id);
-            if(count($order))
-            {
-                switch($type)
-                {
-                    case SwiftFlag::STARRED:
-                        if(Flag::toggleStarred($order))
-                        {
-                            return Response::make('success');
-                        }
-                        break;
-                    case SwiftFlag::IMPORTANT:
-                        if(Sentry::getUser()->hasAnyAccess(['ot-admin']))
-                        {
-                            if(Flag::toggleImportant($order))
-                            {
-                                return Response::make('success');
-                            }
-                        }
-                        else
-                        {
-                            return Response::make('No permission for this action',400);
-                        }
-                    case SwiftFlag::READ:
-                        if(Flag::toggleRead($order))
-                        {
-                            return Response::make('success');
-                        }                        
-                        break;
-                }
-                return Response::make('Unable to process your request',400);
-            }
-            else
-            {
-                return Response::make('Order process form not found',404);
-            }
-        }
-        else
-        {
-            return Response::make('Unable to process: Form ID invalid',400);
-        }
-            
+        return Flag::set($type,'\SwiftOrder',$this->adminPermission);
     }
     
     /*
@@ -1291,7 +1303,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1312,7 +1324,7 @@ class OrderTrackingController extends UserController {
                                     'url'=>$doc->getAttachedFiles()['document']->url(),
                                     'id'=>Crypt::encrypt($doc->id), 
                                     'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(), 
-                                    'updated_by'=>Helper::getUserName($doc->user_id,Sentry::getUser())]);
+                                    'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
                 }
                 else
                 {
@@ -1340,7 +1352,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1375,7 +1387,7 @@ class OrderTrackingController extends UserController {
         /*
         * Check Permissions
         */
-        if(!Sentry::getUser()->hasAccess(['ot-admin','ot-edit'],false))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1498,7 +1510,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!Sentry::getUser()->hasAccess(['ot-admin']))
+        if(!$this->currentUser->hasAccess([$this->adminPermission]))
         {
             return parent::forbidden();
         }        

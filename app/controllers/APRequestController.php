@@ -5,9 +5,14 @@
  */
 
 class APRequestController extends UserController {
+    
     public function __construct(){
         parent::__construct();
         $this->pageName = "A&P Request";
+        $this->rootURL = "aprequest";
+        $this->adminPermission = "apr-admin";
+        $this->viewPermission = "apr-view";
+        $this->editPermission = "apr-edit";        
     }
     
     /*
@@ -25,7 +30,47 @@ class APRequestController extends UserController {
      */
     private function form($id,$edit=false)
     {
-        
+        $apr_id = Crypt::decrypt($id);
+        $apr = SwiftOrder::getById($order_id);
+        if(count($apr))
+        {
+            /*
+             * Set Read
+             */
+            
+            if(!Flag::isRead($apr))
+            {
+                Flag::toggleRead($apr);
+            }
+            
+            /*
+             * Enable Commenting
+             */
+            $this->comment($apr);
+            
+            /*
+             * Data
+             */
+            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$order);
+            $this->pageTitle = "{$order->name} (ID: $order->id)";
+            $this->data['incoterms'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$incoterms));
+            $this->data['freight_type'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$type));
+            $this->data['business_unit'] = json_encode(Helper::jsonobject_encode(SwiftOrder::$business_unit));
+            $this->data['customs_status'] = json_encode(Helper::jsonobject_encode(SwiftCustomsDeclaration::$status));
+            $this->data['shipment_type'] = json_encode(Helper::jsonobject_encode(SwiftShipment::$type));
+            $this->data['order'] = $order;
+            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
+            $this->data['current_activity'] = WorkflowActivity::progress($order,'order_tracking');
+            $this->data['edit'] = $edit;
+            $this->data['flag_important'] = Flag::isImportant($order);
+            $this->data['flag_starred'] = Flag::isStarred($order);
+            
+            return $this->makeView('order-tracking/edit');
+        }
+        else
+        {
+            return parent::notfound();
+        }        
     }   
     
     /*
@@ -47,11 +92,11 @@ class APRequestController extends UserController {
     
     public function getView($id)
     {
-        if(Sentry::getUser()->hasAnyAccess(['apr-edit','apr-admin']))
+        if(Sentry::getUser()->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return Redirect::action('APRequestController@getEdit',array('id'=>$id));
         }
-        elseif(Sentry::getUser()->hasAnyAccess(['apr-view']))
+        elseif(Sentry::getUser()->hasAnyAccess([$this->viewPermission]))
         {
             return $this->form($id,false);
         }
@@ -63,13 +108,13 @@ class APRequestController extends UserController {
     
     public function getEdit($id)
     {
-        if(Sentry::getUser()->hasAnyAccess(['apr-edit','apr-admin']))
+        if(Sentry::getUser()->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return $this->form($id,true);
         }
-        elseif(Sentry::getUser()->hasAnyAccess(['apr-view']))
+        elseif(Sentry::getUser()->hasAnyAccess([$this->viewPermission]))
         {
-            return Redirect::action('OrderTrackingController@getView',array('id'=>$id));
+            return Redirect::action('APRequestController@getView',array('id'=>$id));
         }
         else
         {
@@ -148,14 +193,15 @@ class APRequestController extends UserController {
         
         //The Data
         $this->data['type'] = $type;
-        $this->data['isAdmin'] = Sentry::getUser()->hasAnyAccess(['apr-admin']);
-        $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess(['apr-edit','apr-admin']);
+        $this->data['isAdmin'] = Sentry::getUser()->hasAnyAccess([$this->adminPermission]);
+        $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess([$this->editPermission,$this->adminPermission]);
         $this->data['forms'] = $forms;
         $this->data['count'] = $aprequestquery->count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
+        $this->data['rootURL'] = $this->rootURL;
 //        $this->data['node_definition_list'] = $node_definition_list;
         
         return $this->makeView('aprequest/forms');
@@ -170,7 +216,7 @@ class APRequestController extends UserController {
         /*
          * Check Permission
          */
-        if(!Sentry::getUser()->hasAccess('apr-admin') || !NodeActivity::hasStartAccess('aprequest'))
+        if(!Sentry::getUser()->hasAccess($this->adminPermission) || !NodeActivity::hasStartAccess('aprequest'))
         {
             return parent::forbidden();
         }
@@ -215,7 +261,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */        
-        if(!Sentry::getUser()->hasAccess(['apr-admin','apr-edit'],false))
+        if(!Sentry::getUser()->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }
@@ -252,5 +298,13 @@ class APRequestController extends UserController {
         {
             return Response::make('A&P Request form not found',404);
         }
+    }
+    
+    /*
+     * Mark Items
+     */
+    public function putMark($type)
+    {
+        return Flag::set($type,'SwiftAPRequest',$this->adminPermission);
     }    
 }

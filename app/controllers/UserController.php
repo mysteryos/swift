@@ -28,6 +28,8 @@ class UserController extends Controller {
                 $this->data['css'] = array();
             }
 
+            $this->currentUser = Sentry::getUser();
+            
         }
         
         /*

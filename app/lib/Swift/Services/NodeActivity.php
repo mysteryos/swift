@@ -526,7 +526,7 @@ class NodeActivity {
     /*
      * Verfiy if user has access to this node
      */
-    public function hasAccess($node_definition_id)
+    public function hasAccess($node_definition_id,$permission_type=1)
     {
         //Super Man Access
         if(Sentry::getUser()->isSuperUser())
@@ -534,7 +534,7 @@ class NodeActivity {
             return true;
         }
         
-        $nodeDefinitionPermission = SwiftNodeDefinition::find($node_definition_id)->permission()->get()->all();
+        $nodeDefinitionPermission = SwiftNodeDefinition::find($node_definition_id)->permission()->where('permission_type','=',$permission_type)->get()->all();
         if(count($nodeDefinitionPermission))
         {
             $arrayPermission = array_map(function($p){

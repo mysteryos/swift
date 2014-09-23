@@ -1,8 +1,8 @@
 <table id="inbox-table" class="table table-striped table-hover">
 	<tbody>
-                @if(count($orders) != 0)
-                    @foreach($orders as $o)
-                        <tr class="orderform @if(!$o->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($o->id) }}" data-view="/order-tracking/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($o->id) }}">
+                @if(count($forms) != 0)
+                    @foreach($forms as $f)
+                        <tr class="orderform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}" data-view="/order-tracking/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($f->id) }}">
                                 <td class="inbox-table-icon">
                                         <div class="checkbox">
                                                 <label>
@@ -11,7 +11,7 @@
                                         </div>
                                 </td>
                                 <td class="inbox-table-icon">
-                                    @if($o->flag_important)
+                                    @if($f->flag_important)
                                     <span>
                                         <i class="fa fa-exclamation-triangle" title="Important"></i>
                                     </span>
@@ -20,19 +20,19 @@
                                 <td class="inbox-table-icon">
                                     <div>
                                         <label>
-                                            <a href="/order-tracking/mark/{{ SwiftFlag::STARRED }}?id={{ urlencode(Crypt::encrypt($o->id)) }}" class="markstar"><i class="fa fa-lg @if($o->flag_starred) {{ "fa-star" }} @else {{ "fa-star-o"}} @endif "></i></a>
+                                            <a href="/{{ $rootURL }}/mark/{{ SwiftFlag::STARRED }}?id={{ urlencode(Crypt::encrypt($f->id)) }}" class="markstar"><i class="fa fa-lg @if($f->flag_starred) {{ "fa-star" }} @else {{ "fa-star-o"}} @endif "></i></a>
                                         </label>
                                     </div>
                                 </td>
                                 <td class="inbox-data-from hidden-xs hidden-sm">
                                         <div>
                                                <?php
-                                                    if(count($o->revision_latest))
+                                                    if(count($f->revision_latest))
                                                     {
-                                                        $lastedit_user = User::find($o->revision_latest[0]['user_id']);
+                                                        $lastedit_user = User::find($f->revision_latest[0]['user_id']);
                                                         $me = false;
                                                         $uniqueusers = array();
-                                                        foreach($o->revision_latest as $r)
+                                                        foreach($f->revision_latest as $r)
                                                         {
                                                             if($r['user_id'] == Sentry::getUser()->id)
                                                             {
@@ -57,7 +57,7 @@
                                 <td class="inbox-data-message">
                                         <div>
                                             <span><i class="fa <?php
-                                                switch($o->current_activity['status'])
+                                                switch($f->current_activity['status'])
                                                 {
                                                     case SwiftWorkflowActivity::COMPLETE:
                                                         echo "fa-check";
@@ -73,7 +73,7 @@
                                                         break;
                                                     
                                                 }
-                                                switch($o->business_unit)
+                                                switch($f->business_unit)
                                                 {
                                                     case SwiftOrder::SCOTT_CONSUMER:
                                                         echo " txt-color-orangeDark";
@@ -85,12 +85,12 @@
                                                         echo " txt-color-blue";
                                                         break;
                                                 }
-                                            ?>"></i></span> <i title="ID">{{ $o->id }}.</i></span> <span>{{ $o->name }}</span> - <span class="{{ $o->current_activity['status_class'] }}">{{ $o->current_activity['label'] }}</span>
+                                            ?>"></i></span> <i title="ID">{{ $f->id }}.</i></span> <span>{{ $f->name }}</span> - <span class="{{ $f->current_activity['status_class'] }}">{{ $f->current_activity['label'] }}</span>
                                         </div>
                                 </td>
  
                                 <td class="inbox-data-attachment hidden-xs">
-                                        @if($o->document()->count() != 0)                                        
+                                        @if($f->document()->count() != 0)                                        
                                             <div>
                                                     <i class="fa fa-paperclip fa-lg"></i>
                                             </div>
@@ -98,13 +98,13 @@
                                 </td>
 
                                 <td class="inbox-data-date hidden-xs">
-                                        <span title="{{$o->updated_at->toDayDateTimeString()}}">
-                                                @if(date_format(new DateTime($o->updated_at->toDateTimeString()),'d/m/Y') == date('d/m/Y'))
-                                                    {{ $o->updated_at->format('g:i a') }}
-                                                @elseif($o->updated_at->year != date('Y'))
-                                                    {{ $o->updated_at->toFormattedDateString() }}
+                                        <span title="{{$f->updated_at->toDayDateTimeString()}}">
+                                                @if(date_format(new DateTime($f->updated_at->toDateTimeString()),'d/m/Y') == date('d/m/Y'))
+                                                    {{ $f->updated_at->format('g:i a') }}
+                                                @elseif($f->updated_at->year != date('Y'))
+                                                    {{ $f->updated_at->toFormattedDateString() }}
                                                 @else
-                                                    {{ $o->updated_at->format('M d') }}
+                                                    {{ $f->updated_at->format('M d') }}
                                                 @endif
                                         </span>
                                 </td>

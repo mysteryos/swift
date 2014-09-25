@@ -174,7 +174,7 @@ class NodeActivity {
                  * Check if node activity has been processed
                  */
                 if($nodeActivity->user_id == 0)
-                {                
+                {
                     /*
                      * Call Utility Function
                      */
@@ -270,30 +270,61 @@ class NodeActivity {
     public function goNext($currentNodeActivity)
     {
         $insertedNodesArray = array();
-        //Get Next Nodes
-        $nextNodes = SwiftNodeDefinitionJoin::getByParent($currentNodeActivity->node_definition_id);
-        if(count($nextNodes))
+        //Get Next Node Definitions
+        $nextNodeDefinitionJoins = SwiftNodeDefinitionJoin::getByParent($currentNodeActivity->node_definition_id);
+        if(count($nextNodeDefinitionJoins))
         {
-            switch($nextNodes->first()->pattern)
+            switch($nextNodeDefinitionJoins->first()->pattern)
             {
                 case SwiftNodeDefinitionJoin::$P_SEQUENCE:
                     //Sequence = Single node branch
-                    if(count($nextNodes) == 1)
+                    if(count($nextNodeDefinitionJoins) == 1)
                     {
-                        //Fetch children
-                        $nextNodeDefinition = $nextNodes->first()->childNode;
-                        if(count($nextNodeDefinition))
+                        $function = $nextNodeDefinitionJoins->first()->php_function."::".lcfirst(studly_case($nextNodeDefinitionJoins->first()->name));
+                        /*
+                         * Call function if possible
+                         */
+                        if(is_callable($function))
                         {
-                            $newNodeActivity = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinition);
-                            if($newNodeActivity)
+                            if(call_user_func_array($function,array($currentNodeActivity)))
                             {
-                                $insertedNodesArray[] = $newNodeActivity;
-                                self::join($currentNodeActivity->id,$newNodeActivity->id);
+                                //Fetch children
+                                $nextNodeDefinition = $nextNodeDefinitionJoins->first()->childNode;
+                                if(count($nextNodeDefinition))
+                                {
+                                    $newNodeActivity = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinition);
+                                    if($newNodeActivity)
+                                    {
+                                        $insertedNodesArray[] = $newNodeActivity;
+                                        self::join($currentNodeActivity->id,$newNodeActivity->id);
+                                    }
+                                }
+                                else
+                                {
+                                    throw new \Exception("Node Activity: Failed to find node definition");
+                                }                                
                             }
                         }
                         else
                         {
-                            throw new \Exception("Node Activity: Failed to find node definition");
+                            /*
+                             * If there is no function, we continue ahead
+                             */
+                            //Fetch children
+                            $nextNodeDefinition = $nextNodeDefinitionJoins->first()->childNode;
+                            if(count($nextNodeDefinition))
+                            {
+                                $newNodeActivity = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinition);
+                                if($newNodeActivity)
+                                {
+                                    $insertedNodesArray[] = $newNodeActivity;
+                                    self::join($currentNodeActivity->id,$newNodeActivity->id);
+                                }
+                            }
+                            else
+                            {
+                                throw new \Exception("Node Activity: Failed to find node definition");
+                            }                       
                         }
                     }
                     else
@@ -302,15 +333,15 @@ class NodeActivity {
                     }
                     break;
                 case SwiftNodeDefinitionJoin::$P_AND_SPLIT:
-                case SwiftNodeDefinitionJoin::$P_XOR_SPILT:
+                case SwiftNodeDefinitionJoin::$P_OR_SPILT:
                     //No conditions to evaluate - Straight Forward Creation of Nodes
                     //Expected count more than 1
-                    if(count($nextNodes) > 1)
+                    if(count($nextNodeDefinitionJoins) > 1)
                     {
                         /*
                          * Loop through node definitions
                          */
-                        foreach($nextNodes as $n)
+                        foreach($nextNodeDefinitionJoins as $n)
                         {
                             $newNodeActivity = self::create($currentNodeActivity->workflow_activity_id,$n->childNode);
                             if($newNodeActivity)
@@ -326,15 +357,16 @@ class NodeActivity {
                     }
                     break;
                 case SwiftNodeDefinitionJoin::$P_AND_JOIN:
+                case SwiftNodeDefinition::$P_XAND_JOIN:                    
                     //Verify Condition before joining nodes
                     //Lazy Check - If first condition evaluates to false, no need to verify others.
-                    $function = $nextNodes->first()->php_function."::".lcfirst(studly_case($nextNodes->first()->name));
+                    $function = $nextNodeDefinitionJoins->first()->php_function."::".lcfirst(studly_case($nextNodeDefinitionJoins->first()->name));
                     if(is_callable($function))
                     {
                         if(call_user_func_array($function,array($currentNodeActivity)))
                         {
                             //Check if other nodes have met their conditions
-                            $andJoinNodeId = $nextNodes->first()->children_id;
+                            $andJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
                             /*
                              * Get all nodes associated with the node being joined to with "and Joins"
                              */
@@ -393,7 +425,7 @@ class NodeActivity {
                                 /*
                                  * Node is expected to be solely one.
                                  */
-                                $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodes->first()->childNode);
+                                $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinitionJoins->first()->childNode);
                                 if($insertedNode)
                                 {
                                     $insertedNodesArray[] = $insertedNode;
@@ -415,16 +447,17 @@ class NodeActivity {
                         throw new \RuntimeException("Function '{$function}' is not callable.");
                     }                     
                     break;
-                case SwiftNodeDefinitionJoin::$P_XOR_JOIN:
+                case SwiftNodeDefinitionJoin::$P_OR_JOIN:
+                case SwiftNodeDefinitionJoin::$P_XOR_JOIN:                    
                     //Verify Condition
                     //Lazy Check - If first condition evaluates to true, no need to verify others.
-                    $function = $nextNodes->first()->php_function."::".studly_case($nextNodes->first()->name);
+                    $function = $nextNodeDefinitionJoins->first()->php_function."::".studly_case($nextNodeDefinitionJoins->first()->name);
                     if(is_callable($function))
                     {
                         if(!call_user_func_array($function,array($currentNodeActivity)))
                         {
                             //Check if other nodes have met their conditions
-                            $orJoinNodeId = $nextNodes->first()->children_id;
+                            $orJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
                             /*
                              * Get all nodes associated with the node being joined to with "and Joins"
                              */
@@ -432,7 +465,7 @@ class NodeActivity {
                             $conditionOr = true;
                             if(count($nodesWithOrJoin) < 2)
                             {
-                                throw new UnexpectedValueExemption("An \"And branch\" terminated wtih a single branch; Multiple branches expected");
+                                throw new UnexpectedValueExemption("An \"Or branch\" terminated wtih a single branch; Multiple branches expected");
                             }
                             /*
                              * Loop through all Node Branching Conditions & Check them
@@ -442,7 +475,7 @@ class NodeActivity {
                             {
                                 //Check if parent node activity exists first
                                 $parentNodeActivity = SwiftNodeActivity::getByWorkflowAndDefinition($currentNodeActivity->workflow_activity_id, $n->parent_node->id);
-                                if($parentNodeActivity)
+                                if(count($parentNodeActivity))
                                 {
                                     /*
                                      * If exists, we check branching condition
@@ -476,7 +509,7 @@ class NodeActivity {
                             /*
                              * Node is expected to be solely one.
                              */
-                            $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodes->first()->childNode);
+                            $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinitionJoins->first()->childNode);
                             if($insertedNode)
                             {
                                 $insertedNodesArray[] = $insertedNode;
@@ -493,10 +526,123 @@ class NodeActivity {
                         throw new \RuntimeException("Function '{$function}' is not callable.");
                     }                    
                     break;
-//                case SwiftNodeDefinition::$P_OR_SPLIT:
-//                    break;
-//                case SwiftNodeDefinition::$P_OR_JOIN:
+                case SwiftNodeDefinitionJoin::$P_XOR_SPLIT:
+                case SwiftNodeDefinitionJoin::$P_XAND_SPLIT:                    
+                    //Expected count more than 1
+                    if(count($nextNodeDefinitionJoins) > 1)
+                    {
+                        /*
+                         * Loop through node definitions
+                         */
+                        foreach($nextNodeDefinitionJoins as $n)
+                        {
+                            $function = $n->first()->php_function."::".lcfirst(studly_case($n->first()->name));
+                            /*
+                             * Call function if possible
+                             */
+                            if(is_callable($function))
+                            {
+                                /*
+                                 * Check if we are allowed to create the next node
+                                 */
+                                if(call_user_func_array($function,array($currentNodeActivity)))
+                                {
+                                    $newNodeActivity = self::create($currentNodeActivity->workflow_activity_id,$n->childNode);
+                                    if($newNodeActivity)
+                                    {
+                                        $insertedNodesArray[] = $newNodeActivity;
+                                        self::join($currentNodeActivity->id,$newNodeActivity->id);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                throw new \RuntimeException("Function '{$function}' is not callable.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new \RuntimeException("Node of 'XOR/XAND split' must have more than one branch");
+                    }                    
+                    break;
+
                     //Verify Condition
+                    //Lazy Check - If first condition evaluates to true, no need to verify others.
+                    $function = $nextNodeDefinitionJoins->first()->php_function."::".studly_case($nextNodeDefinitionJoins->first()->name);
+                    if(is_callable($function))
+                    {
+                        if(!call_user_func_array($function,array($currentNodeActivity)))
+                        {
+                            //Check if other nodes have met their conditions
+                            $orJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
+                            /*
+                             * Get all nodes associated with the node being joined to with "XOR Joins"
+                             */
+                            $nodesWithOrJoin = SwiftNodeDefinitionJoin::getByChild($orJoinNodeId);
+                            $conditionOr = true;
+                            if(count($nodesWithOrJoin) < 2)
+                            {
+                                throw new UnexpectedValueExemption("An \"Or branch\" terminated wtih a single branch; Multiple branches expected");
+                            }
+                            /*
+                             * Loop through all Node Branching Conditions & Check them
+                             */
+                            $conditionOr = false;
+                            foreach($nodesWithOrJoin as $n)
+                            {
+                                //Check if parent node activity exists first
+                                $parentNodeActivity = SwiftNodeActivity::getByWorkflowAndDefinition($currentNodeActivity->workflow_activity_id, $n->parent_node->id);
+                                if(count($parentNodeActivity))
+                                {
+                                    /*
+                                     * If exists, we check branching condition
+                                     */
+                                    $func = $n->php_function."::".lcfirst(studly_case($n->name));
+                                    if(is_callable($func))
+                                    {
+                                        if(call_user_func_array($func,array($parentNodeActivity)))
+                                        {
+                                            $conditionOr = true;
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        throw new \RuntimeException("Function '{$func}' is not callable.");
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $conditionOr = true;
+                        }
+                            
+                        /*
+                         * Conditions couldn't be more ideal.
+                         */
+                        if($conditionOr)
+                        {
+                            /*
+                             * Node is expected to be solely one.
+                             */
+                            $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinitionJoins->first()->childNode);
+                            if($insertedNode)
+                            {
+                                $insertedNodesArray[] = $insertedNode;
+                                /*
+                                 * Joins are expected to be only one.
+                                 * Loop through ParentNodeIDs and Join the Nodes
+                                 */
+                                self::join($parentNodeActivity->id,$insertedNode->id);
+                            }
+                        }                        
+                    }
+                    else
+                    {
+                        throw new \RuntimeException("Function '{$function}' is not callable.");
+                    }                    
                     break;
                 default:
                     throw new \UnexpectedValueException("Node definition pattern is unknown.");
@@ -518,9 +664,9 @@ class NodeActivity {
     /*
      * Visits previous node in workflow
      */
-    public function goPrevious($currentNodeActivity)
+    public function goPrevious($nodeName)
     {
-            
+        
     }
     
     /*

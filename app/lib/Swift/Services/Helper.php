@@ -84,7 +84,7 @@ class Helper {
                 $url = "/order-tracking/view/".Crypt::encrypt($obj->id);
                 break;
             case "SwiftAPRequest":
-                $url = "/aprequest/view".Crypt::encrypt($obj->id);
+                $url = "/aprequest/view/".Crypt::encrypt($obj->id);
                 break;
         }
         

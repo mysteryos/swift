@@ -31,40 +31,40 @@
     </div>
     <div class="row">
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
-            @if(Sentry::getUser()->hasAccess(['apr-admin']))
+            @if($isAdmin)
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/order-tracking/create" class="btn btn-primary btn-block pjax @if(!Sentry::getUser()->hasAccess('apr-admin')){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$isAdmin){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
                     </div>
                 </div>
             @endif
             <div class="row">
                 <div class="col-xs-12 inbox-side-bar">
-                    <h6> Filters <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a></h6>
+                    <h6> Filters <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a>--></h6>
 
                     <ul class="inbox-menu-lg">
-                            <li @if($type=="all"){{"class=\"active\""}}@endif >
-                                    <a href="/order-tracking/forms/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All</a>
-                            </li>
                             <li @if($type=="inprogress"){{"class=\"active\""}}@endif >
-                                    <a href="/order-tracking/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
+                                    <a href="/{{ $rootURL }}/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
+                            </li>                        
+                            <li @if($type=="all"){{"class=\"active\""}}@endif >
+                                    <a href="/{{ $rootURL }}/forms/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All</a>
                             </li>
                             <li @if($type=="completed"){{"class=\"active\""}}@endif >
-                                    <a href="/order-tracking/forms/completed" class="form-pjax-filter pjax"><i class="fa fa-check"></i>Completed</a>
+                                    <a href="/{{ $rootURL }}/forms/completed" class="form-pjax-filter pjax"><i class="fa fa-check"></i>Completed</a>
                             </li>
                             <li @if($type=="rejected"){{"class=\"active\""}}@endif >
-                                    <a href="/order-tracking/forms/rejected" class="form-pjax-filter pjax"><i class="fa fa-times"></i>Rejected </a>
+                                    <a href="/{{ $rootURL }}/forms/rejected" class="form-pjax-filter pjax"><i class="fa fa-times"></i>Rejected </a>
                             </li>
                     </ul>
 
-                    <h6> Quick Access <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a></h6>
+                    <h6> Quick Access <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a>--> </h6>
 
                     <ul class="inbox-menu-sm">
                             <li @if($type=="starred"){{"class=\"active\""}}@endif >
-                                    <a href="/order-tracking/forms/starred" class="form-pjax-filter pjax"><i class="fa fa-star"></i>Starred</a>
+                                    <a href="/{{ $rootURL }}/forms/starred" class="form-pjax-filter pjax"><i class="fa fa-star"></i>Starred</a>
                             </li>
                             <li @if($type=="important"){{"class=\"active\""}}@endif >
-                                    <a href="/order-tracking/forms/important" class="form-pjax-filter pjax"><i class="fa fa-exclamation-triangle"></i>Important</a>
+                                    <a href="/{{ $rootURL }}/forms/important" class="form-pjax-filter pjax"><i class="fa fa-exclamation-triangle"></i>Important</a>
                             </li>
                     </ul>
 
@@ -75,6 +75,7 @@
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="row">
                 <div class="col-xs-12">
+                    @if($type != 'inprogress')
                     <div class="hidden-tablet pull-left">
                         <ul class="nav nav-pills filter-nav">
                             <li>
@@ -92,13 +93,14 @@
                             </li>
                         </ul>
                     </div>
-                    @if(Sentry::getUser()->hasAccess('apr-admin'))
-                        <a href="/order-tracking/create" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
+                    @endif
+                    @if($isAdmin)
+                        <a href="/{{ $rootURL }}/create" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
                     @endif
                     @if($count)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/order-tracking/forms/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">

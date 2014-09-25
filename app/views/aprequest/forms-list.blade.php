@@ -2,7 +2,7 @@
 	<tbody>
                 @if(count($forms) != 0)
                     @foreach($forms as $f)
-                        <tr class="orderform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}" data-view="/order-tracking/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($f->id) }}">
+                        <tr class="orderform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}" data-view="/{{ $rootURL }}/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($f->id) }}">
                                 <td class="inbox-table-icon">
                                         <div class="checkbox">
                                                 <label>

@@ -4,7 +4,7 @@
  * Description:
  */
 
-class SwiftAPProduct extends eloquent {
+class SwiftAPProduct extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait; 
     
@@ -35,9 +35,29 @@ class SwiftAPProduct extends eloquent {
     );    
     
     protected $revisionClassName = "A&P Product";
+    protected $revisionPrimaryIdentifier = "id";
+    protected $keepCreateRevision = true;
+    protected $softDelete = true;
     
-    protected $saveCreateRevision = true;
+    /*
+     * Events
+     */
     
+//    protected static function boot() {
+//        parent::boot();
+//        
+//        static::deleting(function($this) { // called BEFORE delete()
+//            //Remove all approvals associated with the product
+//            $this->approval()->delete();
+//        });
+//        
+//        static::bootRevisionable();
+//        static::bootSoftDeletingTrait();
+//    }
+    
+    /*
+     * Relationships
+     */
     public function aprequest()
     {
         return $this->belongTo('SwiftApRequest','aprequest_id');

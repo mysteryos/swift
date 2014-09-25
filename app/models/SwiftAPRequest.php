@@ -4,7 +4,7 @@
  * Description:
  */
 
-class SwiftAPRequest extends eloquent {
+class SwiftAPRequest extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait; 
     
@@ -52,6 +52,11 @@ class SwiftAPRequest extends eloquent {
         return $this->hasMany('SwiftApProduct','aprequest_id');
     }
     
+    public function order()
+    {
+        return $this->hasMany('SwiftAPOrder','aprequest_id');
+    }
+    
     /*
      * Morphic
      */
@@ -60,9 +65,12 @@ class SwiftAPRequest extends eloquent {
     {
         return $this->morphMany('SwiftComment', 'commentable');
     }
-    /*
-     * Morphic
-     */
+    
+    public function workflow()
+    {
+        return $this->morphOne('SwiftWorkflowActivity', 'workflowable');
+    }
+    
     public function document()
     {
         return $this->morphMany('SwiftDocument','document');
@@ -71,6 +79,25 @@ class SwiftAPRequest extends eloquent {
     public function flag()
     {
         return $this->morphMany('SwiftFlag','flaggable');
+    }
+    
+    public function approval()
+    {
+        return $this->morphMany('SwiftApproval','approvable');
+    }
+    
+    public function delivery()
+    {
+        return $this->morphMany('SwiftDelivery','deliverable');
+    }
+    
+    /*
+     * Helper Function
+     */
+    
+    public function getById($id)
+    {
+        return self::with('customer','product','comment','document','flag')->find($id);
     }
 
 }

@@ -63,7 +63,19 @@ class SwiftNodeDefinitionJoin extends Eloquent {
      * Name: Synchronizing Merge (OR-Join)
      * TLDR: After B and/or C has completed, it moves to E
      */
-    public static $P_OR_JOIN = 7;    
+    public static $P_OR_JOIN = 7;  
+    
+    /*
+     * Name: Exclusive Compulsory Choice (XAND-Split)
+     * TLDR: Same as AND but with variable number of nodes
+     */
+    public static $P_XAND_SPILT = 8;
+    
+    /*
+     * Name: Simple Merge (XAND-Join)
+     * TLDR: Same as AND but with variable number of nodes
+     */
+    public static $P_XAND_JOIN = 9;       
     
     
     public function childNode()

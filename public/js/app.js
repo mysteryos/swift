@@ -2038,5 +2038,33 @@ var main = {
             pageSetUp();
             ncrm_machinecreate();            
         }
+    },
+    
+    /*
+     * APRequest - Show All Forms
+     */
+    
+    apr_forms: function () {
+        if(typeof window['apr_forms'] === "undefined")
+        {        
+            jsLoader(["/js/swift/swift.apr_forms.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            apr_forms();
+        }
+    },
+    
+    apr_create: function() {
+        if(typeof window['apr_create'] === "undefined")
+        {
+            jsLoader(["/js/plugin/jquery-form/jquery-form.min.js","/js/swift/swift.apr_create.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            apr_create();
+        }        
     }
 }

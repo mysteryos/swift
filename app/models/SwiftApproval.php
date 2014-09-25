@@ -17,6 +17,20 @@ class SwiftApproval extends Eloquent {
     
     public $timestamps = true;
     
+    /*
+     * Approval Types for AP Request
+     */
+    const APR_REQUESTER = 1;
+    const APR_CATMAN = 2;
+    const APR_EXEC = 3;
+    
+    /*
+     * Approved Constants
+     */
+    
+    const PENDING = 0;
+    const APPROVED = 1;
+    const REJECTED = -1;
     
     /*
      * PolyMorphic Relationships
@@ -30,5 +44,10 @@ class SwiftApproval extends Eloquent {
     public function approduct()
     {
         return $this->morphByMany('SwiftApProduct','approvable');
+    }
+    
+    public function aprequest()
+    {
+        return $this->morphByMany('SwiftAPRequest','approvable');
     }
 }

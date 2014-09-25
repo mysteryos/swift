@@ -267,6 +267,10 @@
 * Extend SmartAdmin Production
 */
 
+.full-width{
+    width:100%;
+}
+
 .minified .login-info a i.avatar{
     display:block;
     margin-right:0px;

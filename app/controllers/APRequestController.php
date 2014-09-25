@@ -31,7 +31,7 @@ class APRequestController extends UserController {
     private function form($id,$edit=false)
     {
         $apr_id = Crypt::decrypt($id);
-        $apr = SwiftOrder::getById($order_id);
+        $apr = SwiftAPRequest::getById($order_id);
         if(count($apr))
         {
             /*
@@ -51,21 +51,16 @@ class APRequestController extends UserController {
             /*
              * Data
              */
-            $this->data['activity'] = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$order);
-            $this->pageTitle = "{$order->name} (ID: $order->id)";
-            $this->data['incoterms'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$incoterms));
-            $this->data['freight_type'] = json_encode(Helper::jsonobject_encode(SwiftFreight::$type));
-            $this->data['business_unit'] = json_encode(Helper::jsonobject_encode(SwiftOrder::$business_unit));
-            $this->data['customs_status'] = json_encode(Helper::jsonobject_encode(SwiftCustomsDeclaration::$status));
-            $this->data['shipment_type'] = json_encode(Helper::jsonobject_encode(SwiftShipment::$type));
-            $this->data['order'] = $order;
-            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
-            $this->data['current_activity'] = WorkflowActivity::progress($order,'order_tracking');
+            $this->data['activity'] = Helper::getMergedRevision(array('product','document','product.approval'),$order);
+            $this->pageTitle = "{$apr->name} (ID: $apr->id)";
+            $this->data['form'] = $apr;
+//            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
+            $this->data['current_activity'] = WorkflowActivity::progress($apr,'aprequest');
             $this->data['edit'] = $edit;
-            $this->data['flag_important'] = Flag::isImportant($order);
-            $this->data['flag_starred'] = Flag::isStarred($order);
+            $this->data['flag_important'] = Flag::isImportant($apr);
+            $this->data['flag_starred'] = Flag::isStarred($apr);
             
-            return $this->makeView('order-tracking/edit');
+            return $this->makeView("$this->rootURL/edit");
         }
         else
         {
@@ -82,7 +77,7 @@ class APRequestController extends UserController {
         if(NodeActivity::hasStartAccess('aprequest'))
         {
             $this->pageTitle = 'Create';
-            return $this->makeView('aprequest/create');
+            return $this->makeView("$this->rootURL/create");
         }
         else
         {
@@ -92,11 +87,11 @@ class APRequestController extends UserController {
     
     public function getView($id)
     {
-        if(Sentry::getUser()->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return Redirect::action('APRequestController@getEdit',array('id'=>$id));
         }
-        elseif(Sentry::getUser()->hasAnyAccess([$this->viewPermission]))
+        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
         {
             return $this->form($id,false);
         }
@@ -108,11 +103,11 @@ class APRequestController extends UserController {
     
     public function getEdit($id)
     {
-        if(Sentry::getUser()->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return $this->form($id,true);
         }
-        elseif(Sentry::getUser()->hasAnyAccess([$this->viewPermission]))
+        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
         {
             return Redirect::action('APRequestController@getView',array('id'=>$id));
         }
@@ -130,11 +125,38 @@ class APRequestController extends UserController {
         $limitPerPage = 30;
         
         $this->pageTitle = 'Forms';
-        $aprequestquery = SwiftApRequest::take($limitPerPage)->orderBy('updated_at','desc');
-        if($page > 1)
+        
+        //Check Edit Access
+        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);           
+        
+        //Check user group
+        if(!$this->data['edit_access'] && $type='inprogress')
         {
-            $aprequestquery->offset(($page-1)*$limitPerPage);
-        }
+            $type='all';
+        }        
+        
+        $aprequestquery = SwiftApRequest::orderBy('updated_at','desc');
+        
+        if($type != 'inprogress')
+        {
+            /*
+             * If not in progress, we limit rows
+             */
+            $aprequestquery->take($limitPerPage);
+            if($page > 1)
+            {
+                $aprequestquery->offset(($page-1)*$limitPerPage);
+            }
+            
+            //Get node definition list
+            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','aprequest')->first()->id)->all();
+            $node_definition_list = array();
+            foreach($node_definition_result as $v)
+            {
+                $node_definition_list[$v->id] = $v->label;
+            }
+            $this->data['node_definition_list'] = $node_definition_list;            
+        }        
         
         switch($type)
         {
@@ -155,7 +177,7 @@ class APRequestController extends UserController {
                 break;
             case 'starred':
                 $aprequestquery->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',Sentry::getUser()->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
+                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
                 });                
                 break;
             case 'important':
@@ -165,36 +187,109 @@ class APRequestController extends UserController {
                 break;
         }
         
+        //Filters
+        if(Input::has('filter'))
+        {
+            
+            if(Session::has('apr_form_filter'))
+            {
+                $filter = Session::get('apr_form_filter');
+            }
+            else
+            {
+                $filter = array();
+            }
+            
+            $filter[Input::get('filter_name')] = Input::get('filter_value');
+            
+            /*
+             * loop & Apply all filters
+             */
+            foreach($filter as $f_name => $f_val)
+            {
+                switch($f_name)
+                {
+                    case 'business_unit':
+                        $aprequestquery->where('business_unit','=',$f_val);
+                        break;
+                    case 'node_definition_id':
+                        $aprequestquery->whereHas('workflow',function($q) use($f_val){
+                           return $q->whereHas('nodes',function($q) use($f_val){
+                               return $q->where('node_definition_id','=',$f_val);
+                           });
+                        });
+                        break;
+                }
+            }
+            
+            Session::flash('apr_form_filter',$filter);
+
+        }
+        else
+        {
+            Session::forget('apr_form_filter');
+        }
+        
         $forms = $aprequestquery->get();
         
         /*
          * Fetch latest history;
          */
-        foreach($forms as &$f)
+        foreach($forms as $k => &$f)
         {
+            
+            //Set Current Workflow Activity
+            $f->current_activity = WorkflowActivity::progress($f);            
+            
+            //If in progress, we filter
+            if($type == 'inprogress')
+            {
+                $hasAccess = false;
+                /*
+                 * Loop through node definition and check access
+                 */
+                foreach($f->current_activity['definition'] as $d)
+                {
+                    if(NodeActivity::hasAccess($d,SwiftNodePermission::RESPONSIBLE))
+                    {
+                        $hasAccess = true;
+                        break;
+                    }
+                }
+                
+                /*
+                 * No Access : We Remove order from list
+                 */
+                if(!$hasAccess)
+                {
+                    unset($forms[$k]);
+                    continue;
+                }
+            }
+            else
+            {
+                if(isset($filter) && isset($filter['node_definition_id']))
+                {
+                    if(!isset($f->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$f->current_activity['definition']))
+                    {
+                        unset($forms[$k]);
+                        break;
+                    }
+                }
+            }
+            
             //Set Revision
             $f->revision_latest = Helper::getMergedRevision(array('product'),$f);
-            //Set Current Workflow Activity
-            $f->current_activity = WorkflowActivity::progress($f);
+
             //Set Starred/important
             $f->flag_starred = Flag::isStarred($f);
             $f->flag_important = Flag::isImportant($f);
             $f->flag_read = Flag::isRead($f);
         }
         
-        //Get node definition list
-//        $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','order_tracking')->first()->id)->all();
-//        $node_definition_list = array();
-//        foreach($node_definition_result as $v)
-//        {
-//            $node_definition_list[$v->id] = $v->label;
-//        }
-//        
-        
         //The Data
         $this->data['type'] = $type;
-        $this->data['isAdmin'] = Sentry::getUser()->hasAnyAccess([$this->adminPermission]);
-        $this->data['edit_access'] = Sentry::getUser()->hasAnyAccess([$this->editPermission,$this->adminPermission]);
+        $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
         $this->data['forms'] = $forms;
         $this->data['count'] = $aprequestquery->count();
         $this->data['page'] = $page;
@@ -202,9 +297,8 @@ class APRequestController extends UserController {
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
         $this->data['rootURL'] = $this->rootURL;
-//        $this->data['node_definition_list'] = $node_definition_list;
         
-        return $this->makeView('aprequest/forms');
+        return $this->makeView("$this->rootURL/forms");
     }
     
     /*
@@ -216,13 +310,14 @@ class APRequestController extends UserController {
         /*
          * Check Permission
          */
-        if(!Sentry::getUser()->hasAccess($this->adminPermission) || !NodeActivity::hasStartAccess('aprequest'))
+        if(!$this->currentUser->hasAccess($this->editPermission) || !NodeActivity::hasStartAccess('aprequest'))
         {
             return parent::forbidden();
         }
         
         $validator = Validator::make(Input::all(),
-                        array('name'=>'required')
+                        array('name'=>'required',
+                              'customer_code'=>'required')
                     );
         
         if($validator->fails())
@@ -238,7 +333,7 @@ class APRequestController extends UserController {
                 if(\WorkflowActivity::update($aprequest,'aprequest'))
                 {
                     //Success
-                    echo json_encode(['success'=>1,'url'=>Helper::generateUrl($$aprequest)]);
+                    echo json_encode(['success'=>1,'url'=>Helper::generateUrl($aprequest)]);
                 }
                 else
                 {
@@ -261,7 +356,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */        
-        if(!Sentry::getUser()->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }

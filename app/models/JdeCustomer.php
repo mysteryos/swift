@@ -4,19 +4,19 @@
  * Description: Eloquent Model
  */
 
-class JdeCustomer extends eloquent {
+class JdeCustomer extends Eloquent {
     protected $connection = 'sct_jde';
     
     protected $table = 'jdecustomers';
     
     public static function getByName($term,$offset,$limit)
     {
-        return self::where('alph','LIKE',"%$term%")->limit($limit)->offset($offset)->get();
+        return self::where('alph','LIKE',"%$term%")->limit($limit)->offset($offset)->select('alph','AN8','AC09')->get();
     }
     
     public static function getByCode($term,$offset,$limit)
     {
-        return self::where('an8','LIKE',"%$term%")->distinct()->limit($limit)->offset($offset)->get();
+        return self::where('an8','LIKE',"%$term%")->distinct()->limit($limit)->offset($offset)->select('alph','AN8','AC09')->get();
     }
     
     public static function countByName($term)

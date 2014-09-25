@@ -415,6 +415,7 @@ class OrderTrackingController extends UserController {
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
+        $this->data['rootURL'] = $this->rootURL;
         
         return $this->makeView('order-tracking/forms');
     }

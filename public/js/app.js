@@ -2066,5 +2066,30 @@ var main = {
             pageSetUp();
             apr_create();
         }        
-    }
+    },
+    apr_view: function() {
+        if(typeof window['apr_view'] === "undefined")
+        {
+            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.apr_view.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            apr_view();
+        }
+    },
+    apr_edit: function() {
+        if(typeof window['apr_edit'] === "undefined")
+        {
+            jsLoader(["/js/plugin/x-editable/x-editable.js",
+                        "/js/plugin/jquery-caret/jquery.caret.min.js",
+                        "/js/plugin/jquery-atwho/jquery.atwho.min.js",
+                        "/js/swift/swift.apr_edit.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            apr_edit();
+        }
+    }    
 }

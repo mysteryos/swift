@@ -11,7 +11,7 @@ Use \SwiftWorkflowActivity;
 
 Class NodeDefinitionJoin {
     
-    public function __call($method, $args) {
+    public static function __callStatic($method, $args) {
         /*
          * To Category Manager routing
          */

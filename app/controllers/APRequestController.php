@@ -31,7 +31,7 @@ class APRequestController extends UserController {
     private function form($id,$edit=false)
     {
         $apr_id = Crypt::decrypt($id);
-        $apr = SwiftAPRequest::getById($order_id);
+        $apr = SwiftAPRequest::getById($apr_id);
         if(count($apr))
         {
             /*
@@ -51,14 +51,38 @@ class APRequestController extends UserController {
             /*
              * Data
              */
-            $this->data['activity'] = Helper::getMergedRevision(array('product','document','product.approval'),$order);
+            $this->data['activity'] = Helper::getMergedRevision(array('product','document','delivery'),$apr);
             $this->pageTitle = "{$apr->name} (ID: $apr->id)";
             $this->data['form'] = $apr;
 //            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
+            $this->data['product_reason_code'] = json_encode(Helper::jsonobject_encode(SwiftAPProduct::$reason));
             $this->data['current_activity'] = WorkflowActivity::progress($apr,'aprequest');
             $this->data['edit'] = $edit;
             $this->data['flag_important'] = Flag::isImportant($apr);
             $this->data['flag_starred'] = Flag::isStarred($apr);
+            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
+            $this->data['rootURL'] = $this->rootURL;
+            $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
+            $this->data['canPublish'] = false;
+                        
+            /*
+             * See if can publish
+             */
+            
+            if($edit == true)
+            {
+                if($this->data['current_activity']['status'] == SwiftWorkflowActivity::INPROGRESS)
+                {
+                    foreach($this->data['current_activity']['definition_obj'] as $d)
+                    {
+                        if($d->data != "" && isset($d->data->manualpublish) && ($this->data['isAdmin'] || $apr->revisionHistory()->orderBy('created_at','ASC')->first()->user_id == $this->currentUser->id))
+                        {
+                            $this->data['canPublish'] = true;
+                            break;
+                        }
+                    }
+                }
+            }
             
             return $this->makeView("$this->rootURL/edit");
         }
@@ -327,6 +351,7 @@ class APRequestController extends UserController {
         else
         {
             $aprequest = new SwiftAPRequest(Input::All());
+            $aprequest->requester_user_id = $this->currentUser->id;
             if($aprequest->save())
             {
                 //Start the Workflow
@@ -375,6 +400,11 @@ class APRequestController extends UserController {
                 return Response::make('Please enter a name',400);
             }
             
+             if(Input::get('name') == 'customer_code' && trim(Input::get('value')==""))
+            {
+                return Response::make('Please enter a customer name',400);
+            }           
+            
             /*
              * Save
              */
@@ -393,6 +423,303 @@ class APRequestController extends UserController {
         {
             return Response::make('A&P Request form not found',404);
         }
+    }
+    
+    public function putProduct($apr_id)
+    {
+        /*  
+         * Check Permissions
+         */        
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
+        
+        /*
+         * Manual Validation
+         */
+        if(count($form))
+        {
+            switch(Input::get('name'))
+            {
+                case 'status':
+                    if(!array_key_exists(Input::get('value'),SwiftAPProduct::$reason))
+                    {
+                        return Response::make('Please select a valid reason code',400);
+                    }
+                    break;
+                case 'quantity':
+                    if((!is_numeric(Input::get('value')) && Input::get('value') != "") || (is_numeric(Input::get('value')) && (int)Input::get('value') < 0))
+                    {
+                        return Response::make('Please enter a valid numeric value',400);
+                    }
+                    break;
+            }       
+
+            /*
+             * New AP Product
+             */
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $APProduct = new SwiftAPProduct();
+                $APProduct->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                if($form->product()->save($APProduct))
+                {
+                    WorkflowActivity::update($form);
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($APProduct->id),'id'=>$APProduct->id]));
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }
+                
+            }
+            else
+            {
+                $APProduct = SwiftAPProduct::find(Crypt::decrypt(Input::get('pk')));
+                if($APProduct)
+                {
+                    $APProduct->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    if($APProduct->save())
+                    {
+                        WorkflowActivity::update($form);
+                        return Response::make('Success');
+                    }
+                    else
+                    {
+                        return Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return Response::make('Error saving product: Invalid PK',400);
+                }
+            }
+        }
+        else
+        {
+            return Response::make('A&P Request form not found',404);
+        }
+    }
+    
+    public function deleteProduct()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $product_id = Crypt::decrypt(Input::get('pk'));
+        $product = SwiftAPProduct::find($product_id);
+        if(count($product))
+        {
+            /*
+             * Normal User but not creator = no access
+             */
+            if($this->currentUser->hasAccess($this->editPermission) && 
+                !$this->currentUser->isSuperUser() && 
+                $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
+            {
+                return Response::make('Do not publish, that which is not yours',400);
+            }            
+            
+            //Check what stage the form is at
+            $form = $product->aprequest()->first();
+            $progress = WorkflowActivity::progress($form);
+            
+            /*
+             * If Form still in progress
+             */
+            if($progress['status']==SwiftWorkflowActivity::INPROGRESS)
+            {
+                foreach($progress['definition_obj'] as $d)
+                {
+                    if($d->data != "" && isset($d->data->deleteproduct))
+                    {
+                        /*
+                         * At this stage we can delete products
+                         */                        
+                        $product->approval()->delete();
+                        if($product->delete())
+                        {
+                            return Response::make('Success');
+                        }
+                        else
+                        {
+                            return Response::make('Unable to delete',400);
+                        }                        
+                    }
+                }
+            }
+            
+            return Response::make('Unable to delete',400);
+
+        }
+        else
+        {
+            return Response::make('Product not found',404);
+        }
+    }    
+    
+    /*
+     * Form approval for creator of request or admin
+     */
+    public function putFormapproval($apr_id)
+    {
+        /*  
+         * Check Permissions
+         */        
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        
+        $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
+        
+        /*
+         * Manual Validation
+         */
+        if(count($form))
+        {
+            /*
+             * Normal User but not creator = no access
+             */
+            if($this->currentUser->hasAccess($this->editPermission) && 
+                !$this->currentUser->isSuperUser() && 
+                $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
+            {
+                return Response::make('Do not publish, that which is not yours',400);
+            }
+            
+            $approval = $form->approval()->where('type','=',SwiftApproval::APR_REQUESTER,'AND')->where('approved','=',SwiftApproval::APPROVED)->get();
+            if(count($approval))
+            {
+                /*
+                 * Check if form has already been approved
+                 */
+                return Response::make('Form already approved',400);
+            }
+            else
+            {
+                $approval = new SwiftApproval([
+                   'type' => SwiftApproval::APR_REQUESTER,
+                   'approval_user_id' => $this->currentUser->id,
+                   'approved' => SwiftApproval::APPROVED 
+                ]);
+                
+                if($form->approval()->save($approval))
+                {
+                    return Response::make('success');
+                }
+                else
+                {
+                    return Response::make('Failed to approve form',400);
+                }
+            }
+        } 
+        else
+        {
+            return Response::make('A&P Request form not found',404);
+        }
+    }
+    
+    /*
+     * Approval of products for Cat Man Or Exec
+     */
+    public function putProductapproval($product_id,$type)
+    {
+        /*  
+         * Check Permissions
+         */        
+        if(!$this->currentUser->hasAnyAccess(['apr-catman','apr-exec']))
+        {
+            return parent::forbidden();
+        }
+        
+        $product = SwiftAPProduct::find(Crypt::decrypt($product_id));
+        
+        if(count($product))
+        {
+            if(Input::has('approved') && in_array(Input::get('approved'),array(SwiftApproval::REJECTED,SwiftApproval::APPROVED)))
+            {
+                switch((int)$type)
+                {
+                    case SwiftApproval::APR_CATMAN:
+                    case SwiftApproval::APR_EXEC:
+                        if(is_numeric(Input::get('pk')))
+                        {
+                            /*
+                             * New Entry
+                             */
+                            //All Validation Passed, let's save
+                            $approval = new SwiftApproval(array('type'=>(int)$type,'approval_user_id'=>$this->currentUser->id));
+                            $approval->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                            if($product->approval()->save($approval))
+                            {
+                                $apr = $product->aprequest()->first();
+                                WorkflowActivity::update($apr);
+                                return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($approval->id),'id'=>$approval->id]));
+                            }
+                            else
+                            {
+                                return Response::make('Failed to save. Please retry',400);
+                            }
+
+                        }
+                        else
+                        {
+                            $approval = SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
+                            if($approval)
+                            {
+                                $approval->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                                if($approval->save())
+                                {
+                                    $apr = $product->aprequest()->first();
+                                    WorkflowActivity::update($apr);
+                                    return Response::make('Success');
+                                }
+                                else
+                                {
+                                    return Response::make('Failed to save. Please retry',400);
+                                }
+                            }
+                            else
+                            {
+                                return Response::make('Error saving customs information: Invalid PK',400);
+                            }
+                        }
+                        break;
+                    default:
+                        return Response::make('Type of approval unknown',400);
+                        break;
+                }
+            }
+            else
+            {
+                return Response::make('Invalid Request',400);
+            }
+        }
+        else
+        {
+            return Response::make('Product not found',404);
+        }
+        
+    }
+    
+    /*
+     * Save Orders
+     */
+    
+    public function putOrder($apr_id)
+    {
+        
     }
     
     /*

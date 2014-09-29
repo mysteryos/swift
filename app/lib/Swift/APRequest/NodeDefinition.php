@@ -11,7 +11,7 @@ Use SwiftAPOrder;
 
 Class NodeDefinition {
     
-    public function __call($method, $args) {
+    public static function __callStatic($method, $args) {
         /*
          * Category Manager Nodes
          */
@@ -19,6 +19,15 @@ Class NodeDefinition {
         if(strpos($method,'aprCatapproval') !== false)
         {
             return self::aprCatapproval($args[0],str_replace('aprCatapproval','',$method));
+        }
+        
+        /*
+         * Customer Care
+         */
+        
+        if(strpos($method,'aprCustomercare') !== false)
+        {
+            return self::aprCustomercare($args[0]);
         }
     }
     
@@ -41,6 +50,11 @@ Class NodeDefinition {
             }
         }
         return false;
+    }
+    
+    public static function aprCatapprovalRoute($nodeActivity)
+    {
+        return true;
     }
     
     private static function aprCatapproval($nodeActivity,$productCategory)
@@ -91,7 +105,12 @@ Class NodeDefinition {
         return false;        
     }
     
-    public static function aprCustomercare($nodeActivity)
+    public static function aprCustomerRoute($nodeActivity)
+    {
+        return true;
+    }
+    
+    private static function aprCustomercare($nodeActivity)
     {
         $apr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         

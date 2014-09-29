@@ -58,7 +58,13 @@
                 return false;
         }
     });
-
+    
+    /*
+     * Clean previous instances of select2
+     */
+    $('.select2-container').remove();
+    $('#ccode').val('');
+    
     $('#ccode').select2({
         placeholder: 'Enter a customer code/name',
         allowClear: true,
@@ -95,12 +101,6 @@
                      return {results: ''};
                  }
              },
-        },
-        initSelection: function (item, callback) {
-            var id = item.val();
-            var text = item.next('.form_customer_name').val() +" (Code: " + id + ")";
-            var data = { id: id, text: text };
-            callback(data);
         }
     }).on('select2-open',function(){
             $('#select2-drop-mask')

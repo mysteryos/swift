@@ -43,7 +43,7 @@ Class AjaxSearchController extends UserController {
         $limit = 5;
         $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
 
-        $searchresult = SwiftFreightCompany::getByName(Input::get('term'),$offset,$limit);
+        $searchresult = SwiftFreightCompany::getByName(Input::get('query'),$offset,$limit);
         
         if(count($searchresult))
         {
@@ -87,6 +87,72 @@ Class AjaxSearchController extends UserController {
         {
             echo json_encode(array('total'=>0));
         }          
+    }
+    
+    /*
+     * Name: Select2 X-editable function for getting JDE customers
+     * Uses: aprequest/edit.blade.php
+     */
+    public function getCustomercodeplain()
+    {
+        $limit = 5;
+        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
+        
+        if(Input::has('query'))
+        {
+            if(is_numeric(Input::get('query')))
+            {
+                $searchresult = JdeCustomer::getByCode(Input::get('query'),$offset,$limit);
+            }
+            else
+            {
+                $searchresult = JdeCustomer::getByName(Input::get('query'),$offset,$limit);
+            }        
+
+            if(count($searchresult))
+            {
+                foreach($searchresult as $s)
+                {
+                    $result[] = array('id'=>$s->AN8,'text'=>$s->ALPH." - ".$s->AN8);
+                }
+                echo json_encode($result);
+                return;
+            }
+        }
+        
+        echo "";
+    }
+    
+    /*
+     * Name: JDE products, search by code or name
+     * Uses: /aprequest/edit_product.blade.php
+     */
+    public function getProductplain()
+    {
+        $limit = 5;
+        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
+        
+        if(is_numeric(Input::get('query')))
+        {
+            $searchresult = JdeProduct::getByCode(Input::get('query'),$offset,$limit);
+        }
+        else
+        {
+            $searchresult = JdeProduct::getByName(Input::get('query'),$offset,$limit);
+        }        
+        
+        if(count($searchresult))
+        {
+            foreach($searchresult as $s)
+            {
+                $result[] = array('id'=>trim($s->ITM),'text'=>trim($s->DSC1)." - ".trim($s->AITM));
+            }
+            echo json_encode($result);
+        }
+        else
+        {
+            echo "";
+        }        
     }
     
     public function getNespressomachine()

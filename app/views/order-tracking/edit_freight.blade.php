@@ -1,6 +1,6 @@
 <fieldset data-name="freight" class="fieldset-freight multi @if(isset($dummy) && $dummy == true) dummy hide @endif ">
         <div class="row">
-            <div class="form-group">
+            <div class="form-group col-xs-12">
                 <label class="col-md-2 control-label">Type</label>
                 <div class="col-md-10">
                     <a href="#" @if(isset($f->id)) {{ "id=\"freight_freight_type_".Crypt::decrypt($f->id)."\"" }} @endif class="editable freight-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="freight" data-type="select" data-name="freight_type" data-pk="{{ $f->id or 0 }}" data-url="/order-tracking/freight/{{ Crypt::encrypt($order->id) }}" data-title="Select freight type" data-value="{{ $f->freight_type or "" }}" data-source='{{ $freight_type }}'></a>

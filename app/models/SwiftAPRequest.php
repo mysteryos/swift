@@ -10,7 +10,7 @@ class SwiftAPRequest extends Eloquent {
     
     protected $table = "swift_ap_request";
     
-    protected $fillable = array("customer_code","name","description","feedback_star","feedback_text");
+    protected $fillable = array("requester_user_id","customer_code","name","description","feedback_star","feedback_text");
     
     protected $guarded = array('id');
     
@@ -34,17 +34,17 @@ class SwiftAPRequest extends Eloquent {
         'feedback_text' => 'Feedback Text',
     );    
     
-    protected $revisionClassName = "A&P Product";
-    
-    protected $saveCreateRevision = true;
-    
+    protected $revisionClassName = "A&P Request";
+    protected $revisionPrimaryIdentifier = "name";
+    protected $keepCreateRevision = true;
+    protected $softDelete = true;
     /*
      * Relationships
      */
     
     public function customer()
     {
-        return $this->belongTo('JdeCustomer','customer_code','an8');
+        return $this->belongsTo('JdeCustomer','customer_code','AN8');
     }
     
     public function product()
@@ -95,9 +95,9 @@ class SwiftAPRequest extends Eloquent {
      * Helper Function
      */
     
-    public function getById($id)
+    public static function getById($id)
     {
-        return self::with('customer','product','comment','document','flag')->find($id);
+        return self::with('customer','product','product.jdeproduct','product.approval','delivery','approval','order','document')->find($id);
     }
 
 }

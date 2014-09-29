@@ -8,16 +8,16 @@
         <div class="ribbon-button-alignment hidden-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if(Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if(Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif            
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && Sentry::getUser()->hasAnyAccess(['ot-admin']))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
-        </div>    
+            @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif            
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
+        </div>
 
 </div>
 <!-- END RIBBON -->
@@ -68,7 +68,7 @@
 	<div class="row">
 
 		<!-- NEW COL START -->
-		<article class="col-md-8 col-xs-12">
+		<article class="col-lg-8 col-xs-12">
 			
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="ot-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
@@ -158,7 +158,7 @@
                         </div>
                         <!-- end widget freight -->                        
                         
-            <!-- Widget Shipment Start-->
+                        <!-- Widget Shipment Start-->
 			<div class="jarviswidget" id="ot-shipment" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				
 				<header>
@@ -263,7 +263,7 @@
                 <!-- NEW COL END -->
                 
                 <!-- NEW COL START -->
-                <article class="col-md-4 col-xs-12">
+                <article class="col-lg-4 col-xs-12">
                         <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="ot-docs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				

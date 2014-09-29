@@ -15,7 +15,6 @@ class OrderTrackingController extends UserController {
         $this->editPermission = "ot-edit";
     }
     
-    
     /*
      * Overview
      */
@@ -153,6 +152,7 @@ class OrderTrackingController extends UserController {
             $this->data['edit'] = $edit;
             $this->data['flag_important'] = Flag::isImportant($order);
             $this->data['flag_starred'] = Flag::isStarred($order);
+            $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
             
             return $this->makeView('order-tracking/edit');
         }
@@ -741,7 +741,7 @@ class OrderTrackingController extends UserController {
                         return Response::make('Please enter a numeric value',400);
                     }
                     break;
-            }        
+            }       
 
             /*
              * New Customs Declaration

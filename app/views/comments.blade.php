@@ -19,7 +19,6 @@
 
             <!-- CHAT REPLY/SEND -->
             <span class="textarea-controls">
-                    <p class="pull-left"><i>To tag your colleagues, type @, followed by their name</i></p>
                     <button class="btn btn-sm btn-primary pull-right" type="submit" id="comment-submit">
                             Reply
                     </button>

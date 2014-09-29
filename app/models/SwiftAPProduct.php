@@ -39,6 +39,24 @@ class SwiftAPProduct extends Eloquent {
     protected $keepCreateRevision = true;
     protected $softDelete = true;
     
+    
+    
+    /*
+     * Constants : Reason Codes
+     */
+    
+    const RC_EVENT = 1;
+    const RC_TESTING = 2;
+    const RC_SPONSOR = 3;
+    const RC_TRAINING = 4;
+    const RC_CONTRIBUTION = 5;
+    
+    public static $reason = array(self::RC_EVENT => 'Event',
+                                  self::RC_TESTING => 'Testing/Tasting',
+                                  self::RC_SPONSOR => 'Sponsorship',
+                                  self::RC_TRAINING => 'Training',
+                                  self::RC_CONTRIBUTION=> 'Contribution');
+    
     /*
      * Events
      */
@@ -56,11 +74,27 @@ class SwiftAPProduct extends Eloquent {
 //    }
     
     /*
+     * Revisionable Accessors
+     */
+    
+    public function getReasonCodeRevisionAttribute($val)
+    {
+        if(key_exists($val,self::$reason))
+        {
+            return self::$reason[$val];
+        }
+        else
+        {
+            return "";
+        }           
+    }
+    
+    /*
      * Relationships
      */
     public function aprequest()
     {
-        return $this->belongTo('SwiftApRequest','aprequest_id');
+        return $this->belongsTo('SwiftApRequest','aprequest_id');
     }
     
     public function approval()
@@ -70,6 +104,6 @@ class SwiftAPProduct extends Eloquent {
     
     public function jdeproduct()
     {
-        return $this->belongsTo('JdeProduct','LITM','jde_id');
+        return $this->belongsTo('JdeProduct','jde_id','ITM');
     }
 }

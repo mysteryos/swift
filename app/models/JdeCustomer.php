@@ -11,12 +11,12 @@ class JdeCustomer extends Eloquent {
     
     public static function getByName($term,$offset,$limit)
     {
-        return self::where('alph','LIKE',"%$term%")->limit($limit)->offset($offset)->select('alph','AN8','AC09')->get();
+        return self::where('alph','LIKE',"%$term%")->limit($limit)->offset($offset)->select('ALPH','AN8','AC09')->get();
     }
     
     public static function getByCode($term,$offset,$limit)
     {
-        return self::where('an8','LIKE',"%$term%")->distinct()->limit($limit)->offset($offset)->select('alph','AN8','AC09')->get();
+        return self::where('an8','LIKE',"%$term%")->distinct()->limit($limit)->offset($offset)->select('ALPH','AN8','AC09')->get();
     }
     
     public static function countByName($term)

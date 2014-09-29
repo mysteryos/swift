@@ -32,6 +32,27 @@ class SwiftApproval extends Eloquent {
     const APPROVED = 1;
     const REJECTED = -1;
     
+    public static $approved = array(
+                                self::APPROVED => 'Approved',
+                                self::REJECTED => 'Rejected'
+                                );
+    
+    /*
+     * Revision Accessors
+     */
+    
+    public function getApprovedRevisionAttribute($val)
+    {
+        if(key_exists($val,self::$approved))
+        {
+            return self::$approved[$val];
+        }
+        else
+        {
+            return "";
+        }        
+    }
+    
     /*
      * PolyMorphic Relationships
      */

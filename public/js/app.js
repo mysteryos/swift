@@ -143,7 +143,6 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
             {
                 if(!$('.whos-online').children('#user_'+member.id).length)
                 {
-                    console.log($('.whos-online').children('#user_'+member.id).length);
                     $('.whos-online').append(avatarHTML(member))
                     $('.whos-online .avatar').tooltip();
                 }
@@ -152,7 +151,6 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
         presenceChannelCurrent.bind('pusher:member_added',function(member){
             if(!$('.whos-online').children('#user_'+member.id).length)
             {
-                console.log($('.whos-online').children('#user_'+member.id).length);
                 $('.whos-online').append(avatarHTML(member))
                 $('.whos-online .avatar').tooltip();
             }

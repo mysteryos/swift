@@ -48,7 +48,7 @@ Class NodeDefinitionJoin {
         return false;
     }    
     
-    public static function startToPreparation($nodeActivity)
+    public static function startToPrep($nodeActivity)
     {
         return true;
     }
@@ -127,16 +127,12 @@ Class NodeDefinitionJoin {
         
         if(count($apr))
         {
-            $products = $apr->product()->with('product.jdeproduct')->get();
-            if(count($products))
+            $productscount = $apr->product()->whereHas('jdeproduct',function($q) use ($productCategory){
+                                return $q->where('SRP3','=',strtoupper($productCategory));
+                        })->count();
+            if($productscount > 0)
             {
-                foreach($products as $p)
-                {
-                    if(strtolower(trim($p->SRP3)) == $productCategory)
-                    {
-                        return true;
-                    }
-                }
+                return true;
             }
         }
         
@@ -184,8 +180,8 @@ Class NodeDefinitionJoin {
             /*
              * Check if all products have been rejected
              */
-            $products = $apr->products()->get();
-            $rejectedproducts = $apr->products()->whereHas('approval',function($q){
+            $products = $apr->product()->get();
+            $rejectedproducts = $apr->product()->whereHas('approval',function($q){
                 return $q->where('type','=',SwiftApproval::APR_EXEC,'AND')->where('approved','=',SwiftApproval::REJECTED);
             })->get();
             if(count($products) == count($rejectedproducts))
@@ -229,8 +225,8 @@ Class NodeDefinitionJoin {
         
         if(count($apr))
         {
-            $products = $apr->products()->get();
-            $rejectedproducts = $apr->products()->whereHas('approval',function($q){
+            $products = $apr->product()->get();
+            $rejectedproducts = $apr->product()->whereHas('approval',function($q){
                 return $q->where('type','=',SwiftApproval::APR_CATMAN,'AND')->where('approved','=',SwiftApproval::REJECTED);
             })->get();
             if(count($products) == count($rejectedproducts))

@@ -1514,7 +1514,7 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAccess([$this->adminPermission]))
         {
             return parent::forbidden();
-        }        
+        }
         
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
         

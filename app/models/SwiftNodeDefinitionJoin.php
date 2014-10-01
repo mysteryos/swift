@@ -44,7 +44,7 @@ class SwiftNodeDefinitionJoin extends Eloquent {
      * Use Case Example: After an order has been received, the payment can be performed by either credit card or bank transfer.
      * TLDR: After B, C or D is complete, workflow moves to E.
      */
-    public static $P_XOR_SPILT = 4;
+    public static $P_XOR_SPLIT = 4;
     
     /*
      * Name: Simple Merge (XOR-Join)
@@ -69,7 +69,7 @@ class SwiftNodeDefinitionJoin extends Eloquent {
      * Name: Exclusive Compulsory Choice (XAND-Split)
      * TLDR: Same as AND but with variable number of nodes
      */
-    public static $P_XAND_SPILT = 8;
+    public static $P_XAND_SPLIT = 8;
     
     /*
      * Name: Simple Merge (XAND-Join)

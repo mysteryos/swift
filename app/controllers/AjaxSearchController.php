@@ -125,7 +125,40 @@ Class AjaxSearchController extends UserController {
     
     /*
      * Name: JDE products, search by code or name
-     * Uses: /aprequest/edit_product.blade.php
+     * Uses:  /aprequest/edit-product.blade.php
+     */
+    public function getProduct()
+    {
+        $limit = 10;
+        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
+        
+        if(is_numeric(Input::get('term')))
+        {
+            $searchresult = JdeProduct::getByCode(Input::get('term'),$offset,$limit);
+            $total = JdeProduct::countByCode(Input::get('term'));
+        }
+        else
+        {
+            $searchresult = JdeProduct::getByName(Input::get('term'),$offset,$limit);
+            $total = JdeProduct::countByName(Input::get('term'));
+        }        
+        
+        if(count($searchresult))
+        {
+            foreach($searchresult as $s)
+            {
+                $result[] = array('id'=>trim($s->ITM),'text'=>trim($s->DSC1)." - ".trim($s->AITM));
+            }
+            echo json_encode(['products'=>$result,'total'=>$total]);
+        }
+        else
+        {
+            echo json_encode(array('total'=>0));
+        }        
+    }
+    
+    /*
+     * Name: JDE products, search by code or name
      */
     public function getProductplain()
     {
@@ -153,7 +186,7 @@ Class AjaxSearchController extends UserController {
         {
             echo "";
         }        
-    }
+    }    
     
     public function getNespressomachine()
     {
@@ -189,7 +222,10 @@ Class AjaxSearchController extends UserController {
             $result = array();
             foreach($users as $u)
             {
-                $result[] = array('uid'=>$u->id,'value'=>$u->first_name." ".$u->last_name);
+                if($u->activated)
+                {
+                    $result[] = array('uid'=>$u->id,'value'=>$u->first_name." ".$u->last_name);
+                }
             }
             return Response::json($result);
         }

@@ -89,8 +89,8 @@
                      found = $.map(data.customers, function (item) {
                          return {
                              id: item.AN8,
-                             name: item.alph,
-                             text: item.alph+" (Code:"+item.AN8+")",
+                             name: item.ALPH,
+                             text: item.ALPH+" (Code:"+item.AN8+")",
                              category: item.AC09
                          }
                       });

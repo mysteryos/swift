@@ -1,7 +1,7 @@
 <?php
 
 class SwiftComment extends Eloquent {
-
+        use \Venturecraft\Revisionable\RevisionableTrait;
 	/**
 	 * Name of the table to use for this model
 	 *
@@ -23,6 +23,18 @@ class SwiftComment extends Eloquent {
         
         protected $guarded = array('id');
 
+        /* Revisionable */
+
+        protected $revisionEnabled = true;
+
+        protected $keepRevisionOf = array(
+            'comment'
+        );
+        
+        protected $revisionFormattedFieldNames = array(
+            'comment' => 'Comment',
+        ); 
+        
 	/**
 	 * Defines polymorphic relationship type
 	 *

@@ -95,7 +95,7 @@
 
                                 <header>
                                         <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Business Info </h2>			
+                                        <h2>Business Info </h2>
                                 </header>
                                 <!-- widget div-->
                                 <div>
@@ -112,7 +112,7 @@
                                                         <div class="form-group">
                                                             <label class="col-md-2 control-label">VAT number</label>
                                                             <div class="col-md-10">
-                                                                <a href="#" class="editable" data-type="text" data-name="vat" data-pk="{{ Crypt::encrypt($fc->id) }}" data-url="/order-tracking/freightcompanyform" data-value="{{ $fc->vat }}"></a>
+                                                                <a href="#" class="editable" data-type="text" data-name="vat_no" data-pk="{{ Crypt::encrypt($fc->id) }}" data-url="/order-tracking/freightcompanyform" data-value="{{ $fc->vat_no }}"></a>
                                                             </div>
                                                         </div>
                                                 </fieldset>
@@ -145,7 +145,7 @@
                                                         <div class="form-group">
                                                             <label class="col-md-2 control-label">Telephone number</label>
                                                             <div class="col-md-10">
-                                                                <a href="#" class="editable" data-type="text" data-name="tel_no" data-pk="{{ Crypt::encrypt($fc->id) }}" data-url="/order-tracking/freightcompanyform" data-value="{{ $fc->tel_no }}"></a>
+                                                                <a href="#" class="editable" data-type="text" data-name="tel" data-pk="{{ Crypt::encrypt($fc->id) }}" data-url="/order-tracking/freightcompanyform" data-value="{{ $fc->tel }}"></a>
                                                             </div>
                                                         </div>
                                                         <div class="form-group">

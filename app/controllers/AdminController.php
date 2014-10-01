@@ -26,5 +26,11 @@ Class AdminController extends UserController {
         return $this->makeView('admin.users');
     }
     
+    public function getPhpinfo()
+    {
+        $this->data['pageTitle'] = "PHPInfo";
+        return $this->makeView('admin.phpinfo');
+    }
+    
     
 }

@@ -20,6 +20,12 @@
 
     $('#upload-preview #template').hide();
     $('#upload-preview').find('button.btn.delete').hide();
+    
+    //Enable Commenting
+    enableComments();
+    
+    //Bind pusher channel
+    pusherSubscribeCurrentPresenceChannel(true,true);    
 
     //Hide Loading Message
     messenger_hidenotiftop(); 

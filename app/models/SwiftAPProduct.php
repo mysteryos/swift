@@ -10,7 +10,7 @@ class SwiftAPProduct extends Eloquent {
     
     protected $table = "swift_ap_product";
     
-    protected $fillable = array("aprequest_id","jde_id","quantity","reason_code","reason_others");
+    protected $fillable = array("aprequest_id","jde_itm","quantity","reason_code","reason_others");
     
     protected $guarded = array('id');
     
@@ -23,12 +23,12 @@ class SwiftAPProduct extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'jde_id','quantity','reason_code','reason_others'
+        'jde_itm','quantity','reason_code','reason_others'
     );
     
     protected $revisionFormattedFieldNames = array(
         'document_file_name' => 'Document Name',
-        'jde_id' => 'Product JDE Id',
+        'jde_itm' => 'Product JDE Id',
         'quantity' => 'Product Quantity',
         'reason_code' => 'Reason Code',
         'reason_others' => 'Reason(specify)',
@@ -104,6 +104,16 @@ class SwiftAPProduct extends Eloquent {
     
     public function jdeproduct()
     {
-        return $this->belongsTo('JdeProduct','jde_id','ITM');
+        return $this->belongsTo('JdeProduct','jde_itm','ITM');
     }
+    
+    public function approvalcatman()
+    {
+        return $this->morphOne('SwiftApproval','approvable')->where('type','==',SwiftApproval::APR_CATMAN);        
+    } 
+    
+    public function approvalexec()
+    {
+        return $this->morphOne('SwiftApproval','approvable')->where('type','==',SwiftApproval::APR_EXEC);        
+    }    
 }

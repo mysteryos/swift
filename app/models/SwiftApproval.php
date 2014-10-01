@@ -33,6 +33,7 @@ class SwiftApproval extends Eloquent {
     const REJECTED = -1;
     
     public static $approved = array(
+                                self::PENDING => 'Pending',
                                 self::APPROVED => 'Approved',
                                 self::REJECTED => 'Rejected'
                                 );
@@ -60,6 +61,11 @@ class SwiftApproval extends Eloquent {
     public function approvable()
     {
         return $this->morphTo();
+    }
+    
+    public function comments()
+    {
+        return $this->morphMany('SwiftComment', 'commentable');
     }
     
     public function approduct()

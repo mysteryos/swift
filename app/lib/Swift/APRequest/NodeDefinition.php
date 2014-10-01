@@ -43,8 +43,8 @@ Class NodeDefinition {
         
         if(count($apr))
         {
-            $approval = $apr->approval()->where('type','=',SwiftApproval::APR_REQUESTER)->get();
-            if(count($approval))
+            $countapproval = $apr->approval()->where('type','=',SwiftApproval::APR_REQUESTER)->count();
+            if($countapproval > 0)
             {
                 return true;
             }
@@ -63,17 +63,17 @@ Class NodeDefinition {
         
         if(count($apr))
         {
-            $products = $apr->products()->whereHas('jdeproduct',function($q){
-                return $q->where('SRP3','=',strtoupper($productCategory));
-            })->get();
+            $productscount = $apr->product()->whereHas('jdeproduct',function($q) use ($productCategory){
+                                return $q->where('SRP3','=',strtoupper($productCategory));
+                        })->count();
             
-            $approvals = $apr->products()->whereHas('approval',function($q){
-                return $q->where('type','=',SwiftApproval::APR_CATMAN,'AND')->where('approved','!=',SwiftApproval::PENDING);
-            })->whereHas('jdeproduct',function($q){
-                return $q->where('SRP3','=',strtoupper($productCategory));
-            })->get();
+            $approvalscount = $apr->product()->whereHas('approval',function($q){
+                                    return $q->where('type','=',SwiftApproval::APR_CATMAN,'AND')->where('approved','!=',SwiftApproval::PENDING);
+                            })->whereHas('jdeproduct',function($q) use ($productCategory){
+                                return $q->where('SRP3','=',strtoupper($productCategory));
+                            })->count();
             
-            if(count($products) == count($approvals))
+            if($productscount > 0 && $productscount == $approvalscount)
             {
                 //Total count tallies
                 //All approvals are done and done
@@ -90,8 +90,8 @@ Class NodeDefinition {
         
         if(count($apr))
         {
-            $products = $apr->products()->get();
-            $approvals = $apr->products()->whereHas('approval',function($q){
+            $products = $apr->product()->get();
+            $approvals = $apr->product()->whereHas('approval',function($q){
                 return $q->where('type','=',SwiftApproval::APR_EXEC,'AND')->where('approved','!=',SwiftApproval::PENDING);
             })->get();
             if(count($products) == count($approvals))

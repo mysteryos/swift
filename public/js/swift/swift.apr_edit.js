@@ -3,33 +3,84 @@
  * Description: Order tracking form edit
  */
 
-function addMulti($dummy,pk)
+function addMultiAPR($dummy,pk)
 {
     $clone = $dummy.clone();
     $clone.removeClass('hide dummy');
     $clone.find('.editable').removeClass('dummy');
-    $clone.find('.editable').editable().on('save',function(e,params){
-        //First time save, set primary key
-        if($(this).attr('data-pk') == "0")
+    $clone.find('.editable').each(function(){
+        if($(this).attr('data-type')=="select2" && $(this).hasClass('product-editable'))
         {
-            var response = $.parseJSON(params.response);
-            //Set new pk value
-            addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
-            //Trigger Channel Event
-            presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
+            $(this).editable({
+                placeholder: 'Select a product',
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },                    
+                    ajax: {
+                        url: '/ajaxsearch/product',
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 10,
+                                page: page
+                            };
+                        },
+                        results: function (data, page) {
+                            var more = (page * 10) < data.total;
+                            if(data.total > 0)
+                            {
+                                return {results: data.products, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        }
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
+                    }                     
+                }                 
+            });
+        }
+        else
+        {
+            $(this).editable();
+        }
+        
+        $(this).on('shown',function(e){
+            presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+            if($(this).attr('data-type')=="select2")
+            {
+                /*
+                 * Resize to fit within space
+                 */
+                $(this).parent('.editable-select2').find('.select2-container').width($(this).parents('.editable-select2').width()*0.6);
+            }
+            return true;
+        }).on('hidden',function(e,reason){
+            presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
+        }).on('save',function(e,params){
+            //First time save, set primary key
+            if($(this).attr('data-pk') == "0")
+            {
+                var response = $.parseJSON(params.response);
+                //Set new pk value
+                addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
+                //Trigger Channel Event
+                presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
+            }
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
-        }
-    }).on('shown',function(e){
-        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
-    }).on('hidden',function(e,reason){
-        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
-    }).on('save',function(e,params){
-        if($(this).editable('option','pk') !== "0")
-        {
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
-        }
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})        
+        });        
     });
+    
     if(typeof pk !== "undefined")
     {
         addEditablePk($clone,pk.encrypted_id,pk.id);
@@ -79,7 +130,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                         {
                             window.setTimeout(function(){
                                 $.pjax({
-                                   href: document.URL,
+                                   href: window.location.href,
                                    container: '#main'
                                 });
                             },'2000');
@@ -157,30 +208,77 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
 
     //General Info
-    $('.editable:not(.dummy)').editable().on('shown',function(e){
-        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
-        if($(this).attr('data-type')=="select2")
+    $('.editable:not(.dummy)').each(function(){
+        if($(this).attr('data-type')=="select2" && $(this).hasClass('product-editable'))
         {
-            /*
-             * Resize to fit within space
-             */
-            $(this).parent('.editable-select2').find('.select2-container').width($(this).parents('.editable-select2').width()*0.6);
+            $(this).editable({
+                placeholder: 'Select a product',
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },                    
+                    ajax: {
+                        url: '/ajaxsearch/product',
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 10,
+                                page: page
+                            };
+                        },
+                        results: function (data, page) {
+                            var more = (page * 10) < data.total;
+                            if(data.total > 0)
+                            {
+                                return {results: data.products, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        }
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
+                    }                     
+                }                 
+            });
         }
-        return true;
-    }).on('hidden',function(e,reason){
-        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
-        return true;
-    }).on('save',function(e,params){
-        if($(this).editable('option','pk') !== "0")
+        else
         {
-            //Bug fix for disappearing pks - Weird
-            $(this).editable('option','pk',$(this).attr('data-pk'));
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
+            $(this).editable();
         }
-        return true;
+        
+        $(this).on('shown',function(e){
+            presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+            if($(this).attr('data-type')=="select2")
+            {
+                /*
+                 * Resize to fit within space
+                 */
+                $(this).parent('.editable-select2').find('.select2-container').width($(this).parents('.editable-select2').width()*0.6);
+            }
+            return true;
+        }).on('hidden',function(e,reason){
+            presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+            return true;
+        }).on('save',function(e,params){
+            if($(this).editable('option','pk') !== "0")
+            {
+                //Bug fix for disappearing pks - Weird
+                $(this).editable('option','pk',$(this).attr('data-pk'));
+                presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
+            }
+            return true;
+        });
     });
-
-    //Customs
+    
+    //Multi
     $('.product-editable,.delivery-editable').on('save',function(e,params){
         //First time save, set primary key
         if($(this).attr('data-pk') == "0")
@@ -195,7 +293,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
         return true;
     });
-
+    
     /*
      * Add New
      */
@@ -204,7 +302,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         $dummy = $this.parents('.jarviswidget').find('fieldset.dummy');
         if($dummy.length)
         {
-            addMulti($dummy);
+            addMultiAPR($dummy);
         }
         else
         {
@@ -511,6 +609,52 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
        return false;
     });
+    
+    
+    //Publish button
+    $('a.btn-publish').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $.SmartMessageBox({
+                title : "<span class='txt-color-greenDark'><i class='fa fa-share'></i> Publish Form?</span>",
+                content : "A notification will be sent to the responsible parties",
+                buttons : '[No][Yes]'
+
+        }, function(ButtonPressed) {
+            if (ButtonPressed == "Yes") {
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                    id: 'notif-top',
+                    errorMessage: 'Error: form not published',
+                    successMessage: 'Form has been published',
+                    progressMessage: 'Please Wait...',
+                    action: $.ajax,
+                },
+                {
+                    type:'POST',
+                    url: $this.attr('href'),
+                    success:function()
+                    {
+                        window.setTimeout(function(){
+                            $.pjax({
+                               href: document.URL,
+                               container: '#main'
+                            });
+                        },'2000');
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        return xhr.responseText;
+                    }
+                });                       
+            }
+            else
+            {
+                return false;
+            }
+
+        });        
+        return false;
+    });    
     
     //Enable Commenting
     enableComments();

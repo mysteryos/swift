@@ -7,7 +7,7 @@
 class JdeCustomer extends Eloquent {
     protected $connection = 'sct_jde';
     
-    protected $table = 'jdecustomers';
+    protected $table = 'sct_jde.jdecustomers';
     
     public static function getByName($term,$offset,$limit)
     {

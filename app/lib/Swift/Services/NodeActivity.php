@@ -203,7 +203,7 @@ class NodeActivity {
                          * Check if node activity has been processed
                          */
                         if($nodeActivity->user_id == 0)
-                        {                        
+                        {
                             //Save Current
                             self::save($nodeActivity,$flow);
                         }
@@ -333,7 +333,7 @@ class NodeActivity {
                     }
                     break;
                 case SwiftNodeDefinitionJoin::$P_AND_SPLIT:
-                case SwiftNodeDefinitionJoin::$P_OR_SPILT:
+                case SwiftNodeDefinitionJoin::$P_OR_SPLIT:
                     //No conditions to evaluate - Straight Forward Creation of Nodes
                     //Expected count more than 1
                     if(count($nextNodeDefinitionJoins) > 1)
@@ -357,7 +357,7 @@ class NodeActivity {
                     }
                     break;
                 case SwiftNodeDefinitionJoin::$P_AND_JOIN:
-                case SwiftNodeDefinition::$P_XAND_JOIN:                    
+                case SwiftNodeDefinitionJoin::$P_XAND_JOIN:
                     //Verify Condition before joining nodes
                     //Lazy Check - If first condition evaluates to false, no need to verify others.
                     $function = $nextNodeDefinitionJoins->first()->php_function."::".lcfirst(studly_case($nextNodeDefinitionJoins->first()->name));
@@ -527,7 +527,7 @@ class NodeActivity {
                     }                    
                     break;
                 case SwiftNodeDefinitionJoin::$P_XOR_SPLIT:
-                case SwiftNodeDefinitionJoin::$P_XAND_SPLIT:                    
+                case SwiftNodeDefinitionJoin::$P_XAND_SPLIT:
                     //Expected count more than 1
                     if(count($nextNodeDefinitionJoins) > 1)
                     {
@@ -536,7 +536,7 @@ class NodeActivity {
                          */
                         foreach($nextNodeDefinitionJoins as $n)
                         {
-                            $function = $n->first()->php_function."::".lcfirst(studly_case($n->first()->name));
+                            $function = $n->php_function."::".lcfirst(studly_case($n->name));
                             /*
                              * Call function if possible
                              */
@@ -564,84 +564,6 @@ class NodeActivity {
                     else
                     {
                         throw new \RuntimeException("Node of 'XOR/XAND split' must have more than one branch");
-                    }                    
-                    break;
-
-                    //Verify Condition
-                    //Lazy Check - If first condition evaluates to true, no need to verify others.
-                    $function = $nextNodeDefinitionJoins->first()->php_function."::".studly_case($nextNodeDefinitionJoins->first()->name);
-                    if(is_callable($function))
-                    {
-                        if(!call_user_func_array($function,array($currentNodeActivity)))
-                        {
-                            //Check if other nodes have met their conditions
-                            $orJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
-                            /*
-                             * Get all nodes associated with the node being joined to with "XOR Joins"
-                             */
-                            $nodesWithOrJoin = SwiftNodeDefinitionJoin::getByChild($orJoinNodeId);
-                            $conditionOr = true;
-                            if(count($nodesWithOrJoin) < 2)
-                            {
-                                throw new UnexpectedValueExemption("An \"Or branch\" terminated wtih a single branch; Multiple branches expected");
-                            }
-                            /*
-                             * Loop through all Node Branching Conditions & Check them
-                             */
-                            $conditionOr = false;
-                            foreach($nodesWithOrJoin as $n)
-                            {
-                                //Check if parent node activity exists first
-                                $parentNodeActivity = SwiftNodeActivity::getByWorkflowAndDefinition($currentNodeActivity->workflow_activity_id, $n->parent_node->id);
-                                if(count($parentNodeActivity))
-                                {
-                                    /*
-                                     * If exists, we check branching condition
-                                     */
-                                    $func = $n->php_function."::".lcfirst(studly_case($n->name));
-                                    if(is_callable($func))
-                                    {
-                                        if(call_user_func_array($func,array($parentNodeActivity)))
-                                        {
-                                            $conditionOr = true;
-                                            break;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        throw new \RuntimeException("Function '{$func}' is not callable.");
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            $conditionOr = true;
-                        }
-                            
-                        /*
-                         * Conditions couldn't be more ideal.
-                         */
-                        if($conditionOr)
-                        {
-                            /*
-                             * Node is expected to be solely one.
-                             */
-                            $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinitionJoins->first()->childNode);
-                            if($insertedNode)
-                            {
-                                $insertedNodesArray[] = $insertedNode;
-                                /*
-                                 * Joins are expected to be only one.
-                                 * Loop through ParentNodeIDs and Join the Nodes
-                                 */
-                                self::join($parentNodeActivity->id,$insertedNode->id);
-                            }
-                        }                        
-                    }
-                    else
-                    {
-                        throw new \RuntimeException("Function '{$function}' is not callable.");
                     }                    
                     break;
                 default:

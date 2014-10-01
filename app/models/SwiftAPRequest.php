@@ -97,7 +97,7 @@ class SwiftAPRequest extends Eloquent {
     
     public static function getById($id)
     {
-        return self::with('customer','product','product.jdeproduct','product.approval','delivery','approval','order','document')->find($id);
+        return self::with('customer','product','product.jdeproduct','product.approval','product.approvalcatman','product.approvalcatman.comments','product.approvalexec','product.approvalexec.comments','delivery','approval','order','document')->find($id);
     }
 
 }

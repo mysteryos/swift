@@ -7,7 +7,7 @@
 class JdeSupplierMaster extends eloquent {
     protected $connection = 'sct_jde';
     
-    protected $table = 'jdesuppliermaster';
+    protected $table = 'sct_jde.jdesuppliermaster';
     
     public static function getByName($term,$offset,$limit)
     {

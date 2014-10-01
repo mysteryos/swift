@@ -17,12 +17,15 @@ class NodeMail {
         {
             foreach($users as $u)
             {
-                //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$order,'user'=>$u))->render());
-                \Mail::send('emails.order-tracking.pending',array('order'=>$order,'user'=>$u),function($message) use ($u,$order){
-                    $message->from('no-reply@scottltd.net','Scott Swift');
-                    $message->subject(\Config::get('website.name').' - Status update on Order Process "'.$order->name.'" ID: '.$order->id);
-                    $message->to($u->email);
-                });             
+                if($u->activated && !$u->isSuperUser())
+                {
+                    //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$order,'user'=>$u))->render());
+                    \Mail::send('emails.order-tracking.pending',array('order'=>$order,'user'=>$u),function($message) use ($u,$order){
+                        $message->from('no-reply@scottltd.net','Scott Swift');
+                        $message->subject(\Config::get('website.name').' - Status update on Order Process "'.$order->name.'" ID: '.$order->id);
+                        $message->to($u->email);
+                    });
+                }
             }   
         }
     }

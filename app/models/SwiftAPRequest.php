@@ -52,11 +52,6 @@ class SwiftAPRequest extends Eloquent {
         return $this->hasMany('SwiftApProduct','aprequest_id');
     }
     
-    public function order()
-    {
-        return $this->hasMany('SwiftAPOrder','aprequest_id');
-    }
-    
     /*
      * Morphic
      */
@@ -70,6 +65,11 @@ class SwiftAPRequest extends Eloquent {
     {
         return $this->morphOne('SwiftWorkflowActivity', 'workflowable');
     }
+    
+    public function order()
+    {
+        return $this->morphMany('SwiftErpOrder','orderable');
+    }    
     
     public function document()
     {
@@ -97,7 +97,7 @@ class SwiftAPRequest extends Eloquent {
     
     public static function getById($id)
     {
-        return self::with('customer','product','product.jdeproduct','product.approval','product.approvalcatman','product.approvalcatman.comments','product.approvalexec','product.approvalexec.comments','delivery','approval','order','document')->find($id);
+        return self::with('customer','product','product.jdeproduct','product.approval','product.approvalcatman','product.approvalexec','delivery','approval','order','document')->find($id);
     }
 
 }

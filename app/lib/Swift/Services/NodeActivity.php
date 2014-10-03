@@ -357,7 +357,6 @@ class NodeActivity {
                     }
                     break;
                 case SwiftNodeDefinitionJoin::$P_AND_JOIN:
-                case SwiftNodeDefinitionJoin::$P_XAND_JOIN:
                     //Verify Condition before joining nodes
                     //Lazy Check - If first condition evaluates to false, no need to verify others.
                     $function = $nextNodeDefinitionJoins->first()->php_function."::".lcfirst(studly_case($nextNodeDefinitionJoins->first()->name));
@@ -414,6 +413,83 @@ class NodeActivity {
                                      */
                                     $conditionAnd = false;
                                     break;                                    
+                                }
+                            }
+                            
+                            /*
+                             * Conditions couldn't be more ideal.
+                             */
+                            if($conditionAnd)
+                            {
+                                /*
+                                 * Node is expected to be solely one.
+                                 */
+                                $insertedNode = self::create($currentNodeActivity->workflow_activity_id,$nextNodeDefinitionJoins->first()->childNode);
+                                if($insertedNode)
+                                {
+                                    $insertedNodesArray[] = $insertedNode;
+                                    /*
+                                     * Joins are expected to be two or more
+                                     * Loop through ParentNodeIDs and Join the Nodes
+                                     */
+
+                                    foreach($parentNodeIds as $parentId)
+                                    {
+                                        self::join($parentId,$insertedNode->id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new \RuntimeException("Function '{$function}' is not callable.");
+                    }                     
+                    break;
+                case SwiftNodeDefinitionJoin::$P_XAND_JOIN:
+                    //Verify Condition before joining nodes
+                    //Lazy Check - If first condition evaluates to false, no need to verify others.
+                    $function = $nextNodeDefinitionJoins->first()->php_function."::".lcfirst(studly_case($nextNodeDefinitionJoins->first()->name));
+                    if(is_callable($function))
+                    {
+                        if(call_user_func_array($function,array($currentNodeActivity)))
+                        {
+                            //Check if other nodes have met their conditions
+                            $andJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
+                            /*
+                             * Get all nodes associated with the node being joined to with "and Joins"
+                             */
+                            $nodesWithAndJoin = SwiftNodeDefinitionJoin::getByChild($andJoinNodeId);
+                            $conditionAnd = true;
+                            /*
+                             * Loop through all Node Branching Conditions & Check them
+                             */
+                            foreach($nodesWithAndJoin as $n)
+                            {
+                                //Check if parent node activity exists first
+                                $parentNodeActivity = SwiftNodeActivity::getByWorkflowAndDefinition($currentNodeActivity->workflow_activity_id, $n->parent_node->id);
+                                if(count($parentNodeActivity))
+                                {
+                                    /*
+                                     * Push IDs to an array for later use
+                                     */
+                                    $parentNodeIds[] = $parentNodeActivity->id;
+                                    /*
+                                     * If exists, we check branching condition
+                                     */
+                                    $func = $n->php_function."::".lcfirst(studly_case($n->name));
+                                    if(is_callable($func))
+                                    {
+                                        if(!call_user_func_array($func,array($parentNodeActivity)))
+                                        {
+                                            $conditionAnd = false;
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        throw new \RuntimeException("Function '{$func}' is not callable.");
+                                    }                                     
                                 }
                             }
                             

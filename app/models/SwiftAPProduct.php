@@ -34,6 +34,8 @@ class SwiftAPProduct extends Eloquent {
         'reason_others' => 'Reason(specify)',
     );    
     
+    public static $revisionName = "A&P Product";
+    
     protected $revisionClassName = "A&P Product";
     protected $revisionPrimaryIdentifier = "id";
     protected $keepCreateRevision = true;
@@ -109,11 +111,11 @@ class SwiftAPProduct extends Eloquent {
     
     public function approvalcatman()
     {
-        return $this->morphOne('SwiftApproval','approvable')->where('type','==',SwiftApproval::APR_CATMAN);        
-    } 
+        return $this->morphOne('SwiftApproval','approvable')->with('comment')->where('type','=',SwiftApproval::APR_CATMAN);
+    }
     
     public function approvalexec()
     {
-        return $this->morphOne('SwiftApproval','approvable')->where('type','==',SwiftApproval::APR_EXEC);        
+        return $this->morphOne('SwiftApproval','approvable')->with('comment')->where('type','=',SwiftApproval::APR_EXEC);
     }    
 }

@@ -64,10 +64,10 @@ class APRequestController extends UserController {
             $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
             $this->data['rootURL'] = $this->rootURL;
             $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
-            $this->data['canPublish'] = $this->data['canAddProduct'] = $this->data['canAddProduct'] = false;
+            $this->data['canPublish'] = $this->data['canModifyProduct'] = $this->data['canAddProduct'] = false;
             $this->data['isCatMan'] = $this->currentUser->hasAccess(['apr-catman']);
             $this->data['isExec'] = $this->currentUser->hasAccess(['apr-exec']);
-
+            
             /*
              * See if can publish
              */
@@ -76,6 +76,14 @@ class APRequestController extends UserController {
             {
                 if($this->data['current_activity']['status'] == SwiftWorkflowActivity::INPROGRESS)
                 {
+                    if(!isset($this->data['current_activity']['definition_obj']))
+                    {
+                        /*
+                         * Detect buggy workflows
+                         */
+                        WorkflowActivity::update($apr);
+                    }
+                    
                     foreach($this->data['current_activity']['definition_obj'] as $d)
                     {
                         if($d->data != "")
@@ -85,9 +93,9 @@ class APRequestController extends UserController {
                                 $this->data['canAddProduct'] = true;
                             }
                             
-                            if(isset($d->data->deleteproduct))
+                            if(isset($d->data->modifyproduct))
                             {
-                                $this->data['canDeleteProduct'] = true;
+                                $this->data['canModifyProduct'] = true;
                             }
                             
                             if(isset($d->data->manualpublish) && ($this->data['isAdmin'] || $apr->revisionHistory()->orderBy('created_at','ASC')->first()->user_id == $this->currentUser->id))
@@ -686,7 +694,7 @@ class APRequestController extends UserController {
     /*
      * Approval of products for Cat Man Or Exec
      */
-    public function putProductapproval($product_id,$type)
+    public function putProductapproval($type,$product_id)
     {
         /*  
          * Check Permissions

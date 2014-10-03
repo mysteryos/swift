@@ -42,7 +42,7 @@ class SwiftNodeDefinitionJoin extends Eloquent {
     /*
      * Name: Exclusive Choice (XOR-Split)
      * Use Case Example: After an order has been received, the payment can be performed by either credit card or bank transfer.
-     * TLDR: After B, C or D is complete, workflow moves to E.
+     * TLDR: After B, C or D is complete, workflow moves to E. Checks conditions before doing branching
      */
     public static $P_XOR_SPLIT = 4;
     
@@ -61,7 +61,7 @@ class SwiftNodeDefinitionJoin extends Eloquent {
     
     /*
      * Name: Synchronizing Merge (OR-Join)
-     * TLDR: After B and/or C has completed, it moves to E
+     * TLDR: After B and/or C has completed, it moves to E; Ignores conditions while branching
      */
     public static $P_OR_JOIN = 7;  
     

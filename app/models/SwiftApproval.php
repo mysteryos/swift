@@ -6,6 +6,7 @@
 
 class SwiftApproval extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
+    use \Venturecraft\Revisionable\RevisionableTrait;
     
     protected $table = "swift_approval";
     
@@ -16,6 +17,26 @@ class SwiftApproval extends Eloquent {
     protected $dates = ['deleted_at'];
     
     public $timestamps = true;
+    
+    
+    /* Revisionable */
+    
+    protected $revisionEnabled = true;
+    
+    protected $keepRevisionOf = array(
+        'approved'
+    );
+    
+    protected $revisionFormattedFieldNames = array(
+        'approved' => 'approval'
+    );    
+    
+    protected $revisionClassName = "A&P Order";
+    protected $revisionPrimaryIdentifier = "approvable";
+    protected $revisionPolymorphicIdentifier = "";
+    protected $keepCreateRevision = true;
+    protected $softDelete = true;
+    
     
     /*
      * Approval Types for AP Request
@@ -61,6 +82,11 @@ class SwiftApproval extends Eloquent {
     public function approvable()
     {
         return $this->morphTo();
+    }
+ 
+    public function comment()
+    {
+        return $this->morphOne('SwiftComment', 'commentable');
     }
     
     public function comments()

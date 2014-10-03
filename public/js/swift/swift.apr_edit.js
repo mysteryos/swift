@@ -51,7 +51,9 @@ function addMultiAPR($dummy,pk)
         }
         else
         {
-            $(this).editable();
+            $(this).editable({
+                disabled: $(this).hasClass('editable-disabled')
+            });
         }
         
         $(this).on('shown',function(e){
@@ -97,9 +99,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     $fieldset.find('a.editable').each(function(){
         $this=$(this);
         $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+$pk); 
-    });       
-    $fieldset.find('a.editable').editable('option', 'pk', $encryptedPk);
-    $fieldset.find('a.editable').attr('data-pk',$encryptedPk);
+    });
     return true;
 }
 
@@ -200,7 +200,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         return false;        
     });
 
-    //Bind pusher channel
+    //Bind pusher channel & events
     pusherSubscribeCurrentPresenceChannel(true,true);
 
     //Turn on inline Mode
@@ -209,9 +209,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
     //General Info
     $('.editable:not(.dummy)').each(function(){
-        if($(this).attr('data-type')=="select2" && $(this).hasClass('product-editable'))
+        var $this = $(this);
+        if($this.attr('data-type')=="select2" && $this.hasClass('product-editable'))
         {
-            $(this).editable({
+            $this.editable({
                 placeholder: 'Select a product',
                 select2: {
                     allowClear: false,
@@ -251,10 +252,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
         else
         {
-            $(this).editable();
+            $this.editable();
         }
         
-        $(this).on('shown',function(e){
+        $this.on('shown',function(e){
             presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
             if($(this).attr('data-type')=="select2")
             {
@@ -267,19 +268,48 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }).on('hidden',function(e,reason){
             presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
             return true;
-        }).on('save',function(e,params){
-            if($(this).editable('option','pk') !== "0")
-            {
-                //Bug fix for disappearing pks - Weird
-                $(this).editable('option','pk',$(this).attr('data-pk'));
-                presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
-            }
-            return true;
         });
+        if($this.hasClass('productcatman-editable') || $this.hasClass('productexec-editable'))
+        {
+            /*
+             * Approvals only
+             */
+            $this.on('save',function(e,params){
+                if($this.attr('data-pk') == "0")
+                {
+                    var response = $.parseJSON(params.response);
+                    //Set new pk value
+                    $(this).editable('option', 'pk', response.encrypted_id);
+                    $(this).attr('data-pk',response.encrypted_id);
+                    
+                    //Set comment pk as well
+                    $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').editable('option', 'pk', response.encrypted_id);
+                    $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').attr('data-pk',response.encrypted_id);
+                    
+                    //Trigger Single Value Save as well
+                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
+                }
+                return true;        
+            });
+        }
+        else
+        {
+            //Normal Editables
+            $this.on('save',function(e,params){
+                if($(this).editable('option','pk') !== "0")
+                {
+                    //Bug fix for disappearing pks - Weird
+                    $(this).editable('option','pk',$(this).attr('data-pk'));
+                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
+                }
+                return true;
+            });            
+        }
+
     });
     
     //Multi
-    $('.product-editable,.delivery-editable').on('save',function(e,params){
+    $('.product-editable,.delivery-editable:not(.productcatman-editable):not(.productexec-editable)').on('save',function(e,params){
         //First time save, set primary key
         if($(this).attr('data-pk') == "0")
         {

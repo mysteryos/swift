@@ -31,9 +31,9 @@ Class NodeDefinitionJoin {
         /*
          * To Customer Care Routing
          */
-        if(strpos($method,'execToCcare') !== false)
+        if(strpos($method,'ToCcare') !== false)
         {
-            return self::cmanrouting($args[0], str_replace('execToCcare','',$method));
+            return self::ccarerouting($args[0], str_replace('exectoccare','',strtolower($method)));
         }
         
         /*
@@ -180,11 +180,11 @@ Class NodeDefinitionJoin {
             /*
              * Check if all products have been rejected
              */
-            $products = $apr->product()->get();
-            $rejectedproducts = $apr->product()->whereHas('approval',function($q){
+            $productcount = $apr->product()->count();
+            $rejectedproductcount = $apr->product()->whereHas('approval',function($q){
                 return $q->where('type','=',SwiftApproval::APR_EXEC,'AND')->where('approved','=',SwiftApproval::REJECTED);
-            })->get();
-            if(count($products) == count($rejectedproducts))
+            })->count();
+            if($productcount == $rejectedproductcount)
             {
                 //All products have been rejected
                 //Update Workflow as Rejected
@@ -194,8 +194,8 @@ Class NodeDefinitionJoin {
             }
             else
             {
-                $customer = $apr->customer()->get();
-                if(count($customer) && strtolower($customer->AC09) == $customerCategory)
+                $customer = $apr->customer()->first();
+                if(count($customer) && strtolower($customer->AC09) == strtolower($custommerCategory))
                 {
                     return true;
                 }
@@ -225,11 +225,11 @@ Class NodeDefinitionJoin {
         
         if(count($apr))
         {
-            $products = $apr->product()->get();
-            $rejectedproducts = $apr->product()->whereHas('approval',function($q){
+            $productcount = $apr->product()->count();
+            $rejectedproductcount = $apr->product()->whereHas('approval',function($q){
                 return $q->where('type','=',SwiftApproval::APR_CATMAN,'AND')->where('approved','=',SwiftApproval::REJECTED);
-            })->get();
-            if(count($products) == count($rejectedproducts))
+            })->count();
+            if($productcount == $rejectedproductcount)
             {
                 //All products have been rejected
                 $workflow->status = SwiftWorkflowActivity::REJECTED;

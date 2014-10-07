@@ -103,7 +103,29 @@
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                                             </div>
-                                        @endif                                        
+                                        @endif
+                                        <div class="widget-toolbar">
+                                                <!-- add: non-hidden - to disable auto hide -->
+                                                <div class="btn-group">
+                                                        <button class="btn dropdown-toggle btn-xs btn-default" data-toggle="dropdown">
+                                                                Showing <i class="fa fa-caret-down"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu product-filter pull-right">
+                                                                <li>
+                                                                        <a href="javascript:void(0);" id="product_filter_all">All</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a href="javascript:void(0);" id="product_filter_approved" data-approvalstatus="1">Approved</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a href="javascript:void(0);" id="product_filter_rejected" data-approvalstatus="-1">Rejected</a>
+                                                                </li>
+                                                                <li>
+                                                                        <a href="javascript:void(0);" id="product_filter_pending" data-approvalstatus="0">Pending</a>
+                                                                </li>
+                                                        </ul>
+                                                </div>
+                                        </div>                                        
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -126,6 +148,40 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
+                        
+			<!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="apr-erporder" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				
+				<header>
+					<span class="widget-icon"> <i class="fa fa-shopping-cart"></i> </span>
+                                        <h2>JDE Order </h2>
+                                        @if($edit && ($isCcare || $isAdmin))
+                                            <div class="widget-toolbar" role="menu">
+                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                                            </div>
+                                        @endif                                        
+				</header>
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body">
+                                            <form class="form-horizontal">
+                                                    @if(count($form->order))
+                                                        @foreach($form->order as &$e)
+                                                            <?php $e->id = Crypt::encrypt($e->id); ?>
+                                                            @include('aprequest.edit_erporder',array('e'=>$e))
+                                                        @endforeach
+                                                    @else
+                                                        @include('aprequest.edit_erporder')
+                                                    @endif
+                                                    @include('aprequest.edit_erporder',array('dummy'=>true,'p'=>null))                                                
+                                            </form>
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>
+                        <!-- end widget -->                        
                 </article>
                 <!-- NEW COL END -->
                 

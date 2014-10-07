@@ -79,7 +79,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                         {
                             window.setTimeout(function(){
                                 $.pjax({
-                                   href: document.URL,
+                                   href: $('.btn-ribbon-refresh').attr('href'),
                                    container: '#main'
                                 });
                             },'2000');

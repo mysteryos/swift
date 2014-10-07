@@ -24,10 +24,10 @@
     </div>
     <div class="row">
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
-            @if(Sentry::getUser()->hasAnyAccess(array('ot-admin','ot-edit')))
+            @if($canCreate)
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/order-tracking/createfreightcompanyform" class="btn btn-primary btn-block pjax @if(!Sentry::getUser()->hasAccess('ot-admin')){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                        <a href="/order-tracking/createfreightcompanyform" class="btn btn-primary btn-block pjax @if(!$canCreate){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
                     </div>
                 </div>
             @endif
@@ -56,7 +56,7 @@
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="row">
                 <div class="col-xs-12">
-                    @if(Sentry::getUser()->hasAccess('ot-admin'))
+                    @if($canCreate)
                         <a href="/order-tracking/createfreightcompanyform" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
                     @endif
                     @if($count)

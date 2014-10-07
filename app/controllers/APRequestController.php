@@ -12,7 +12,8 @@ class APRequestController extends UserController {
         $this->rootURL = "aprequest";
         $this->adminPermission = "apr-admin";
         $this->viewPermission = "apr-view";
-        $this->editPermission = "apr-edit";        
+        $this->editPermission = "apr-edit";
+        $this->ccarePermission = "apr-ccare";
     }
     
     /*
@@ -46,7 +47,7 @@ class APRequestController extends UserController {
             /*
              * Enable Commenting
              */
-            $this->comment($apr);
+            $this->enableComment($apr);
             
             /*
              * Data
@@ -57,6 +58,8 @@ class APRequestController extends UserController {
 //            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
             $this->data['product_reason_code'] = json_encode(Helper::jsonobject_encode(SwiftAPProduct::$reason));
             $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
+            $this->data['erporder_type'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$type));
+            $this->data['erporder_status'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$status));
             $this->data['current_activity'] = WorkflowActivity::progress($apr,'aprequest');
             $this->data['edit'] = $edit;
             $this->data['flag_important'] = Flag::isImportant($apr);
@@ -64,9 +67,11 @@ class APRequestController extends UserController {
             $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
             $this->data['rootURL'] = $this->rootURL;
             $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
+            $this->data['isCcare'] = $this->currentUser->hasAccess($this->ccarePermission);
             $this->data['canPublish'] = $this->data['canModifyProduct'] = $this->data['canAddProduct'] = false;
             $this->data['isCatMan'] = $this->currentUser->hasAccess(['apr-catman']);
             $this->data['isExec'] = $this->currentUser->hasAccess(['apr-exec']);
+            $this->data['isCreator'] = $this->currentUser->id = $apr->revisionHistory()->first()->user_id ? true : false;
             
             /*
              * See if can publish
@@ -108,7 +113,23 @@ class APRequestController extends UserController {
                 }
             }
             
-            
+            if(count($apr->product))
+            {
+                foreach($apr->product as &$p)
+                {
+                    $p->approvalstatus = SwiftApproval::PENDING;
+                    if(count($p->approvalcatman) && $p->approvalcatman->approved != SwiftApproval::PENDING)
+                    {
+                        $p->approvalstatus = $p->approvalcatman->approved;
+                    }
+
+                    if(count($p->approvalexec) && $p->approvalexec->approved != SwiftApproval::PENDING)
+                    {
+                        $p->approvalstatus = $p->approvalexec->approved;
+                    }
+                    
+                }
+            }
 
             
             return $this->makeView("$this->rootURL/edit");
@@ -545,8 +566,7 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        $product_id = Crypt::decrypt(Input::get('pk'));
-        $product = SwiftAPProduct::find($product_id);
+        $product = SwiftAPProduct::find(Crypt::decrypt(Input::get('pk')));
         if(count($product))
         {
             /*
@@ -595,6 +615,116 @@ class APRequestController extends UserController {
         {
             return Response::make('Product not found',404);
         }
+    }
+    
+    public function putErporder($apr_id)
+    {
+        /*  
+         * Check Permissions
+         */        
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->ccarePermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
+        
+        /*
+         * Manual Validation
+         */
+        if(count($form))
+        {
+            switch(Input::get('name'))
+            {
+                case 'status':
+                    if(!array_key_exists(Input::get('value'),SwiftErpOrder::$status))
+                    {
+                        return Response::make('Please select a valid status',400);
+                    }
+                    break;
+                case 'type':
+                    if(!array_key_exists(Input::get('value'),SwiftErpOrder::$type))
+                    {
+                        return Response::make('Please select a valid type',400);
+                    }
+                    break;
+            }
+            
+            /*
+             * New Erp Order
+             */
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $erpOrder = new SwiftErpOrder();
+                $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                if($form->order()->save($erpOrder))
+                {
+                    WorkflowActivity::update($form);
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($erpOrder->id),'id'=>$erpOrder->id]));
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }
+                
+            }
+            else
+            {
+                $erpOrder = SwiftErpOrder::find(Crypt::decrypt(Input::get('pk')));
+                if($erpOrder)
+                {
+                    $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    if($erpOrder->save())
+                    {
+                        WorkflowActivity::update($form);
+                        return Response::make('Success');
+                    }
+                    else
+                    {
+                        return Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return Response::make('Error saving order: Invalid PK',400);
+                }
+            }
+        }
+        else
+        {
+            return Response::make('A&P Request form not found',404);
+        }
+        
+    }
+    
+    public function deleteErporder()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->ccarePermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $erpOrder = SwiftErpOrder::find(Crypt::decrypt(Input::get('pk')));
+        
+        if(count($erpOrder))
+        {
+            if($erpOrder->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }                        
+        }
+        else
+        {
+            return Response::make('JDE order not found',404);
+        }        
     }
     
     /*

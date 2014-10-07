@@ -31,10 +31,10 @@
     </div>
     <div class="row">
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
-            @if($isAdmin)
+            @if($canCreate)
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$isAdmin){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$canCreate){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
                     </div>
                 </div>
             @endif
@@ -106,7 +106,7 @@
                             @endif
                         </ul>
                     </div>
-                    @if($isAdmin)
+                    @if($canCreate)
                         <a href="/{{ $rootURL }}/create" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
                     @endif
                     @if($count)

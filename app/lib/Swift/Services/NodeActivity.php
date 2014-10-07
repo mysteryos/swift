@@ -524,7 +524,7 @@ class NodeActivity {
                     }                     
                     break;
                 case SwiftNodeDefinitionJoin::$P_OR_JOIN:
-                case SwiftNodeDefinitionJoin::$P_XOR_JOIN:                    
+                case SwiftNodeDefinitionJoin::$P_XOR_JOIN:
                     //Verify Condition
                     //Lazy Check - If first condition evaluates to true, no need to verify others.
                     $function = $nextNodeDefinitionJoins->first()->php_function."::".studly_case($nextNodeDefinitionJoins->first()->name);
@@ -593,7 +593,7 @@ class NodeActivity {
                                  * Joins are expected to be only one.
                                  * Loop through ParentNodeIDs and Join the Nodes
                                  */
-                                self::join($parentNodeActivity->id,$insertedNode->id);
+                                self::join($currentNodeActivity->id,$insertedNode->id);
                             }
                         }                        
                     }

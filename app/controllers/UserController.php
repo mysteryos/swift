@@ -80,7 +80,7 @@ class UserController extends Controller {
             return Response::make($view,404);
         }
         
-        public function comment($commentable)
+        public function enableComment($commentable)
         {
             $this->data['commentKey'] = Comment::makeKey($commentable);
             $this->data['comments'] = $commentable->comments()->orderBy('created_at','DESC')->get();

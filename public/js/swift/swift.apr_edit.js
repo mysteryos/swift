@@ -105,6 +105,24 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
 (window.apr_edit = function () {
     
+    $(".product-filter a").on('click',function() {
+            var selText = $(this).text();
+            var $this = $(this);
+            $this.parents('.btn-group').find('.dropdown-toggle').html(selText + ' <span class="caret"></span>');
+            var filter = $this.attr("data-approvalstatus");
+            $this.parents('.dropdown-menu').find('li').removeClass('active');
+            
+            if(typeof filter !== "undefined")
+            {
+                $('fieldset.fieldset-product').hide();
+                $('fieldset.fieldset-product[data-approvalstatus="'+filter+'"]').show();
+            }
+            else
+            {
+                $('fieldset.fieldset-product').show();
+            }
+    });
+    
     //Ribbon Buttons
     $('a.btn-ribbon-cancel').on('click',function(e){
         e.preventDefault();            
@@ -130,7 +148,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                         {
                             window.setTimeout(function(){
                                 $.pjax({
-                                   href: window.location.href,
+                                   href: $('.btn-ribbon-refresh').attr('href'),
                                    container: '#main'
                                 });
                             },'2000');

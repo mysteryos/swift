@@ -13,6 +13,7 @@ class OrderTrackingController extends UserController {
         $this->adminPermission = "ot-admin";
         $this->viewPermission = "ot-view";
         $this->editPermission = "ot-edit";
+        $this->createPermission = "ot-create";
     }
     
     /*
@@ -134,7 +135,7 @@ class OrderTrackingController extends UserController {
             /*
              * Enable Commenting
              */
-            $this->comment($order);
+            $this->enableComment($order);
             
             /*
              * Data
@@ -153,6 +154,7 @@ class OrderTrackingController extends UserController {
             $this->data['flag_important'] = Flag::isImportant($order);
             $this->data['flag_starred'] = Flag::isStarred($order);
             $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
+            $this->data['isCreator'] = $this->currentUser->id == $order->revisionHistory()->orderBy('created_at','ASC')->first()->user_id ? true : false;
             
             return $this->makeView('order-tracking/edit');
         }
@@ -168,7 +170,7 @@ class OrderTrackingController extends UserController {
     public function getCreate()
     {
         //Check Permission
-        if(NodeActivity::hasStartAccess('order_tracking'))
+        if($this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission)))
         {
             $this->pageTitle = 'Create';
             return $this->makeView('order-tracking/create');
@@ -407,7 +409,8 @@ class OrderTrackingController extends UserController {
         
         //The Data
         $this->data['type'] = $type;
-        $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
+        $this->data['isAdmin'] = $this->currentUser->hasAccess([$this->adminPermission]);
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
         
         $this->data['orders'] = $orders;
         $this->data['count'] = isset($filter) ? count($orders) : $orderquery->count();
@@ -458,6 +461,7 @@ class OrderTrackingController extends UserController {
         $this->data['page'] = $page;
         $this->data['type'] = $type;
         $this->data['limit_per_page'] = $limitPerPage;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]);
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);    
         
         return $this->makeView('freight-company/forms');
@@ -598,7 +602,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permission
          */
-        if(!$this->currentUser->hasAccess($this->adminPermission) || !NodeActivity::hasStartAccess('order_tracking'))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->createPermission]) || !NodeActivity::hasStartAccess('order_tracking'))
         {
             return parent::forbidden();
         }
@@ -1511,7 +1515,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAccess([$this->adminPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->createPermission]))
         {
             return parent::forbidden();
         }
@@ -1520,6 +1524,12 @@ class OrderTrackingController extends UserController {
         
         if(count($order))
         {
+            //Not Admin and not creator
+            if(!$this->currentUser->hasAccess($this->adminPermission) && $this->currentUser->id != $order->revisionHistory()->orderBy('created_at','ASC')->first()->user_id)
+            {
+                return Response::make('Operation not allowed',400);
+            }
+            
             $workflow = $order->workflow()->first();
             $workflow->status = SwiftWorkflowActivity::REJECTED;
             if($workflow->save())

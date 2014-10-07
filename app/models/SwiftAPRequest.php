@@ -69,7 +69,7 @@ class SwiftAPRequest extends Eloquent {
     public function order()
     {
         return $this->morphMany('SwiftErpOrder','orderable');
-    }    
+    }
     
     public function document()
     {

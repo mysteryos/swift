@@ -1,4 +1,19 @@
-<fieldset data-name="product" class="fieldset-purchaseorder multi @if(isset($dummy) && $dummy == true) dummy hide @endif ">
+<fieldset data-name="product" class="fieldset-product multi @if(isset($dummy) && $dummy == true) dummy hide @endif" @if(!isset($dummy)) {{ "data-approvalstatus='".$p->approvalstatus."'" }} @endif>
+    <div class="product-bg <?php if(!isset($dummy)){
+        switch($p->approvalstatus)
+        {
+            case SwiftApproval::PENDING:
+                echo " bg-color-orange";
+                break;
+            case SwiftApproval::APPROVED:
+                echo " bg-color-green";
+                break;
+            case SwiftApproval::REJECTED:
+                echo " bg-color-red";
+                break;
+        }
+        
+    } ?>"></div>
     <div class="row">
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Name*</label>
@@ -10,8 +25,8 @@
             <label class="col-md-2 control-label">Quantity*</label>
             <div class="col-md-10">
                 <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_quantity_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(isset($canModifyProduct) && !$isAdmin) editable-disabled @endif" data-type="text" data-context="product" data-name="quantity" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->quantity or 0 }}"></a>
-            </div>                                                                                        
-        </div>        
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="form-group col-lg-6 col-xs-12">

@@ -44,7 +44,7 @@
             <label class="col-md-4 control-label">Cleared At</label>
             <div class="col-md-8">
                 <div class="input-group">                
-                    <a href="#" @if(isset($c->id)) {{ "id=\"customs_customs_cleared_at_".Crypt::decrypt($c->id)."\"" }} @endif data-type="date" class="editable customs-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="customs" data-pk="{{ $c->id or 0 }}" data-viewformat="dd/mm/yyyy" data-url="/order-tracking/customsdeclaration/{{ Crypt::encrypt($order->id) }}" data-date="@if(isset($c->customs_customs_cleared_at)){{$c->customs_customs_cleared_at->format('d/m/Y')}}@endif" data-name="customs_cleared_at">@if(isset($c->customs_customs_cleared_at)){{$c->customs_customs_cleared_at->format('d/m/Y')}}@endif</a>
+                    <a href="#" @if(isset($c->id)) {{ "id=\"customs_customs_cleared_at_".Crypt::decrypt($c->id)."\"" }} @endif data-type="date" class="editable customs-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="customs" data-pk="{{ $c->id or 0 }}" data-viewformat="dd/mm/yyyy" data-url="/order-tracking/customsdeclaration/{{ Crypt::encrypt($order->id) }}" data-date="@if(isset($c->customs_customs_cleared_at)){{$c->customs_customs_cleared_at->format('d/m/Y')}}@endif" data-name="customs_cleared_at">@if(isset($c->customs_cleared_at)){{$c->customs_cleared_at->format('d/m/Y')}}@endif</a>
                 </div>
             </div>
         </div>

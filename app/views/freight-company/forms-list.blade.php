@@ -19,13 +19,14 @@
                                 </td>
                                 <td class="inbox-data-from hidden-xs hidden-sm">
                                         <div>
-                                            <span>{{ $c->name }}</span>
+                                            <span>{{ SwiftFreightCompany::$type[$c->type] }}</span>
                                         </div>
+                                        
                                 </td>
                                 <td class="inbox-data-type">
                                         <div>
-                                            <span>{{ SwiftFreightCompany::$type[$c->type] }}</span>
-                                        </div>
+                                            <span>{{ $c->name }}</span>
+                                        </div>                                        
                                 </td>
 
                                 <td class="inbox-data-date hidden-xs">

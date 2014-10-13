@@ -2,7 +2,7 @@
 
 namespace Swift\Providers;
 use Illuminate\Support\ServiceProvider;
-use Swift\Services\OrderProcess;
+use Swift\Services\OrderTracking;
  
 class OrderTrackingServiceProvider extends ServiceProvider
 {

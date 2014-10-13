@@ -29,7 +29,7 @@ class SwiftCustomsDeclaration extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'customs_reference','customs_processed_at','customs_filled_at', 'customs_status'
+        'customs_reference','customs_processed_at','customs_filled_at', 'customs_cleared_at','customs_under_verification_at', 'customs_status'
     );
     
     protected $revisionFormattedFieldNames = array(

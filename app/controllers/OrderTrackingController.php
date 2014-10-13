@@ -155,6 +155,8 @@ class OrderTrackingController extends UserController {
             $this->data['flag_starred'] = Flag::isStarred($order);
             $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
             $this->data['isCreator'] = $this->currentUser->id == $order->revisionHistory()->orderBy('created_at','ASC')->first()->user_id ? true : false;
+            //$this->data['message'] = OrderTracking::smartMessage($this->data);
+            
             
             return $this->makeView('order-tracking/edit');
         }

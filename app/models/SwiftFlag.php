@@ -48,6 +48,7 @@ class SwiftFlag extends eloquent {
     public function order()
     {
         return $this->morphedByMany('SwiftOrder', 'flaggable');
-    }    
+    }
+    
 }
 

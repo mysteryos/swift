@@ -111,8 +111,8 @@
                     @endif
                     @if($count)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">
@@ -120,7 +120,7 @@
                             <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
                         </div>
                     </div>
-                    @if($count) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">@if($page == 1){{1}}@else{{ $page*$limit_per_page }}@endif</span>-<span id="count-end">@if($count < 30) {{ $count }} @else{{ $page*$limit_per_page }}@endif</span></strong> of <strong><span id="count-total">{{ $count }}</span></strong></span> @endif
+                    @if($count) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">@if($page == 1){{1}}@else{{ (($page-1)*$limit_per_page)+1 }}@endif</span>-<span id="count-end">@if($count < ($page*$limit_per_page)) {{ $count }} @else{{ $page*$limit_per_page }}@endif</span></strong> of <strong><span id="count-total">{{ $count }}</span></strong></span> @endif
                 </div>
             </div>
             <div class="row">

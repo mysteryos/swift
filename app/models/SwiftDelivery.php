@@ -12,7 +12,7 @@ class SwiftDelivery extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('status','invoice_number','delivery_person','delivery_date');
+    protected $fillable = array('status','status_comment','invoice_number','invoice_recipient','delivery_person','delivery_date');
     
     protected $dates = ['deleted_at'];
     
@@ -23,20 +23,22 @@ class SwiftDelivery extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'status','invoice_number','delivery_person','delivery_date'
+        'status','invoice_number','invoice_recipient','delivery_person','delivery_date'
     );
     
     protected $revisionFormattedFieldNames = array(
         'status' => 'Delivery Status',
-        'invoice_number' => 'Delivery Invoice No',
+        'status_comment' => 'Delivery Comment',
+        'invoice_number' => 'Invoice No',
+        'invoice_recipient' => 'Invoice Recipient',
         'delivery_person' => 'Delivery Person',
         'delivery_date' => 'Delivery Date'
     );    
     
-    protected $revisionClassName = "Delivery";
-    protected $revisionPrimaryIdentifier = "invoice_number";    
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
+    public $revisionClassName = "Delivery";
+    public $revisionPrimaryIdentifier = "invoice_number";    
+    public $keepCreateRevision = true;
+    public $softDelete = true;
     
     /*
      * constants

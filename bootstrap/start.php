@@ -24,11 +24,10 @@ $app = new Illuminate\Foundation\Application;
 |
 */
 
-$env = $app->detectEnvironment(array(
-
-	'development' => array('Keshav-PC'),
-
-));
+$env = $app->detectEnvironment(function()
+{
+    return $_SERVER['LARAVEL_ENV'];
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -206,7 +206,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     $('.jarviswidget').on('click','fieldset.multi .btn-delete',function(){
-        $this = $(this);
+        var $this = $(this);
         if(confirm('Are you sure you wish to delete this record?'))
         {
             var $thisname = $this.parents('fieldset.multi').attr('data-name').ucfirst();

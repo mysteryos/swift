@@ -44,7 +44,8 @@ class SwiftTag extends eloquent {
     const OT_COSTING = 13;
     const OT_GRN = 14;
     const OT_PACKING_LIST = 15;
-    
+    const AP_EVENTFLYER = 16;
+        
     /*
      * Compilation of Order Tracking Tags
      */
@@ -57,7 +58,11 @@ class SwiftTag extends eloquent {
                                             self::OT_BILL_OF_ENTRY=>"Bill of Entry",
                                             self::OT_COSTING=>"Costing",
                                             self::OT_GRN=>"Goods Received Note"];
-     
+    
+    /*
+     * Compilation of A&P Request Tags
+     */
+    public static $aprequestTags = [self::AP_EVENTFLYER => "Event flyer"];
     
     /*
      * Event Observers

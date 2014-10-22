@@ -3,7 +3,7 @@
 namespace Swift\Facades;
 use Illuminate\Support\Facades\Facade;
  
-class OrderTrackingFacade extends Facade
+class OrderTrackingHelperFacade extends Facade
 {
     /**
      * Get the registered name of the component.
@@ -12,6 +12,6 @@ class OrderTrackingFacade extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'OrderTracking';
+        return 'OrderTrackingHelper';
     }
 }

@@ -34,10 +34,10 @@ class SwiftAPRequest extends Eloquent {
         'feedback_text' => 'Feedback Text',
     );    
     
-    protected $revisionClassName = "A&P Request";
-    protected $revisionPrimaryIdentifier = "name";
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
+    public $revisionClassName = "A&P Request";
+    public $revisionPrimaryIdentifier = "name";
+    public $keepCreateRevision = true;
+    public $softDelete = true;
     /*
      * Relationships
      */

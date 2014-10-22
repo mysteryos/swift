@@ -96,6 +96,69 @@ class OrderTrackingController extends UserController {
         }
         
         /*
+         * Storage Tracking - SEA
+         */
+        
+        $order_storage = SwiftOrder::has('reception','=',0)->with('freight','document','document.tag')->whereHas('workflow',function($q){
+                            return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                        })->whereHas('freight',function($q){
+                            return $q->where('freight_type','=',SwiftFreight::TYPE_SEA)->where('vessel_name','<>','""')->where('vessel_voyage','<>','""')->where('freight_eta','!=','""');
+                        })->get();
+        
+        $storage_array = array();
+                        
+        foreach($order_storage as $o)
+        {
+            $closestFreightByEta = false;
+            foreach($o->freight as $f)
+            {
+                    if($closestFreightByEta === false)
+                    {
+                        $closestFreightByEta = $f;
+                    }
+                    else
+                    {
+                        $diff = $f->freight_eta->diffInDays($closestFreightByEta->freight_eta,false);
+                        if($diff > 0)
+                        {
+                            //If freight eta is greater than closest eta, we save it. We take the biggest eta by sea, which SHOULD be the last sea freight.
+                            $closestFreightByEta = $f;
+                        }
+                    }
+            }
+            //So we have the freight. Search vessel on elastic
+            $searchresults = OrderTrackingHelper::searchCHCLVessel($closestFreightByEta->vessel_name,$closestFreightByEta->vessel_voyage);
+            if($searchresults['hits']['max_score'] > 1 && $searchresults['hits']['total'] > 0)
+            {
+                $relevantSearch = false;
+                foreach($searchresults['hits']['hits'] as $s)
+                {
+                    if($relevantSearch === false)
+                    {
+                        $relevantSearch = $s['_source'];
+                    }
+                    else
+                    {
+                        $searchdate = new Carbon($s['_source']['date_start']['date']);
+                        if(Carbon($relevantSearch['date_start']['date'])->diffInDays($closestFreightByEta->freight_eta) > $searchdate->diffIndays($closestFreightByEta->freight_eta))
+                        {
+                            $relevantSearch = $s['_source'];
+                        }
+                    }
+                }
+                
+                //Got our relevant search, based on date closest to Freight Eta
+                $storage_array[] = array(
+                                    'order'=>$o,
+                                    'storage_start'=> new Carbon($relevantSearch['storage']['date']),
+                                    'rate' => $relevantSearch['storage_rate'],
+                                    'chcl_record' => $relevantSearch,
+                                    'freight' => $closestFreightByEta
+                                    );
+            }
+        }
+        
+        /*
          * In Transit Dates
          */
         
@@ -103,6 +166,7 @@ class OrderTrackingController extends UserController {
         $this->data['order_inprogress_responsible'] = $order_inprogress_responsible;
         $this->data['order_inprogress_important'] = $order_inprogress_important;
         $this->data['order_inprogress_important_responsible'] = $order_inprogress_important_responsible;
+        $this->data['order_storage'] = $storage_array;
         $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
         $this->data['node_responsible'] = $nodeResponsible;                                         
         
@@ -242,7 +306,7 @@ class OrderTrackingController extends UserController {
      */
     public function getForms($type='inprogress',$page=1)
     {
-        $limitPerPage = 30;
+        $limitPerPage = 15;
         $this->pageTitle = 'Forms';
         
         //Check Edit Access
@@ -337,7 +401,7 @@ class OrderTrackingController extends UserController {
                     case 'node_definition_id':
                         $orderquery->whereHas('workflow',function($q) use($f_val){
                            return $q->whereHas('nodes',function($q) use($f_val){
-                               return $q->where('node_definition_id','=',$f_val);
+                               return $q->whereRaw("(node_definition_id = $f_val AND user_id=0)");
                            });
                         });
                         break;
@@ -415,7 +479,7 @@ class OrderTrackingController extends UserController {
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
         
         $this->data['orders'] = $orders;
-        $this->data['count'] = isset($filter) ? count($orders) : $orderquery->count();
+        $this->data['count'] = isset($filter) ? count($orders) : SwiftOrder::count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
@@ -687,7 +751,7 @@ class OrderTrackingController extends UserController {
             $order->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($order->save())
             {
-                WorkflowActivity::update($order);
+                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                 return Response::make('Success', 200);
             }
             else
@@ -759,7 +823,7 @@ class OrderTrackingController extends UserController {
                 $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->customsDeclaration()->save($customsDeclaration))
                 {
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@update',array('order'=>$order));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($customsDeclaration->id),'id'=>$customsDeclaration->id]));
                 }
                 else
@@ -776,7 +840,7 @@ class OrderTrackingController extends UserController {
                     $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($customsDeclaration->save())
                     {
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@update',array('order'=>$order));
                         return Response::make('Success');
                     }
                     else
@@ -890,7 +954,7 @@ class OrderTrackingController extends UserController {
                 $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->freight()->save($freight))
                 {
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($freight->id),'id'=>$freight->id]));
                 }
                 else
@@ -930,7 +994,7 @@ class OrderTrackingController extends UserController {
                     $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($freight->save())
                     {
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                         return Response::make('Success');
                     }
                     else
@@ -1031,7 +1095,7 @@ class OrderTrackingController extends UserController {
                 $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->shipment()->save($shipment))
                 {
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($shipment->id),'id'=>$shipment->id]));
                 }
                 else
@@ -1048,7 +1112,7 @@ class OrderTrackingController extends UserController {
                     $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($shipment->save())
                     {
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                         return Response::make('Success');
                     }
                     else
@@ -1127,7 +1191,7 @@ class OrderTrackingController extends UserController {
                 $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->purchaseOrder()->save($po))
                 {
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($po->id),'id'=>$po->id]));
                 }
                 else
@@ -1144,7 +1208,7 @@ class OrderTrackingController extends UserController {
                     $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($po->save())
                     {
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                         return Response::make('Success');
                     }
                     else
@@ -1225,7 +1289,7 @@ class OrderTrackingController extends UserController {
                 $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->reception()->save($reception))
                 {
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($reception->id),'id'=>$reception->id]));
                 }
                 else
@@ -1242,7 +1306,7 @@ class OrderTrackingController extends UserController {
                     $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($reception->save())
                     {
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
                         return Response::make('Success');
                     }
                     else
@@ -1493,7 +1557,7 @@ class OrderTrackingController extends UserController {
                         }
                     }
                 }
-                WorkflowActivity::update($doc->first()->document()->first());
+                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($doc->order),'id'=>$doc->order->id));
                 return Response::make('Success');
             }
             else

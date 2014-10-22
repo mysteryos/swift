@@ -37,10 +37,10 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
         'document_file_name' => 'Document',
     );    
     
-    protected $revisionClassName = "Document";
-    protected $revisionPrimaryIdentifier = "document_file_name";    
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
+    public $revisionClassName = "Document";
+    public $revisionPrimaryIdentifier = "document_file_name";    
+    public $keepCreateRevision = true;
+    public $softDelete = true;
     
     public function __construct(array $attributes = array())
     {
@@ -79,9 +79,15 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
     /*
      * relationships
      */
-    public function order(){
-        return $this->belongsTo('SwiftOrder');
+    public function order()
+    {
+        return $this->belongsTo('SwiftOrder', 'document_id','id');
     }
+    
+    public function aprequest()
+    {
+        return $this->belongsTo('SwiftAPRequest', 'document_id','id');
+    }    
     
     /*
      * Morph

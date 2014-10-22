@@ -8,6 +8,7 @@ NameSpace Swift\APRequest;
 
 Use SwiftApproval;
 Use SwiftAPOrder;
+Use SwiftDelivery;
 
 Class NodeDefinition {
     
@@ -138,7 +139,26 @@ Class NodeDefinition {
         
         if(count($apr))
         {
-            
+            $delivery = $apr->delivery()->get();
+            if(count($delivery))
+            {
+                foreach($delivery as $d)
+                {
+                    if($d->status != SwiftDelivery::PENDING && (int)$d->invoice_number != 0)
+                    {
+                        //If delivered, should have invoice recipient
+                        if($d->status == SwiftDelivery::DELIVERED  && $d->invoice_recipient != "")
+                        {
+                            return true;
+                        }
+                        //If cancelled, nothing else is needed
+                        if($d->status == SwiftDelivery::CANCELLED)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
         }
         
         return false;
@@ -146,6 +166,6 @@ Class NodeDefinition {
     
     public static function aprEnd($nodeActivity)
     {
-        
+        return true;
     }
 }

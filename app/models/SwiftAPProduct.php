@@ -10,7 +10,7 @@ class SwiftAPProduct extends Eloquent {
     
     protected $table = "swift_ap_product";
     
-    protected $fillable = array("aprequest_id","jde_itm","quantity","reason_code","reason_others");
+    protected $fillable = array("aprequest_id","jde_itm","quantity","price","reason_code","reason_others");
     
     protected $guarded = array('id');
     
@@ -32,15 +32,16 @@ class SwiftAPProduct extends Eloquent {
         'quantity' => 'Product Quantity',
         'reason_code' => 'Reason Code',
         'reason_others' => 'Reason(specify)',
+        'id'        =>  'id'
     );    
     
     public static $revisionName = "A&P Product";
     
-    protected $revisionClassName = "A&P Product";
-    protected $revisionPrimaryIdentifier = "id";
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
-    
+    public $revisionClassName = "A&P Product";
+    public $revisionPrimaryIdentifier = "id";
+    public $keepCreateRevision = true;
+    public $softDelete = true;
+    public $revisionDisplayId = true;
     
     
     /*

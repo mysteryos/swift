@@ -39,6 +39,11 @@ class SwiftFreightCompany extends Eloquent {
 //        'freight_eta' => 'Freight ETA',
 //    );
     
+    public $keepCreateRevision = true;
+    public $softDelete = true;
+    public $revisionClassName = "Freight Company";
+    public $revisionPrimaryIdentifier = "id";    
+    
     /*
      * General Attributes
      */

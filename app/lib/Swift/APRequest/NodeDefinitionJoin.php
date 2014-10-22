@@ -229,6 +229,7 @@ Class NodeDefinitionJoin {
             $rejectedproductcount = $apr->product()->whereHas('approval',function($q){
                 return $q->where('type','=',SwiftApproval::APR_CATMAN,'AND')->where('approved','=',SwiftApproval::REJECTED);
             })->count();
+            
             if($productcount == $rejectedproductcount)
             {
                 //All products have been rejected
@@ -236,9 +237,19 @@ Class NodeDefinitionJoin {
                 $workflow->save();
                 return false;
             }
+            
+            $approvedproductcount = $apr->product()->whereHas('approval',function($q){
+                return $q->where('type','=',SwiftApproval::APR_CATMAN,'AND')->where('approved','!=',SwiftApproval::PENDING);
+            })->count();
+            
+            if($productcount == $approvedproductcount)
+            {
+                //All products have been processed for that Cat MAN
+                return true;
+            }
         }
         
-        return true;
+        return false;
     }
     
     public static function deliveryToEnd($nodeActivity)

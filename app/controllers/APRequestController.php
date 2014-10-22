@@ -14,6 +14,7 @@ class APRequestController extends UserController {
         $this->viewPermission = "apr-view";
         $this->editPermission = "apr-edit";
         $this->ccarePermission = "apr-ccare";
+        $this->storePermission = "apr-store";
     }
     
     /*
@@ -52,7 +53,7 @@ class APRequestController extends UserController {
             /*
              * Data
              */
-            $this->data['activity'] = Helper::getMergedRevision(array('product','document','delivery'),$apr);
+            $this->data['activity'] = Helper::getMergedRevision(array('product','document','delivery','order','product.approvalexec','product.approvalcatman'),$apr);
             $this->pageTitle = "{$apr->name} (ID: $apr->id)";
             $this->data['form'] = $apr;
 //            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
@@ -60,14 +61,16 @@ class APRequestController extends UserController {
             $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
             $this->data['erporder_type'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$type));
             $this->data['erporder_status'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$status));
+            $this->data['delivery_status'] = json_encode(Helper::jsonobject_encode(SwiftDelivery::$status));
             $this->data['current_activity'] = WorkflowActivity::progress($apr,'aprequest');
             $this->data['edit'] = $edit;
             $this->data['flag_important'] = Flag::isImportant($apr);
             $this->data['flag_starred'] = Flag::isStarred($apr);
-            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
+            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$aprequestTags));
             $this->data['rootURL'] = $this->rootURL;
             $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
             $this->data['isCcare'] = $this->currentUser->hasAccess($this->ccarePermission);
+            $this->data['isStore'] = $this->currentUser->hasAccess($this->storePermission);
             $this->data['canPublish'] = $this->data['canModifyProduct'] = $this->data['canAddProduct'] = false;
             $this->data['isCatMan'] = $this->currentUser->hasAccess(['apr-catman']);
             $this->data['isExec'] = $this->currentUser->hasAccess(['apr-exec']);
@@ -576,7 +579,7 @@ class APRequestController extends UserController {
                 !$this->currentUser->isSuperUser() && 
                 $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
             {
-                return Response::make('Do not publish, that which is not yours',400);
+                return Response::make('Do not delete, that which is not yours',400);
             }            
             
             //Check what stage the form is at
@@ -590,7 +593,7 @@ class APRequestController extends UserController {
             {
                 foreach($progress['definition_obj'] as $d)
                 {
-                    if($d->data != "" && isset($d->data->deleteproduct))
+                    if(($d->data != "" && isset($d->data->modifyproduct)) || $this->currentUser->hasAccess($this->adminPermission))
                     {
                         /*
                          * At this stage we can delete products
@@ -724,6 +727,114 @@ class APRequestController extends UserController {
         else
         {
             return Response::make('JDE order not found',404);
+        }        
+    }
+    
+    public function putDelivery($apr_id)
+    {
+        /*  
+         * Check Permissions
+         */        
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->storePermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
+/*
+         * Manual Validation
+         */
+        if(count($form))
+        {
+            switch(Input::get('name'))
+            {
+                case 'status':
+                    if(!array_key_exists(Input::get('value'),SwiftDelivery::$status))
+                    {
+                        return Response::make('Please select a valid status',400);
+                    }
+                    break;
+                case 'invoice_number':
+                    if(!is_numeric(Input::get('value')))
+                    {
+                        return Response::make('Please enter a valid invoice number',400);
+                    }
+                    break;
+            }
+            
+            /*
+             * New Erp Order
+             */
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $delivery = new SwiftDelivery();
+                $delivery->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                if($form->delivery()->save($delivery))
+                {
+                    WorkflowActivity::update($form);
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($delivery->id),'id'=>$delivery->id]));
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }
+                
+            }
+            else
+            {
+                $delivery = SwiftDelivery::find(Crypt::decrypt(Input::get('pk')));
+                if($delivery)
+                {
+                    $delivery->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    if($delivery->save())
+                    {
+                        WorkflowActivity::update($form);
+                        return Response::make('Success');
+                    }
+                    else
+                    {
+                        return Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return Response::make('Error saving delivery: Invalid PK',400);
+                }
+            }
+        }
+        else
+        {
+            return Response::make('A&P Request form not found',404);
+        }        
+    }
+    
+    public function deleteDelivery()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->storePermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $delivery = SwiftDelivery::find(Crypt::decrypt(Input::get('pk')));
+        
+        if(count($delivery))
+        {
+            if($delivery->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }                        
+        }
+        else
+        {
+            return Response::make('Delivery not found',404);
         }        
     }
     
@@ -982,6 +1093,210 @@ class APRequestController extends UserController {
         }        
     }
     
+    public function postUpload($apr_id)
+    {
+        
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $apr = SwiftAPRequest::find(Crypt::decrypt($apr_id));
+        /*
+         * Manual Validation
+         */
+        if(count($apr))
+        {
+            if(Input::file('file'))
+            {
+                $doc = new SwiftDocument();
+                $doc->document = Input::file('file');
+                if($apr->document()->save($doc))
+                {
+                    echo json_encode(['success'=>1,
+                                    'url'=>$doc->getAttachedFiles()['document']->url(),
+                                    'id'=>Crypt::encrypt($doc->id), 
+                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(), 
+                                    'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
+                }
+                else
+                {
+                    return Response::make('Upload failed.',400);
+                }
+            }
+            else
+            {
+                return Response::make('File not found.',400);
+            }
+        }
+        else
+        {
+            return Response::make('A&P Request form not found',404);
+        } 
+    }
+    
+    /*
+     * Delete upload
+     */
+    
+    public function deleteUpload($doc_id)
+    {
+        
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }        
+        
+        $doc = SwiftDocument::find(Crypt::decrypt($doc_id));
+        /*
+         * Manual Validation
+         */
+        if(count($doc))
+        {
+            if($doc->delete())
+            {
+                echo json_encode(['success'=>1,'url'=>$doc->getAttachedFiles()['document']->url(),'id'=>Crypt::encrypt($doc->id)]);
+            }
+            else
+            {
+                return Response::make('Delete failed.',400);
+            }
+        }
+        else
+        {
+            return Response::make('Document not found',404);
+        } 
+    }
+    
+    /*
+     * Tags: REST
+     */
+    
+    public function putTag()
+    {
+        /*
+        * Check Permissions
+        */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        if(Input::get('pk') && !is_numeric(Input::get('pk')))
+        {
+            $doc = SwiftDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
+            if($doc)
+            {
+                //Lets check those tags
+                if(count($doc->tag))
+                {
+                    if(Input::get('value'))
+                    {
+                        //It already has some tags
+                        //Save those not in table
+                        foreach(Input::get('value') as $val)
+                        {
+                            $found = false;
+                            foreach($doc->tag as $t)
+                            {
+                                if($t->type == $val)
+                                {
+                                    $found = true;
+                                    break;
+                                }
+                            }
+                            //Save
+                            if(!$found)
+                            {
+                                /*
+                                 * Validate dat tag
+                                 */
+                                if(key_exists($val,SwiftTag::$aprequestTags))
+                                {
+                                    $tag = new SwiftTag(array('type'=>$val));
+                                    if(!$doc->tag()->save($tag))
+                                    {
+                                        return Response::make('Error: Unable to save tags',400);
+                                    }
+                                }
+                            }
+                        }
+
+                        //Delete values from table, not in value array
+
+                        foreach($doc->tag as $t)
+                        {
+                            $found = false;
+                            foreach(Input::get('value') as $val)
+                            {
+                                if($val == $t->type)
+                                {
+                                    $found = true;
+                                    break;
+                                }
+                            }
+                            //Delete
+                            if(!$found)
+                            {
+                                if(!$t->delete())
+                                {
+                                    return Response::make('Error: Cannot delete tag',400);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //Delete all existing tags
+                        if(!$doc->tag()->delete())
+                        {
+                            return Response::make('Error: Cannot delete tag',400);
+                        }
+                    }
+                }
+                else
+                {
+                    //Alright, just save then
+                    foreach(Input::get('value') as $val)
+                    {
+                        /*
+                         * Validate dat tag
+                         */
+                        if(key_exists($val,SwiftTag::$aprequestTags))
+                        {
+                            $tag = new SwiftTag(array('type'=>$val));
+                            if(!$doc->tag()->save($tag))
+                            {
+                                return Response::make('Error: Unable to save tags',400);
+                            }
+                        }
+                        else
+                        {
+                            return Response::make('Error: Invalid tags',400);
+                        }
+                    }
+                }
+//                WorkflowActivity::update($doc->aprequest);
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Error: Document not found',400);
+            }
+        }
+        else
+        {
+            return Response::make('Error: Document number invalid',400);
+        }
+    }    
+    
+    
     /*
      * Cancel Form
      */
@@ -1028,16 +1343,7 @@ class APRequestController extends UserController {
             return Response::make('A&P Request form not found',404);
         }        
     }
-    
-    /*
-     * Save Orders
-     */
-    
-    public function putOrder($apr_id)
-    {
-        
-    }
-    
+
     /*
      * Mark Items
      */

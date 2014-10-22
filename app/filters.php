@@ -40,7 +40,8 @@ Route::filter('auth', function()
         Session::put('redirect_after_login',Request::Url());
         if(Request::header('X-PJAX'))
         {
-            return Response::make('',301)->header('Location','/login')->header('X-PJAX-URL','/login');
+            Session::flash('expired',true);
+            return Response::make('',302)->header('X-PJAX-URL','/login');
         }
         
         return Redirect::to('/login');

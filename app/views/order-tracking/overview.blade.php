@@ -83,7 +83,24 @@
                                         <!-- end widget content -->
                                 </div>
                                 <!-- end widget div -->
-                        </div>                         
+                        </div>
+                        
+			<!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="ot-overview-storage" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				<header>
+					<span class="widget-icon"> <i class="fa fa-history"></i> </span>
+                                        <h2>Upcoming Storage (Cost) </h2>
+				</header>
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body">
+                                                @include('order-tracking.overview_storage')
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>
                 </article>
                 <!-- NEW COL END -->
                 

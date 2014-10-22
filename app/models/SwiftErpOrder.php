@@ -47,10 +47,10 @@ class SwiftErpOrder extends Eloquent {
         'type'  => 'Jde Order Type'
     );    
     
-    protected $revisionClassName = "Erp Order";
-    protected $revisionPrimaryIdentifier = "ref";    
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
+    public $revisionClassName = "Erp Order";
+    public $revisionPrimaryIdentifier = "ref";
+    public $keepCreateRevision = true;
+    public $softDelete = true;
     
     /*
      * Revision Accessors

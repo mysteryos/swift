@@ -31,10 +31,10 @@ class SwiftAPOrder extends Eloquent {
         'status' => 'Order Status',
     );    
     
-    protected $revisionClassName = "A&P Order";
-    protected $revisionPrimaryIdentifier = "ref";    
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
+    public $revisionClassName = "A&P Order";
+    public $revisionPrimaryIdentifier = "ref";    
+    public $keepCreateRevision = true;
+    public $softDelete = true;
     
     /*
      * Constants

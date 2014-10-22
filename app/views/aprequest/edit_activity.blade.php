@@ -33,6 +33,24 @@
                             break;
                     }
                     ?>
+                    <?php 
+                    $related_model = new $a->revisionable_type;
+                    if(isset($related_model->revisionDisplayId) && isset($related_model->revisionDisplayId))
+                    {
+                        echo "[Id: $a->revisionable_id]";
+                    }
+                    
+                    $poly = $related_model->revisionPolymorphicIdentifier;
+                    if($poly)
+                    {
+                        $related_obj = $related_model::find($a->revisionable_id);
+                        $rerevisionable = $related_obj->{$related_model->revisionPolymorphicIdentifier};
+                        if(count($rerevisionable))
+                        {
+                            echo "[<i>".$rerevisionable->revisionClassName."</i> (".$rerevisionable->revisionPrimaryIdentifier.": ".$rerevisionable->{$rerevisionable->revisionPrimaryIdentifier}.")]";
+                        }
+                    }
+                    ?>
                     </span>
                 </td>
             </tr>

@@ -7,6 +7,8 @@ Use \SwiftNodePermission;
 Use \SwiftNodeDefinition;
 Use \SwiftWorkflowActivity;
 Use \SwiftWorkflowType;
+Use \Eloquent;
+Use \SwiftOrder;
 
 class WorkflowActivity {
     
@@ -138,6 +140,20 @@ class WorkflowActivity {
         }
         
         return true;
+    }
+    
+    public function updateTask($job,$data)
+    {
+        if(isset($data['class']) && isset($data['id']))
+        {
+            $eloqentClass = new $data['class'];
+            $eloquentObject = $eloqentClass::find($data['id']);
+            return $this->update($eloquentObject);
+        }
+        else
+        {
+            throw new \RuntimeException('Eloquent class or object ID missing');
+        }
     }
     
     /*

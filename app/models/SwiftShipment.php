@@ -41,12 +41,10 @@ class SwiftShipment extends Eloquent {
         'gross_weight' => 'Gross Weight'
     );
     
-    protected $keepCreateRevision = true;  
-    protected $softDelete = true;
-    
-    protected $revisionClassName = "Shipment";    
-    
-    protected $revisionPrimaryIdentifier = "id";
+    public $keepCreateRevision = true;  
+    public $softDelete = true;
+    public $revisionClassName = "Shipment";    
+    public $revisionPrimaryIdentifier = "id";
     
     public function getTypeRevisionAttribute($val)
     {

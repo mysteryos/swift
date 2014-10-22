@@ -28,17 +28,15 @@ class SwiftPurchaseOrder extends Eloquent {
         'reference','published_at','deleted_at'
     );
     
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
-    
     protected $revisionFormattedFieldNames = array(
         'reference' => 'Purchase Order No',
         'published_at' => 'PO - Published at'
     );
     
-    protected $revisionClassName = "Purchase Order";
-    
-    protected $revisionPrimaryIdentifier = "reference";
+    public $keepCreateRevision = true;
+    public $softDelete = true;    
+    public $revisionClassName = "Purchase Order";
+    public $revisionPrimaryIdentifier = "reference";
     
     /*
      * Relationships

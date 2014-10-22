@@ -22,5 +22,6 @@
         </div>        
     </div>
     <legend class="top"></legend>
-    @if($edit && ($isCcare || $isAdmin))<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/erporder"><i class="fa fa-trash-o"></i></a>@endif    
+    @if($edit && ($isCcare || $isAdmin))<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/erporder"title="Delete Order"><i class="fa fa-trash-o"></i></a>@endif
+    @if(!isset($dummy) && isset($e))<span class="float-id">ID: {{ Crypt::decrypt($e->id) }}</span> @endif
 </fieldset>

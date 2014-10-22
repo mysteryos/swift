@@ -58,24 +58,24 @@ class SwiftFreight extends Eloquent{
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'freight_company_id','freight_type','bol_no', 'vessel_no', 'incoterms', 'freight_etd', 'freight_eta'
+        'freight_company_id','freight_type','bol_no', 'vessel_no', 'vessel_name', 'incoterms', 'freight_etd', 'freight_eta'
     );
     
     protected $revisionFormattedFieldNames = array(
         'freight_type' => 'Freight Type',
         'bol_no' => 'Bill of Lading Number',
         'vessel_no' => 'Vessel Number',
+        'vessel_name' => 'Vessel Name',
         'incoterms' => 'Incoterms',
         'freight_etd' => 'Freight ETD',
         'freight_eta' => 'Freight ETA',
         'freight_company' => 'Freight Company',
     );
     
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
-    
-    protected $revisionClassName = "Freight";
-    protected $revisionPrimaryIdentifier = "id";
+    public $keepCreateRevision = true;
+    public $softDelete = true;
+    public $revisionClassName = "Freight";
+    public $revisionPrimaryIdentifier = "id";
     /*
      * Revision - Accessors
      */

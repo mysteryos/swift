@@ -99,7 +99,7 @@
 				<header>
 					<span class="widget-icon"> <i class="fa fa-gift"></i> </span>
                                         <h2>Products </h2>
-                                        @if($edit && $canAddProduct)
+                                        @if(($edit && $canAddProduct) || $isAdmin)
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                                             </div>
@@ -174,14 +174,48 @@
                                                     @else
                                                         @include('aprequest.edit_erporder')
                                                     @endif
-                                                    @include('aprequest.edit_erporder',array('dummy'=>true,'p'=>null))                                                
+                                                    @include('aprequest.edit_erporder',array('dummy'=>true,'e'=>null))                                                
                                             </form>
                                         </div>
                                         <!-- end widget content -->
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->                        
+                        <!-- end widget -->
+                        
+ 			<!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="apr-delivery" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				
+				<header>
+					<span class="widget-icon"> <i class="fa fa-shopping-cart"></i> </span>
+                                        <h2>Delivery </h2>
+                                        @if($edit && ($isStore || $isAdmin))
+                                            <div class="widget-toolbar" role="menu">
+                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                                            </div>
+                                        @endif                                        
+				</header>
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body">
+                                            <form class="form-horizontal">
+                                                    @if(count($form->delivery))
+                                                        @foreach($form->delivery as &$d)
+                                                            <?php $d->id = Crypt::encrypt($d->id); ?>
+                                                            @include('aprequest.edit_delivery',array('d'=>$d))
+                                                        @endforeach
+                                                    @else
+                                                        @include('aprequest.edit_delivery')
+                                                    @endif
+                                                    @include('aprequest.edit_delivery',array('dummy'=>true,'d'=>null))                                                
+                                            </form>
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>
+                        <!-- end widget -->                       
                 </article>
                 <!-- NEW COL END -->
                 

@@ -1936,7 +1936,10 @@ var main = {
     ot_view: function() {
         if(typeof window['ot_view'] === "undefined")
         {
-            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.ot_view.js"]);
+            jsLoader(["/js/plugin/x-editable/x-editable.js",
+                      "/js/plugin/jquery-caret/jquery.caret.min.js",
+                      "/js/plugin/jquery-atwho/jquery.atwho.min.js",
+                      "/js/swift/swift.ot_view.js"]);
         }
         else
         {

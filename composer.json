@@ -21,8 +21,10 @@
                 "aws/aws-sdk-php": "2.4.*@dev",
                 "venturecraft/revisionable": "dev-master",
                 "shift31/laravel-elasticsearch": "1.0.*@dev",
+                "elasticsearch/elasticsearch": "~1.0",
                 "codeception/codeception":"*",
-                "thiagoalessio/tesseract_ocr": ">= 0.2.0"                
+                "yangqi/htmldom": "dev-master",
+                "indatus/dispatcher": "1.*"
 	},
         "repositories": [
             {

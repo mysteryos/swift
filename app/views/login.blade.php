@@ -65,6 +65,16 @@
                                         </div>
                                     </div>
                                 @endif
+                                @if(Session::has('expired'))
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                                <div class="alert alert-info fade in">
+                                                        <i class="fa-fw fa fa-info"></i>
+                                                        <strong>Info!</strong> Your session has expired. Please login to continue.
+                                                </div>                                            
+                                        </div>                                    
+                                    </div>
+                                @endif
 				<div class="row">
 					<div class="col-xs-12 col-sm-12 col-md-7 col-lg-8 hidden-xs hidden-sm">
 						<h1 class="txt-color-red login-header-big">Scott Swift</h1>

@@ -31,11 +31,11 @@ class SwiftApproval extends Eloquent {
         'approved' => 'approval'
     );    
     
-    protected $revisionClassName = "A&P Order";
-    protected $revisionPrimaryIdentifier = "approvable";
-    protected $revisionPolymorphicIdentifier = "";
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
+    public $revisionClassName = "A&P Order";
+    public $revisionPrimaryIdentifier = "id";
+    public $revisionPolymorphicIdentifier = "approvable";
+    public $keepCreateRevision = true;
+    public $softDelete = true;
     
     
     /*

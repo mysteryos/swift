@@ -1,5 +1,5 @@
-<fieldset data-name="product" class="fieldset-product multi @if(isset($dummy) && $dummy == true) dummy hide @endif" @if(!isset($dummy)) {{ "data-approvalstatus='".$p->approvalstatus."'" }} @endif>
-    <div class="product-bg <?php if(!isset($dummy)){
+<fieldset data-name="product" class="fieldset-product multi @if(isset($dummy) && $dummy == true) dummy hide @endif" @if(!isset($dummy) && isset($p)) {{ "data-approvalstatus='".$p->approvalstatus."'" }} @endif>
+    <div class="product-bg <?php if(!isset($dummy) && isset($p)){
         switch($p->approvalstatus)
         {
             case SwiftApproval::PENDING:
@@ -42,7 +42,7 @@
             </div>                                                                                        
         </div>        
     </div>
-    @if(!isset($dummy))
+    @if(!isset($dummy) && isset($p))
     <div class="row">
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Cat Man Approval</label>
@@ -73,5 +73,6 @@
     </div>    
     @endif    
     <legend class="top"></legend>
-    @if($edit && (isset($canModifyProduct) || $isAdmin))<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/product"><i class="fa fa-trash-o"></i></a>@endif
+    @if($edit && (isset($canModifyProduct) || $isAdmin))<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/product" title="Delete Product"><i class="fa fa-trash-o"></i></a>@endif
+    @if(!isset($dummy) && isset($p))<span class="float-id">ID: {{ Crypt::decrypt($p->id) }}</span> @endif
 </fieldset>

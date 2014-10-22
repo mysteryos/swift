@@ -329,13 +329,19 @@ fieldset.multi {
 fieldset.multi a.top-right,fieldset.multi a.top-right:active,fieldset.multi a.top-right:focus {
     position:absolute;
     right:0px !important;
-    top:0px !important;
+    top:30px !important;
 }
 
 fieldset.multi a.top-left,fieldset.multi a.top-left:active,fieldset.multi a.top-left:focus {
     position:absolute;
     left:0px !important;
-    top:0px !important;
+    top:30px !important;
+}
+
+fieldset.multi span.float-id{
+    position: absolute;
+    right:0px;
+    top: 5px;
 }
 
 .unread td {
@@ -481,6 +487,22 @@ Inbox
 #jarviswidget-fullscreen-mode .panel-compressed .panel-body {
     max-height: none;
     overflow-y: auto;
+}
+
+#ot-overview-storage .storage_ok{
+    color: #71843f;
+}
+
+#ot-overview-storage .storage_bad{
+    color: #a65858;
+}
+
+#ot-overview-storage .storage_urgent{
+    color: #c79121;
+}
+
+#ot-overview-storage tr[data-href] td:hover {
+    cursor:pointer;
 }
 
 /*

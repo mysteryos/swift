@@ -57,7 +57,7 @@
     // calendar agenda day
     $('#transit_calendar_td').on('click',function() {
             $('#transit_calendar').fullCalendar('changeView', 'agendaDay');
-    });    
+    });
     
     //Hide Loading Message
     messenger_hidenotiftop();    

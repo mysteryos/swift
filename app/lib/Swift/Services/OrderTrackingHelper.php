@@ -11,10 +11,13 @@ Use \SwiftOrder;
 Use \SwiftDocs;
 Use \SwiftTag;
 Use \SwiftFreight;
+Use \Es;
 
-class OrderTracking{
+class OrderTrackingHelper{
     
     public $message;
+    public $chclIndex = 'chcl';
+    public $chclType = 'storage';
     
     public function smartMessage($data)
     {
@@ -40,9 +43,8 @@ class OrderTracking{
                         if(count($data['order']->customsDeclaration))
                         {
                             $custommessage = array("We have noticed that you have already filled in customs information but <b>Notice of Arrival</b> document is still missing.",
-                                                   "Sometimes, a <b>Notice of Arrival</b> document will help change the status from 'In transit' to 'Custom Declaration'",
                                                    "So, we need to talk. Someone has already filled in some customs information, without a <b>Notice of Arrival</b> document present on this form");
-                            $this->$message[] = array('type'=>'info','message'=>'');
+                            $this->message[] = array('type'=>'info','message'=>'');
                         }
                         break;
                     
@@ -80,10 +82,10 @@ class OrderTracking{
                                                 //Bill of Lading document found
                                                 if($t->type == SwiftTag::OT_BILL_OF_LADING)
                                                 {
-                                                    $billofladingnumbermissing = array("A recent discovery showed that you have a <b>Bill of Lading</b> document present, but no Bill of Lading number filled in.",
+                                                    $billofladingnumbermissing = array("A recent discovery showed that you have a <b>Bill of Lading</b> document present, but no Bill of Lading number filled in, in your freight section.",
                                                                                        "Your <b>Bill of Lading</b> number is missing. Please fill it in.",
                                                                                         );
-                                                    $this->$message[] = array('type'=>'warning','message'=>'');
+                                                    $this->message[] = array('type'=>'warning','message'=>'');
                                                 }
                                             }
                                         }
@@ -95,5 +97,31 @@ class OrderTracking{
                 }   
             }
         }
+    }
+    
+    //When ETA is not matching date of upload of NOA
+    private function incorrectdata()
+    {
+        
+    }
+    
+    /*
+     * Goes through elasticsearch
+     */
+    public function searchCHCLVessel($vessel,$voyage)
+    {
+        $params = array();
+        $params['type'] = $this->chclType;
+        $params['index'] = $this->chclIndex;
+        $params['body']=array('query'=>array(
+                                    'fuzzy_like_this_field'=>array(
+                                            "vessel" => array('like_text'=>$vessel)
+                                        ),
+                                    'fuzzy_like_this_field'=>array(
+                                            "voy" => array('like_text'=>$voyage)
+                                        )
+                                    )
+                                );
+        return Es::search($params);
     }
 }

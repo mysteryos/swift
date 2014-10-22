@@ -11,6 +11,7 @@ Use User;
 Use Crypt;
 Use Session;
 Use Config;
+Use Carbon;
 
 class Helper {
     
@@ -50,12 +51,44 @@ class Helper {
         $revision = array();
         $revision = array_merge($revision,$obj->revisionHistory()->get()->all());
 
+        $relstack = array();
+        
         foreach($arrayClass as $relation)
         {
-            $rel = $obj->{$relation}()->withTrashed()->get();
-            foreach($rel as $r)
+            if(strpos($relation,".") === false)
             {
-                $revision = array_merge($revision,$r->revisionHistory()->get()->all());
+                $rel = $obj->{$relation}()->withTrashed()->get();
+                $relexists = array_filter($arrayClass,function($val) use ($relation){
+                                return (strpos($val,$relation.".") !== false);
+                             });
+                if($relexists !== false)
+                {
+                    //Stack relation for future usage
+                    $relstack[$relation] = $rel;
+                }
+                
+                foreach($rel as $r)
+                {
+                    $revision = array_merge($revision,$r->revisionHistory()->get()->all());
+                }
+            }
+            else
+            {
+                foreach($relstack as $k=>$s)
+                {
+                    if(strpos($relation,$k) !== false)
+                    {
+                        foreach($s as $rel)
+                        {
+                            $relationships = $rel->{str_replace($k.".","",$relation)}()->withTrashed()->get();
+                            foreach($relationships as $r)
+                            {
+                                $revision = array_merge($revision,$r->revisionHistory()->get()->all());
+                            }   
+                        }
+                        break;
+                    }
+                }
             }
         }
         usort($revision,function($a,$b){
@@ -104,6 +137,62 @@ class Helper {
         else
         {
             return Session::has($session_variable) && isset(Session::get($session_variable)[$filter_name]);
+        }
+    }
+    
+    public function calculateStorageCost($storagestart,$numberOfContainers)
+    {
+        if($storagestart->diffInDays(Carbon::now(),false) <=0)
+        {
+            return 0;
+        }
+        else
+        {
+            $numberOfDays = Carbon::now()->diffInDaysFiltered(function(Carbon $date) {
+                return $date->dayOfWeek != Carbon::SUNDAY;
+            }, $storagestart);
+            
+            if($numberOfContainers > 1)
+            {
+                $oneToFour = "27.5";
+                $fiveToNine = "36.7";
+                $ten = "55.0";
+            }
+            else
+            {
+                $oneToFour = "13.8";
+                $fiveToNine = "18.3";
+                $ten = "27.5";
+            }
+            
+            $storageCost = 0;
+            if($numberOfDays >= 4)
+            {
+                $storageCost += (4 * $oneToFour);
+                if($numberOfDays <= 9)
+                {
+                    //More than 4, less than 9
+                    $remainderDays = $numberOfDays - 9;
+                    $storageCost += ($remainderDays * $fiveToNine);
+                }
+                else
+                {
+                    //More than 9
+                    $storageCost += (5 *$fiveToNine); 
+                    $remainderDays = $numberOfDays - 9;
+                    if($numberOfDays >=10)
+                    {
+                        //More than ten
+                        $storageCost += ($remainderDays*$ten);
+                    }
+                }
+            }
+            else
+            {
+                //Less than 4
+                $storageCost += $numberOfDays*$oneToFour;
+            }
+            return $storageCost;
         }
     }
     

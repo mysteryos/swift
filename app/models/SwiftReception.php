@@ -36,10 +36,10 @@ class SwiftReception extends Eloquent {
         'reception_user' => 'Received By'
     );
     
-    protected $revisionClassName = "Reception";
-    
-    protected $keepCreateRevision = true;
-    protected $softDelete = true;
+    public $revisionClassName = "Reception";
+    public $revisionPrimaryIdentifier = "id";
+    public $keepCreateRevision = true;
+    public $softDelete = true;
     
     /*
      * Mutator

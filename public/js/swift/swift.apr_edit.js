@@ -128,7 +128,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         e.preventDefault();            
         var $this = $(this);
         $.SmartMessageBox({
-                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to cancel this order process?</strong></span> ?",
+                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to cancel this A&P Request?</strong></span> ?",
                 content : "The form will be locked from editing after cancellation",
                 buttons : '[No][Yes]'
 
@@ -136,8 +136,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 if (ButtonPressed == "Yes") {
                     Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
                         id: 'notif-top',
-                        errorMessage: 'Error cancelling order process',
-                        successMessage: 'Order process has been cancelled',
+                        errorMessage: 'Error cancelling A&P Request',
+                        successMessage: 'A&P Request has been cancelled',
                         progressMessage: 'Please Wait...',
                         action: $.ajax,
                     },
@@ -171,7 +171,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         var $this = $(this);
         var $important = $this.children('i').hasClass('fa-exclamation-triangle');
         $.SmartMessageBox({
-                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($important? "unmark" : "mark")+" this order process as important?</strong></span> ?",
+                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($important? "unmark" : "mark")+" this A&P Request as important?</strong></span> ?",
                 content : "All A&P request users will receive a notice",
                 buttons : '[No][Yes]'
 
@@ -180,8 +180,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     $this.attr('disabled');
                     Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
                         id: 'notif-top',
-                        errorMessage: 'Error marking order process',
-                        successMessage: 'Order process has been '+($important? "unmarked" : "marked")+' as important',
+                        errorMessage: 'Error marking A&P Request',
+                        successMessage: 'A&P Request has been '+($important? "unmarked" : "marked")+' as important',
                         progressMessage: 'Please Wait...',
                         action: $.ajax,
                     },
@@ -327,7 +327,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
     
     //Multi
-    $('.product-editable,.delivery-editable:not(.productcatman-editable):not(.productexec-editable)').on('save',function(e,params){
+    $('.product-editable, .erporder-editable, .delivery-editable, .delivery-editable:not(.productcatman-editable):not(.productexec-editable)').on('save',function(e,params){
         //First time save, set primary key
         if($(this).attr('data-pk') == "0")
         {
@@ -359,7 +359,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     $('.jarviswidget').on('click','fieldset.multi .btn-delete',function(){
-        $this = $(this);
+        var $this = $(this);
         if(confirm('Are you sure you wish to delete this record?'))
         {
             var $thisname = $this.parents('fieldset.multi').attr('data-name').ucfirst();
@@ -410,7 +410,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     var previewTemplate = previewNode.parentNode.innerHTML;
     previewNode.style.display = "none";
     var removeFileEvent;
-    var theAwesomeDropZone= new Dropzone(document.getElementById('content'),{
+    var theAwesomeDropZoneAP= new Dropzone(document.getElementById('content'),{
         url:'/aprequest/upload/'+$('#id').val(),
         clickable: '#btn-upload',
         previewsContainer: "#upload-preview",
@@ -463,7 +463,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                             {
                                 $.ajax({    
                                     type:'DELETE',
-                                    url: '/order-tracking/upload/'+$(file.previewElement).attr('data-id'),
+                                    url: '/aprequest/upload/'+$(file.previewElement).attr('data-id'),
                                     success:function()
                                     {
                                         deletemsg.update({
@@ -514,7 +514,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
                     $.ajax({
                         type:'DELETE',
-                        url: '/order-tracking/upload/'+$thisParent.attr('data-id'),
+                        url: '/aprequest/upload/'+$thisParent.attr('data-id'),
                         success:function()
                         {
                             deletemsg.update({
@@ -543,7 +543,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
     });
 
-    theAwesomeDropZone.on("sending", function(file,xhr,formdata) {
+    theAwesomeDropZoneAP.on("sending", function(file,xhr,formdata) {
             uploadmsg = Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
             message: 'Uploading "'+file.name+'" <div class="progress progress-sm progress-striped active"><div aria-valuetransitiongoal="25" class="progress-bar bg-color-blue" id="upload-progress" style="width: 0%;" aria-valuenow="25"></div> </div>',
             hideAfter: 0,
@@ -581,7 +581,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         return file;
     });
 
-    theAwesomeDropZone.on("success", function (file,response){
+    theAwesomeDropZoneAP.on("success", function (file,response){
         Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
             showCloseButton: true,
             type: 'success',
@@ -610,7 +610,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         return file;
     });
 
-    theAwesomeDropZone.on("cancelled",function(){
+    theAwesomeDropZoneAP.on("cancelled",function(){
        if(typeof uploadmsg !== null)
        {
            uploadmsg.hide();
@@ -623,7 +623,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         });
     });
 
-    theAwesomeDropZone.on('error',function(file,errorMsg,xhr){
+    theAwesomeDropZoneAP.on('error',function(file,errorMsg,xhr){
         Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
             showCloseButton: true,
             type: 'error',
@@ -632,7 +632,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         });            
     });
 
-    theAwesomeDropZone.on('uploadprogress',function(file,progress){
+    theAwesomeDropZoneAP.on('uploadprogress',function(file,progress){
         var $uploadprogress = $('#upload-progress');
         if($uploadprogress[0].length != 0)
         {
@@ -640,7 +640,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
     });
 
-    theAwesomeDropZone.on('totaluploadprogress',function(progress){
+    theAwesomeDropZoneAP.on('totaluploadprogress',function(progress){
        if(typeof uploadmsg !== "undefined" && progress == 100)
        {
            uploadmsg.hide();
@@ -684,7 +684,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     {
                         window.setTimeout(function(){
                             $.pjax({
-                               href: document.URL,
+                               href: $('.btn-ribbon-refresh').attr('href'),
                                container: '#main'
                             });
                         },'2000');

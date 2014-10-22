@@ -75,7 +75,7 @@ class SwiftNodeDefinitionJoin extends Eloquent {
      * Name: Simple Merge (XAND-Join)
      * TLDR: Same as AND but with variable number of nodes
      */
-    public static $P_XAND_JOIN = 9;       
+    public static $P_XAND_JOIN = 9;
     
     
     public function childNode()

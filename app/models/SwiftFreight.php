@@ -29,7 +29,9 @@ class SwiftFreight extends Eloquent{
                                     self::INCOTERM_CPT=>'CPT',
                                     self::INCOTERM_CIP=>'CIP',
                                     self::INCOTERM_DAT=>'DAT',
-                                    self::INCOTERM_DAP=>'DAP');
+                                    self::INCOTERM_DAP=>'DAP',
+                                    self::INCOTERM_DDU=>'DDU',
+                                    self::INCOTERM_DDP=>'DDP');
     
     public static $type = array(self::TYPE_SEA=>'Sea',self::TYPE_AIR=>'Air',self::TYPE_LAND=>'Land');
     
@@ -51,6 +53,8 @@ class SwiftFreight extends Eloquent{
     const INCOTERM_CIP = 8;
     const INCOTERM_DAT = 9;
     const INCOTERM_DAP = 10;
+    const INCOTERM_DDP = 11;
+    const INCOTERM_DDU = 12;
     
     
     /* Revisionable Attributes */

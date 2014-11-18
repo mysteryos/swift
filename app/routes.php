@@ -49,7 +49,6 @@ Route::group(array('before' => array('auth')), function()
     //Comment
     Route::controller('comment','CommentController');
     
-//  Route::controller('user', 'UserController');
 });
 
 Route::group(array('before'=> array('admin')), function()

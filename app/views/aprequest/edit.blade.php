@@ -48,6 +48,9 @@
 			<span>&gt;  
 				Form ID: {{ $form->id }}
 			</span>
+                        <span>
+                            &nbsp;By {{ $owner }}
+                        </span>
 		</h1>
 	</div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
@@ -174,7 +177,7 @@
                                                     @else
                                                         @include('aprequest.edit_erporder')
                                                     @endif
-                                                    @include('aprequest.edit_erporder',array('dummy'=>true,'e'=>null))                                                
+                                                    @include('aprequest.edit_erporder',array('dummy'=>true,'e'=>null))
                                             </form>
                                         </div>
                                         <!-- end widget content -->

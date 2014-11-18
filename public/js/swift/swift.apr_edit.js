@@ -231,6 +231,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         if($this.attr('data-type')=="select2" && $this.hasClass('product-editable'))
         {
             $this.editable({
+                disabled: $this.hasClass('editable-disabled'),
                 placeholder: 'Select a product',
                 select2: {
                     allowClear: false,
@@ -270,7 +271,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
         else
         {
-            $this.editable();
+            $this.editable({
+               disabled: $this.hasClass('editable-disabled') 
+            });
+
         }
         
         $this.on('shown',function(e){

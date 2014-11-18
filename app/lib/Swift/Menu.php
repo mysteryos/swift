@@ -7,9 +7,7 @@
 Namespace Swift;
 
 use Config;
-use Route;
 use Sentry;
-use Request;
 use URL;
 
 class Menu {

@@ -61,22 +61,6 @@ class SwiftAPProduct extends Eloquent {
                                   self::RC_CONTRIBUTION=> 'Contribution');
     
     /*
-     * Events
-     */
-    
-//    protected static function boot() {
-//        parent::boot();
-//        
-//        static::deleting(function($this) { // called BEFORE delete()
-//            //Remove all approvals associated with the product
-//            $this->approval()->delete();
-//        });
-//        
-//        static::bootRevisionable();
-//        static::bootSoftDeletingTrait();
-//    }
-    
-    /*
      * Revisionable Accessors
      */
     

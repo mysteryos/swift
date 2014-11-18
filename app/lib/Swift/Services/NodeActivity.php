@@ -10,7 +10,6 @@ Use \SwiftNodeActivityJoin;
 Use \SwiftNodePermission;
 Use \SwiftNodeDefinition;
 Use \SwiftNodeDefinitionJoin;
-Use \SwiftWorkflowActivity;
 Use \SwiftWorkflowType;
 Use \Sentry;
 Use \NodeDefinition;
@@ -29,7 +28,7 @@ class NodeActivity {
     /*
      * Create node activity
      */
-    public function create($workflow_activity_id,$node_definition)
+    public function create($workflow_activity_id,SwiftNodeDefinition $node_definition)
     {
         $nodeCheck = SwiftNodeActivity::getByWorkflowAndDefinition($workflow_activity_id,$node_definition->id);
         //If node with same definition doesn't exists
@@ -91,7 +90,7 @@ class NodeActivity {
     /*
      * Save Current Node
      */
-    public function save($node_activity,$flow=1/*Forward Flow*/)
+    public function save(SwiftNodeActivity $node_activity,$flow=1/*Forward Flow*/)
     {
         $node_activity->user_id = Sentry::getUser()->id;
         $node_activity->flow = $flow;
@@ -267,7 +266,7 @@ class NodeActivity {
      * Evaluates Branching & Creates next nodes
      */
     
-    public function goNext($currentNodeActivity)
+    public function goNext(SwiftNodeActivity $currentNodeActivity)
     {
         $insertedNodesArray = array();
         //Get Next Node Definitions
@@ -380,9 +379,9 @@ class NodeActivity {
                              */
                             foreach($nodesWithAndJoin as $n)
                             {
-                                //Check if parent node activity exists first
+                                //Check if parent node activity exists first and is complete
                                 $parentNodeActivity = SwiftNodeActivity::getByWorkflowAndDefinition($currentNodeActivity->workflow_activity_id, $n->parent_node->id);
-                                if(count($parentNodeActivity))
+                                if(count($parentNodeActivity) && (int)$parentNodeActivity->user_id != 0)
                                 {
                                     /*
                                      * Push IDs to an array for later use
@@ -541,7 +540,7 @@ class NodeActivity {
                             $conditionOr = true;
                             if(count($nodesWithOrJoin) < 2)
                             {
-                                throw new UnexpectedValueExemption("An \"Or branch\" terminated wtih a single branch; Multiple branches expected");
+                                throw new \UnexpectedValueExemption("An \"Or branch\" terminated wtih a single branch; Multiple branches expected");
                             }
                             /*
                              * Loop through all Node Branching Conditions & Check them
@@ -551,7 +550,7 @@ class NodeActivity {
                             {
                                 //Check if parent node activity exists first
                                 $parentNodeActivity = SwiftNodeActivity::getByWorkflowAndDefinition($currentNodeActivity->workflow_activity_id, $n->parent_node->id);
-                                if(count($parentNodeActivity))
+                                if(count($parentNodeActivity) && (int)$parentNodeActivity->user_id != 0)
                                 {
                                     /*
                                      * If exists, we check branching condition
@@ -681,7 +680,7 @@ class NodeActivity {
         $nodeDefinitionPermission = SwiftNodeDefinition::find($node_definition_id)->permission()->where('permission_type','=',$permission_type)->get()->all();
         if(count($nodeDefinitionPermission))
         {
-            $arrayPermission = array_map(function($p){
+            $arrayPermission = array_map(function(SwiftNodePermission $p){
                 return $p->permission_name;
             },$nodeDefinitionPermission);
             return Sentry::getUser()->hasAnyAccess((array)$arrayPermission);
@@ -727,7 +726,6 @@ class NodeActivity {
         else
         {
             throw New \RuntimeException ("Workflow of name '{$workflow_name}' Not Found");
-            return false;
         }
 
     }
@@ -750,7 +748,6 @@ class NodeActivity {
         else
         {
             throw New \RuntimeException ("Workflow of name '{$workflow_name}' Not Found");
-            return false;            
         }
     }
     

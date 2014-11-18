@@ -25,7 +25,7 @@ Class LoginController extends Controller
             if ( !empty( $code ) ) {
 
                 // This was a callback request from google, get the token
-                $token = $goog->requestAccessToken( $code );
+                $goog->requestAccessToken( $code );
 
                 // Send a request with it for basic info
                 $result = json_decode( $goog->request( 'https://www.googleapis.com/oauth2/v1/userinfo' ), true );
@@ -73,7 +73,6 @@ Class LoginController extends Controller
                         Session::flash('login-email', $result['email']);
                         return self::getDomainnotallowed();
                     }
-                    //Redirect::to('/login/notactivated');
                 }
                 catch (Cartalyst\Sentry\Users\UserNotActivatedException $e)
                 {

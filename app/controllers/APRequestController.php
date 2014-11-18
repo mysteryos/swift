@@ -1,8 +1,4 @@
 <?php
-/*
- * Name:
- * Description:
- */
 
 class APRequestController extends UserController {
     
@@ -24,6 +20,106 @@ class APRequestController extends UserController {
     public function getOverview()
     {
         $this->pageTitle = 'Overview';
+        $this->data['inprogress_limit'] = 15;
+        
+        
+        $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
+        
+        $aprequest_inprogress = SwiftAPRequest::orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                            },'=',0);
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },'=',0)->take($this->data['inprogress_limit'])->get();
+                            
+        $aprequest_inprogress_count = SwiftAPRequest::orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                            },'=',0);
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },'=',0)->count();
+                            
+        $aprequest_inprogress_important = SwiftAPRequest::orderBy('updated_at','desc')
+                           ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                               return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                       ->whereHas('nodes',function($q){
+                                            return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                       ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                           },'=',0);
+                                       }); 
+                           })->whereHas('flag',function($q){
+                               return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                           })->get();       
+                            
+       $aprequest_inprogress_responsible = SwiftAPRequest::orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                            });
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },'=',0)->get(); 
+                            
+       $aprequest_inprogress_important_responsible = SwiftAPRequest::orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                            });
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            })->get();                            
+        
+        $aprequest_inprogress = $aprequest_inprogress->diff($aprequest_inprogress_responsible);
+        $aprequest_inprogress_important = $aprequest_inprogress_important->diff($aprequest_inprogress_important_responsible);
+        
+        if(count($aprequest_inprogress) == 0 || count($aprequest_inprogress_important) == 0 || count($aprequest_inprogress_responsible) == 0 || count($aprequest_inprogress_important_responsible) == 0)
+        {
+            $this->data['in_progress_present'] = true;
+        }
+        else
+        {
+            $this->data['in_progress_present'] = false;
+        }
+        
+        foreach(array($aprequest_inprogress,$aprequest_inprogress_responsible,$aprequest_inprogress_important,$aprequest_inprogress_important_responsible) as $aprequestarray)
+        {
+            foreach($aprequestarray as &$apr)
+            {
+                $apr->current_activity = WorkflowActivity::progress($apr,'aprequest');
+                $apr->activity = Helper::getMergedRevision(array('product','product.approval','order','approval','delivery','document'),$apr);
+            }
+        }     
+
+        $this->data['inprogress'] = $aprequest_inprogress;
+        $this->data['inprogress_responsible'] = $aprequest_inprogress_responsible;
+        $this->data['inprogress_important'] = $aprequest_inprogress_important;
+        $this->data['inprogress_important_responsible'] = $aprequest_inprogress_important_responsible;
+        /*$this->data['aprequest_storage'] = $storage_array*/
+        $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
+        
+        return $this->makeView('aprequest/overview');        
+        
     }
     
     /*
@@ -53,34 +149,36 @@ class APRequestController extends UserController {
             /*
              * Data
              */
+            $owner = $apr->revisionHistory()->orderBy('created_at','asc')->first();
+            $this->data['isCreator'] = ($this->currentUser->id == $owner->user_id ? true : false);
+            $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
+            $this->data['current_activity'] = WorkflowActivity::progress($apr,'aprequest');
             $this->data['activity'] = Helper::getMergedRevision(array('product','document','delivery','order','product.approvalexec','product.approvalcatman'),$apr);
             $this->pageTitle = "{$apr->name} (ID: $apr->id)";
             $this->data['form'] = $apr;
-//            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
             $this->data['product_reason_code'] = json_encode(Helper::jsonobject_encode(SwiftAPProduct::$reason));
             $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
             $this->data['erporder_type'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$type));
             $this->data['erporder_status'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$status));
             $this->data['delivery_status'] = json_encode(Helper::jsonobject_encode(SwiftDelivery::$status));
-            $this->data['current_activity'] = WorkflowActivity::progress($apr,'aprequest');
-            $this->data['edit'] = $edit;
             $this->data['flag_important'] = Flag::isImportant($apr);
             $this->data['flag_starred'] = Flag::isStarred($apr);
             $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$aprequestTags));
             $this->data['rootURL'] = $this->rootURL;
-            $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
+            
             $this->data['isCcare'] = $this->currentUser->hasAccess($this->ccarePermission);
             $this->data['isStore'] = $this->currentUser->hasAccess($this->storePermission);
             $this->data['canPublish'] = $this->data['canModifyProduct'] = $this->data['canAddProduct'] = false;
-            $this->data['isCatMan'] = $this->currentUser->hasAccess(['apr-catman']);
-            $this->data['isExec'] = $this->currentUser->hasAccess(['apr-exec']);
-            $this->data['isCreator'] = $this->currentUser->id = $apr->revisionHistory()->first()->user_id ? true : false;
+            $this->data['isCatMan'] = $this->currentUser->hasAccess('apr-catman');
+            $this->data['isExec'] = $this->currentUser->hasAccess('apr-exec');
+            $this->data['edit'] = $edit;
+            $this->data['owner'] = Helper::getUserName($owner->user_id,$this->currentUser);
             
             /*
              * See if can publish
              */
             
-            if($edit == true)
+            if($edit === true)
             {
                 if($this->data['current_activity']['status'] == SwiftWorkflowActivity::INPROGRESS)
                 {
@@ -101,7 +199,7 @@ class APRequestController extends UserController {
                                 $this->data['canAddProduct'] = true;
                             }
                             
-                            if(isset($d->data->modifyproduct))
+                            if((isset($d->data->modifyproduct) && $this->data['isCreator'] == true) || $this->data['isAdmin'] == true)
                             {
                                 $this->data['canModifyProduct'] = true;
                             }
@@ -134,7 +232,6 @@ class APRequestController extends UserController {
                 }
             }
 
-            
             return $this->makeView("$this->rootURL/edit");
         }
         else
@@ -160,9 +257,9 @@ class APRequestController extends UserController {
         }
     }
     
-    public function getView($id)
+    public function getView($id,$override=false)
     {
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]) && $override === false)
         {
             return Redirect::action('APRequestController@getEdit',array('id'=>$id));
         }
@@ -210,7 +307,7 @@ class APRequestController extends UserController {
             $type='all';
         }        
         
-        $aprequestquery = SwiftApRequest::orderBy('updated_at','desc');
+        $aprequestquery = SwiftAPRequest::orderBy('updated_at','desc');
         
         if($type != 'inprogress')
         {
@@ -1112,7 +1209,7 @@ class APRequestController extends UserController {
         {
             if(Input::file('file'))
             {
-                $doc = new SwiftDocument();
+                $doc = new SwiftAPDocument();
                 $doc->document = Input::file('file');
                 if($apr->document()->save($doc))
                 {
@@ -1153,7 +1250,7 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }        
         
-        $doc = SwiftDocument::find(Crypt::decrypt($doc_id));
+        $doc = SwiftAPDocument::find(Crypt::decrypt($doc_id));
         /*
          * Manual Validation
          */
@@ -1171,7 +1268,7 @@ class APRequestController extends UserController {
         else
         {
             return Response::make('Document not found',404);
-        } 
+        }
     }
     
     /*
@@ -1190,7 +1287,7 @@ class APRequestController extends UserController {
         
         if(Input::get('pk') && !is_numeric(Input::get('pk')))
         {
-            $doc = SwiftDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
+            $doc = SwiftAPDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
             if($doc)
             {
                 //Lets check those tags
@@ -1282,7 +1379,6 @@ class APRequestController extends UserController {
                         }
                     }
                 }
-//                WorkflowActivity::update($doc->aprequest);
                 return Response::make('Success');
             }
             else

@@ -1,8 +1,4 @@
 <?php
-/*
- * Name:
- * Description:
- */
 
 class FreightCompanyController extends UserController {
     public function __construct(){

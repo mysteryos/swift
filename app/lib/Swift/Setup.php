@@ -39,7 +39,6 @@ Class Setup {
         
         //Add webmaster to Group
         $webmasterUser = Sentry::findUserByLogin(Config::get('website.webmaster_mail'));
-//        dd($webmasterUser);
         if($webmasterUser)
         {
             $webmasterUser->addGroup($adminGroup);

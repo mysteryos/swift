@@ -1,8 +1,4 @@
 <?php
-/*
- * Name: Order Tracking
- * Description:
- */
 
 class OrderTrackingController extends UserController {
     
@@ -22,75 +18,85 @@ class OrderTrackingController extends UserController {
     
     public function getOverview()
     {
-        $this->pageTitle = 'Overview';
         
+        $this->pageTitle = 'Overview';
+        $this->data['inprogress_limit'] = 15;        
         /*
          * Order in Progress
          */
         
-        $nodeResponsible = SwiftNodePermission::getByPermission($this->currentUser->getMergedPermissions(),SwiftNodePermission::RESPONSIBLE);
-        if(count($nodeResponsible))
+        $order_inprogress = $order_inprogress_important = $order_inprogress_responsible = $order_inprogress_important_responsible = array();
+        
+        $order_inprogress = SwiftOrder::orderBy('swift_order.updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                            },'=',0);
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },'=',0)->take($this->data['inprogress_limit'])->get();                            
+        
+        $order_inprogress_important = SwiftOrder::orderBy('swift_order.updated_at','desc')
+                           ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                               return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                       ->whereHas('nodes',function($q){
+                                            return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                       ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                           },'=',0);
+                                       }); 
+                           })->whereHas('flag',function($q){
+                               return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                           })->get();       
+                            
+       $order_inprogress_responsible = SwiftOrder::orderBy('swift_order.updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                            });
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },'=',0)->get(); 
+                            
+       $order_inprogress_important_responsible = SwiftOrder::orderBy('swift_order.updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
+                                            });
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            })->get();                            
+        
+        $order_inprogress = $order_inprogress->diff($order_inprogress_responsible);
+        $order_inprogress_important = $order_inprogress_important->diff($order_inprogress_important_responsible);
+        $order_inprogress_count = count($order_inprogress);
+                            
+        if(count($order_inprogress) == 0 || count($order_inprogress_important) == 0 || count($order_inprogress_responsible) == 0 || count($order_inprogress_important_responsible) == 0)
         {
-            foreach($nodeResponsible as $nr)
-            {
-                $nodeResponsibleNodeDefinitionId[] = $nr->node_definition_id;
-            }
+            $this->data['in_progress_present'] = true;
         }
         else
         {
-            $nodeResponsibleNodeDefinitionId = array();
-        }
-        $order_inprogress = SwiftOrder::orderBy('updated_at','desc')->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                            return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS); 
-                            })->get();
-        $order_inprogress_important = $order_inprogress_responsible = $order_inprogress_important_responsible = array();
-        
-        if(count($order_inprogress))
-        {
-            $this->data['in_progress_count'] = count($order_inprogress);
-            //Loop in orders
-            foreach($order_inprogress as $key=>$o)
-            {
-                $o->current_activity = WorkflowActivity::progress($o,'order_tracking');
-                //check if flag important
-                if(Flag::isImportant($o))
-                {
-                    array_push($order_inprogress_important,$o);
-                    //Check if user is responsible for node
-                    foreach($o->workflow->nodes as $n)
-                    {
-                        //see if node is in progress and user is responsible
-                        if($n->user_id == 0 && in_array($n->node_definition_id,$nodeResponsibleNodeDefinitionId))
-                        {
-                            $order_inprogress_important_responsible[] = $o;
-                            //Pop important array to make sure no duplicates are present
-                            array_pop($order_inprogress_important);
-                            break;
-                        }
-                    }
-                    unset($order_inprogress[$key]);
-                }
-                else
-                {
-                    foreach($o->workflow->nodes as $n)
-                    {
-                        //see if node is in progress and user is responsible
-                        if($n->user_id == 0 && in_array($n->node_definition_id,$nodeResponsibleNodeDefinitionId))
-                        {
-                            $order_inprogress_responsible[] = $o;
-                            unset($order_inprogress[$key]);
-                            //Pop important array to make sure no duplicates are present
-                            break;
-                        }
-                    }
-                }
-            }
+            $this->data['in_progress_present'] = false;
         }
         
         foreach(array($order_inprogress,$order_inprogress_responsible,$order_inprogress_important,$order_inprogress_important_responsible) as $orderarray)
         {
             foreach($orderarray as &$o)
             {
+                $o->current_activity = WorkflowActivity::progress($o,'order_tracking');
                 $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
             }
         }
@@ -99,7 +105,7 @@ class OrderTrackingController extends UserController {
          * Storage Tracking - SEA
          */
         
-        $order_storage = SwiftOrder::has('reception','=',0)->with('freight','document','document.tag')->whereHas('workflow',function($q){
+        /*$order_storage = SwiftOrder::has('reception','=',0)->with('freight','document','document.tag')->whereHas('workflow',function($q){
                             return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS);
                         })->whereHas('freight',function($q){
                             return $q->where('freight_type','=',SwiftFreight::TYPE_SEA)->where('vessel_name','<>','""')->where('vessel_voyage','<>','""')->where('freight_eta','!=','""');
@@ -157,7 +163,7 @@ class OrderTrackingController extends UserController {
                                     );
             }
         }
-        
+        */
         /*
          * In Transit Dates
          */
@@ -166,9 +172,8 @@ class OrderTrackingController extends UserController {
         $this->data['order_inprogress_responsible'] = $order_inprogress_responsible;
         $this->data['order_inprogress_important'] = $order_inprogress_important;
         $this->data['order_inprogress_important_responsible'] = $order_inprogress_important_responsible;
-        $this->data['order_storage'] = $storage_array;
+        /*$this->data['order_storage'] = $storage_array*/
         $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
-        $this->data['node_responsible'] = $nodeResponsible;                                         
         
         return $this->makeView('order-tracking/overview');
     }
@@ -354,17 +359,17 @@ class OrderTrackingController extends UserController {
             case 'rejected':
                 $orderquery->whereHas('workflow',function($q){
                    return $q->where('status','=',SwiftWorkflowActivity::REJECTED); 
-                });                
+                });
                 break;
             case 'completed':
                 $orderquery->whereHas('workflow',function($q){
                    return $q->where('status','=',SwiftWorkflowActivity::COMPLETE); 
-                });                
+                });
                 break;
             case 'starred':
                 $orderquery->whereHas('flag',function($q){
                    return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
-                });                
+                });
                 break;
             case 'important':
                 $orderquery->whereHas('flag',function($q){
@@ -751,7 +756,7 @@ class OrderTrackingController extends UserController {
             $order->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($order->save())
             {
-                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                WorkflowActivity::update($order);
                 return Response::make('Success', 200);
             }
             else
@@ -793,18 +798,6 @@ class OrderTrackingController extends UserController {
                         return Response::make('Please select a valid status',400);
                     }
                     break;
-                case 'customs_filled_at':
-//                    if(Input::get('value') == "")
-//                    {
-//                        return Response::make('Please enter a valid date',400);
-//                    }
-                    break;
-                case 'customs_processed_at':
-//                    if(Input::get('value') == "")
-//                    {
-//                        return Response::make('Please enter a valid date',400);
-//                    }
-                    break;
                 case 'customs_reference':
                     if(!is_numeric(Input::get('value')) && Input::get('value') != "")
                     {
@@ -823,7 +816,7 @@ class OrderTrackingController extends UserController {
                 $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->customsDeclaration()->save($customsDeclaration))
                 {
-                    Queue::push('WorkflowActivity@update',array('order'=>$order));
+                    WorkflowActivity::update($order);
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($customsDeclaration->id),'id'=>$customsDeclaration->id]));
                 }
                 else
@@ -840,7 +833,7 @@ class OrderTrackingController extends UserController {
                     $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($customsDeclaration->save())
                     {
-                        Queue::push('WorkflowActivity@update',array('order'=>$order));
+                        WorkflowActivity::update($order);
                         return Response::make('Success');
                     }
                     else
@@ -916,18 +909,6 @@ class OrderTrackingController extends UserController {
                         return Response::make('Please select a valid freight type',400);
                     }
                     break;
-                case 'bol_no':
-//                    if(trim(Input::get('value')) == "")
-//                    {
-//                        return Response::make('Please enter a valid bill of lading',400);
-//                    }
-                    break;
-                case 'vessel_no':
-//                    if(trim(Input::get('value')) == "")
-//                    {
-//                        return Response::make('Please enter a valid vessel number',400);
-//                    }
-                    break;
                 case 'incoterms':
                     if(!array_key_exists(Input::get('value'),SwiftFreight::$incoterms))
                     {
@@ -954,7 +935,7 @@ class OrderTrackingController extends UserController {
                 $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->freight()->save($freight))
                 {
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                    WorkflowActivity::update($order);
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($freight->id),'id'=>$freight->id]));
                 }
                 else
@@ -994,7 +975,7 @@ class OrderTrackingController extends UserController {
                     $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($freight->save())
                     {
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                        WorkflowActivity::update($order);
                         return Response::make('Success');
                     }
                     else
@@ -1095,7 +1076,7 @@ class OrderTrackingController extends UserController {
                 $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->shipment()->save($shipment))
                 {
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                    WorkflowActivity::update($order);
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($shipment->id),'id'=>$shipment->id]));
                 }
                 else
@@ -1112,7 +1093,7 @@ class OrderTrackingController extends UserController {
                     $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($shipment->save())
                     {
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                        WorkflowActivity::update($order);
                         return Response::make('Success');
                     }
                     else
@@ -1191,7 +1172,7 @@ class OrderTrackingController extends UserController {
                 $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->purchaseOrder()->save($po))
                 {
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                    WorkflowActivity::update($order);
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($po->id),'id'=>$po->id]));
                 }
                 else
@@ -1208,7 +1189,7 @@ class OrderTrackingController extends UserController {
                     $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($po->save())
                     {
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                        WorkflowActivity::update($order);
                         return Response::make('Success');
                     }
                     else
@@ -1289,7 +1270,7 @@ class OrderTrackingController extends UserController {
                 $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->reception()->save($reception))
                 {
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                    WorkflowActivity::update($order);
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($reception->id),'id'=>$reception->id]));
                 }
                 else
@@ -1306,7 +1287,7 @@ class OrderTrackingController extends UserController {
                     $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($reception->save())
                     {
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id));
+                        WorkflowActivity::update($order);
                         return Response::make('Success');
                     }
                     else
@@ -1557,7 +1538,7 @@ class OrderTrackingController extends UserController {
                         }
                     }
                 }
-                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($doc->order),'id'=>$doc->order->id));
+                WorkflowActivity::update($doc->order);
                 return Response::make('Success');
             }
             else

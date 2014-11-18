@@ -18,10 +18,10 @@
 <!-- MAIN CONTENT -->
 <div id="content" data-js="ot_forms">
     <div class="row">
-        <div class="col-md-4 col-lg-2 col-xs-12">
+        <div class="col-md-2 col-xs-12">
             <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>            
         </div>
-        <div class="col-md-8 col-lg-10 hidden-mobile">
+        <div class="col-md-10 col-lg-10 hidden-mobile">
             <div class="inbox-inline-actions page-title">
                 <div class="btn-group">
                     <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
@@ -30,7 +30,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
+        <div class="col-md-2 col-lg-2 hidden-tablet hidden-mobile">
             @if($canCreate)
                 <div class="row">
                     <div class="col-xs-12">
@@ -40,7 +40,7 @@
             @endif
             <div class="row">
                 <div class="col-xs-12 inbox-side-bar">
-                    <h6> Filters <!-- <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a>--> </h6>
+                    <h6> Filters <!-- <a href="javascript:void(0);" rel="tooltip"page title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a>--> </h6>
 
                     <ul class="inbox-menu-lg">
                             @if($edit_access)
@@ -74,7 +74,7 @@
             </div>
             
         </div>
-        <div class="col-md-8 col-lg-10 col-xs-12">
+        <div class="col-md-10 col-xs-12">
             <div class="row">
                 <div class="col-xs-12">
                     <div class="hidden-tablet pull-left">

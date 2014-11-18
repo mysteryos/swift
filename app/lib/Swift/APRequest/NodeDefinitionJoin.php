@@ -11,6 +11,9 @@ Use \SwiftWorkflowActivity;
 
 Class NodeDefinitionJoin {
     
+    /*
+     * Calls to undefined static functions, routes to here
+     */
     public static function __callStatic($method, $args) {
         /*
          * To Category Manager routing
@@ -70,54 +73,6 @@ Class NodeDefinitionJoin {
     }
     
     /*
-     * Cat Man: Drinks
-     */
-//    public function cmanrouteToCmandrk($nodeActivity)
-//    {
-//        return self::cmanrouting($nodeActivity,"drk");
-//    }
-    
-    /*
-     * Cat Man: Food
-     */
-//    public function cmanrouteToCmanfod($nodeActivity)
-//    {
-//        return self::cmanrouting($nodeActivity,"fod");
-//    }
-    
-    /*
-     * Cat Man: Spirits
-     */
-//    public function cmanrouteToCmanspi($nodeActivity)
-//    {
-//        return self::cmanrouting($nodeActivity,"spi");
-//    }
-    
-    /*
-     * Cat Man: Wines
-     */
-//    public function cmanrouteToCmanwin($nodeActivity)
-//    {
-//        return self::cmanrouting($nodeActivity,"win");
-//    }    
-        
-    /*
-     * Cat Man: Cigarette
-     */
-//    public function cmanrouteToCmancig($nodeActivity)
-//    {
-//        return self::cmanrouting($nodeActivity,"cig");
-//    }    
-    
-    /*
-     * Cat Man: Nespresso
-     */
-//    public function cmanrouteToCmannes($nodeActivity)
-//    {
-//        return self::cmanrouting($nodeActivity,"nes");
-//    }
-    
-    /*
      * All Cat Man Filters
      */
         
@@ -139,32 +94,6 @@ Class NodeDefinitionJoin {
         return false;        
     }
     
-    /*
-     * Customer Care: Corporate
-     */
-    
-//    public function execToCcaredb($nodeActivity)
-//    {
-//        return self::ccarerouting($nodeActivity,"db");
-//    }
-    
-    /*
-     * Customer Care: Corporate
-     */
-    
-//    public function execToCcareco($nodeActivity)
-//    {
-//        return self::ccarerouting($nodeActivity,"co");
-//    }
-    
-    /*
-     * Customer Care: Corporate
-     */
-    
-//    public function execToCcareex($nodeActivity)
-//    {
-//        return self::ccarerouting($nodeActivity,"co");
-//    }    
     
     /*
      * All Customer Care Filters

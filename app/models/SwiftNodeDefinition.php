@@ -1,5 +1,4 @@
 <?php
-
 /* 
  * Name: Swift Node Definition
  * Description: Stores all Node definition
@@ -50,22 +49,6 @@ class SwiftNodeDefinition extends Eloquent {
     {
         return ($value == '' ? '' : json_decode($value));
     }
-    
-//    public function setDataAttribute($value)
-//    {
-//        if($value == '')
-//        {
-//            return '';
-//        }
-//        else
-//        {
-//            if(is_array(json_decode($this->data)))
-//            {
-//                
-//            }
-//            $this->data[key($value[0])] = $value[0];
-//        }
-//    }
     
     /*
      * Getter/Setter Methods for Data Field -- END

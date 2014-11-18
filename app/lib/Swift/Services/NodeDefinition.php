@@ -5,12 +5,8 @@
 
 Namespace Swift\Services;
 
-Use \SwiftNodeActivity;
-Use \SwiftNodePermission;
 Use \SwiftNodeDefinition;
-Use \SwiftWorkflowActivity;
 Use \SwiftWorkflowType;
-use \Sentry;
 
 class NodeDefinition {
     /*
@@ -32,7 +28,19 @@ class NodeDefinition {
         else
         {
             throw New \RuntimeException ("Workflow of name '{$workflow_name}' Not Found");
-            return false;
         }        
-    }    
+    }
+    
+    public function checkPermission(\SwiftNodeDefinition $nodeDefinition,$user)
+    {
+        $permissions = $nodeDefinition->load('permission');
+        foreach($permissions as $p)
+        {
+            if($p->permission_type == \SwiftNodePermission::RESPONSIBLE && $user->hasAccess($p->permission_name))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

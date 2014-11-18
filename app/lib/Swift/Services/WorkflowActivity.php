@@ -3,12 +3,10 @@
 Namespace Swift\Services;
 
 Use \SwiftNodeActivity;
-Use \SwiftNodePermission;
 Use \SwiftNodeDefinition;
 Use \SwiftWorkflowActivity;
 Use \SwiftWorkflowType;
-Use \Eloquent;
-Use \SwiftOrder;
+Use \Sentry;
 
 class WorkflowActivity {
     
@@ -144,6 +142,14 @@ class WorkflowActivity {
     
     public function updateTask($job,$data)
     {
+        if(isset($data['user_id']))
+        {
+            $user = Sentry::findUserById($data['user_id']);
+
+            // Log the user in
+            Sentry::login($user, false);
+        }
+        
         if(isset($data['class']) && isset($data['id']))
         {
             $eloqentClass = new $data['class'];

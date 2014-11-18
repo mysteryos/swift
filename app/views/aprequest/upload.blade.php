@@ -41,7 +41,7 @@
                           <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
                         </div>
                     </div>
-                    <div class="col-xs-2">
+                    <div class="col-xs-2 @if(!$isCreator && !$isAdmin) hide @endif">
                       <button data-dz-remove="" class="btn btn-danger delete btn-xs">
                         <i class="glyphicon glyphicon-trash"></i>
                       </button>

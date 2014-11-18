@@ -49,7 +49,7 @@ class SwiftAPRequest extends Eloquent {
     
     public function product()
     {
-        return $this->hasMany('SwiftApProduct','aprequest_id');
+        return $this->hasMany('SwiftAPProduct','aprequest_id');
     }
     
     /*

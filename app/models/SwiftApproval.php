@@ -96,7 +96,7 @@ class SwiftApproval extends Eloquent {
     
     public function approduct()
     {
-        return $this->morphByMany('SwiftApProduct','approvable');
+        return $this->morphByMany('SwiftAPProduct','approvable');
     }
     
     public function aprequest()

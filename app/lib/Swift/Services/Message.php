@@ -4,7 +4,6 @@
  */
 
 Namespace Swift\Services;
-Use \SwiftMessage;
 
 class Message {
     

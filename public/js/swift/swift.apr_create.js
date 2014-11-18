@@ -14,7 +14,7 @@
         },
         messages: {
             name: {
-                required: 'Please enter a name to identify this order'
+                required: 'Please enter a name to identify this a&p request'
             },
             customer_code: {
                 required: 'Please select a customer'
@@ -24,7 +24,7 @@
         // Ajax form submition
         submitHandler : function(form) {
                 var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
-                                message: 'Saving order tracking form',
+                                message: 'Saving A&P Request form',
                                 type: 'info',
                                 id: 'notif-top'
                               });

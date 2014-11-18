@@ -1,7 +1,7 @@
 <?php
 /*
- * Name:
- * Description:
+ * Name: Swift Document - Order Process
+ * Description: Handles all documents for order process/ Tracking
  */
 
 use Codesleeve\Stapler\ORM\StaplerableInterface;
@@ -44,16 +44,23 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
     
     public function __construct(array $attributes = array())
     {
-        // Define an attachment named 'document' that stores files locally.
-        $this->hasAttachedFile('document', [
-            'storage' => 's3',
-            'url' => '/upload/:attachment/:id/:filename',
-            'default_url' => '/defaults/:style/missing.png',
-            'keep_old_files' => true,
-            'preserve_old_files' => true
-        ]);
-        
-        parent::__construct($attributes);
+        if(!empty($attributes))
+        {
+            // Define an attachment named 'document' that stores files locally.
+            $this->hasAttachedFile($attributes['attachment_name'], $attributes['attachment_config']);
+        }
+        else
+        {
+            // Define an attachment named 'document' that stores files locally.
+            $this->hasAttachedFile('document', [
+                'storage' => 's3',
+                'url' => '/upload/:attachment/:id/:filename',
+                'default_url' => '/defaults/:style/missing.png',
+                'keep_old_files' => true,
+                'preserve_old_files' => true
+            ]);            
+        }
+         parent::__construct();
     }
     
     /*

@@ -3,9 +3,6 @@
 Namespace Swift\Services;
 
 Use Sentry;
-Use SwiftComment;
-Use Eloquent;
-Use Eloquent\Model;
 Use Crypt;
 
 /**
@@ -25,18 +22,17 @@ class Comment {
     {
         if (empty($commentable))
         {
-                throw new Exception();
+                throw new \Exception();
         }
         $commentable = Crypt::decrypt($commentable);
-        if (strpos($commentable, '.') == false)
+        if (strpos($commentable, '.') === false)
         {
-                throw new Exception();
+                throw new \Exception();
         }
         $explodedArray = explode('.', $commentable);
-        list($commentableType, $commentableId) = $explodedArray;
-        if (!\class_exists("\\".$commentableType))
+        if (!\class_exists("\\".$explodedArray[0]))
         {
-                throw new Exception();
+                throw new \Exception();
         }
         
         return $explodedArray;

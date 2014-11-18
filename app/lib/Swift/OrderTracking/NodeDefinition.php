@@ -198,7 +198,7 @@ Class NodeDefinition {
         {
             //Check if bill of lading has been uploaded
             //If it is, Order is now in transit
-            $docs = $order->document()->get();
+            /*$docs = $order->document()->get();
             if(count($docs))
             {
                 $docs = $docs->load('tag');
@@ -235,7 +235,18 @@ Class NodeDefinition {
                 }
                 
                 return $tagfound;
-            }
+            }*/
+            $order->load('reception');
+            if(count($order->reception))
+            {
+                foreach($order->reception as $r)
+                {
+                    if($r->grn != "")
+                    {
+                        return true;                                    
+                    }
+                }
+            }            
         }        
     }
     

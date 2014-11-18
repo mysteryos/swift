@@ -14,7 +14,7 @@ class SwiftDelivery extends Eloquent {
     
     protected $fillable = array('status','status_comment','invoice_number','invoice_recipient','delivery_person','delivery_date');
     
-    protected $dates = ['deleted_at'];
+    protected $dates = ['deleted_at','delivery_date'];
     
     public $timestamps = true;
     

@@ -20,7 +20,7 @@ class NodeMail {
             {
                 foreach($users as $u)
                 {
-                    if($u->activated && $u->isSuperUser())
+                    if($u->activated && !$u->isSuperUser())
                     {
                         //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
                         \Mail::send('emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$u),function($message) use ($u,$aprequest){

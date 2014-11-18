@@ -50,28 +50,7 @@ class SwiftReception extends Eloquent {
         //Add missing seconds value
         $this->attributes['reception_date'] = ($value != "" ? Carbon::parse($value)->toDateTimeString(): "");
     }
-    
-    /*
-     * Revision Accessor
-     */
-    
-//    public function getReceptionUserRevisionAttribute($value)
-//    {
-//        if($value != "")
-//        {
-//            $user = Sentry::findUserById($value);
-//            if($user)
-//            {
-//                return $user->first_name." ".$user->last_name;
-//            }
-//            else
-//            {
-//                return "(Unknown)";
-//            }
-//        }
-//        return "";
-//    }
-    
+        
     /*
      * Relationships
      */

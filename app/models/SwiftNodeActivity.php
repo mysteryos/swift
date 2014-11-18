@@ -4,10 +4,10 @@
  * Description: Stores all node related activity
  */
 
-use Illuminate\Database\Eloquent\SoftDeletingTrait;
-
 class SwiftNodeActivity extends Eloquent
 {
+    use Illuminate\Database\Eloquent\SoftDeletingTrait;
+    
     protected $table = "swift_node_activity";
     
     protected $guarded = array('id');
@@ -78,6 +78,11 @@ class SwiftNodeActivity extends Eloquent
     public function workflowactivity()
     {
         return $this->belongsTo('SwiftWorkflowActivity','workflow_activity_id');
+    }
+    
+    public function permission()
+    {
+        return $this->hasMany('SwiftNodePermission','node_definition_id','node_definition_id');
     }
     
     /*

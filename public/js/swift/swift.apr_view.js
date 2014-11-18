@@ -30,4 +30,4 @@
     //Hide Loading Message
     messenger_hidenotiftop(); 
 
-});
+})();

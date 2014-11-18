@@ -1,7 +1,7 @@
 <?php
 /*
- * Name:
- * Description:
+ * Name: Swift Tag
+ * Description: Handles tags for everything and anything
  */
 
 class SwiftTag extends eloquent {

@@ -1,8 +1,4 @@
 <?php
-/*
- * Name:
- * Description:
- */
 
 NameSpace Swift\OrderTracking;
 

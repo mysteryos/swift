@@ -80,7 +80,6 @@
                         window.setTimeout(function(){
                             var loadingdiv = document.getElementById('loading');
                             loadingdiv.parentNode.removeChild(loadingdiv);                            
-                            //document.getElementsByTagName("body")[0].removeAttribute('style');
                             clearTimeout(slowconnection);
                         },500);
                     },this);

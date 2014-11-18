@@ -2071,7 +2071,10 @@ var main = {
     apr_view: function() {
         if(typeof window['apr_view'] === "undefined")
         {
-            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.apr_view.js"]);
+            jsLoader(["/js/plugin/x-editable/x-editable.js",
+                        "/js/plugin/jquery-caret/jquery.caret.min.js",
+                        "/js/plugin/jquery-atwho/jquery.atwho.min.js",
+                        "/js/swift/swift.apr_view.js"]);
         }
         else
         {
@@ -2092,5 +2095,16 @@ var main = {
             pageSetUp();
             apr_edit();
         }
-    }    
+    },
+    apr_overview: function() {
+        if(typeof window['apr_overview'] === "undefined")
+        {
+            jsLoader(["/js/swift/swift.apr_overview.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            apr_overview();
+        }        
+    }
 }

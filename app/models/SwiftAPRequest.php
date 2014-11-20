@@ -91,6 +91,11 @@ class SwiftAPRequest extends Eloquent {
         return $this->morphMany('SwiftDelivery','deliverable');
     }
     
+    public function recent()
+    {
+        return $this->morphMany('SwiftRecent','recentable');
+    }    
+    
     /*
      * Helper Function
      */

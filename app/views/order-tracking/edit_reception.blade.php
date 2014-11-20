@@ -1,8 +1,8 @@
 <fieldset data-name="reception" class="fieldset-reception multi @if(isset($dummy) && $dummy == true) dummy hide @endif " >
     <div class="row">
-        <div class="form-group">
-            <label class="col-md-2 control-label">GRN Number*</label>
-            <div class="col-md-10">
+        <div class="form-group col-md-6">
+            <label class="col-md-4 control-label">GRN Number*</label>
+            <div class="col-md-8">
                 <a href="#" @if(isset($r->id)) {{ "id=\"reception_grn_".Crypt::decrypt($r->id)."\"" }} @endif class="editable reception-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="text" data-context="reception" data-name="grn" data-pk="{{ $r->id or 0 }}" data-url="/order-tracking/reception/{{ Crypt::encrypt($order->id) }}" data-value="{{ $r->grn or "" }}"></a>
             </div>                                                                                        
         </div>

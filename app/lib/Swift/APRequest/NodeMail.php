@@ -12,7 +12,7 @@ class NodeMail {
     {
         $workflowActivity = \SwiftWorkflowActivity::find($workflow_activity_id);
         if(count($workflowActivity))
-        {        
+        {
             $aprequest = $workflowActivity->workflowable;
             $aprequest->current_activity = \WorkflowActivity::progress($aprequest,'aprequest');
             $users = \Sentry::findAllUsersWithAnyAccess($permissions);
@@ -31,6 +31,21 @@ class NodeMail {
                     }
                 }   
             }
+        }
+    }
+    
+    public static function sendCancelledMail($aprequest)
+    {
+        //Get owner of AP Request
+        $owner_id = $aprequest->revisionHistory()->orderBy('created_at','asc')->first()->user_id;
+        $owner_user = \Sentry::find($owner_id);
+        if($owner_user->activated)
+        {
+            \Mail::send('emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$owner_user),function($message) use ($owner_user,$aprequest){
+                $message->from('no-reply@scottltd.net','Scott Swift');
+                $message->subject(\Config::get('website.name').' - A&P Request Cancelled"'.$aprequest->name.'" ID: '.$aprequest->id);
+                $message->to($owner_user->email);
+            });            
         }
     }
 }

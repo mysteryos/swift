@@ -68,6 +68,9 @@
                             <li @if($type=="important"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/forms/important" class="form-pjax-filter pjax"><i class="fa fa-exclamation-triangle"></i>Important</a>
                             </li>
+                            <li @if($type=="recent"){{"class=\"active\""}}@endif >
+                                    <a href="/{{ $rootURL }}/forms/recent" class="form-pjax-filter pjax"><i class="fa fa-history"></i>Recent</a>
+                            </li>                            
                     </ul>
 
                 </div>

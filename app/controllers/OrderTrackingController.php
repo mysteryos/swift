@@ -38,7 +38,7 @@ class OrderTrackingController extends UserController {
                                         }); 
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->take($this->data['inprogress_limit'])->get();                            
+                            },'=',0)->take($this->data['inprogress_limit'])->remember(5)->get();                            
         
         $order_inprogress_important = SwiftOrder::orderBy('swift_order.updated_at','desc')
                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
@@ -51,7 +51,7 @@ class OrderTrackingController extends UserController {
                                        }); 
                            })->whereHas('flag',function($q){
                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                           })->get();       
+                           })->remember(5)->get();       
                             
        $order_inprogress_responsible = SwiftOrder::orderBy('swift_order.updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
@@ -64,7 +64,7 @@ class OrderTrackingController extends UserController {
                                         }); 
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->get(); 
+                            },'=',0)->remember(5)->get(); 
                             
        $order_inprogress_important_responsible = SwiftOrder::orderBy('swift_order.updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
@@ -77,7 +77,7 @@ class OrderTrackingController extends UserController {
                                         }); 
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            })->get();                            
+                            })->remember(5)->get();                            
         
         $order_inprogress = $order_inprogress->diff($order_inprogress_responsible);
         $order_inprogress_important = $order_inprogress_important->diff($order_inprogress_important_responsible);
@@ -100,6 +100,35 @@ class OrderTrackingController extends UserController {
                 $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
             }
         }
+        
+        /*
+         * Late Nodes
+         */
+        
+        /*$late_node_activity = SwiftNodeActivity::whereHas('workflowactivity',function($q){
+                                    return $q->where('status','=',SwiftWorkflowActivity::PENDING)->has('order','>',0);
+                              })->where('user_id','=',0)->with('definition');
+                              
+        $late_node_definition = array();
+        foreach($late_node_activity as $act)
+        {
+            if($act->created_at->diffInDaysFiltered(function(Carbon $date){
+                return !$date->isWeekend();
+                },Carbon::now()) > $act->definition->eta)
+            {
+                if(!isset($late_node_definition[$act->node_definition_id]))
+                {
+                    $late_node_definition[$act->node_definition_id] = array(
+                        'definition' => $act->definition,
+                        'count' => 1,
+                    );
+                }
+                else
+                {
+                    $late_node_definition[$act->node_definition_id]['count'] += 1;
+                }
+            }
+        }*/
         
         /*
          * Storage Tracking - SEA
@@ -226,6 +255,7 @@ class OrderTrackingController extends UserController {
             $this->data['isCreator'] = $this->currentUser->id == $order->revisionHistory()->orderBy('created_at','ASC')->first()->user_id ? true : false;
             //$this->data['message'] = OrderTracking::smartMessage($this->data);
             
+            Helper::saveRecent($order,$this->currentUser);
             
             return $this->makeView('order-tracking/edit');
         }
@@ -326,7 +356,7 @@ class OrderTrackingController extends UserController {
         /*
          * Let's Start Order Query
          */
-        $orderquery = SwiftOrder::orderBy('updated_at','desc');
+        $orderquery = SwiftOrder::query();
         
         if($type != 'inprogress')
         {
@@ -352,29 +382,38 @@ class OrderTrackingController extends UserController {
         switch($type)
         {
             case 'inprogress':
-                $orderquery->whereHas('workflow',function($q){
+                $orderquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
                     return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS); 
                 });
                 break;
             case 'rejected':
-                $orderquery->whereHas('workflow',function($q){
+                $orderquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
                    return $q->where('status','=',SwiftWorkflowActivity::REJECTED); 
                 });
                 break;
             case 'completed':
-                $orderquery->whereHas('workflow',function($q){
+                $orderquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
                    return $q->where('status','=',SwiftWorkflowActivity::COMPLETE); 
                 });
                 break;
             case 'starred':
-                $orderquery->whereHas('flag',function($q){
+                $orderquery->orderBy('updated_at','desc')->whereHas('flag',function($q){
                    return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
                 });
                 break;
             case 'important':
-                $orderquery->whereHas('flag',function($q){
+                $orderquery->orderBy('updated_at','desc')->whereHas('flag',function($q){
                    return $q->where('type','=',SwiftFlag::IMPORTANT,'AND'); 
-                });                
+                });
+                break;
+            case 'recent':
+                $orderquery->join('swift_recent',function($join) use ($orderquery){
+                    $join->on('swift_recent.recentable_type','=',DB::raw('"SwiftOrder"'));
+                    $join->on('swift_recent.recentable_id','=','swift_order.id');
+                })->orderBy('swift_recent.updated_at','DESC')->select('swift_order.*');
+                break;
+            case 'all':
+                $orderquery->orderBy('updated_at','desc');
                 break;
         }
         

@@ -12,8 +12,24 @@ Use Crypt;
 Use Session;
 Use Config;
 Use Carbon;
+use SwiftRecent;
 
 class Helper {
+    
+    public function saveRecent($obj,$user)
+    {
+        $recent = $obj->recent()->where('user_id','=',$user->id)->first();
+        if(count($recent))
+        {
+            $recent->updated_at = Carbon::now();
+            $recent->save();
+        }
+        else {
+            $recent = new SwiftRecent;
+            $obj->recent()->save($recent);
+        }
+ 
+    }
     
     public function jsonobject_encode(array $array)
     {

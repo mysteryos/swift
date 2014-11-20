@@ -231,6 +231,8 @@ class APRequestController extends UserController {
                     
                 }
             }
+            
+            Helper::saveRecent($apr,$this->currentUser);
 
             return $this->makeView("$this->rootURL/edit");
         }
@@ -259,7 +261,12 @@ class APRequestController extends UserController {
     
     public function getView($id,$override=false)
     {
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]) && $override === false)
+        if($override === true)
+        {
+            return $this->form($id,false);
+        }
+        
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return Redirect::action('APRequestController@getEdit',array('id'=>$id));
         }
@@ -356,7 +363,7 @@ class APRequestController extends UserController {
                 $aprequestquery->whereHas('flag',function($q){
                    return $q->where('type','=',SwiftFlag::IMPORTANT,'AND'); 
                 });                
-                break;
+                break;          
         }
         
         //Filters

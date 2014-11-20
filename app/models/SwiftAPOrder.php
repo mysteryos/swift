@@ -70,6 +70,6 @@ class SwiftAPOrder extends Eloquent {
      */
     public function aprequest()
     {
-        return $this->belongTo('SwiftApRequest','aprequest_id');
+        return $this->belongTo('SwiftAPRequest','aprequest_id');
     }
 }

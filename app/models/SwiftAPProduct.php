@@ -81,7 +81,7 @@ class SwiftAPProduct extends Eloquent {
      */
     public function aprequest()
     {
-        return $this->belongsTo('SwiftApRequest','aprequest_id');
+        return $this->belongsTo('SwiftAPRequest','aprequest_id');
     }
     
     public function approval()

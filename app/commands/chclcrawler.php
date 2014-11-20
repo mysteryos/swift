@@ -40,7 +40,7 @@ class chclcrawler extends ScheduledCommand {
         
         public function getName()
         {
-            return $this->$name;
+            return $this->name;
         }
         
         public function isEnabled() {

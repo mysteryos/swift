@@ -102,12 +102,17 @@ class SwiftOrder extends Eloquent {
      */
     public function document()
     {
-        return $this->MorphMany('SwiftDocument','document');
+        return $this->morphMany('SwiftDocument','document');
     }
     
     public function flag()
     {
-        return $this->MorphMany('SwiftFlag','flaggable');
+        return $this->morphMany('SwiftFlag','flaggable');
+    }
+    
+    public function recent()
+    {
+        return $this->morphMany('SwiftRecent','recentable');
     }
     
     /*

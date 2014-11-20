@@ -119,6 +119,7 @@ Class NodeDefinitionJoin {
                 //Update Workflow as Rejected
                 $workflow->status = SwiftWorkflowActivity::REJECTED;
                 $workflow->save();
+                NodeMail::sendCancelledMail($apr);
                 return false;
             }
             else
@@ -164,6 +165,7 @@ Class NodeDefinitionJoin {
                 //All products have been rejected
                 $workflow->status = SwiftWorkflowActivity::REJECTED;
                 $workflow->save();
+                NodeMail::sendCancelledMail($apr);
                 return false;
             }
             

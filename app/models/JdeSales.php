@@ -6,6 +6,10 @@ class JdeSales extends Eloquent {
     
     public static function getProductHighestPrice($productCode)
     {
-        self::where('UPRC','>',0)->whereIn('DCTO',array('3S','4S','S9'),'AND')->orderBy('selling_price','DESC')->first();
+        self::where('UPRC','>',0,'AND')
+              ->where('ITM','=',$productCode,'AND')
+              ->whereIn('DCTO',array('3S','4S','S9'))
+              ->orderBy('UPRC','DESC')
+              ->first();
     }
 }

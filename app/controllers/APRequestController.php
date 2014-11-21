@@ -635,8 +635,15 @@ class APRequestController extends UserController {
             else
             {
                 $APProduct = SwiftAPProduct::find(Crypt::decrypt(Input::get('pk')));
-                if($APProduct)
+                if(count($APProduct))
                 {
+                    switch(Input::get('name'))
+                    {
+                        case 'jde_itm':
+                            $APProduct->price = 0;
+                            break;
+                    }
+                    
                     $APProduct->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($APProduct->save())
                     {
@@ -1006,6 +1013,7 @@ class APRequestController extends UserController {
             if(count($approval))
             {
                 WorkflowActivity::update($form);
+                Queue::push('Helper@getProductPrice',array('product'=>$form->product));
                 /*
                  * Check if form has already been approved
                  */
@@ -1022,6 +1030,7 @@ class APRequestController extends UserController {
                 if($form->approval()->save($approval))
                 {
                     WorkflowActivity::update($form);
+                    Queue::push('Helper@getProductPrice',array('product'=>$form->product));
                     return Response::make('success');
                 }
                 else

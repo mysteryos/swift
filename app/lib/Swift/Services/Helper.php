@@ -13,8 +13,24 @@ Use Session;
 Use Config;
 Use Carbon;
 use SwiftRecent;
+use Sentry;
+use Eloquent;
 
 class Helper {
+    
+    public function loginSysUser()
+    {
+        $sysuser = Sentry::findUserByLogin(Config::get('website.system_mail'));
+        if($sysuser)
+        {
+            Sentry::login($sysuser,false);
+            if(Sentry::check())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     
     public function saveRecent($obj,$user)
     {
@@ -29,6 +45,40 @@ class Helper {
             $obj->recent()->save($recent);
         }
  
+    }
+    
+    public function getProductPrice($job,$data)
+    {
+        if(!self::loginSysUser())
+        {
+            \Log::error('Unable to login system user');
+            return;
+        }
+        
+        if(isset($data['product']))
+        {
+            foreach($data['product'] as $p)
+            {
+                if($p['jde_itm'])
+                {
+                    $result = \JdeSales::getProductHighestPrice($p['jde_itm']);
+                    if(count($result))
+                    {
+                        $prod = \SwiftAPProduct::find($p['id'])->first();
+                        if(count($prod))
+                        {
+                            $prod->price = $result->UPRC;
+                            $prod->save();                            
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            Log::error('No products were set');
+        }
+        
     }
     
     public function jsonobject_encode(array $array)

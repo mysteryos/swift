@@ -4,7 +4,7 @@ class JdeSales extends Eloquent {
     
     protected $table = 'sct_jde.jdesales';
     
-    protected $cache_expiry_time = 240;
+    private static $cache_expiry_time = 240;
     
     public static function getProductHighestPrice($productCode)
     {

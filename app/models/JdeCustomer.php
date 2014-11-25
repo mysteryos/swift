@@ -9,7 +9,7 @@ class JdeCustomer extends Eloquent {
     
     protected $table = 'sct_jde.jdecustomers';
     
-    protected $cache_expiry_time = 240;
+    private static $cache_expiry_time = 240;
     
     public static function getByName($term,$offset,$limit)
     {

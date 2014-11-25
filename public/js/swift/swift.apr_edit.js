@@ -17,7 +17,7 @@ function addMultiAPR($dummy,pk)
                     allowClear: false,
                     minimumInputLength: 3,
                     id: function (item) {
-                        return item.itm;
+                        return item.id;
                     },                    
                     ajax: {
                         url: '/ajaxsearch/product',

@@ -70,7 +70,7 @@ class Helper {
         }
         else
         {
-            Log::error('No products were set');
+            \Log::error('No products were set');
         }
         
     }

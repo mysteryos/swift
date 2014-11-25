@@ -9,36 +9,38 @@ class JdeProduct extends Eloquent {
     
     protected $table = 'sct_jde.jdeproducts';
     
+    protected $cache_expiry_time = 240;
+    
     public static function getByName($term,$offset,$limit)
     {
         return self::where('DSC1','LIKE',"%$term%")
                 ->limit($limit)
                 ->offset($offset)
                 ->orderBy('DSC1','ASC')
-                ->get();        
+                ->remember(self::$cache_expiry_time)->get();        
     }
     
     public static function getByCode($term,$offset,$limit)
     {
-        return self::where('AITM','LIKE',"%$term%")
+        return self::where('ITM','LIKE',"%$term%")
                 ->limit($limit)
                 ->distinct()
                 ->offset($offset)
-                ->orderBy('AITM','ASC')
-                ->get();        
+                ->orderBy('ITM','ASC')
+                ->remember(self::$cache_expiry_time)->get();        
     }
     
     public static function countByName($term)
     {
         return self::where('DSC1','LIKE',"%$term%")
-                ->count();        
+                ->remember(self::$cache_expiry_time)->count();        
     }
     
     public static function countByCode($term)
     {
-        return self::where('AITM','LIKE',"%$term%")
+        return self::where('ITM','LIKE',"%$term%")
                 ->distinct()
-                ->count();        
+                ->remember(self::$cache_expiry_time)->count();        
     }      
     
     public static function getNespressoMachineByName($term,$offset,$limit)
@@ -49,7 +51,7 @@ class JdeProduct extends Eloquent {
                 ->limit($limit)
                 ->offset($offset)
                 ->orderBy('DSC1','ASC')
-                ->get();
+                ->remember(self::$cache_expiry_time)->get();
     }
     
     public static function getNespressoMachineByCode($term,$offset,$limit)
@@ -61,7 +63,7 @@ class JdeProduct extends Eloquent {
                 ->limit($limit)
                 ->offset($offset)
                 ->orderBy('LITM','ASC')
-                ->get();
+                ->remember(self::$cache_expiry_time)->get();
     }
     
     public static function countNespressoMachineByName($term)
@@ -69,7 +71,7 @@ class JdeProduct extends Eloquent {
         return self::where('DSC1','LIKE',"%$term%")
                 ->where('SRP3','=','NES','AND')
                 ->where('SRP4','=','NEM','AND')
-                ->count();
+                ->remember(self::$cache_expiry_time)->count();
     }
     
     public static function countNespressoMachineByCode($term)
@@ -78,6 +80,6 @@ class JdeProduct extends Eloquent {
                 ->where('SRP3','=','NES','AND')
                 ->where('SRP4','=','NEM','AND')
                 ->distinct()
-                ->count();
+                ->remember(self::$cache_expiry_time)->count();
     }
 }

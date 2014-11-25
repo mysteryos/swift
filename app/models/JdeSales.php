@@ -4,12 +4,14 @@ class JdeSales extends Eloquent {
     
     protected $table = 'sct_jde.jdesales';
     
+    protected $cache_expiry_time = 240;
+    
     public static function getProductHighestPrice($productCode)
     {
-        self::where('UPRC','>',0,'AND')
+        return self::where('UPRC','>',DB::raw(0))
               ->where('ITM','=',$productCode,'AND')
-              ->whereIn('DCTO',array('3S','4S','S9'))
-              ->orderBy('UPRC','DESC')
-              ->first();
+              ->whereIn('DCTO',array('3S','4S','S9'),'AND')
+              ->orderBy('UPRC','DESC')->take(1)
+              ->remember(self::$cache_expiry_time)->get();
     }
 }

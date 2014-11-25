@@ -55,24 +55,18 @@ class Helper {
             return;
         }
         
-        if(isset($data['product']))
+        if(isset($data['product_id']))
         {
-            foreach($data['product'] as $p)
+            $prod = \SwiftAPProduct::find((int)$data['product_id']);
+            if(count($prod) && isset($prod->jde_itm) && (int)$prod->jde_itm > 0)
             {
-                if($p['jde_itm'])
+                $result = \JdeSales::getProductHighestPrice($prod->jde_itm);
+                if(count($result))
                 {
-                    $result = \JdeSales::getProductHighestPrice($p['jde_itm']);
-                    if(count($result))
-                    {
-                        $prod = \SwiftAPProduct::find($p['id'])->first();
-                        if(count($prod))
-                        {
-                            $prod->price = $result->UPRC;
-                            $prod->save();                            
-                        }
-                    }
+                    $prod->price = $result->first()->UPRC;
+                    $prod->save();                            
                 }
-            }
+            }                
         }
         else
         {

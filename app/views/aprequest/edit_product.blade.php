@@ -15,24 +15,24 @@
         
     } ?>"></div>
     <div class="row">
-        <div class="form-group col-lg-6 col-xs-12">
-            <label class="col-md-2 control-label">Name*</label>
-            <div class="col-md-10 editable-select2">
+        <div class="form-group col-lg-12 col-xs-12">
+            <label class="col-md-1 control-label">Name*</label>
+            <div class="col-md-11 editable-select2">
                 <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_ref_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$canModifyProduct) editable-disabled @endif" data-type="select2" data-context="product" data-name="jde_itm" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->jde_itm or "" }}">{{ $p->jdeproduct->DSC1 or "" }}@if(isset($p->jdeproduct->ITM)){{ " - ".$p->jdeproduct->ITM }}@endif</a>
             </div>                                                                                        
         </div>
+    </div>
+    <div class="row">
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Quantity*</label>
             <div class="col-md-10">
                 <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_quantity_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$canModifyProduct) editable-disabled @endif" data-type="text" data-context="product" data-name="quantity" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->quantity or 0 }}"></a>
             </div>
-        </div>
-    </div>
-    <div class="row">
+        </div>        
         <div class="form-group col-lg-6 col-xs-12">
-            <label class="col-md-2 control-label">Price</label>
+            <label class="col-md-2 control-label">Total Price</label>
             <div class="col-md-10">
-                <span>@if(!isset($dummy) && (isset($p) && $p->price > 0 && $p->quantity > 0)) {{ round($p->price*$p->quantity,2) }} @else {{ "N/A" }} @endif</span>
+                <p class="form-control-static">@if(!isset($dummy) && (isset($p) && $p->price > 0 && $p->quantity > 0)) {{ "Rs ".round($p->price*$p->quantity,2) }} @else {{ "N/A" }} @endif</p>
             </div>
         </div>              
     </div>

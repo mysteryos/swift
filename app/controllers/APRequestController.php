@@ -216,6 +216,7 @@ class APRequestController extends UserController {
             
             if(count($apr->product))
             {
+                $total = 0;
                 foreach($apr->product as &$p)
                 {
                     $p->approvalstatus = SwiftApproval::PENDING;
@@ -228,8 +229,12 @@ class APRequestController extends UserController {
                     {
                         $p->approvalstatus = $p->approvalexec->approved;
                     }
-                    
+                    if((int)$p->quantity > 0 && (float)$p->price > 0)
+                    {
+                        $total += $p->quantity * $p->price;
+                    }
                 }
+                $this->data['product_price_total'] = "(Rs. ".round($total, 2).")";
             }
             
             Helper::saveRecent($apr,$this->currentUser);
@@ -240,7 +245,7 @@ class APRequestController extends UserController {
         {
             return parent::notfound();
         }        
-    }   
+    }
     
     /*
      * GET Pages
@@ -301,7 +306,7 @@ class APRequestController extends UserController {
      */
     public function getForms($type='all',$page=1)
     {
-        $limitPerPage = 30;
+        $limitPerPage = 15;
         
         $this->pageTitle = 'Forms';
         
@@ -314,7 +319,7 @@ class APRequestController extends UserController {
             $type='all';
         }        
         
-        $aprequestquery = SwiftAPRequest::orderBy('updated_at','desc');
+        $aprequestquery = SwiftAPRequest::query();
         
         if($type != 'inprogress')
         {
@@ -362,7 +367,9 @@ class APRequestController extends UserController {
             case 'important':
                 $aprequestquery->whereHas('flag',function($q){
                    return $q->where('type','=',SwiftFlag::IMPORTANT,'AND'); 
-                });                
+                });
+            case 'all':
+                $aprequestquery->orderBy('updated_at','desc');
                 break;          
         }
         
@@ -470,7 +477,7 @@ class APRequestController extends UserController {
         $this->data['type'] = $type;
         $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
         $this->data['forms'] = $forms;
-        $this->data['count'] = $aprequestquery->count();
+        $this->data['count'] = isset($filter) ? count($forms) : SwiftAPRequest::count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
@@ -623,6 +630,12 @@ class APRequestController extends UserController {
                 $APProduct->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($form->product()->save($APProduct))
                 {
+                    switch(Input::get('name'))
+                    {
+                        case 'jde_itm':
+                            Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id));
+                            break;
+                    }
                     WorkflowActivity::update($form);
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($APProduct->id),'id'=>$APProduct->id]));
                 }
@@ -641,6 +654,7 @@ class APRequestController extends UserController {
                     {
                         case 'jde_itm':
                             $APProduct->price = 0;
+                            Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id));
                             break;
                     }
                     
@@ -1013,7 +1027,6 @@ class APRequestController extends UserController {
             if(count($approval))
             {
                 WorkflowActivity::update($form);
-                Queue::push('Helper@getProductPrice',array('product'=>$form->product));
                 /*
                  * Check if form has already been approved
                  */
@@ -1030,7 +1043,6 @@ class APRequestController extends UserController {
                 if($form->approval()->save($approval))
                 {
                     WorkflowActivity::update($form);
-                    Queue::push('Helper@getProductPrice',array('product'=>$form->product));
                     return Response::make('success');
                 }
                 else

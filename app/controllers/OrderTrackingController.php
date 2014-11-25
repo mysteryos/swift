@@ -51,7 +51,7 @@ class OrderTrackingController extends UserController {
                                        }); 
                            })->whereHas('flag',function($q){
                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                           })->remember(5)->get();       
+                           })->remember(5)->get();
                             
        $order_inprogress_responsible = SwiftOrder::orderBy('swift_order.updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){

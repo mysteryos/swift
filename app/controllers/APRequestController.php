@@ -1042,6 +1042,7 @@ class APRequestController extends UserController {
                 
                 if($form->approval()->save($approval))
                 {
+                    Queue::push('APRequestHelper@autoexecapproval',array('aprequest_id'=>$form->id));
                     WorkflowActivity::update($form);
                     return Response::make('success');
                 }

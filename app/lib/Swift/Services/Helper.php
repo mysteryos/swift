@@ -20,6 +20,8 @@ class Helper {
     
     public function loginSysUser()
     {
+        DB::reconnect();
+        
         $sysuser = Sentry::findUserByLogin(Config::get('website.system_mail'));
         if($sysuser)
         {
@@ -64,9 +66,14 @@ class Helper {
                 if(count($result))
                 {
                     $prod->price = $result->first()->UPRC;
-                    $prod->save();                            
                 }
-            }                
+                else
+                {
+                    $prod->price = 0;
+                }
+                $prod->save();
+                $job->delete();
+            }
         }
         else
         {

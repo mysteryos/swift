@@ -124,4 +124,67 @@ class OrderTrackingHelper{
                                 );
         return Es::search($params);
     }
+    
+    /*
+     * Elastic Search Update Data
+     */
+    public function esUpdate($job,$data)
+    {
+        $params = array();
+        $params['index'] = \App::environment();
+        $params['type'] = $data['context'];
+        $order = SwiftOrder::find($data['order_id']);
+        if($order)
+        {
+            $params['id'] = $order->id;
+            $params['timestamp'] = $order->updated_at;
+            switch($job['info-context'])
+            {
+                case 'self':
+                    $params['body'] = $order->toArray();
+                    break;
+                case 'purchaseOrder':
+                case 'reception':
+                case 'freight':
+                case 'shipment':
+                case 'customsDeclaration':
+                    $relation = $order->{$job['info-context']}()->get();
+                    if(count($relation))
+                    {
+                        $params['body'][$job['info-context']] = $relation->toArray();
+                    }
+                    else
+                    {
+                        $params['body'][$job['info-context']] = array();
+                    }
+                    break;
+                default:
+                    $job->delete();
+                    return;
+                    break;
+            }
+            Es::update($params);
+            $job->delete();
+        }
+    }
+    
+    /*
+     * Elastic Search Index Data (For first Time)
+     */
+    public function esIndex($job,$data)
+    {
+        $params = array();
+        $params['index'] = \App::environment();
+        $params['type'] = $data['context'];
+        $order = SwiftOrder::find($data['order_id']);
+        if($order)
+        {
+            $params['id'] = $order->id;
+            $params['timestamp'] = $order->updated_at;
+            $params['body'] = $order->toArray();
+            Es::index($params);
+            $job->delete();
+        }
+    }
+    
 }

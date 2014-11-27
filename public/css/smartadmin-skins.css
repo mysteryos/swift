@@ -876,6 +876,7 @@ color: #5F5F5F;
 
 .smart-style-3 .header-search>input[type=text] {
 	border-color: #CA854F;
+        width: 300px;
 }
 
 .smart-style-3 .header-search>button {

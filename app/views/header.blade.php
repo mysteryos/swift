@@ -68,7 +68,18 @@
 
         </div>
         <!-- end projects dropdown -->
-
+        <div>
+            <!-- input: search field -->
+            <form action="#search.html" class="header-search">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Find reports and more" id="search-fld">
+                    <div class="input-group-btn">
+                        <button type="submit" class="btn btn-default">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- end input: search field -->
         <!-- pulled right: nav area -->
         <div class="pull-right">
 
@@ -89,16 +100,6 @@
                         <span> <a href="javascript:void(0)" title="Search"><i class="fa fa-search"></i></a> </span>
                 </div>
                 <!-- end search mobile button -->
-
-                <!-- input: search field -->
-                <form action="#search.html" class="header-search pull-right">
-                        <input type="text" placeholder="Find reports and more" id="search-fld">
-                        <button type="submit">
-                                <i class="fa fa-search"></i>
-                        </button>
-                        <a href="javascript:void(0);" id="cancel-search-js" title="Cancel Search"><i class="fa fa-times"></i></a>
-                </form>
-                <!-- end input: search field -->
 
         </div>
         <!-- end pulled right: nav area -->

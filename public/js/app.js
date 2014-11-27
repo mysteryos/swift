@@ -1452,6 +1452,33 @@ $.document_.on('pjax:beforeReplace',function(){
 
 /* ~ END: APP AJAX REQUEST SETUP */
 
+/* Search Bar Setup */
+var allBloodhound = new Bloodhound({
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  prefetch: '/search/all-prefetch',
+  remote: '/search/all/%QUERY'
+});
+
+allBloodhound.initialize();
+
+$('#search-fld').typeahead(null, {
+    name: 'all',
+    displayKey: 'value',
+    source: allBloodhound.ttAdapter(),
+    highlight: true,
+    templates: {
+      empty: [
+        '<div class="empty-message">',
+        'No suggestions for your search',
+        '</div>'
+      ].join('\n'),
+      suggestion: Handlebars.compile('<p><i class="fa fa-fw {{icon}}" title="{{title}}"/><a href="{{url}}" class="pjax">{{value}}</a></p>')
+    }    
+});
+
+/* End: Search Bar Setup */
+
 /*Form Validation Setup*/
 
 // override jquery validate plugin defaults

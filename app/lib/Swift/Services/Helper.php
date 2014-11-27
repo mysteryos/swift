@@ -20,7 +20,7 @@ class Helper {
     
     public function loginSysUser()
     {
-        DB::reconnect();
+        \DB::reconnect();
         
         $sysuser = Sentry::findUserByLogin(Config::get('website.system_mail'));
         if($sysuser)

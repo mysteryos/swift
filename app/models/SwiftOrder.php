@@ -115,6 +115,11 @@ class SwiftOrder extends Eloquent {
         return $this->morphMany('SwiftRecent','recentable');
     }
     
+    public function event()
+    {
+        return $this->morphMany('SwiftEvent','eventable');
+    }
+    
     /*
      * Polymorphic Relation
      */

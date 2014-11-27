@@ -1,6 +1,6 @@
 <?php
 
-Namespace \Swift\Events;
+namespace Swift\Events;
 
 class OrderTracking extends BaseEvent {
     

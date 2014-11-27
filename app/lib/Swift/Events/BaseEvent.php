@@ -1,6 +1,6 @@
 <?php
 
-Namespace \Swift\Events;
+Namespace Swift\Events;
 
 class BaseEvent {
     public function pushToPusher()

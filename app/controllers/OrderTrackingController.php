@@ -796,7 +796,7 @@ class OrderTrackingController extends UserController {
             $order->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($order->save())
             {
-                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'self'));
+                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'order'));
                 WorkflowActivity::update($order);
                 return Response::make('Success', 200);
             }

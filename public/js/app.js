@@ -1475,6 +1475,10 @@ $('#search-fld').typeahead(null, {
       ].join('\n'),
       suggestion: Handlebars.compile('<p><i class="fa fa-fw {{icon}}" title="{{title}}"/><a href="{{url}}" class="pjax">{{value}}</a></p>')
     }    
+}).on('typeahead:selected', function(event, selection) {
+    $.pjax({
+       url:selection.url
+    });
 });
 
 /* End: Search Bar Setup */

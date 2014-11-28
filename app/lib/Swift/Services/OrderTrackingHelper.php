@@ -137,25 +137,23 @@ class OrderTrackingHelper{
         if($order)
         {
             $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at;
-            switch($job['info-context'])
+            $params['timestamp'] = $order->updated_at->toDateTimeString();
+            switch($data['info-context'])
             {
-                case 'self':
-                    $params['body'] = $order->toArray();
-                    break;
+                case 'order':
                 case 'purchaseOrder':
                 case 'reception':
                 case 'freight':
                 case 'shipment':
                 case 'customsDeclaration':
-                    $relation = $order->{$job['info-context']}()->get();
+                    $relation = $order->{$data['info-context']}()->get();
                     if(count($relation))
                     {
-                        $params['body'][$job['info-context']] = $relation->toArray();
+                        $params['doc'][$data['info-context']] = $relation->toArray();
                     }
                     else
                     {
-                        $params['body'][$job['info-context']] = array();
+                        $params['doc'][$data['info-context']] = array();
                     }
                     break;
                 default:
@@ -180,8 +178,8 @@ class OrderTrackingHelper{
         if($order)
         {
             $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at;
-            $params['body'] = $order->toArray();
+            $params['timestamp'] = $order->updated_at->toDateTimeString();
+            $params['order'] = $order->toArray();
             Es::index($params);
             $job->delete();
         }

@@ -12,3 +12,4 @@
 */
 
 Artisan::add(new chclcrawler);
+Artisan::add(new elasticsearch);

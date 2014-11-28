@@ -47,14 +47,32 @@ class elasticsearch extends Command {
                     $params['type'] = 'order-tracking';
                     $params['id'] = $o->id;
                     $params['timestamp'] = $o->updated_at->toIso8601String();
-                    $params['body']['order'] = $o->toArray();
+                    $params['body']['order-tracking'] = $o->toArray();
                     $params['body']['purchaseOrder'] = $o->purchaseOrder()->get()->toArray();
                     $params['body']['reception'] = $o->reception()->get()->toArray();
                     $params['body']['freight'] = $o->freight()->get()->toArray();
                     $params['body']['shipment'] = $o->shipment()->get()->toArray();
                     $params['body']['customsDeclaration'] = $o->customsDeclaration()->get()->toArray();
                     Es::index($params);
-                    $this->info('Indexed ID:'.$o->id);
+                    $this->info('OT Indexed ID:'.$o->id);
+                }
+                
+                $aprequestall = SwiftAPRequest::all();
+                foreach($aprequestall as $ap)
+                {
+                    $params = array();
+                    $params['index'] = App::environment();
+                    $params['type'] = 'aprequest';
+                    $params['id']= $ap->id;
+                    $params['timestamp'] = $ap->updated_at->toIso8601String();
+                    $params['body']['aprequest'] = $ap->toArray();
+                    $params['body']['customer'] = $ap->customer()->get()->toArray();
+                    $params['body']['product'] = $ap->product()->with('jdeproduct')->get()->toArray();
+                    $params['body']['delivery'] = $ap->delivery()->get()->toArray();
+                    $params['body']['order'] = $ap->order()->get()->toArray();
+                    
+                    Es::index($params);
+                    $this->info('APR Indexed ID:'.$ap->id);                    
                 }
             } 
             catch(Exception $e)

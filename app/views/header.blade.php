@@ -72,7 +72,7 @@
             <!-- input: search field -->
             <form action="#search.html" class="header-search">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Find reports and more" id="search-fld">
+                    <input type="text" class="form-control" placeholder="Search anything..." id="search-fld">
                     <div class="input-group-btn">
                         <button type="submit" class="btn btn-default">Search</button>
                     </div>

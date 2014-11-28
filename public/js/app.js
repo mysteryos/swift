@@ -1456,11 +1456,13 @@ $.document_.on('pjax:beforeReplace',function(){
 var allBloodhound = new Bloodhound({
   datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
   queryTokenizer: Bloodhound.tokenizers.whitespace,
-  prefetch: '/search/all-prefetch',
-  remote: '/search/all/%QUERY'
+  remote: {
+      url: '/search/all/%QUERY'
+  }
 });
 
 allBloodhound.initialize();
+allBloodhound.clearRemoteCache();
 
 $('#search-fld').typeahead(null, {
     name: 'all',
@@ -1473,7 +1475,7 @@ $('#search-fld').typeahead(null, {
         'No suggestions for your search',
         '</div>'
       ].join('\n'),
-      suggestion: Handlebars.compile('<p><i class="fa fa-fw {{icon}}" title="{{title}}"/><a href="{{url}}" class="pjax">{{value}}</a></p>')
+      suggestion: Handlebars.compile('<p><div>{{{highlight}}}</div><div><i class="fa fa-fw {{icon}}" title="{{title}}"/><a href="{{url}}" class="pjax">{{value}}</a></div></p>')
     }    
 }).on('typeahead:selected', function(event, selection) {
     $.pjax({

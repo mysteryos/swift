@@ -5,6 +5,10 @@ class SearchController extends UserController {
         parent::__construct();
         $this->pageName = "Search";
         $this->rootURL = "search";
+        $this->searchPermissions = array(
+                                        'order-tracking'=>'ot-view',
+                                        'aprequest'=>'apr-view',
+                                   );
     }
     
     /*
@@ -17,13 +21,34 @@ class SearchController extends UserController {
         {
             foreach($queryResponse['hits']['hits'] as $line)
             {
+                $highlight = "";
+                if(isset($line['highlight']))
+                {
+                    foreach($line['highlight'] as $k=>$v)
+                    {
+                        foreach($v as $val)
+                        {
+                            $highlight[] =  str_replace("_"," ",implode(" - ",explode(".",$k)))." : ".$val;
+                        }
+                    }
+                    $highlight = implode(" · ",$highlight);
+                }
+
                 switch($line['_type'])
                 {
                     case 'order-tracking':
-                        $result[] = array('icon'=>'fa-map-marker','title'=>'Order Process','value'=>$line['_source']['name'],'url'=>Helper::generateUrl(SwiftOrder::find($line['_source']['id'])));
+                        $result[] = array('icon'=>'fa-map-marker',
+                                          'title'=>'Order Process',
+                                          'value'=>$line['_source'][$line['_type']]['name'],
+                                          'url'=>Helper::generateUrl(SwiftOrder::find($line['_id'])),
+                                          'highlight'=>$highlight);
                         break;
                     case 'aprequest':
-                        $result[] = array('icon'=>'fa-gift','title'=>'A&P Request','value'=>$line['_source']['name'], 'url'=>Helper::generateUrl(SwiftAPRequest::find($line['_source']['id'])));
+                        $result[] = array('icon'=>'fa-gift',
+                                          'title'=>'A&P Request',
+                                          'value'=>$line['_source']['aprequest']['name'],
+                                          'url'=>Helper::generateUrl(SwiftAPRequest::find($line['_id'])),
+                                          'highlight'=>$highlight);
                         break;
                     case 'acpayable':
                         break;
@@ -39,12 +64,32 @@ class SearchController extends UserController {
     {
         $params = array();
         $params['index'] = App::environment();
-        $params['body']['query']['match']['name'] = array(
-            'query' => $search,
-            'fuzziness' => 0.7,
-        );
+        $params['type'] = array();
+        /*
+         * Check Permissions
+         */
+        foreach($this->searchPermissions as $k=>$sp)
+        {
+            if($this->currentUser->hasAccess($sp))
+            {
+                $params['type'][]=$k;
+            }
+        }
+        if(count($params['type']) === 0)
+        {
+            echo "";
+            return;
+        }
+        
+        $params['body']['query']['fuzzy_like_this']['like_text'] = $search;
+        $params['body']['query']['fuzzy_like_this']['fuzziness'] = 1;
+        
+        $params['body']['highlight']['fields']['*'] = new \stdClass();
+        $params['body']['highlight']['pre_tags'] = array('<b>');
+        $params['body']['highlight']['post_tags'] = array('</b>');
+        $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
         $params['body']['from'] = 0;
-        $params['body']['size'] = 20;
+        $params['body']['size'] = 5;
         $queryResponse = Es::search($params);
         
         echo $this->processSearchResult($queryResponse);

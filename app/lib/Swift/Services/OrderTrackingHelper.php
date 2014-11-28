@@ -130,6 +130,9 @@ class OrderTrackingHelper{
      */
     public function esUpdate($job,$data)
     {
+        //exclude dates
+        $exclude = array('created_at','updated_at','deleted_at');
+        
         $params = array();
         $params['index'] = \App::environment();
         $params['type'] = $data['context'];
@@ -137,10 +140,21 @@ class OrderTrackingHelper{
         if($order)
         {
             $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at->toDateTimeString();
+            $params['timestamp'] = $order->updated_at->toIso8601String();
             switch($data['info-context'])
             {
-                case 'order':
+                case 'order-tracking':
+                    $relation = $order;
+                    $relation = $relation->toArray();
+                    foreach($relation as $k => $v)
+                    {
+                        if(in_array($k,$exclude))
+                        {
+                            unset($relation[$k]);
+                        }
+                    }
+                    $params['body']['doc'][$data['info-context']] = $relation;                    
+                    break;
                 case 'purchaseOrder':
                 case 'reception':
                 case 'freight':
@@ -149,12 +163,23 @@ class OrderTrackingHelper{
                     $relation = $order->{$data['info-context']}()->get();
                     if(count($relation))
                     {
-                        $params['doc'][$data['info-context']] = $relation->toArray();
+                        $relation = $relation->toArray();
+                        foreach($relation as $l)
+                        {
+                            foreach($l as $k => $v)
+                            {
+                                if(in_array($k,$exclude))
+                                {
+                                    unset($relation[$k]);
+                                }
+                            }
+                        }
+                        $params['body']['doc'][$data['info-context']] = $relation;
                     }
                     else
                     {
-                        $params['doc'][$data['info-context']] = array();
-                    }
+                        $params['body']['doc'][$data['info-context']] = array();
+                    }                    
                     break;
                 default:
                     $job->delete();
@@ -178,11 +203,10 @@ class OrderTrackingHelper{
         if($order)
         {
             $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at->toDateTimeString();
-            $params['order'] = $order->toArray();
+            $params['timestamp'] = $order->updated_at->toIso8601String();
+            $params['body']['order-tracking'] = $order->toArray();
             Es::index($params);
             $job->delete();
         }
     }
-    
 }

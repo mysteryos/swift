@@ -32,9 +32,7 @@ class chclcrawler extends ScheduledCommand {
 		parent::__construct();
                 if ( ! Sentry::check())
                 {
-                    $user = Sentry::findUserById(0);
-                    // Login system user
-                    Sentry::login($user, false);
+                    Helper::loginSysUser();
                 }
 	}
         

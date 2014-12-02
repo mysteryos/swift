@@ -163,17 +163,27 @@ class OrderTrackingHelper{
                     $relation = $order->{$data['info-context']}()->get();
                     if(count($relation))
                     {
-                        $relation = $relation->toArray();
-                        foreach($relation as $l)
+                        foreach($relation as &$l)
                         {
-                            foreach($l as $k => $v)
+                            foreach($exclude as $ex)
                             {
-                                if(in_array($k,$exclude))
+                                if(isset($l->{$ex}))
                                 {
-                                    unset($relation[$k]);
+                                    unset($l->{$ex});
+                                }
+                            }
+                            if(isset($l->dates))
+                            {
+                                foreach($l->dates as $date)
+                                {
+                                    if(isset($l->{$date}) && get_class($l->{$date}) == "Carbon")
+                                    {
+                                        $l->{$date} = $l->{$date}->toIso8601String();
+                                    }
                                 }
                             }
                         }
+                        $relation = $relation->toArray();
                         $params['body']['doc'][$data['info-context']] = $relation;
                     }
                     else

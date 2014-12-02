@@ -6,8 +6,8 @@ class SearchController extends UserController {
         $this->pageName = "Search";
         $this->rootURL = "search";
         $this->searchPermissions = array(
-                                        'order-tracking'=>'ot-view',
-                                        'aprequest'=>'apr-view',
+                                        'order-tracking'=>array('ot-view','ot-admin'),
+                                        'aprequest'=>array('apr-view','apr-admin'),
                                    );
     }
     
@@ -15,7 +15,8 @@ class SearchController extends UserController {
      * All Search
      */
     
-    private function processSearchResult($queryResponse) {
+    private function processSearchResult($queryResponse)
+    {
         $result = array();
         if($queryResponse['hits']['total'] > 0 && $queryResponse['timed_out'] === false)
         {
@@ -70,7 +71,7 @@ class SearchController extends UserController {
          */
         foreach($this->searchPermissions as $k=>$sp)
         {
-            if($this->currentUser->hasAccess($sp))
+            if($this->currentUser->hasAnyAccess($sp))
             {
                 $params['type'][]=$k;
             }
@@ -81,8 +82,12 @@ class SearchController extends UserController {
             return;
         }
         
-        $params['body']['query']['fuzzy_like_this']['like_text'] = $search;
-        $params['body']['query']['fuzzy_like_this']['fuzziness'] = 1;
+        $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
+        $params['body']['query']['bool']['should'][0]['match']['name']['fuzziness'] = 0.1;
+        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
+        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
+        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
+        $params['body']['query']['bool']['minimum_should_match'] = 1;
         
         $params['body']['highlight']['fields']['*'] = new \stdClass();
         $params['body']['highlight']['pre_tags'] = array('<b>');

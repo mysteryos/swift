@@ -83,7 +83,8 @@ class SearchController extends UserController {
         }
         
         $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
-        $params['body']['query']['bool']['should'][0]['match']['name']['fuzziness'] = 0.1;
+        $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
+        $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
         $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
         $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
         $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;

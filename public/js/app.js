@@ -1483,6 +1483,17 @@ $('#search-fld').typeahead(null, {
     });
 });
 
+$('form.header-search').on('submit',function(){
+    var $this = $(this);
+    $.pjax ({
+          container: '#main',
+          timeout: 10000,
+          url: '/search',
+          data: $this.serialize()
+    });
+    return false;
+});
+
 /* End: Search Bar Setup */
 
 /*Form Validation Setup*/
@@ -1854,6 +1865,18 @@ var main = {
         {
             pageSetUp();
             dashboard();
+        }
+    },
+    
+    swift_search: function () {
+        if(typeof window['swift_search'] === "undefined")
+        {
+            jsLoader(['js/swift/swift.search.js']);
+        }
+        else
+        {
+            pageSetUp();
+            swift_search();
         }
     },
     

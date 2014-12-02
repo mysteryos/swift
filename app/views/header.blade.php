@@ -70,9 +70,9 @@
         <!-- end projects dropdown -->
         <div>
             <!-- input: search field -->
-            <form action="#search.html" class="header-search">
+            <form action="/search" class="header-search" method="GET">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search anything..." id="search-fld">
+                    <input type="text" name="search" class="form-control" placeholder="Search anything..." id="search-fld">
                     <div class="input-group-btn">
                         <button type="submit" class="btn btn-default">Search</button>
                     </div>

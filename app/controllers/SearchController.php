@@ -9,6 +9,10 @@ class SearchController extends UserController {
                                         'order-tracking'=>array('ot-view','ot-admin'),
                                         'aprequest'=>array('apr-view','apr-admin'),
                                    );
+        $this->searchCategory = array(
+                                    'order-tracking' => 'Order Process',
+                                    'aprequest' => 'A&P Request'
+                                );
     }
     
     /*
@@ -40,6 +44,7 @@ class SearchController extends UserController {
                     case 'order-tracking':
                         $result[] = array('icon'=>'fa-map-marker',
                                           'title'=>'Order Process',
+                                          'id' => $line['_id'],
                                           'value'=>$line['_source'][$line['_type']]['name'],
                                           'url'=>Helper::generateUrl(SwiftOrder::find($line['_id'])),
                                           'highlight'=>$highlight);
@@ -47,6 +52,7 @@ class SearchController extends UserController {
                     case 'aprequest':
                         $result[] = array('icon'=>'fa-gift',
                                           'title'=>'A&P Request',
+                                          'id' => $line['_id'],
                                           'value'=>$line['_source']['aprequest']['name'],
                                           'url'=>Helper::generateUrl(SwiftAPRequest::find($line['_id'])),
                                           'highlight'=>$highlight);
@@ -58,7 +64,7 @@ class SearchController extends UserController {
             }
         }
         
-        return json_encode($result);
+        return $result;
     }
     
     public function getAll($search)
@@ -66,6 +72,7 @@ class SearchController extends UserController {
         $params = array();
         $params['index'] = App::environment();
         $params['type'] = array();
+        
         /*
          * Check Permissions
          */
@@ -98,7 +105,7 @@ class SearchController extends UserController {
         $params['body']['size'] = 5;
         $queryResponse = Es::search($params);
         
-        echo $this->processSearchResult($queryResponse);
+        echo json_encode($this->processSearchResult($queryResponse));
     }
     
     public function getAllPrefetch()
@@ -132,8 +139,82 @@ class SearchController extends UserController {
      * Display Search Page
      */
     
-    public function getResult($search)
+    public function getIndex()
     {
+        $perpage = 15;
+        $page_number = (int)Input::get('page',1);
+        $search = Input::get('search',"");
+        $this->data['selected_category'] = Input::get('category','everything');
+        $this->data['category'] = $this->searchCategory;
+        $this->pageTitle = "Search results for '".$search."'";
+        
+        
+        $params = array();
+        $params['index'] = App::environment();
+        $params['type'] = array();
+        
+        /*
+         * Check Permissions
+         */
+        foreach($this->searchPermissions as $k=>$sp)
+        {
+            if($this->currentUser->hasAnyAccess($sp))
+            {
+                $params['type'][]=$k;
+            }
+            else
+            {
+                if(isset($this->searchCategory[$k]))
+                {
+                    unset($this->searchCategory[$k]);
+                }
+            }
+        }
+        
+        if(count($params['type']) === 0)
+        {
+            $this->data['hits_count'] = 0;         
+            $this->data['result'] = array();
+            $this->data['query'] = $search;
+            $this->data['time_taken'] = 0;
+            return $this->makeView('search');
+        }
+        
+        if($this->data['selected_category'] !== "everything" && array_key_exists($this->data['selected_category'],$this->searchCategory))
+        {
+            unset($params['type']);
+            $params['type'] = $this->data['selected_category'];
+        }
+        else
+        {
+            $this->data['selected_category'] = "everything";
+        }
+        
+        $this->data['selected_category_text'] = $this->data['selected_category'] == "everything" ? "Everything" : ucfirst($this->searchCategory[$this->data['selected_category']]) ;
+        
+        $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
+        $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
+        $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
+        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
+        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
+        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
+        $params['body']['query']['bool']['minimum_should_match'] = 1;
+        
+        $params['body']['highlight']['fields']['*'] = new \stdClass();
+        $params['body']['highlight']['pre_tags'] = array('<b>');
+        $params['body']['highlight']['post_tags'] = array('</b>');
+        $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
+        $params['body']['from'] = $page_number == 1 ? 0 : (($page_number-1)*$perpage)+1;
+        $params['body']['size'] = 15;
+        $queryResponse = Es::search($params);
+        
+        $this->data['hits_count'] = $queryResponse['hits']['total'];         
+        $this->data['result'] = Paginator::make($this->processSearchResult($queryResponse),$this->data['hits_count'],$perpage);
+        $this->data['query'] = $search;
+        $this->data['time_taken'] = $queryResponse['took']/1000;
+
+        
+        return $this->makeView('search');
         
     }
         

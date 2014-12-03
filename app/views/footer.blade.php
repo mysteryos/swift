@@ -63,6 +63,7 @@
                     var queue = new createjs.LoadQueue(false);
                     var loaderrorcount = 0;
                     queue.setMaxConnections(3);
+                    queue.loadTimeout = 30000;
                     var progress = 0;
                     queue.on('progress',function(e){
                         if(progress < e.progress*100)

@@ -19,6 +19,12 @@
             <div class="col-md-8">
                 <a href="#" @if(isset($s->id)) {{ "id=\"shipment_gross_weight_".Crypt::decrypt($s->id)."\"" }} @endif class="editable shipment-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="shipment" data-type="text" data-name="gross_weight" data-pk="{{ $s->id or 0 }}" data-url="/order-tracking/shipment/{{ Crypt::encrypt($order->id) }}" data-value="{{ $s->gross_weight or "" }}"></a>
             </div>
+        <div class="form-group col-md-6">
+            <label class="col-md-4 control-label">Container Number</label>
+            <div class="col-md-8">
+                <a href="#" @if(isset($s->id)) {{ "id=\"shipment_container_no_".Crypt::decrypt($s->id)."\"" }} @endif class="editable shipment-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-context="shipment" data-type="text" data-name="container_no" data-pk="{{ $s->id or 0 }}" data-url="/order-tracking/shipment/{{ Crypt::encrypt($order->id) }}" data-value="{{ $s->container_no or "" }}"></a>
+            </div>
+        </div>            
         </div>        
     </div>
     <legend class="top"></legend>

@@ -13,7 +13,7 @@ class SwiftShipment extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('type','volume','gross_weight');
+    protected $fillable = array('type','volume','gross_weight','container_no');
     
     public $timestamps = true;
     
@@ -31,14 +31,15 @@ class SwiftShipment extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'type','volume','gross_weight','deleted_at'
+        'type','volume','gross_weight','container_no','deleted_at'
     );
     
     protected $revisionFormattedFieldNames = array(
         'shipment_type' => 'Type of Shipment',
         'volume' => 'Shipment Volume',
         'id'    => 'ID',
-        'gross_weight' => 'Gross Weight'
+        'gross_weight' => 'Gross Weight',
+        'container_no' => 'Container Number'
     );
     
     public $keepCreateRevision = true;  

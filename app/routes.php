@@ -64,3 +64,9 @@ Route::group(array('before'=> array('admin')), function()
  */
 
 Route::controller('login','LoginController');
+
+/*
+ * 404 Route
+ */
+
+Route::get('404','UserController@notfound');

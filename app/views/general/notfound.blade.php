@@ -5,12 +5,10 @@
 <!-- RIBBON -->
 <div id="ribbon">
 
-        <span class="ribbon-button-alignment"> <span id="refresh" class="btn btn-ribbon" data-title="refresh"  rel="tooltip" data-placement="bottom" data-original-title="<i class='text-warning fa fa-warning'></i> Warning! This will reset all your widget settings." data-html="true"><i class="fa fa-refresh"></i></span> </span>
-
         <!-- breadcrumb -->
         <ol class="breadcrumb">
                 <li>
-                        Error 403
+                        Error 404
                 </li>
         </ol>
         <!-- end breadcrumb -->
@@ -35,53 +33,6 @@
 					<p class="lead">
 						The page you requested could not be found, either contact your webmaster or try again. Use your browsers <b>Back</b> button to navigate to the page you have prevously come from
 					</p>
-					<p class="font-md">
-						<b>... That didn't work on you? Dang. May we suggest a search, then?</b>
-					</p>
-					<br>
-					<div class="error-search well well-lg padding-10">
-						<div class="input-group">
-							<input class="form-control input-lg" type="text" placeholder="let's try this again" id="search-error">
-							<span class="input-group-addon"><i class="fa fa-fw fa-lg fa-search"></i></span>
-						</div>
-					</div>
-
-					<div class="row">
-
-						<div class="col-sm-12">
-							<ul class="list-inline">
-								<li>
-									&nbsp;<a href="javascript:void(0);">Dashbaord</a>&nbsp;
-								</li>
-								<li>
-									.
-								</li>
-								<li>
-									&nbsp;<a href="javascript:void(0);">Inbox (14)</a>&nbsp;
-								</li>
-								<li>
-									.
-								</li>
-								<li>
-									&nbsp;<a href="javascript:void(0);">Calendar</a>&nbsp;
-								</li>
-								<li>
-									.
-								</li>
-								<li>
-									&nbsp;<a href="javascript:void(0);">Gallery</a>&nbsp;
-								</li>
-								<li>
-									.
-								</li>
-								<li>
-									&nbsp;<a href="javascript:void(0);">My Profile</a>&nbsp;
-								</li>
-							</ul>
-						</div>
-
-					</div>
-
 				</div>
 
 			</div>

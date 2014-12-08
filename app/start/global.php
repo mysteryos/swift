@@ -53,6 +53,20 @@ App::error(function(Exception $exception, $code)
 
 /*
 |--------------------------------------------------------------------------
+| Application 404 Handler
+|--------------------------------------------------------------------------
+|
+| You see, this page doesn't exist yet. Let's show a 404 error for it.
+|
+*/
+
+App::missing(function($exception)
+{
+    return Redirect::to('404');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Maintenance Mode Handler
 |--------------------------------------------------------------------------
 |

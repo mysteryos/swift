@@ -19,6 +19,7 @@
                 "liebig/cron": "dev-master",
                 "codesleeve/laravel-stapler": "1.0.*",
                 "aws/aws-sdk-php": "2.4.*@dev",
+                "aws/aws-sdk-php-laravel": "1.*",
                 "venturecraft/revisionable": "dev-master",
                 "shift31/laravel-elasticsearch": "1.0.*@dev",
                 "elasticsearch/elasticsearch": "~1.0",

@@ -83,38 +83,51 @@ class SearchController extends UserController {
                 $params['type'][]=$k;
             }
         }
-        if(count($params['type']) === 0)
+        if(count($params['type']) === 0 || trim($search) === "")
         {
             echo "";
             return;
         }
         
-        $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
-        $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
-        $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
-        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
-        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
-        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
-        $params['body']['query']['bool']['minimum_should_match'] = 1;
-        
-        $params['body']['highlight']['fields']['*'] = new \stdClass();
-        $params['body']['highlight']['pre_tags'] = array('<b>');
-        $params['body']['highlight']['post_tags'] = array('</b>');
-        $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
-        $params['body']['from'] = 0;
-        $params['body']['size'] = 5;
-        $queryResponse = Es::search($params);
+        try
+        {
+            $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
+            $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
+            $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
+            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
+            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
+            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
+            $params['body']['query']['bool']['minimum_should_match'] = 1;
+
+            $params['body']['highlight']['fields']['*'] = new \stdClass();
+            $params['body']['highlight']['pre_tags'] = array('<b>');
+            $params['body']['highlight']['post_tags'] = array('</b>');
+            $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
+            $params['body']['from'] = 0;
+            $params['body']['size'] = 5;
+            $queryResponse = Es::search($params);
+            
+        } catch (\Exception $e)
+        {
+            return Response::make("An error occured with the search server.",500);
+        }
         
         echo json_encode($this->processSearchResult($queryResponse));
     }
     
     public function getAllPrefetch()
     {
-        $params = array();
-        $params['index'] = App::environment();
-        $params['body']['from'] = 0;
-        $params['body']['size'] = 25;
-        $queryResponse = Es::search($params);
+        try
+        {        
+            $params = array();
+            $params['index'] = App::environment();
+            $params['body']['from'] = 0;
+            $params['body']['size'] = 25;
+            $queryResponse = Es::search($params);
+        } catch (Exception $e)
+        {
+            return Response::make("An error occured with the search server.",500);
+        }        
 
         echo $this->processSearchResult($queryResponse);
     }
@@ -190,30 +203,34 @@ class SearchController extends UserController {
             $this->data['selected_category'] = "everything";
         }
         
-        $this->data['selected_category_text'] = $this->data['selected_category'] == "everything" ? "Everything" : ucfirst($this->searchCategory[$this->data['selected_category']]) ;
-        
-        $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
-        $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
-        $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
-        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
-        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
-        $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
-        $params['body']['query']['bool']['minimum_should_match'] = 1;
-        
-        $params['body']['highlight']['fields']['*'] = new \stdClass();
-        $params['body']['highlight']['pre_tags'] = array('<b>');
-        $params['body']['highlight']['post_tags'] = array('</b>');
-        $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
-        $params['body']['from'] = $page_number == 1 ? 0 : (($page_number-1)*$perpage)+1;
-        $params['body']['size'] = 15;
-        $queryResponse = Es::search($params);
+        try
+        {
+            $this->data['selected_category_text'] = $this->data['selected_category'] == "everything" ? "Everything" : ucfirst($this->searchCategory[$this->data['selected_category']]) ;
+
+            $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
+            $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
+            $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
+            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
+            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
+            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
+            $params['body']['query']['bool']['minimum_should_match'] = 1;
+
+            $params['body']['highlight']['fields']['*'] = new \stdClass();
+            $params['body']['highlight']['pre_tags'] = array('<b>');
+            $params['body']['highlight']['post_tags'] = array('</b>');
+            $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
+            $params['body']['from'] = $page_number == 1 ? 0 : (($page_number-1)*$perpage)+1;
+            $params['body']['size'] = 15;
+            $queryResponse = Es::search($params);
+        } catch (Exception $e) {
+            
+        }
         
         $this->data['hits_count'] = $queryResponse['hits']['total'];         
         $this->data['result'] = Paginator::make($this->processSearchResult($queryResponse),$this->data['hits_count'],$perpage);
         $this->data['query'] = $search;
         $this->data['time_taken'] = $queryResponse['took']/1000;
 
-        
         return $this->makeView('search');
         
     }

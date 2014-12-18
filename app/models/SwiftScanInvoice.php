@@ -12,7 +12,7 @@ class SwiftScanInvoice extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('business_unit','invoice_no');
+    protected $fillable = array('business_unit','invoice_number','invoice_date','customer_id');
     
     public $timestamps = true;
     
@@ -31,7 +31,16 @@ class SwiftScanInvoice extends Eloquent {
     );    
     
     public $revisionClassName = "Scanned Invoice";
-    public $revisionPrimaryIdentifier = "invoice_no";    
+    public $revisionPrimaryIdentifier = "invoice_no";
     public $keepCreateRevision = true;
-    public $softDelete = true;    
+    public $softDelete = true;
+    
+    /*
+     * Relationships
+     */
+    
+    public function document()
+    {
+        return $this->morphMany('SwiftScanDocument','scannable');
+    }
 }

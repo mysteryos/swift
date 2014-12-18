@@ -1457,8 +1457,15 @@ var allBloodhound = new Bloodhound({
   datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
   queryTokenizer: Bloodhound.tokenizers.whitespace,
   remote: {
-      url: '/search/all/%QUERY'
-  }
+        url: '/search/all/%QUERY',
+        ajax: {
+            error: function(xhr,text,error)
+            {
+                messenger_notiftop("Search service encountered an error. Please contact your administrator.","error",5);
+            }
+        }      
+  },
+
 });
 
 allBloodhound.initialize();

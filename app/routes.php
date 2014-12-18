@@ -70,3 +70,5 @@ Route::controller('login','LoginController');
  */
 
 Route::get('404','UserController@notfound');
+
+Route::controller('test','testController');

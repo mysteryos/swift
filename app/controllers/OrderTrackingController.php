@@ -61,7 +61,7 @@ class OrderTrackingController extends UserController {
                                                  return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
                                                         ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
                                             });
-                                        }); 
+                                        });
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
                             },'=',0)->remember(5)->get(); 

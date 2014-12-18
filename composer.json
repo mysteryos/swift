@@ -23,9 +23,12 @@
                 "venturecraft/revisionable": "dev-master",
                 "shift31/laravel-elasticsearch": "1.0.*@dev",
                 "elasticsearch/elasticsearch": "~1.0",
-                "codeception/codeception":"*",
                 "yangqi/htmldom": "dev-master",
-                "indatus/dispatcher": "1.*"
+                "indatus/dispatcher": "1.*",
+                "phpunit/phpunit": "4.3.*",
+                "mockery/mockery": "dev-master",
+                "doctrine/dbal": "2.4",
+                "xethron/migrations-generator": "dev-master"
 	},
         "repositories": [
             {

@@ -67,4 +67,9 @@ class SwiftWorkflowActivity extends Eloquent {
     {
         return $this->morphOne('SwiftOrder','workflowable');
     }
+    
+    public function aprequest()
+    {
+        return $this->morphOne('SwiftAPRequest','workflowable');
+    }
 }

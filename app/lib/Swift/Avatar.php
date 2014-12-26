@@ -58,7 +58,10 @@ Class Avatar {
     public static function forget()
     {
         $avatars = (array)Cache::get('avatars');
-        unset($avatars[Sentry::getUser()->email]);
+        if(isset($avatars[Sentry::getUser()->email]))
+        {
+            unset($avatars[Sentry::getUser()->email]);
+        }
         Cache::forever('avatars',$avatars);
     }
     
@@ -76,7 +79,7 @@ Class Avatar {
 
     }
     
-    public static function getHTML($user=false,$tooltip=false,$size='medium')
+    public static function getHTML($user=false,$tooltip=false,$size='medium',$class=array())
     {
         if($user === false)
         {
@@ -101,7 +104,7 @@ Class Avatar {
         {
             $avatarSize = "";
         }
-        $html = "<i class=\"avatar {$avatarSize} avatar-color-{$avatar['color']}\" ".($tooltip ? $tooltip_html : "").">{$avatar['letter']}</i>";
+        $html = "<i class=\"".implode(" ",$class)." avatar {$avatarSize} avatar-color-{$avatar['color']}\" ".($tooltip ? $tooltip_html : "").">{$avatar['letter']}</i>";
         return $html;
     }
     

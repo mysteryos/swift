@@ -8,6 +8,8 @@ class SwiftAPRequest extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait; 
     
+    public $readableName = "A&P Request";
+    
     protected $table = "swift_ap_request";
     
     protected $fillable = array("requester_user_id","customer_code","name","description","feedback_star","feedback_text");
@@ -38,6 +40,23 @@ class SwiftAPRequest extends Eloquent {
     public $revisionPrimaryIdentifier = "name";
     public $keepCreateRevision = true;
     public $softDelete = true;
+    
+    
+    public function getClassName()
+    {
+        return $this->revisionClassName;
+    }
+    
+    public function getReadableName($html = false)
+    {
+        return $this->readableName." (Id:".$this->id.")";
+    }
+    
+    public function getIcon()
+    {
+        return "fa-gift";
+    }    
+    
     /*
      * Relationships
      */
@@ -50,6 +69,11 @@ class SwiftAPRequest extends Eloquent {
     public function product()
     {
         return $this->hasMany('SwiftAPProduct','aprequest_id');
+    }
+    
+    public function requester()
+    {
+        return $this->belongsTo('users','requester_user_id');
     }
     
     /*
@@ -94,6 +118,11 @@ class SwiftAPRequest extends Eloquent {
     public function recent()
     {
         return $this->morphMany('SwiftRecent','recentable');
+    }
+    
+    public function notification()
+    {
+        return $this->morphMany('SwiftNotification','notifiable');
     }    
     
     /*
@@ -103,6 +132,15 @@ class SwiftAPRequest extends Eloquent {
     public static function getById($id)
     {
         return self::with('customer','product','product.jdeproduct','product.approval','product.approvalcatman','product.approvalexec','delivery','approval','order','document')->find($id);
+    }
+    
+    /*
+     * Utility
+     */
+    
+    public function channelName()
+    {
+        return "apr_".$this->id;
     }
 
 }

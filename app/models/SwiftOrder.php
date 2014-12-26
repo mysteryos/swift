@@ -11,6 +11,8 @@ class SwiftOrder extends Eloquent {
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;    
     use \Venturecraft\Revisionable\RevisionableTrait;
     
+    public $readableName = "Order Process";
+    
     protected $table = "swift_order";
     
     protected $guarded = array('id');
@@ -43,7 +45,7 @@ class SwiftOrder extends Eloquent {
     
     public $saveCreateRevision = true;
     public $softDelete = true;
-    public $revisionClassName = "Order Process";
+    public $revisionClassName =  "Order Process";
     public $revisionPrimaryIdentifier = "id";
     
     /*
@@ -65,6 +67,16 @@ class SwiftOrder extends Eloquent {
     public function getClassName()
     {
         return $this->revisionClassName;
+    }
+    
+    public function getReadableName()
+    {
+        return $this->readableName." (Id:".$this->id.")";
+    }
+    
+    public function getIcon()
+    {
+        return "fa-map-marker";
     }
     
     /*
@@ -137,7 +149,12 @@ class SwiftOrder extends Eloquent {
     public function comments()
     {
         return $this->morphMany('SwiftComment', 'commentable');
-    }    
+    }
+    
+    public function notification()
+    {
+        return $this->morphMany('SwiftNotification','notifiable');
+    }
     
     /*
      * Functions
@@ -146,6 +163,15 @@ class SwiftOrder extends Eloquent {
     public static function getById($id)
     {
         return self::with('purchaseOrder','reception','freight','shipment','customsDeclaration','document')->find($id);
+    }
+    
+    /*
+     * Utility
+     */
+    
+    public function channelName()
+    {
+        return "ot_".$this->id;
     }
     
 }

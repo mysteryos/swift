@@ -1475,5 +1475,97 @@ class APRequestController extends UserController {
     public function putMark($type)
     {
         return Flag::set($type,'SwiftAPRequest',$this->adminPermission);
-    }    
+    }
+    
+    public function getStatistics($productCategory='all')
+    {
+        $this->pageTitle = "Statistics";
+        
+        /*
+         * Top Stats
+         */
+        //Top Product For the month
+        
+        $product_id = SwiftAPProduct::whereHas('approval',function($q){
+                            return $q->where('approved','=',SwiftApproval::APPROVED);
+                      })->select(DB::raw('TRUNCATE(SUM(price),0) as price_sum, jde_itm, TRIM(sct_jde.jdeproducts.DSC1) as label'))
+                      ->join('sct_jde.jdeproducts','sct_jde.jdeproducts.itm','=','swift_ap_product.jde_itm')
+                      ->groupBy('jde_itm')
+                      ->whereBetween('created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                      ->orderBy('price_sum','DESC')
+                      ->first();
+                      
+        $this->data['topstat_product'] = $product_id;
+
+        //Top Client
+        
+        $customer_code = SwiftAPProduct::whereHas('approval',function($q){
+                            return $q->where('approved','=',SwiftApproval::APPROVED);
+                      })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price),0) as price_sum, jde_itm','swift_ap_request.customer_code'))
+                      ->groupBy('swift_ap_product.jde_itm','swift_ap_request.customer_code')
+                      ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                      ->orderBy('price_sum','DESC')
+                      ->first();
+        
+        if(count($customer_code))
+        {
+            $jdeCustomer = JdeCustomer::where('an8','LIKE','%'.$customer_code->customer_code.'%')->first();
+            $customer_code->customer = $jdeCustomer;
+        }
+        
+        $this->data['topstat_customer'] = $customer_code;
+                      
+        //Top A&P Initiator
+        
+        $requester = SwiftAPProduct::whereHas('approval',function($q){
+                            return $q->where('approved','=',SwiftApproval::APPROVED);
+                      })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price),0) as price_sum, jde_itm, swift_ap_request.requester_user_id'))
+                      ->groupBy('swift_ap_product.jde_itm','swift_ap_request.customer_code')
+                      ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                      ->orderBy('price_sum','DESC')
+                      ->first();
+                      
+        if(count($requester))
+        {
+            $user = Sentry::find($requester->requester_user_id);
+            $requester->requester = $user;
+        }
+        
+        $this->data['topstat_requester'] = $requester;
+        
+        return $this->makeView("$this->rootURL/statistics");
+    }
+    
+    public function postChart()
+    {
+        /*
+         * Stats for Bar Chart
+         */
+        if(Input::has('type'))
+        {
+            switch(Input::get('type'))
+            {
+                case "product":
+                    //Products
+                    $products_chart = SwiftAPProduct::whereHas('approval',function($q){
+                                        return $q->where('approved','=',SwiftApproval::APPROVED);
+                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price),0) as value, TRIM(sct_jde.jdeproducts.DSC1) as label'))
+                                  ->join('sct_jde.jdeproducts','sct_jde.jdeproducts.itm','=','swift_ap_product.jde_itm')
+                                  ->groupBy('jde_itm')
+                                  ->whereBetween('created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                                  ->orderBy('value','DESC')
+                                  ->take(10)->get();
+
+                    return Response::json($products_chart);
+                    break;
+                case "requester":
+                    //Requester
+                    
+                    break;
+                case "customer":
+                    break;
+            }
+       
+        }
+    }
 }

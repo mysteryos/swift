@@ -55,7 +55,7 @@
 	</div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
             <h1 class="page-title txt-color-blueDark">
-                <span>Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span>
+                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span>
             </h1>
         </div>
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">

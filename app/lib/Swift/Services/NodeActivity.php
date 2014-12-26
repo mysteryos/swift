@@ -57,6 +57,7 @@ class NodeActivity {
                         }
                         if(!empty($permissions))
                         {
+                            //send mail
                             if(is_callable($node_definition->php_mail_function."::sendMail"))
                             {
                                 call_user_func_array($node_definition->php_mail_function."::sendMail",array($workflow_activity_id,$permissions));
@@ -65,6 +66,15 @@ class NodeActivity {
                             {
                                 throw new \Exception("Mail php function '{$node_definition->php_mail_function}::sendMail' is not callable");
                             }
+                            //send Notification
+                            if(is_callable($node_definition->php_notification_function."::sendNotification"))
+                            {
+                                call_user_func_array($node_definition->php_notification_function."::sendNotification",array($workflow_activity_id,$permissions));
+                            }
+                            else
+                            {
+                                throw new \Exception("Notification php function '{$node_definition->php_notification_function}::sendNotification' is not callable");
+                            }                            
                         }
                     }
                 }
@@ -205,6 +215,8 @@ class NodeActivity {
                         {
                             //Save Current
                             self::save($nodeActivity,$flow);
+                            //Send Notification of Success
+                            \Notification::send(\SwiftNotification::TYPE_SUCCESS,$nodeActivity,Sentry::getUser()->id);
                         }
                         /*
                          * As per flow, create other nodes

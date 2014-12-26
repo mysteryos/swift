@@ -14,7 +14,7 @@ class SwiftNodeDefinition extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('type','name','label','description','php_function','workflow_type_id','eta','data');
+    protected $fillable = array('type','name','label','description','php_function','php_mail_function','php_notification_function','workflow_type_id','eta','data');
     
     protected $dates = ['deleted_at'];
     

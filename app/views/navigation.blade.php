@@ -8,8 +8,9 @@
 					
 					<a href="javascript:void(0);" id="show-shortcut">
                                                 {{\Swift\Avatar::getHTML(false,true)}}
-						<span class="text">
+						<span class="text" title="{{ Sentry::getUser()['email'] }}">
 							{{ Sentry::getUser()['first_name'] }} {{ Sentry::getUser()['last_name'] }}
+                                                        <input type="hidden" name="user_id_encrypted" id="user_id" value="{{ Sentry::getUser()['id'] }}" />
 						</span>
                                                 <!-- Disabled Top Menu -->
 <!--						<i class="fa fa-angle-down"></i>-->

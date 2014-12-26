@@ -79,15 +79,17 @@ class WorkflowActivity {
         
         if($workflow->status === \SwiftWorkflowActivity::INPROGRESS)
         {
+            $updateTimeBefore = $workflow->updated_at;
+            
             //We have workflow object, get Da Nodes
             $nodeInProgress = \NodeActivity::inProgress($workflow->id);
             if(!count($nodeInProgress))
             {
+                $latestNodeBefore = SwiftNodeActivity::getLatestByWorkflow($workflow->id);
                 //Check if Nodes Exists
-                $latestNode = SwiftNodeActivity::getLatestByWorkflow($workflow->id);
-                if(count($latestNode))
+                if(count($latestNodeBefore))
                 {
-                    foreach($latestNode as $l)
+                    foreach($latestNodeBefore as $l)
                     {
                         \NodeActivity::process($l,SwiftNodeActivity::$FLOW_FORWARD);
                     }
@@ -125,15 +127,25 @@ class WorkflowActivity {
 
             //Check if workflow is complete
             //Get Latest Node Activity
-            $latestNode = SwiftNodeActivity::getLatestByWorkflow($workflow->id)->first();
-            if(count($latestNode))
+            $latestNodeAfter = SwiftNodeActivity::getLatestByWorkflow($workflow->id)->first();
+            if(count($latestNodeAfter))
             {
-                $latestNode->load('definition');
-                if($latestNode->definition->type == SwiftNodeDefinition::$T_NODE_END && $latestNode->user_id != 0)
+                $latestNodeAfter->load('definition');
+                if($latestNodeAfter->definition->type == SwiftNodeDefinition::$T_NODE_END && $latestNodeAfter->user_id != 0)
                 {
                     $workflow->status = SwiftWorkflowActivity::COMPLETE;
                     $workflow->save();
                 }
+            }
+            
+            //If Timestamp on workflow Activity changes, Node Activity updates have occured
+            //Hence we call pusher to push the update to the UI
+            if($relation_object->workflow()->first()->updated_at !== $updateTimeBefore && is_callable(array($relation_object,"channelName"),true))
+            {
+                $progress = $this->progress($relation_object);
+                $progressHTML = 'Current Step: <span class="'.$progress['status_class'].'">'.$progress['label'].'</span>';
+                $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
+                $pusher->trigger('presence-'.$relation_object->channelName(), 'html-update', array('id'=>'workflow_status','html'=>$progressHTML));
             }
         }
         

@@ -52,6 +52,9 @@ Route::group(array('before' => array('auth')), function()
     //search
     Route::controller('search','SearchController');
     
+    //Notification
+    Route::controller('notification','NotificationController');
+    
 });
 
 Route::group(array('before'=> array('admin')), function()

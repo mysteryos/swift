@@ -26,7 +26,7 @@
 <div id="content" data-js="@if($edit){{"ot_edit"}}@else{{"ot_view"}}@endif">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($order->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $order->updated_at }}" />
-    <input type="hidden" name="channel_name" id="channel_name" value="ot_{{ $order->id }}" />
+    <input type="hidden" name="channel_name" id="channel_name" value="{{ $order->channelName() }}" />
     <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
     <input type="hidden" id="project-name" value='<i class="fa-fw fa fa-map-marker"></i> {{ $order->name }} (ID: {{ $order->id }})'/>
     <input type="hidden" id="project-id" value='ot_{{ $order->id }}' />
@@ -50,7 +50,7 @@
 	</div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
             <h1 class="page-title txt-color-blueDark">
-                <span>Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span>
+                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span>
             </h1>
         </div>
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">

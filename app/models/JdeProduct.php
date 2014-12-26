@@ -9,6 +9,10 @@ class JdeProduct extends Eloquent {
     
     protected $table = 'sct_jde.jdeproducts';
     
+    protected $primaryKey = "ITM";
+    
+    public $timestamps = false;
+    
     private static $cache_expiry_time = 240;
     
     public static function getByName($term,$offset,$limit)

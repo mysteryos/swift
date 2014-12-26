@@ -28,6 +28,8 @@
 	$.bread_crumb = $('#ribbon ol.breadcrumb');
         $.maindiv = $('#main');
         $.leftsidemenu = $('#leftsidemenu');
+        $.notification_list = $('#notification-list');
+        $.notification_count = $('#activity-badge');
 
         // desktop or mobile
         $.device = null;
@@ -82,6 +84,7 @@
         var pusher = new Pusher('d34044dc68acb4ac2833',{authEndpoint : '/pusher/auth'});
         //Presence Channel for current page
         var presenceChannelCurrent = null;
+        var presenceChannelNotification;
         //List of presence channels subscribed to
         var presenceChannelCurrentSubscriptions = [];
         
@@ -123,9 +126,31 @@ function messenger_hidenotiftop()
 
 function pusher_global()
 {
-    var presenceChannelGlobal = pusher.subscribe('presence-global'); 
+    var presenceChannelGlobal = pusher.subscribe('presence-global');
     presenceChannelGlobal.bind('pusher:subscription_succeeded', function(users) {
         //Do Something here
+    });
+}
+
+/*
+ * Pusher Notification Channel
+ */
+
+function pusher_user()
+{
+    var presenceChannelUser = pusher.subscribe('private-user-'+document.getElementById('user_id').value);
+    presenceChannelUser.bind('pusher:subscription_succeeded', function(users) {
+        presenceChannelUser.bind('notification_new',function(data){
+            $.notification_list.append(data.html);
+            $.bigBox({
+                title : '<a href="'+data.url+'" class="pjax">'+data.title+'</a>',
+                content : data.content,
+                color : data.color,
+                iconSmall : "fa "+data.icon,
+                timeout : 10000
+            });
+            $.notification_count.html(parseInt($.notification_count.html())+1).addClass('bg-color-red');
+        });
     });
 }
 
@@ -148,6 +173,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 }
             }
         });
+        
         presenceChannelCurrent.bind('pusher:member_added',function(member){
             if(!$('.whos-online').children('#user_'+member.id).length)
             {
@@ -155,9 +181,39 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 $('.whos-online .avatar').tooltip();
             }
         });
+        
         presenceChannelCurrent.bind('pusher:member_removed',function(member){
             $('#user_'+member.id).tooltip('destroy');
             $('#user_'+member.id).remove();
+        });
+        
+        presenceChannelCurrent.bind('html-update',function(data){
+            var $element = $('#'+data.id);
+            if($element.length)
+            {
+                $element.html(data.html);
+            }
+        });
+        
+        presenceChannelCurrent.bind('message',function(data){
+            switch(data.message)
+            {
+                case 'small':
+                    $.smallBox({
+                                title : data.title,
+                                content: data.content,
+                                color : "#3276b1",
+                                timeout : 4000
+                    });                    
+                    break;
+                case 'big':
+                    $.SmartMessageBox({
+                            title : data.title,
+                            content : data.content,
+                            buttons : '[Ok]'
+                    }); 
+                    break;
+            }
         });
         if(typeof xeditable !== "undefined" && xeditable)
         {
@@ -1663,7 +1719,10 @@ function pageSetUp() {
 		if ($this.find('.badge').hasClass('bg-color-red')) {
 			$this.find('.badge').removeClassPrefix('bg-color-');
 			$this.find('.badge').text("0");
-			// console.log("Ajax call for activity")
+			$.ajax({
+                           url: '/notification/markread',
+                           
+                        });
 		}
 
 		if (!$this.next('.ajax-dropdown').is(':visible')) {
@@ -2168,6 +2227,17 @@ var main = {
         {
             pageSetUp();
             apr_overview();
+        }
+    },
+    apr_statistics: function() {
+        if(typeof window['apr_statistics'] === "undefined")
+        {
+            jsLoader(["/js/plugin/morris/raphael.2.1.0.min.js","/js/plugin/morris/morris.min.js","/js/swift/swift.apr_statistics.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            apr_statistics();
         }        
     }
 }

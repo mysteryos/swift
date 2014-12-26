@@ -14,4 +14,11 @@ class JdeSales extends Eloquent {
               ->orderBy('UPRC','DESC')->take(1)
               ->remember(self::$cache_expiry_time)->get();
     }
+    
+    public static function getProductLatestCostPrice($productCode)
+    {
+        return self::where('ECST','>',DB::raw(0))
+            ->where('ITM','=',$productCode,'AND')
+            ->orderBy('IVD','DESC')->take(1)->first();
+    }
 }

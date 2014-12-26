@@ -37,8 +37,8 @@ class NodeMail {
     public static function sendCancelledMail($aprequest)
     {
         //Get owner of AP Request
-        $owner_id = $aprequest->revisionHistory()->orderBy('created_at','asc')->first()->user_id;
-        $owner_user = \Sentry::find($owner_id);
+        $owner_user = \Sentry::find($aprequest->requester_user_id);
+        
         if($owner_user->activated)
         {
             \Mail::send('emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$owner_user),function($message) use ($owner_user,$aprequest){

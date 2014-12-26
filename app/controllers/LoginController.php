@@ -85,7 +85,7 @@ Class LoginController extends Controller
                 Swift\Avatar::set();
                 
                 //To the dashboard, matey
-                if(Session::has('redirect_after_login'))
+                if(Session::has('redirect_after_login') && strpos(Session::get('redirect_after_login'),"pusher") === false)
                 {
                     $temp = Session::get('redirect_after_login');
                     Session::forget('redirect_after_login');

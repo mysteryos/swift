@@ -2,7 +2,6 @@
 
 class UserController extends Controller {
 
-        
         public $pageName;
         public $pageTitle;
         
@@ -47,6 +46,9 @@ class UserController extends Controller {
                 $this->data['assets'] = "\"".implode('", "', array_merge($this->data['css'],$this->data['js']))."\"";
             }
             $this->data['pageTitle'] = ($this->pageTitle != "" ? $this->pageTitle." - " : "").$this->pageName;
+            $this->data['notifications'] = SwiftNotification::getByUser($this->currentUser->id,10);
+//            dd($this->data['notifications']);
+            $this->data['notification_unread_count'] = SwiftNotification::getUnreadCountByUser($this->currentUser->id);
             return View::make($view,$this->data);
         }
         

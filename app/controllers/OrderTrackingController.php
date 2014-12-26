@@ -197,6 +197,8 @@ class OrderTrackingController extends UserController {
          * In Transit Dates
          */
         
+        $this->data['rootURL'] = $this->rootURL;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
         $this->data['order_inprogress'] = $order_inprogress;
         $this->data['order_inprogress_responsible'] = $order_inprogress_responsible;
         $this->data['order_inprogress_important'] = $order_inprogress_important;
@@ -797,7 +799,6 @@ class OrderTrackingController extends UserController {
             if($order->save())
             {
                 Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'order-tracking'));
-                WorkflowActivity::update($order);
                 return Response::make('Success', 200);
             }
             else
@@ -858,7 +859,7 @@ class OrderTrackingController extends UserController {
                 if($order->customsDeclaration()->save($customsDeclaration))
                 {
                     Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'customsDeclaration'));
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($customsDeclaration->id),'id'=>$customsDeclaration->id]));
                 }
                 else
@@ -876,7 +877,7 @@ class OrderTrackingController extends UserController {
                     if($customsDeclaration->save())
                     {
                         Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'customsDeclaration'));
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -981,7 +982,7 @@ class OrderTrackingController extends UserController {
                 if($order->freight()->save($freight))
                 {
                     Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'freight'));
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($freight->id),'id'=>$freight->id]));
                 }
                 else
@@ -1022,7 +1023,7 @@ class OrderTrackingController extends UserController {
                     if($freight->save())
                     {
                         Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'freight'));
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -1126,7 +1127,7 @@ class OrderTrackingController extends UserController {
                 if($order->shipment()->save($shipment))
                 {
                     Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'shipment'));
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($shipment->id),'id'=>$shipment->id]));
                 }
                 else
@@ -1144,7 +1145,7 @@ class OrderTrackingController extends UserController {
                     if($shipment->save())
                     {
                         Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'shipment'));
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -1226,7 +1227,7 @@ class OrderTrackingController extends UserController {
                 if($order->purchaseOrder()->save($po))
                 {
                     Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'purchaseOrder'));
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($po->id),'id'=>$po->id]));
                 }
                 else
@@ -1244,7 +1245,7 @@ class OrderTrackingController extends UserController {
                     if($po->save())
                     {
                         Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'purchaseOrder'));
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -1328,7 +1329,7 @@ class OrderTrackingController extends UserController {
                 if($order->reception()->save($reception))
                 {
                     Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'reception'));
-                    WorkflowActivity::update($order);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($reception->id),'id'=>$reception->id]));
                 }
                 else
@@ -1346,7 +1347,7 @@ class OrderTrackingController extends UserController {
                     if($reception->save())
                     {
                         Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'reception'));
-                        WorkflowActivity::update($order);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -1599,7 +1600,7 @@ class OrderTrackingController extends UserController {
                         }
                     }
                 }
-                WorkflowActivity::update($doc->order);
+                Queue::push('WorkflowActivity@updateTask',array('class'=>$doc->document_type,'id'=>$doc->document_id,'user_id'=>$this->currentUser->id));
                 return Response::make('Success');
             }
             else

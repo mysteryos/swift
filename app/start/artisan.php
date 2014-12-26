@@ -13,3 +13,4 @@
 
 Artisan::add(new chclcrawler);
 Artisan::add(new elasticsearch);
+Artisan::add(new sctjdeProducts);

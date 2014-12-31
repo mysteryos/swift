@@ -24,6 +24,10 @@ function addMulti($dummy,pk)
         presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
     }).on('hidden',function(e,reason){
         presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
+        if(reason === 'save' && $(this).attr('data-pk') === "0")
+        {
+            $(this).parents('fieldset.multi').find('a.editable').editable('disable');
+        }
     }).on('save',function(e,params){
         if($(this).editable('option','pk') !== "0")
         {
@@ -41,14 +45,16 @@ function addMulti($dummy,pk)
 
 function addEditablePk($fieldset,$encryptedPk,$pk)
 {
-    $fieldset.find('a.editable').editable('option', 'pk', $encryptedPk);
-    $fieldset.find('a.editable').attr('data-pk',$encryptedPk);
-    $fieldset.find('a.editable').each(function(){
+    var $editables = $fieldset.find('a.editable');
+    $editables.editable('option', 'pk', $encryptedPk);
+    $editables.attr('data-pk',$encryptedPk);
+    $editables.each(function(){
         $this=$(this);
         $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+$pk); 
     });       
-    $fieldset.find('a.editable').editable('option', 'pk', $encryptedPk);
-    $fieldset.find('a.editable').attr('data-pk',$encryptedPk);
+    $editables.editable('option', 'pk', $encryptedPk);
+    $editables.attr('data-pk',$encryptedPk);
+    $editables.editable('enable');
     return true;
 }
 
@@ -170,7 +176,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         return true;
     });
 
-    //Customs
+    //Multi X-editable save
     $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable').on('save',function(e,params){
         //First time save, set primary key
         if($(this).attr('data-pk') == "0")
@@ -185,6 +191,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
         return true;
     });
+    
+    $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable').on('hidden',function(e,reason){
+        //First time save, set primary key
+        if(reason === 'save' && $(this).attr('data-pk') === "0")
+        {
+            $(this).parents('fieldset.multi').find('a.editable').editable('disable');
+        }
+    });    
 
     /*
      * Add New

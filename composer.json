@@ -69,5 +69,6 @@
 	"config": {
 		"preferred-install": "dist"
 	},
+        "private": true,
 	"minimum-stability": "stable"
 }

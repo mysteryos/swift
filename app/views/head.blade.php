@@ -17,14 +17,7 @@
 		<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,300,400,700">
                 
                 <!-- Main CSS -->
-                <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css"/>
-                <link rel="stylesheet" type="text/css" href="/css/font-awesome.min.css"/>
-                <link rel="stylesheet" type="text/css" href="/css/smartadmin-production.css"/>
-                <link rel="stylesheet" type="text/css" href="/css/smartadmin-skins.css"/>
-                <link rel="stylesheet" type="text/css" href="/css/libraries/messenger/messenger.css" />
-                <link rel="stylesheet" type="text/css" href="/css/libraries/vex/vex.css" />
-                <link rel="stylesheet" type="text/css" href="/css/libraries/vex/vex-theme-default.css" />
-                <link rel="stylesheet" type="text/css" href="/css/swift.css"/>
+                <link rel="stylesheet" type="text/css" href="/css/all.css"/>
                 
 	</head>
         <body class="fixed-header fixed-ribbon smart-style-3" style="overflow:hidden;position:relative;">

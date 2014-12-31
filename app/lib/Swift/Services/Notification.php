@@ -6,7 +6,7 @@ class Notification {
     
     private $notification;
     
-    public function send($type,$object,$user)
+    public function send($type,$object,$user=false)
     {
         $result = false;
         
@@ -21,10 +21,10 @@ class Notification {
                 }
                 break;
             case \SwiftNotification::TYPE_SUCCESS:
-                switch(get_class())
+                switch(get_class($object))
                 {
                     case "SwiftNodeActivity":
-                        $result = $this->generateNodeSuccess($object,$user);
+                        $result = $this->generateNodeSuccess($object);
                         break;
                 }
                 break;
@@ -32,26 +32,33 @@ class Notification {
         
         if($result === true)
         {
-            $this->push($this->notification);
+            $this->push();
         }
     }
     
-    public function push($notification)
+    public function push()
     {
-        switch($notification->type)
+        switch($this->notification->type)
         {
             case \SwiftNotification::TYPE_INFO:
+                $color = "#3498db";
+                break;
             case \SwiftNotification::TYPE_STATISTICS:
+                $color = "#7f8c8d";
+                break;
+            case \SwiftNotification::TYPE_SUCCESS:
                 $color = "#739E73";
                 break;
             case \SwiftNotification::TYPE_RESPONSIBLE:
+                $color = "#e67e22";
+                break;
             case \SwiftNotification::TYPE_ACTION:
             default:
                 $color = "#3276b1";
-                break;            
+                break;
         }
         
-        switch($notification->type)
+        switch($this->notification->type)
         {
             case \SwiftNotification::TYPE_STATISTICS:
                 $icon = "fa-bar-chart-o";
@@ -68,19 +75,19 @@ class Notification {
             case \SwiftNotification::TYPE_INFO:
             default:
                 $icon = "fa-cloud";
-                break;            
+                break;
         }
         
-        $notification->load('notifiable');
+        $this->notification->load('notifiable');
         $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
-        $pusher->trigger('private-user-'.$notification->to,
-                         'notification-new',
-                         array('id'=>$notification->id,
+        $pusher->trigger('private-user-'.$this->notification->to,
+                         'notification_new',
+                         array('id'=>$this->notification->id,
                                'color'=>$color,
-                               'html'=>\View::make('notification/single',array('notification'=>$notification)),
-                               'title'=>$notification->notifiable->getReadableName(),
-                               'content'=>$notification->msg,
-                               'url'=>Helper::generateUrl($notification->notifiable),
+                               'html'=>\View::make('notification/single',array('notification'=>$this->notification))->render(),
+                               'title'=>"<i class=\"fa {$this->notification->notifiable->getIcon()}\"></i> ".$this->notification->notifiable->getReadableName(),
+                               'content'=>$this->notification->msg,
+                               'url'=>\Helper::generateUrl($this->notification->notifiable),
                                'icon'=>$icon));
     }
     
@@ -91,13 +98,12 @@ class Notification {
         $relation_object = $object->workflowable;
         if(count($relation_object))
         {
-            $notif = new \SwiftNotification;
-            $notif->msg = 'awaits your input.';
-            $notif->from = \Sentry::getUser()->id;
-            $notif->to = $user->id;
-            $notif->type = \SwiftNotification::TYPE_RESPONSIBLE;
-            $relation_object->notification()->save($notif);
-            $this->notification = $notif;
+            $this->notification = new \SwiftNotification;
+            $this->notification->msg = 'awaits your input.';
+            $this->notification->from = \Sentry::getUser()->id;
+            $this->notification->to = $user->id;
+            $this->notification->type = \SwiftNotification::TYPE_RESPONSIBLE;
+            $relation_object->notification()->save($this->notification);
             return true;
         }
         
@@ -108,9 +114,20 @@ class Notification {
      * SwiftNodeActivity: On Success TBD
      */
     
-    public function generateNodeSuccess($object,$user)
+    public function generateNodeSuccess($object)
     {
+        $definition = $object->definition;
         $workflow = $object->workflowactivity;
-        
+        if(count($definition))
+        {
+            $this->notification = new \SwiftNotification;
+            $this->notification->msg = 'You completed step <b>'.$definition->label.'</b>';
+            $this->notification->from = \Sentry::findUserByLogin(\Config::get('website.system_mail'))->id;
+            $this->notification->to = \Sentry::getUser()->id;
+            $this->notification->type = \SwiftNotification::TYPE_SUCCESS;
+            $workflow->workflowable->notification()->save($this->notification);
+            return true;
+        }
+        return false;
     }
 }

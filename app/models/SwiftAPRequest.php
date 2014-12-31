@@ -49,7 +49,7 @@ class SwiftAPRequest extends Eloquent {
     
     public function getReadableName($html = false)
     {
-        return $this->readableName." (Id:".$this->id.")";
+        return $this->name." (Id:".$this->id.")";
     }
     
     public function getIcon()

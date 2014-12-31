@@ -216,7 +216,7 @@ class NodeActivity {
                             //Save Current
                             self::save($nodeActivity,$flow);
                             //Send Notification of Success
-                            \Notification::send(\SwiftNotification::TYPE_SUCCESS,$nodeActivity,Sentry::getUser()->id);
+                            \Notification::send(\SwiftNotification::TYPE_SUCCESS,$nodeActivity);
                         }
                         /*
                          * As per flow, create other nodes

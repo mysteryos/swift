@@ -141,12 +141,13 @@ function pusher_user()
     var presenceChannelUser = pusher.subscribe('private-user-'+document.getElementById('user_id').value);
     presenceChannelUser.bind('pusher:subscription_succeeded', function(users) {
         presenceChannelUser.bind('notification_new',function(data){
-            $.notification_list.append(data.html);
+            $.notification_list.prepend(data.html);
+            $.notification_list.find('abbr[data-livestamp]').livestamp($(this).attr('data-livestamp'));
             $.bigBox({
                 title : '<a href="'+data.url+'" class="pjax">'+data.title+'</a>',
                 content : data.content,
                 color : data.color,
-                iconSmall : "fa "+data.icon,
+                icon : "fa fadeInLeft animated "+data.icon,
                 timeout : 10000
             });
             $.notification_count.html(parseInt($.notification_count.html())+1).addClass('bg-color-red');
@@ -1821,6 +1822,12 @@ function pageSetUp() {
 
 		});
 	});
+        
+        /*
+         * Pusher User Channel
+         */
+        
+        pusher_user();
 
 	/*
 	* SHORTCUTS

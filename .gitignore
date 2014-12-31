@@ -10,3 +10,8 @@ Thumbs.db
 /app/config/
 /public/upload/
 tests/_output/*
+/workbench
+/tests
+/app/database
+Gruntfile.js
+/node_modules

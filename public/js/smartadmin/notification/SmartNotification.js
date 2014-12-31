@@ -245,10 +245,7 @@ var BigBoxes = 0;
             if (isIE8orlower() == 0) {
                 var audioElement = document.createElement('audio');
 
-                if (navigator.userAgent.match('Firefox/'))
-                    audioElement.setAttribute('src', $.sound_path + 'bigbox.ogg');
-                else
-                    audioElement.setAttribute('src', $.sound_path + 'bigbox.mp3');
+                audioElement.setAttribute('src', $.sound_path + 'bigbox.mp3');
 
                 $.get();
                 audioElement.addEventListener("load", function () {

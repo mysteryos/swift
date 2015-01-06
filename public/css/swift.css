@@ -329,7 +329,7 @@ fieldset.multi {
 fieldset.multi a.top-right,fieldset.multi a.top-right:active,fieldset.multi a.top-right:focus {
     position:absolute;
     right:0px !important;
-    top:30px !important;
+    top:0px !important;
 }
 
 fieldset.multi a.top-left,fieldset.multi a.top-left:active,fieldset.multi a.top-left:focus {

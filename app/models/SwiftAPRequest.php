@@ -41,6 +41,25 @@ class SwiftAPRequest extends Eloquent {
     public $keepCreateRevision = true;
     public $softDelete = true;
     
+    /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "aprequest";
+    //Main Document
+    public $esMain = true;
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->id;
+    }    
     
     public function getClassName()
     {
@@ -123,7 +142,12 @@ class SwiftAPRequest extends Eloquent {
     public function notification()
     {
         return $this->morphMany('SwiftNotification','notifiable');
-    }    
+    }
+    
+    public function story()
+    {
+        return $this->morphMany('SwiftStory','storyfiable');
+    }
     
     /*
      * Helper Function

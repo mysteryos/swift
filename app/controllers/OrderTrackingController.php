@@ -6,10 +6,10 @@ class OrderTrackingController extends UserController {
         parent::__construct();
         $this->pageName = "Order Process";
         $this->rootURL = $this->context = "order-tracking";
-        $this->adminPermission = "ot-admin";
-        $this->viewPermission = "ot-view";
-        $this->editPermission = "ot-edit";
-        $this->createPermission = "ot-create";
+        $this->adminPermission = \Config::get("permission.{$this->context}.admin");
+        $this->viewPermission = \Config::get("permission.{$this->context}.view");
+        $this->editPermission = \Config::get("permission.{$this->context}.edit");
+        $this->createPermission = \Config::get("permission.{$this->context}.create");
     }
     
     /*
@@ -20,7 +20,8 @@ class OrderTrackingController extends UserController {
     {
         
         $this->pageTitle = 'Overview';
-        $this->data['inprogress_limit'] = 15;        
+        $this->data['inprogress_limit'] = 15;
+        
         /*
          * Order in Progress
          */
@@ -193,9 +194,12 @@ class OrderTrackingController extends UserController {
             }
         }
         */
+        
         /*
-         * In Transit Dates
+         * Stories
          */
+        
+        $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
         
         $this->data['rootURL'] = $this->rootURL;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
@@ -453,9 +457,7 @@ class OrderTrackingController extends UserController {
                         break;
                 }
             }
-            
             Session::flash('ot_form_filter',$filter);
-
         }
         else
         {
@@ -587,7 +589,6 @@ class OrderTrackingController extends UserController {
     
     public function postFreightcompanyform()
     {
-        
         /*
          * Check Permission
          */
@@ -621,12 +622,11 @@ class OrderTrackingController extends UserController {
                 echo "";
                 return false;                
             }
-        }        
+        }
     }
     
     public function putFreightcompanyform()
     {
-        
         /*
          * Check Permission
          */
@@ -741,7 +741,12 @@ class OrderTrackingController extends UserController {
                 //Start the Workflow
                 if(\WorkflowActivity::update($order,'order_tracking'))
                 {
-                    Queue::push('OrderTrackingHelper@esIndex',array('order_id'=>$order->id,'context'=>$this->context));
+                    //Story Relate
+                    Queue::push('Story@relateTask',array('obj_class'=>get_class($order),
+                                                         'obj_id'=>$order->id,
+                                                         'action'=>SwiftStory::ACTION_CREATE,
+                                                         'user_id'=>$this->currentUser->id,
+                                                         'context'=>get_class($order)));
                     $order_id = Crypt::encrypt($order->id);
                     //Success
                     echo json_encode(['success'=>1,'url'=>"/order-tracking/edit/$order_id"]);
@@ -798,7 +803,7 @@ class OrderTrackingController extends UserController {
             $order->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($order->save())
             {
-                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'order-tracking'));
+                Queue::push('ElasticSearchHelper@updateTask',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'order-tracking'));
                 return Response::make('Success', 200);
             }
             else
@@ -858,7 +863,6 @@ class OrderTrackingController extends UserController {
                 $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->customsDeclaration()->save($customsDeclaration))
                 {
-                    Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'customsDeclaration'));
                     Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($customsDeclaration->id),'id'=>$customsDeclaration->id]));
                 }
@@ -876,7 +880,6 @@ class OrderTrackingController extends UserController {
                     $customsDeclaration->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($customsDeclaration->save())
                     {
-                        Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'customsDeclaration'));
                         Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
@@ -914,7 +917,6 @@ class OrderTrackingController extends UserController {
             $order_id = $customsDeclaration->order_id;
             if($customsDeclaration->delete())
             {
-                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order_id,'context'=>$this->context,'info-context'=>'customsDeclaration'));
                 return Response::make('Success');
             }
             else
@@ -981,7 +983,6 @@ class OrderTrackingController extends UserController {
                 $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->freight()->save($freight))
                 {
-                    Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'freight'));
                     Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($freight->id),'id'=>$freight->id]));
                 }
@@ -1022,7 +1023,6 @@ class OrderTrackingController extends UserController {
                     $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($freight->save())
                     {
-                        Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'freight'));
                         Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
@@ -1061,7 +1061,6 @@ class OrderTrackingController extends UserController {
             $order_id = $freight->order_id;
             if($freight->delete())
             {
-                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order_id,'context'=>$this->context,'info-context'=>'freight'));
                 return Response::make('Success');
             }
             else
@@ -1126,7 +1125,6 @@ class OrderTrackingController extends UserController {
                 $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->shipment()->save($shipment))
                 {
-                    Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'shipment'));
                     Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($shipment->id),'id'=>$shipment->id]));
                 }
@@ -1144,7 +1142,6 @@ class OrderTrackingController extends UserController {
                     $shipment->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($shipment->save())
                     {
-                        Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'shipment'));
                         Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
@@ -1182,7 +1179,6 @@ class OrderTrackingController extends UserController {
             $order_id = $shipment->order_id;
             if($shipment->delete())
             {
-                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order_id,'context'=>$this->context,'info-context'=>'shipment'));
                 return Response::make('Success');
             }
             else
@@ -1226,7 +1222,6 @@ class OrderTrackingController extends UserController {
                 $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->purchaseOrder()->save($po))
                 {
-                    Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'purchaseOrder'));
                     Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($po->id),'id'=>$po->id]));
                 }
@@ -1244,7 +1239,6 @@ class OrderTrackingController extends UserController {
                     $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($po->save())
                     {
-                        Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'purchaseOrder'));
                         Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
@@ -1258,7 +1252,7 @@ class OrderTrackingController extends UserController {
                     return Response::make('Error saving purchase order: Invalid PK',400);
                 }
             }            
-        }        
+        }
         else
         {
             return Response::make('Order process form not found',404);
@@ -1283,7 +1277,6 @@ class OrderTrackingController extends UserController {
             $order_id = $po->order_id;
             if($po->delete())
             {
-                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order_id,'context'=>$this->context,'info-context'=>'purchaseOrder'));
                 return Response::make('Success');
             }
             else
@@ -1328,7 +1321,6 @@ class OrderTrackingController extends UserController {
                 $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->reception()->save($reception))
                 {
-                    Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'reception'));
                     Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($reception->id),'id'=>$reception->id]));
                 }
@@ -1346,7 +1338,6 @@ class OrderTrackingController extends UserController {
                     $reception->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($reception->save())
                     {
-                        Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'reception'));
                         Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
@@ -1385,7 +1376,6 @@ class OrderTrackingController extends UserController {
             $reception = $reception->order_id;
             if($reception->delete())
             {
-                Queue::push('OrderTrackingHelper@esUpdate',array('order_id'=>$order_id,'context'=>$this->context,'info-context'=>'reception'));
                 return Response::make('Success');
             }
             else
@@ -1639,9 +1629,7 @@ class OrderTrackingController extends UserController {
                 return Response::make('Operation not allowed',400);
             }
             
-            $workflow = $order->workflow()->first();
-            $workflow->status = SwiftWorkflowActivity::REJECTED;
-            if($workflow->save())
+            if(WorkflowActivity::cancel($order))
             {
                 return Response::make('Workflow has been cancelled',200);
             }
@@ -1657,7 +1645,7 @@ class OrderTrackingController extends UserController {
     }
     
     /*
-     * Transit Calendar data
+     * Transit Calendar data by AJAX
      */
     
     public function postTransitcalendar()

@@ -152,7 +152,7 @@ class NodeActivity {
                         {
                             call_user_func_array($function,array($nodeActivity));
                         }
-
+                        
                         self::save($nodeActivity,$flow);
                     }
                     /*
@@ -215,6 +215,8 @@ class NodeActivity {
                         {
                             //Save Current
                             self::save($nodeActivity,$flow);
+                            //Story Relate
+                            \Story::relate($nodeActivity,\SwiftStory::ACTION_COMPLETE);                            
                             //Send Notification of Success
                             \Notification::send(\SwiftNotification::TYPE_SUCCESS,$nodeActivity);
                         }

@@ -135,6 +135,7 @@ class WorkflowActivity {
                 {
                     $workflow->status = SwiftWorkflowActivity::COMPLETE;
                     $workflow->save();
+                    \Story::relate($workflow,\SwiftStory::ACTION_COMPLETE);
                 }
             }
             
@@ -166,12 +167,13 @@ class WorkflowActivity {
         {
             $eloqentClass = new $data['class'];
             $eloquentObject = $eloqentClass::find($data['id']);
-            return $this->update($eloquentObject);
+            $this->update($eloquentObject);
         }
         else
         {
             throw new \RuntimeException('Eloquent class or object ID missing');
         }
+        $job->delete();
     }
     
     /*
@@ -189,7 +191,7 @@ class WorkflowActivity {
         $workflow = $relation_object->workflow()->first();
         if(!count($workflow))
         {
-            throw new \Exception ("Workflow activity not found");
+            return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');
         }
         
         if($workflow->status == SwiftWorkflowActivity::COMPLETE)
@@ -232,6 +234,38 @@ class WorkflowActivity {
         }
         
         return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');        
+    }
+    
+    public function cancel($relation_object)
+    {
+        //Check if relation is indeed an object
+        if(!is_object($relation_object))
+        {
+            throw new \RuntimeException("Data type 'object' expected.");
+        }
+        
+        $workflow = $relation_object->workflow()->first();
+        if(!count($workflow))
+        {
+            throw new \Exception ("Workflow activity not found");
+        }
+        
+        $workflow = $relation_object->workflow()->first();
+        if($workflow->status === SwiftWorkflowActivity::INPROGRESS)
+        {
+            $workflow->status = SwiftWorkflowActivity::REJECTED;
+            if($workflow->save())
+            {
+                Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
+                                                     'obj_id'=>$workflow->id,
+                                                     'user_id'=>\Sentry::getUser()->id,
+                                                     'context'=>get_class($relation_object),
+                                                     'action'=>\SwiftStory::ACTION_CANCEL));
+                return true;
+            }
+        }
+        
+        return false;
     }
     
 }

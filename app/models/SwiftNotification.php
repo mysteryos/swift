@@ -24,6 +24,7 @@ class SwiftNotification extends Eloquent {
     const TYPE_STATISTICS = 3;
     const TYPE_INFO = 4;
     const TYPE_SUCCESS = 5;
+    const TYPE_COMMENT = 6;
     
     /*
      * Event

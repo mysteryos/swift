@@ -28,6 +28,14 @@ class Notification {
                         break;
                 }
                 break;
+            case \SwiftNotification::TYPE_COMMENT:
+                switch(get_class($object))
+                {
+                    case "SwiftComment":
+                        $result = $this->generateCommentMention($object,$user);
+                        break;
+                }
+                break;
         }
         
         if($result === true)
@@ -52,6 +60,9 @@ class Notification {
             case \SwiftNotification::TYPE_RESPONSIBLE:
                 $color = "#e67e22";
                 break;
+            case \SwiftNotification::TYPE_COMMENT:
+                $color = "#7f8c8d";
+                break;
             case \SwiftNotification::TYPE_ACTION:
             default:
                 $color = "#3276b1";
@@ -71,6 +82,9 @@ class Notification {
                 break;
             case \SwiftNotification::TYPE_SUCCESS:
                 $icon = "fa-check";
+                break;
+            case \SwiftNotification::TYPE_COMMENT:
+                $icon = "fa-comment-o";
                 break;
             case \SwiftNotification::TYPE_INFO:
             default:
@@ -129,5 +143,19 @@ class Notification {
             return true;
         }
         return false;
+    }
+    
+    /*
+     * SwiftComment: User Mentionned in Comment
+     */
+    public function generateCommentMention($comment,$user)
+    {
+        $this->notification = new \SwiftNotification;
+        $this->notification->msg = "You have been mentionned in a comment: '{$comment->comment}'";
+        $this->notification->from = $comment->user_id;
+        $this->notification->to = $user->id;
+        $this->notification->type = \SwiftNotification::TYPE_COMMENT;
+        $comment->commentable->notification()->save($this->notification);
+        return true;
     }
 }

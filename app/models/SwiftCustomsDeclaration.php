@@ -7,6 +7,7 @@
 class SwiftCustomsDeclaration extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;    
     use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\ElasticSearchEventTrait;
     
     /*
      * Eloquent Attributes
@@ -58,6 +59,41 @@ class SwiftCustomsDeclaration extends Eloquent {
                                     self::PROCESSING=>'Sent/Processed',
                                     self::VERIFICATION=>'Under Verification',
                                     self::CLEARED=>'Cleared');
+    
+    /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "order-tracking";    
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->order_id;
+    }
+    
+    public function esGetInfoContext()
+    {
+        return "customsDeclaration";
+    }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
+    }
     
     /*
      * Accessors

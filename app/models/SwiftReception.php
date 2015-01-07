@@ -9,6 +9,7 @@ class SwiftReception extends Eloquent {
     
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\ElasticSearchEventTrait;
     
     protected $table = "swift_reception";
     
@@ -40,6 +41,41 @@ class SwiftReception extends Eloquent {
     public $revisionPrimaryIdentifier = "id";
     public $keepCreateRevision = true;
     public $softDelete = true;
+    
+    /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "order-tracking";    
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->order_id;
+    }
+    
+    public function esGetInfoContext()
+    {
+        return "shipment";
+    }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
+    }    
     
     /*
      * Mutator

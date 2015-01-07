@@ -85,6 +85,11 @@ class SwiftNodeActivity extends Eloquent
         return $this->hasMany('SwiftNodePermission','node_definition_id','node_definition_id');
     }
     
+    public function story()
+    {
+        return $this->morphMany('SwiftStory','storyfiable');
+    }    
+    
     /*
      * Get all nodes which needs to be processed
      */

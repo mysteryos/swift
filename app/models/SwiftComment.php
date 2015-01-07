@@ -44,6 +44,11 @@ class SwiftComment extends Eloquent {
 	{
 		return $this->morphTo();
 	}
+        
+        public function story()
+        {
+            return $this->morphMany('SwiftStory','storyfiable');
+        }        
 
 	/**
 	 * Defines the belongsTo relationship

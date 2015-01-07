@@ -15,7 +15,7 @@ class SwiftWorkflowActivity extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('workflow_type_id','status');
+    protected $fillable = array('workflow_type_id','status','workflowable_type');
     
     protected $dates = ['deleted_at'];
     
@@ -71,5 +71,10 @@ class SwiftWorkflowActivity extends Eloquent {
     public function aprequest()
     {
         return $this->morphOne('SwiftAPRequest','workflowable');
+    }
+    
+    public function story()
+    {
+        return $this->morphMany('SwiftStory','storyfiable');
     }
 }

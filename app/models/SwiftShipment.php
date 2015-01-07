@@ -8,6 +8,7 @@ class SwiftShipment extends Eloquent {
     
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;    
     use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\ElasticSearchEventTrait;
     
     protected $table = "swift_shipment";
     
@@ -46,6 +47,41 @@ class SwiftShipment extends Eloquent {
     public $softDelete = true;
     public $revisionClassName = "Shipment";    
     public $revisionPrimaryIdentifier = "id";
+    
+    /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "order-tracking";
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->order_id;
+    }
+    
+    public function esGetInfoContext()
+    {
+        return "shipment";
+    }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
+    }
     
     public function getTypeRevisionAttribute($val)
     {

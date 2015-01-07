@@ -4,12 +4,11 @@
  * Description: Table that contains all orders
  */
 
-
-
 class SwiftOrder extends Eloquent {
     
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;    
     use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\ElasticSearchEventTrait;
     
     public $readableName = "Order Process";
     
@@ -47,6 +46,41 @@ class SwiftOrder extends Eloquent {
     public $softDelete = true;
     public $revisionClassName =  "Order Process";
     public $revisionPrimaryIdentifier = "id";
+    
+    /* Elastic Search */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "order-tracking";
+    //Main Document
+    public $esMain = true;
+    
+    /*
+     * ElasticSearch Utility functions
+     */
+    
+    public function esGetId()
+    {
+        return $this->id;
+    }
+    
+    public function esGetInfoContext()
+    {
+        return "order-tracking";
+    }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
+    }    
     
     /*
      * Accessors
@@ -132,6 +166,7 @@ class SwiftOrder extends Eloquent {
         return $this->morphMany('SwiftEvent','eventable');
     }
     
+    
     /*
      * Polymorphic Relation
      */
@@ -155,6 +190,11 @@ class SwiftOrder extends Eloquent {
     {
         return $this->morphMany('SwiftNotification','notifiable');
     }
+    
+    public function story()
+    {
+        return $this->morphMany('SwiftStory','storyfiable');
+    }    
     
     /*
      * Functions

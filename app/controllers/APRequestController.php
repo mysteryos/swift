@@ -5,12 +5,12 @@ class APRequestController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "A&P Request";
-        $this->rootURL = "aprequest";
-        $this->adminPermission = "apr-admin";
-        $this->viewPermission = "apr-view";
-        $this->editPermission = "apr-edit";
-        $this->ccarePermission = "apr-ccare";
-        $this->storePermission = "apr-store";
+        $this->rootURL = $this->context = "aprequest";
+        $this->adminPermission = \Config::get("permission.{$this->context}.admin");
+        $this->viewPermission = \Config::get("permission.{$this->context}.view");
+        $this->editPermission = \Config::get("permission.{$this->context}.edit");
+        $this->ccarePermission = \Config::get("permission.{$this->context}.ccare");
+        $this->storePermission = \Config::get("permission.{$this->context}.store");
     }
     
     /*
@@ -519,6 +519,9 @@ class APRequestController extends UserController {
                 //Start the Workflow
                 if(\WorkflowActivity::update($aprequest,'aprequest'))
                 {
+                    //Search Indexing - Insert
+                    Queue::push('APRequestHelper@esIndex',array('order_id'=>$order->id,
+                                                                    'context'=>$this->context));                    
                     //Success
                     echo json_encode(['success'=>1,'url'=>Helper::generateUrl($aprequest)]);
                 }
@@ -1451,14 +1454,9 @@ class APRequestController extends UserController {
                 return Response::make('Do not cancel, that which is not yours',400);
             }
             
-            $workflow = $form->workflow()->first();
-            if($workflow->status == SwiftWorkflowActivity::INPROGRESS)
+            if(WorkflowActivity::cancel($form))
             {
-                $workflow->status = SwiftWorkflowActivity::REJECTED;
-                if($workflow->save())
-                {
-                    return Response::make('Workflow has been cancelled',200);
-                }
+                return Response::make('Workflow has been cancelled',200);
             }
 
             return Response::make('Unable to cancel workflow',400);

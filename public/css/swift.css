@@ -648,6 +648,14 @@ Order Tracking - Edit Form
         background-color: #57889C;
 }
 
+/*
+*  Stories
+*/
+
+.smart-timeline-content a {
+    display:inline-block;
+}
+
 @-webkit-keyframes particle-a {
     0% {
     -webkit-transform: translate3D(-3rem,-3rem,0);

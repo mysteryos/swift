@@ -42,11 +42,14 @@
                                 <h2>Stories</h2>
                         </header>                        
                                 <!-- widget div-->
-				<div class="no-padding">
+				<div>
 					<!-- widget content -->
                                         <div class="widget-body">
                                                 <div class="smart-timeline">
                                                     <ul class="smart-timeline-list">
+                                                        @if($dynamicStory !== false)
+                                                            @include('story.dynamic')
+                                                        @endif
                                                         @if(count($stories))
                                                             @foreach($stories as $story)
                                                                 @include('story.single')

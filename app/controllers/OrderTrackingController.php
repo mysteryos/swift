@@ -200,6 +200,7 @@ class OrderTrackingController extends UserController {
          */
         
         $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
+        $this->data['dynamicStory'] = OrderTrackingHelper::dynamicStory();
         
         $this->data['rootURL'] = $this->rootURL;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));

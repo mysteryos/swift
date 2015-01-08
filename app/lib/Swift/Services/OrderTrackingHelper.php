@@ -27,85 +27,6 @@ class OrderTrackingHelper{
     }
     
     /*
-     * Checks for cases where data has been input before proper step has been reached
-     */
-    private function earlyNode($data)
-    {
-        if($data['current_activity']['status'] == SwiftWorkflowActivity::INPROGRESS && isset($data['current_acivity']['definition_obj']))
-        {
-            //Workflow is in progress, let's analyse
-            foreach($data['current_acivity']['definition_obj'] as $d)
-            {
-                switch($d->name)
-                {
-                    case 'ot_preparation':
-                    case 'ot_transit':
-                        if(count($data['order']->customsDeclaration))
-                        {
-                            $custommessage = array("We have noticed that you have already filled in customs information but <b>Notice of Arrival</b> document is still missing.",
-                                                   "So, we need to talk. Someone has already filled in some customs information, without a <b>Notice of Arrival</b> document present on this form");
-                            $this->message[] = array('type'=>'info','message'=>'');
-                        }
-                        break;
-                    
-                }
-            }
-        }
-    }
-    
-    private function validateNode($data)
-    {
-        if($data['current_activity']['status'] == SwiftWorkflowActivity::INPROGRESS && isset($data['current_acivity']['definition_obj']))
-        {
-            //Workflow is in progress, let's analyse
-            foreach($data['current_acivity']['definition_obj'] as $d)
-            {
-                switch($d->name)
-                {
-                    case 'ot_transit':
-                        if(count($data['order']->freight))
-                        {
-                            foreach($data['order']->freight as $f)
-                            {
-                                //Freight is Sea/Air and Bill of Lading is empty and has documents
-                                if(in_array($f->freight_type,array(SwiftFreight::TYPE_SEA,SwiftFreight::TYPE_AIR)) && $f->bol_no == "" && count($data['order']->document))
-                                {
-                                    //Loop through docs
-                                    foreach($data['order']->document as $doc)
-                                    {
-                                        //if doc has tag
-                                        if(count($doc->tag))
-                                        {
-                                            //loop through tags
-                                            foreach($doc->tag as $t)
-                                            {
-                                                //Bill of Lading document found
-                                                if($t->type == SwiftTag::OT_BILL_OF_LADING)
-                                                {
-                                                    $billofladingnumbermissing = array("A recent discovery showed that you have a <b>Bill of Lading</b> document present, but no Bill of Lading number filled in, in your freight section.",
-                                                                                       "Your <b>Bill of Lading</b> number is missing. Please fill it in.",
-                                                                                        );
-                                                    $this->message[] = array('type'=>'warning','message'=>'');
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                }   
-            }
-        }
-    }
-    
-    //When ETA is not matching date of upload of NOA
-    private function incorrectdata()
-    {
-        
-    }
-    
-    /*
      * Goes through elasticsearch
      */
     public function searchCHCLVessel($vessel,$voyage)
@@ -125,99 +46,48 @@ class OrderTrackingHelper{
         return Es::search($params);
     }
     
-    /*
-     * Elastic Search Update Data
-     */
-    public function esUpdate($job,$data)
+    public function dynamicStory()
     {
-        //exclude dates
-        $exclude = array('created_at','updated_at','deleted_at');
-        
-        $params = array();
-        $params['index'] = \App::environment();
-        $params['type'] = $data['context'];
-        $order = SwiftOrder::find($data['order_id']);
-        if($order)
+        return $this->dynamicStoryLateNode();
+    }
+    
+    public function dynamicStoryLateNode()
+    {
+        $nodes_inprogress_responsible_witheta = SwiftNodeActivity::orderBy('updated_at','asc')
+                                                ->with('definition')
+                                                ->with('workflowactivity')
+                                                ->whereHas('workflowactivity',function($q){
+                                                    return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')->where('workflowable_type','=','SwiftOrder');
+                                                })
+                                                ->where('user_id','=',0,'AND')
+                                                ->whereHas('permission',function($q){
+                                                    return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                            ->whereIn('permission_name',(array)array_keys(\Sentry::getUser()->getMergedPermissions()));
+                                                })
+                                                ->whereHas('definition',function($q){
+                                                    return $q->where('eta','>',0);
+                                                })
+                                                ->get();
+                                                
+        if(count($nodes_inprogress_responsible_witheta))
         {
-            $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at->toIso8601String();
-            switch($data['info-context'])
+            foreach($nodes_inprogress_responsible_witheta as $n)
             {
-                case 'order-tracking':
-                    $relation = $order;
-                    $relation = $relation->toArray();
-                    foreach($relation as $k => $v)
-                    {
-                        if(in_array($k,$exclude))
-                        {
-                            unset($relation[$k]);
-                        }
-                    }
-                    $params['body']['doc'][$data['info-context']] = $relation;                    
-                    break;
-                case 'purchaseOrder':
-                case 'reception':
-                case 'freight':
-                case 'shipment':
-                case 'customsDeclaration':
-                    $relation = $order->{$data['info-context']}()->get();
-                    if(count($relation))
-                    {
-                        foreach($relation as &$l)
-                        {
-                            foreach($exclude as $ex)
-                            {
-                                if(isset($l->{$ex}))
-                                {
-                                    unset($l->{$ex});
-                                }
-                            }
-                            if(isset($l->dates))
-                            {
-                                foreach($l->dates as $date)
-                                {
-                                    if(isset($l->{$date}) && get_class($l->{$date}) == "Carbon")
-                                    {
-                                        $l->{$date} = $l->{$date}->toIso8601String();
-                                    }
-                                }
-                            }
-                        }
-                        $relation = $relation->toArray();
-                        $params['body']['doc'][$data['info-context']] = $relation;
-                    }
-                    else
-                    {
-                        $params['body']['doc'][$data['info-context']] = array();
-                    }                    
-                    break;
-                default:
-                    $job->delete();
-                    return;
-                    break;
+                $workingDaysSinceUpdate = \Helper::getWorkingDays($n->updated_at->toDateString(),\Carbon::now()->toDateString());
+                if($workingDaysSinceUpdate > $n->definition->eta)
+                {
+                    $story = array(
+                                'actionText' => "You are late at the '{$n->definition->label}' task since <b>".($workingDaysSinceUpdate - $n->definition->eta)."</b> day(s).",
+                                'context'   =>$n->workflowactivity->workflowable,
+                                
+                    );
+                    return $story;
+                }
             }
-            Es::update($params);
-            $job->delete();
         }
-    }
-    
-    /*
-     * Elastic Search Index Data (For first Time)
-     */
-    public function esIndex($job,$data)
-    {
-        $params = array();
-        $params['index'] = \App::environment();
-        $params['type'] = $data['context'];
-        $order = SwiftOrder::find($data['order_id']);
-        if($order)
+        else
         {
-            $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at->toIso8601String();
-            $params['body']['order-tracking'] = $order->toArray();
-            Es::index($params);
-            $job->delete();
+            return false;
         }
     }
-    
 }

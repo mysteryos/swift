@@ -39,11 +39,12 @@ class SwiftCustomsDeclaration extends Eloquent {
         'customs_filled_at'=>'Customs filled at',
         'customs_cleared_at'=> 'Customs cleared at',
         'customs_under_verification_at' => 'Customs under verification at',
-        'customs_status'=>'Customs status'
+        'customs_status'=>'Customs status',
+        'id' => 'Id'
     );
     
     public $revisionClassName = "Customs Declaration";
-    public $revisionPrimaryIdentifier = "id";    
+    public $revisionPrimaryIdentifier = "id";
     public $keepCreateRevision = true;
     public $softDelete = true;
     

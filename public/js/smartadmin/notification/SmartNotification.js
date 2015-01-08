@@ -251,9 +251,6 @@ var BigBoxes = 0;
                 audioElement.addEventListener("load", function () {
                     audioElement.play();
                 }, true);
-
-                audioElement.pause();
-                audioElement.play();
             }
         }
 

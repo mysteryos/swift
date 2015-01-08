@@ -53,6 +53,11 @@ class SwiftWorkflowActivity extends Eloquent {
         return $this->hasMany('SwiftNodeActivity','workflow_activity_id');
     }
     
+    public function pendingNodes()
+    {
+        return $this->hasMany('SwiftNodeActivity','workflow_activity_id')->where('user_id','=',0);
+    }
+    
     
     /*
      * Polymorphic Relation

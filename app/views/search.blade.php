@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <a class="btn btn-default" href="javascript:void(0);"><i class="fa fa-gear"></i> Icon Random</a>
+            <!--<a class="btn btn-default" href="javascript:void(0);"><i class="fa fa-gear"></i> Icon Random</a>-->
 <!--            <span id="search" class="btn btn-ribbon hidden-xs" data-title="search"><i class="fa fa-grid"></i> Change Grid</span>
             <span id="add" class="btn btn-ribbon hidden-xs" data-title="add"><i class="fa fa-plus"></i> Add</span>
             <span id="search" class="btn btn-ribbon" data-title="search"><i class="fa fa-search"></i> <span class="hidden-mobile">Search</span></span>-->
@@ -26,7 +26,7 @@
 
                     <ul id="myTab1" class="nav nav-tabs bordered">
                             <li class="active">
-                                    <a href="#s1" data-toggle="tab">Search All <i class="fa fa-caret-down"></i></a>
+                                    <a href="#s1" data-toggle="tab">Search All</a>
                             </li>
                             <li class="pull-right hidden-mobile">
                                     <a href="javascript:void(0);"> <span class="note">About {{ $hits_count }} results ({{ $time_taken }} seconds) </span> </a>
@@ -88,7 +88,7 @@
 
                                     <div class="text-center">
                                             <hr>
-                                            {{ $result->appends(array('search' => $query,'category'=>$selected_category))->links() }}
+                                            {{ $result->appends(array('search' => $query,'category'=>$selected_category))->links('pagination.slider-pjax') }}
                                             <br>
                                             <br>
                                             <br>

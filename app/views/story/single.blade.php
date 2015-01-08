@@ -9,7 +9,7 @@
                     echo '<div class="smart-timeline-icon"><i class="fa fa-pencil"></i></div>';
                     break;
                 case SwiftStory::ACTION_CANCEL:
-                    echo '<div class="smart-timeline-icon"><i class="fa fa-times"></i></div>';
+                    echo '<div class="smart-timeline-icon bg-color-red"><i class="fa fa-times"></i></div>';
                     break;
                 case SwiftStory::ACTION_COMMENT:
                     echo '<div class="smart-timeline-icon"><i class="fa fa-comment-o"></i></div>';

@@ -99,10 +99,10 @@ class SwiftStory extends Eloquent {
         switch($this->storyfiable_type)
         {
             case self::NODE_ACTIVITY:
-                $context = "{$this->storyfiable->definition->label} of <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowactivity->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowactivity->workflowable->getReadableName()}</a>";
+                $context = "step <b>{$this->storyfiable->definition->label}</b> <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowactivity->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowactivity->workflowable->getReadableName()}</a>";
                 break;
             case self::WORKFLOW_ACTIVITY:
-                $context = "<a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowable->getReadableName()}</a>";
+                $context = "form <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowable->getReadableName()}</a>";
                 break;
             case self::ORDER_TRACKING:
             case self::APREQUEST:

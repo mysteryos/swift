@@ -256,7 +256,7 @@ class WorkflowActivity {
             $workflow->status = SwiftWorkflowActivity::REJECTED;
             if($workflow->save())
             {
-                Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
+                \Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
                                                      'obj_id'=>$workflow->id,
                                                      'user_id'=>\Sentry::getUser()->id,
                                                      'context'=>get_class($relation_object),

@@ -13,8 +13,13 @@ Class NodeDefinition {
         return true;
     }
     
-    public static function otPreparation($nodeActivity)
+    public static function otPreparation($nodeActivity,$returnReason=false)
     {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }
+        
         $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
@@ -55,15 +60,28 @@ Class NodeDefinition {
                     {
                         return true;
                     }
+                    elseif($returnReason)
+                    {
+                        $returnReasonList['po'] = "Create a Purchase Order entry";
+                    }
+                }
+                elseif($returnReason)
+                {
+                    $returnReasonList['bol'] = "Upload and tag 'Bill of Lading' document";
                 }
             }
         }
 
-        return false;      
+        return $returnReason ? $returnReasonList : false;
     }
     
-    public static function otTransit($nodeActivity)
+    public static function otTransit($nodeActivity,$returnReason=false)
     {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }
+        
         $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
@@ -98,17 +116,30 @@ Class NodeDefinition {
                         {
                             return true;
                         }
+                        elseif($returnReason)
+                        {
+                            $returnReasonList['transit_freight'] = "Create a Freight entry";
+                        }
                         break;
+                    }
+                    elseif($returnReason)
+                    {
+                        $returnReasonList['transit_noa'] = "Upload and tag 'Notice of Arrival' document";
                     }
                 }
             }
         }
         
-        return false;         
+        return $returnReason ? $returnReasonList : false;
     }
     
-    public static function otCustoms($nodeActivity)
+    public static function otCustoms($nodeActivity,$returnReason=false)
     {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }        
+        
         $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
@@ -143,23 +174,47 @@ Class NodeDefinition {
                         {
                             foreach($order->customsDeclaration as $c)
                             {
-                                if($c->customs_reference != "" && $c->customs_status == \SwiftCustomsDeclaration::CLEARED)
+                                if($c->customs_reference != "")
                                 {
-                                    return true;
+                                    if($c->customs_status == \SwiftCustomsDeclaration::CLEARED)
+                                    {
+                                        return true;
+                                    }
+                                    elseif($returnReason)
+                                    {
+                                        $returnReasonList['customs_cleared'] = "Set Customs Declaration Status to 'cleared'";
+                                    }
+                                }
+                                elseif($returnReason)
+                                {
+                                    $returnReasonList['customs_ref'] = "Set Customs Declaration Reference";
                                 }
                             }
                         }
+                        elseif($returnReason)
+                        {
+                            $returnReasonList['customs'] = "Create new Customs Declaration entry";
+                        }
                         break;
+                    }
+                    elseif($returnReason)
+                    {
+                        $returnReasonList['customs_boe'] = "Upload and tag 'Bill of Entry' document";
                     }
                 }
             }
         }
         
-        return false;         
+        return $returnReason ? $returnReasonList : false;         
     }
     
-    public static function otPickup($nodeActivity)
+    public static function otPickup($nodeActivity,$returnReason=false)
     {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }        
+        
         $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
@@ -171,28 +226,50 @@ Class NodeDefinition {
             {
                 foreach($freight as $f)
                 {
-                    if($f->freight_type == \SwiftFreight::TYPE_LAND && $f->freight_etd != "")
+                    if($f->freight_type == \SwiftFreight::TYPE_LAND)
                     {
-                        return true;
+                        if($f->freight_etd != "")
+                        {
+                            return true;
+                        }
+                        elseif($returnReason)
+                        {
+                            $returnReasonList['freight_etd'] = "Set Freight ETD for freight ID: ".$f->id;
+                        }
                     }
                                 
                     /*
                      * Check if incoterm is DAT/DAP, local pickup will arranged by foreign company
                      */
-                    if((int)$f->incoterm !== 0 && in_array($f->incoterm,array(\SwiftFreight::INCOTERM_DAT,\SwiftFreight::INCOTERM_DAP)))
+                    if((int)$f->incoterm !== 0)
                     {
-                        return true;
+                        if(in_array($f->incoterm,array(\SwiftFreight::INCOTERM_DAT,\SwiftFreight::INCOTERM_DAP)))
+                        {
+                            return true;
+                        }
+                        elseif($returnReason)
+                        {
+                            $returnReasonList['freight_pickup'] = "Set Local pickup since incoterm is '".$f->incotermstext."'";
+                        }
+                    }
+                    elseif($returnReason)
+                    {
+                        $returnReasonList['freight_incoterms'] = "Set Incoterms";
                     }
                 }
             }
-            
         }       
         
-        return false;        
+        return $returnReason ? $returnReasonList : false;       
     }
     
-    public static function otReception($nodeActivity)
+    public static function otReception($nodeActivity,$returnReason=false)
     {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }        
+        
         $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
@@ -245,13 +322,28 @@ Class NodeDefinition {
                     {
                         return true;                                    
                     }
+                    elseif($returnReason)
+                    {
+                        $returnReasonList['reception_grn'] = "Set GRN number";
+                    }                    
                 }
+            }
+            elseif($returnReason)
+            {
+                $returnReasonList['reception_entry'] = "Create a Reception entry";
             }            
-        }        
+        }
+        
+        return $returnReason ? $returnReasonList : false;
     }
     
-    public static function otCosting($nodeActivity)
+    public static function otCosting($nodeActivity,$returnReason=false)
     {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }        
+        
         $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
@@ -282,11 +374,22 @@ Class NodeDefinition {
                     }
                 }
                 
-                return $tagfound;
+                if($tagfound)
+                {
+                    return $tagfound;
+                }
+                elseif($returnReason)
+                {
+                    $returnReasonList['costing_tag'] = "Upload and tag 'Costing' document";
+                }
+            }
+            elseif($returnReason)
+            {
+                $returnReasonList['costing_tag'] = "Upload and tag 'Costing' document";
             }
         }
         
-        return false;        
+        return $returnReason ? $returnReasonList : false;       
     } 
     
     public static function otEnd($nodeActivity)

@@ -656,6 +656,21 @@ Order Tracking - Edit Form
     display:inline-block;
 }
 
+/*
+* Loading Btn
+*/
+
+.btn.loading-animation > i.fa:before{
+    content:"\f021" !important;
+}
+
+.btn.loading-animation > i.fa{
+    -webkit-animation:spin 2s infinite linear;
+    -moz-animation:spin 2s infinite linear;
+    -o-animation:spin 2s infinite linear;
+    animation:spin 2s infinite linear    
+}
+
 @-webkit-keyframes particle-a {
     0% {
     -webkit-transform: translate3D(-3rem,-3rem,0);

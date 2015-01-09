@@ -151,6 +151,35 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         });
         return false;        
     });
+    
+    //Help button
+    $('a.btn-help').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $this.attr('disabled','disabled');
+        $this.addClass('loading-animation');
+        $.ajax({
+            url: $this.attr('data-href'),
+            type: 'GET',
+            success:function(text)
+            {
+                $.smallBox({
+			title : "Help information",
+			content : text,
+			color : "#5384AF",
+			icon : "fa fa-question"
+		});
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');                
+            },
+            error:function(xhr, status, error)
+            {
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');
+                return xhr.responseText;
+            }
+        });
+    });
 
     //Bind pusher channel
     pusherSubscribeCurrentPresenceChannel(true,true);

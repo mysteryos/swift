@@ -8,6 +8,7 @@
         <div class="ribbon-button-alignment hidden-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && ($isAdmin || $isCreator))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
@@ -15,6 +16,7 @@
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif            
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && ($isAdmin || $isCreator))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>

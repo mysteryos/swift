@@ -236,6 +236,64 @@ class WorkflowActivity {
         return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');        
     }
     
+    
+    /*
+     * Provides useful information as to how to move the workflow to the next step
+     */
+    public function progressHelp($relation_object,$needPermission=true)
+    {
+        //Check if relation is indeed an object
+        if(!is_object($relation_object))
+        {
+            throw new \RuntimeException("Data type 'object' expected.");
+        }
+        
+        $workflow = $relation_object->workflow()->first();
+        if(!count($workflow))
+        {
+            return "No workflow found :( Contact your administrator";
+        }
+        
+        switch($workflow->status)
+        {
+            case SwiftWorkflowActivity::COMPLETE:
+                return "Workflow is complete :)";
+                break;
+            case SwiftWorkflowActivity::REJECTED:
+                return "Workflow has been rejected";
+                break;
+            case SwiftWorkflowActivity::INPROGRESS:
+                $nodeInProgress = \NodeActivity::inProgress($workflow->id);
+                $reasonList = array();
+                if(count($nodeInProgress))
+                {
+                    foreach($nodeInProgress as $n)
+                    {
+                        $reason = \NodeActivity::help($n,$needPermission);
+                        if(!is_bool($reason))
+                        {
+                            $reasonList = array_merge($reasonList,$reason);
+                        }
+                    }
+                    if(!empty($reasonList))
+                    {
+                        return implode(", ",$reasonList);
+                    }
+                    else
+                    {
+                        return "We have no advice for you at the moment";
+                    }
+                }
+                else
+                {
+                    return "Something's not right here. Contact your administrator";
+                }
+                break;
+            default:
+                return "This workflow doesn't look good. Contact your administrator";
+        }
+    }    
+    
     public function cancel($relation_object)
     {
         //Check if relation is indeed an object

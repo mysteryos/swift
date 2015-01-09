@@ -108,6 +108,51 @@ class NodeActivity {
     }
     
     /*
+     * Return help text for current pending node
+     */
+    
+    public function help($nodeActivity,$needPermission = true)
+    {
+        /*
+         * Node Not found
+         */
+        if(!count($nodeActivity))
+        {
+            throw new \UnexpectedValueException("Node Activity: Expected node not found");
+        }
+        
+        if($needPermission)
+        {
+            /*
+             * Check if user has access to node
+             */
+            if(!self::hasAccess($nodeActivity->definition->id))
+            {
+                return false;
+            }
+        }
+        
+        switch($nodeActivity->definition->type)
+        {
+            case SwiftNodeDefinition::$T_NODE_CONDITION:                
+            case SwiftNodeDefinition::$T_NODE_INPUT:
+            case SwiftNodeDefinition::$T_NODE_ACTION:
+                $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));
+                if(is_callable($function))
+                {
+                    /*
+                     * If function returns true
+                     */
+                    $helpReason = call_user_func_array($function,array($nodeActivity,true));
+                    return $helpReason;
+                }
+                break;
+            default:
+                return false;
+        }
+    }
+    
+    /*
      * Process Current Node - Evaluate Criteria and Conditions
      * Expects Node with user id = 0
      */

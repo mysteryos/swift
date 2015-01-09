@@ -51,13 +51,9 @@ var ExistMsg = 0,
         if (isIE8orlower() == 0) {
             var audioElement = document.createElement('audio');
             audioElement.setAttribute('src', $.sound_path + 'messagebox.mp3');
-            $.get();
             audioElement.addEventListener("load", function () {
                 audioElement.play();
             }, true);
-
-            audioElement.pause();
-            audioElement.play();
         }
 
         SmartMSGboxCount = SmartMSGboxCount + 1;
@@ -422,17 +418,12 @@ var SmallBoxes = 0,
             if (isIE8orlower() == 0) {
                 var audioElement = document.createElement('audio');
 
-                if (navigator.userAgent.match('Firefox/'))
-                    audioElement.setAttribute('src', $.sound_path + 'smallbox.ogg');
-                else
-                    audioElement.setAttribute('src', $.sound_path + 'smallbox.mp3');
+                audioElement.setAttribute('src', $.sound_path + 'smallbox.mp3');
 
                 $.get();
                 audioElement.addEventListener("load", function () {
                     audioElement.play();
                 }, true);
-                audioElement.pause();
-                audioElement.play();
             }
         }
 

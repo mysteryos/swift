@@ -1374,7 +1374,6 @@ class OrderTrackingController extends UserController {
         $reception = SwiftReception::find($reception_id);
         if(count($reception))
         {
-            $reception = $reception->order_id;
             if($reception->delete())
             {
                 return Response::make('Success');
@@ -1713,6 +1712,38 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make("");
+        }
+    }
+    
+    /*
+     * Help : AJAX
+     */
+    
+    public function getHelp($id)
+    {
+        /*
+        * Check Permissions
+        */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return "You don't have access to this resource.";
+        }
+        
+        $needPermission = true;
+        
+        if($this->currentUser->hasAccess($this->adminPermission))
+        {
+            $needPermission = false;
+        }
+        
+        $form = SwiftOrder::find(Crypt::decrypt($id));
+        if(count($form))
+        {
+            return WorkflowActivity::progressHelp($form,$needPermission);
+        }
+        else
+        {
+            return "We can't find the resource that you were looking for.";
         }
     }
     

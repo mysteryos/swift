@@ -174,6 +174,22 @@ class SwiftFreight extends Eloquent{
     }
     
     /*
+     * Accessors
+     */
+    
+    public function getIncotermstextAttribute()
+    {
+        if(key_exists($this->incoterms,self::$incoterms))
+        {
+            return self::$incoterms[$val];
+        }
+        else
+        {
+            return "(unknown)";
+        }        
+    }
+    
+    /*
      * Relationships
      */
     

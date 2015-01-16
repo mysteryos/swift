@@ -143,13 +143,107 @@ class ElasticSearchHelper {
     
     public function IndexAprequest($data)
     {
-        
+        $params = array();
+        $params['index'] = \App::environment();
+        $params['type'] = $data['context'];
+        $aprequest = \SwiftAPRequest::find($data['id']);
+        if(count($aprequest))
+        {
+            $this->esAccessor($aprequest);
+            $params['id'] = $aprequest->id;
+            $params['timestamp'] = $aprequest->updated_at->toIso8601String();
+            $params['body']['aprequest'] = $aprequest->toArray();
+            \Es::index($params);
+        }
     }
     
     public function UpdateAprequest($data)
     {
-        
+        $params = array();
+        $params['index'] = \App::environment();
+        $params['type'] = $data['context'];
+        $aprequest = \SwiftAPRequest::find($data['id']);
+        if(count($aprequest))
+        {
+            $params['id'] = $aprequest->id;
+            $params['timestamp'] = $aprequest->updated_at->toIso8601String();
+            switch($data['info-context'])
+            {
+                case 'aprequest':
+                    $this->esAccessor($aprequest);
+                    $relation = $aprequest;
+                    $relation = $relation->toArray();
+                    foreach($relation as $k => $v)
+                    {
+                        if(in_array($k,$data['excludes']))
+                        {
+                            unset($relation[$k]);
+                        }
+                    }
+                    $params['body']['doc'][$data['info-context']] = $relation;                    
+                    break;
+                case 'order':
+                case 'product':
+                case 'delivery':
+                    $relation = $aprequest->{$data['info-context']}()->get();
+                    if(count($relation))
+                    {
+                        foreach($relation as &$l)
+                        {
+                            foreach($data['excludes'] as $ex)
+                            {
+                                if(isset($l->{$ex}))
+                                {
+                                    unset($l->{$ex});
+                                }
+                            }
+                            if(isset($l->dates))
+                            {
+                                foreach($l->dates as $date)
+                                {
+                                    if(isset($l->{$date}) && get_class($l->{$date}) == "Carbon")
+                                    {
+                                        $l->{$date} = $l->{$date}->toIso8601String();
+                                    }
+                                }
+                            }
+                            $this->esAccessor($l);
+                        }
+                        $relation = $relation->toArray();
+                        $params['body']['doc'][$data['info-context']] = $relation;
+                    }
+                    else
+                    {
+                        $params['body']['doc'][$data['info-context']] = array();
+                    }
+                    break;
+                default:
+                    return;
+                    break;
+            }
+            \Es::update($params);
+        }
     }
     
-
+    /*
+     * Iterate through all Es accessors of the model.
+     */
+    private function esAccessor(&$object)
+    {
+        if(is_object($object))
+        {
+            $attributes = $object->getAttributes();
+            foreach($attributes as $attr)
+            {
+                $esMutator = 'get' . studly_case($attr) . 'EsAttribute';
+                if (method_exists($object, $esMutator)) {
+                    $object->{$attr} = $object->$esMutator($object->{$attr});
+                }
+            }
+        }
+        else
+        {
+            throw New \RuntimeException("Expected type object");
+        }
+    }
 }

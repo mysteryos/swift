@@ -2,6 +2,11 @@
 * In-place editing with Twitter Bootstrap, jQuery UI or pure jQuery
 * http://github.com/vitalets/x-editable
 * Copyright (c) 2013 Vitaliy Potapov; Licensed MIT */
+/*
+ * Plugin Edited
+ * Features: Submit event (triggered before save), Bootstrap Datepicker 
+ * Author: Pudaruth Keshav, 2015
+ */
 /**
 Form with single input element, two buttons and two states: normal/loading.
 Applied as jQuery method to DIV tag (not to form tag!). This is because form can be in loading state when spinner shown.
@@ -219,9 +224,18 @@ Editableform is linked with one of input types, e.g. 'text', 'select' etc.
                 @event nochange 
                 @param {Object} event event object
                 **/                    
-                this.$div.triggerHandler('nochange');            
+                this.$div.triggerHandler('nochange');
                 return;
-            } 
+            }
+            else
+            {
+                /*
+                 * Fired when form is submitted and save is required.
+                 * @event submit
+                 * @param {Object} event event object
+                 */
+                this.$div.triggerHandler('submit');
+            }
 
             //convert value for submitting to server
             var submitValue = this.input.value2submit(newValue);
@@ -333,7 +347,7 @@ Editableform is linked with one of input types, e.g. 'text', 'select' etc.
                     }, this.options.ajaxOptions));
                 }
             }
-        }, 
+        },
 
         validate: function (value) {
             if (value === undefined) {
@@ -1027,6 +1041,7 @@ Applied as jQuery method.
             .editableform(this.formOptions)
             .on({
                 save: $.proxy(this.save, this), //click on submit button (value changed)
+                submit: $.proxy(this.submit,this),
                 nochange: $.proxy(function(){ this.hide('nochange'); }, this), //click on submit button (value NOT changed)                
                 cancel: $.proxy(function(){ this.hide('cancel'); }, this), //click on calcel button
                 show: $.proxy(function() {
@@ -1176,6 +1191,10 @@ Applied as jQuery method.
         */       
         setPosition: function() {
             //tbd in child class
+        },
+        
+        submit: function(e) {
+            this.$element.triggerHandler('submit');
         },
 
         save: function(e, params) {

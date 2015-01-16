@@ -44,9 +44,9 @@
                                 <!-- widget div-->
 				<div>
 					<!-- widget content -->
-                                        <div class="widget-body">
+                                        <div class="widget-body" id="timeline-body">
                                                 <div class="smart-timeline">
-                                                    <ul class="smart-timeline-list">
+                                                    <ul class="smart-timeline-list" id="timeline-list">
                                                         @if($dynamicStory !== false)
                                                             @include('story.dynamic')
                                                         @endif

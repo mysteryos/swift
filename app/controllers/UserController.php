@@ -28,7 +28,7 @@ class UserController extends Controller {
             }
 
             $this->currentUser = Sentry::getUser();
-            
+            Helper::updateUserLastSeen($this->currentUser);
         }
         
         /*

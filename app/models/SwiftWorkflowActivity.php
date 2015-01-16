@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletingTrait;
 class SwiftWorkflowActivity extends Eloquent {
     
     use SoftDeletingTrait;
-    use \Venturecraft\Revisionable\RevisionableTrait;    
+    use \Venturecraft\Revisionable\RevisionableTrait;
     
     protected $table = 'swift_workflow_activity';
     
@@ -34,7 +34,7 @@ class SwiftWorkflowActivity extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'reference','published_at'
+        'status','reference','published_at'
     );
     
     protected $keepCreateRevision = true;    

@@ -2039,7 +2039,7 @@ var main = {
     ot_overview: function() {
         if(typeof window['ot_overview'] === "undefined")
         {
-            jsLoader(["/js/plugin/fullcalendar/jquery.fullcalendar.min.js","/js/swift/swift.ot_overview.js"]);
+            jsLoader(["/js/swift/swift.ot_overview.js"]);
         }
         else
         {
@@ -2054,7 +2054,7 @@ var main = {
     ot_create: function() {
         if(typeof window['ot_create'] === "undefined")
         {
-            jsLoader(["/js/plugin/jquery-form/jquery-form.min.js","/js/swift/swift.ot_create.js"]);
+            jsLoader(["/js/swift/swift.ot_create.js"]);
         }
         else
         {
@@ -2065,10 +2065,7 @@ var main = {
     ot_view: function() {
         if(typeof window['ot_view'] === "undefined")
         {
-            jsLoader(["/js/plugin/x-editable/x-editable.js",
-                      "/js/plugin/jquery-caret/jquery.caret.min.js",
-                      "/js/plugin/jquery-atwho/jquery.atwho.min.js",
-                      "/js/swift/swift.ot_view.js"]);
+            jsLoader(["/js/swift/swift.ot_view.js"]);
         }
         else
         {
@@ -2083,10 +2080,7 @@ var main = {
     ot_edit: function() {
         if(typeof window['ot_edit'] === "undefined")
         {
-            jsLoader(["/js/plugin/x-editable/x-editable.js",
-                        "/js/plugin/jquery-caret/jquery.caret.min.js",
-                        "/js/plugin/jquery-atwho/jquery.atwho.min.js",
-                        "/js/swift/swift.ot_edit.js"]);
+            jsLoader(["/js/swift/swift.ot_edit.js"]);
         }
         else
         {
@@ -2131,7 +2125,7 @@ var main = {
     fc_create: function () {
         if(typeof window['fc_create'] === "undefined")
         {         
-            jsLoader(["/js/plugin/jquery-form/jquery-form.min.js","/js/swift/swift.fc_create.js"]);
+            jsLoader(["/js/swift/swift.fc_create.js"]);
         }
         else
         {
@@ -2146,7 +2140,7 @@ var main = {
     fc_edit: function() {
         if(typeof window['fc_edit'] === "undefined")
         {        
-            jsLoader(["/js/plugin/x-editable/x-editable.js","/js/swift/swift.fc_edit.js"]);
+            jsLoader(["/js/swift/swift.fc_edit.js"]);
         }
         else
         {
@@ -2189,7 +2183,7 @@ var main = {
     apr_create: function() {
         if(typeof window['apr_create'] === "undefined")
         {
-            jsLoader(["/js/plugin/jquery-form/jquery-form.min.js","/js/swift/swift.apr_create.js"]);
+            jsLoader(["/js/swift/swift.apr_create.js"]);
         }
         else
         {
@@ -2200,10 +2194,7 @@ var main = {
     apr_view: function() {
         if(typeof window['apr_view'] === "undefined")
         {
-            jsLoader(["/js/plugin/x-editable/x-editable.js",
-                        "/js/plugin/jquery-caret/jquery.caret.min.js",
-                        "/js/plugin/jquery-atwho/jquery.atwho.min.js",
-                        "/js/swift/swift.apr_view.js"]);
+            jsLoader(["/js/swift/swift.apr_view.js"]);
         }
         else
         {
@@ -2214,10 +2205,7 @@ var main = {
     apr_edit: function() {
         if(typeof window['apr_edit'] === "undefined")
         {
-            jsLoader(["/js/plugin/x-editable/x-editable.js",
-                        "/js/plugin/jquery-caret/jquery.caret.min.js",
-                        "/js/plugin/jquery-atwho/jquery.atwho.min.js",
-                        "/js/swift/swift.apr_edit.js"]);
+            jsLoader(["/js/swift/swift.apr_edit.js"]);
         }
         else
         {

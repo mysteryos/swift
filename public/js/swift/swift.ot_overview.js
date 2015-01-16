@@ -60,5 +60,5 @@
     });
     
     //Hide Loading Message
-    messenger_hidenotiftop();    
+    messenger_hidenotiftop();
 })();

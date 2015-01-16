@@ -101,7 +101,7 @@
 				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-gift"></i> </span>
-                                        <h2>Products {{ $product_price_total or "" }}</h2>
+                                        <h2>Products - Total: Rs <span id="totaloftotalprice">{{ $product_price_total or 0 }}</span></h2>
                                         @if(($edit && $canAddProduct) || $isAdmin)
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>

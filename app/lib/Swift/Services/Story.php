@@ -95,45 +95,38 @@ class Story {
         
         if($context===false)
         {
-            $context = Config::get('context');
-            //SuperUsers see all stuffs
-            if(\Sentry::getUser()->isSuperuser())
-            {
-                array_walk(\Config::get('context'),function($v,$k){
-                    $contextArray[] = $v;
-                });
-            }
-            else
-            {
-                $userPermissions = (array)array_keys(\Sentry::getUser()->getMergedPermissions());
-
-                foreach(\Config::get('context') as $k=>$v)
-                {
-                    if(in_array(\Config::get('permission.'.$k.'.view'),$userPermissions))
-                    {
-                        $contextArray[] = $v;
-                    }            
-                }
-            }            
+            $contextArray = $this->context();
         }
         else
         {
             $contextArray[] = $context;
         }
         
-        $stories = \SwiftStory::orderBy('created_at','DESC')->whereIn('context',$contextArray)->take($take)->with('storyfiable','byUser');
-        if($offsetId>0)
+        if(!empty($contextArray))
         {
-            $stories->where('id','<',$offsetId);
+            $stories = \SwiftStory::orderBy('created_at','DESC')->whereIn('context',$contextArray)->take($take)->with('storyfiable','byUser');
+            if($offsetId>0)
+            {
+                $stories->where('id','<',$offsetId);
+            }
+
+            $stories = $stories->get();
+            //increment View count
+            if(count($stories))
+            {
+                \Queue::push('Story@viewIncrementTask',array('stories'=>$stories));
+            }
+            return $stories;
         }
+        else
+        {
+            return array();
+        }
+    }
+    
+    public function total($context=false)
+    {
         
-        $stories = $stories->get();
-        //increment View count
-        if(count($stories))
-        {
-            \Queue::push('Story@viewIncrementTask',array('stories'=>$stories));
-        }
-        return $stories;
     }
     
     public function viewIncrementTask($job,$data)
@@ -147,6 +140,37 @@ class Story {
             }
         }
         $job->delete();
+    }
+    
+    /*
+     * Returns: Array
+     */
+    private function context()
+    {
+        $contextArray = array();
+        
+        $context = \Config::get('context');
+        //SuperUsers see all stuffs
+        if(\Sentry::getUser()->isSuperuser())
+        {
+            array_walk(\Config::get('context'),function($v,$k){
+                $contextArray[] = $v;
+            });
+        }
+        else
+        {
+            $userPermissions = (array)array_keys(\Sentry::getUser()->getMergedPermissions());
+
+            foreach(\Config::get('context') as $k=>$v)
+            {
+                if(in_array(\Config::get('permission.'.$k.'.view'),$userPermissions))
+                {
+                    $contextArray[] = $v;
+                }            
+            }
+        }
+        
+        return $contextArray;
     }
     
 }

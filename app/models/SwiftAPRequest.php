@@ -6,7 +6,8 @@
 
 class SwiftAPRequest extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
-    use \Venturecraft\Revisionable\RevisionableTrait; 
+    use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\ElasticSearchEventTrait;
     
     public $readableName = "A&P Request";
     
@@ -15,6 +16,8 @@ class SwiftAPRequest extends Eloquent {
     protected $fillable = array("requester_user_id","customer_code","name","description","feedback_star","feedback_text");
     
     protected $guarded = array('id');
+    
+    protected $appends = array("customer_name");
     
     public $timestamps = true;
     
@@ -34,7 +37,7 @@ class SwiftAPRequest extends Eloquent {
         'description' => 'Description',
         'feedback_star' => 'Feedback Star',
         'feedback_text' => 'Feedback Text',
-    );    
+    );
     
     public $revisionClassName = "A&P Request";
     public $revisionPrimaryIdentifier = "name";
@@ -49,17 +52,36 @@ class SwiftAPRequest extends Eloquent {
     public $esEnabled = true;
     //Context for Indexing
     public $esContext = "aprequest";
+    public $esInfoContext = "aprequest";
     //Main Document
     public $esMain = true;
+    //Excludes
+    public $esExcludes = array('created_at','updated_at','deleted_at','feedback_star','feedback_text');
     
     /*
-     * ElasticSearch Utility Id
+     * ElasticSearch Utility functions
      */
     
     public function esGetId()
     {
         return $this->id;
+    }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
     }    
+    
+    /*
+     * Utility
+     */
     
     public function getClassName()
     {
@@ -74,7 +96,27 @@ class SwiftAPRequest extends Eloquent {
     public function getIcon()
     {
         return "fa-gift";
-    }    
+    }
+    
+    //Pusher
+    public function channelName()
+    {
+        return "apr_".$this->id;
+    }
+    
+    /*
+     * Accessor
+     */
+    
+    public function getCustomerNameAttribute()
+    {
+        if($this->customer_code !== "" && count($this->customer) !== 0)
+        {
+            return trim($this->customer->ALPH);
+        }
+        
+        return "";
+    }
     
     /*
      * Relationships
@@ -157,14 +199,69 @@ class SwiftAPRequest extends Eloquent {
     {
         return self::with('customer','product','product.jdeproduct','product.approval','product.approvalcatman','product.approvalexec','delivery','approval','order','document')->find($id);
     }
-    
+
     /*
-     * Utility
+     * Query
      */
     
-    public function channelName()
+    public static function getInProgress($limit=0,$important = false)
     {
-        return "apr_".$this->id;
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+        
+        return $query->orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                            },'=',0);
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },($important === true ? ">" : "="),0)->get();        
+    }
+    
+    public static function getInProgressResponsible($limit=0,$important=false)
+    {
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+        
+        return $query->orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                            });
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },($important === true ? ">" : "="),0)->get();
+    }
+    
+    public static function getInProgressCount()
+    {
+        return self::orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                            },'=',0);
+                                        }); 
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },'=',0)->count();
     }
 
 }

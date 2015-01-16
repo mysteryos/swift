@@ -2,13 +2,14 @@
 
 class SwiftErpOrder extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
-    use \Venturecraft\Revisionable\RevisionableTrait; 
+    use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\ElasticSearchEventTrait;    
     
     protected $table = "swift_erp_order";
     
     protected $guarded = array('id');
     
-    protected $fillable = array('ref','status','type');
+    protected $fillable = array('ref','status','type','orderable_type','orderable_id');
     
     protected $dates = ['deleted_at'];
     
@@ -78,6 +79,53 @@ class SwiftErpOrder extends Eloquent {
         {
             return "";
         }        
+    }
+    
+    /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    public $esInfoContext = "order";
+    public $esExcludes = array('created_at','updated_at','deleted_at','status','orderable_type','orderable_id');
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->orderable_id;
+    }
+    
+    public function esGetContext()
+    {
+        switch($this->orderable_type)
+        {
+            case "SwiftAPRequest":
+                return "aprequest";
+                break;
+            default:
+                return false;
+        }
+    }
+    
+    public function getTypeEsAttribute($val)
+    {
+        return $this->getTypeRevisionAttribute($val);
+    }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
     }    
     
     /*

@@ -3,6 +3,21 @@
  * Description: Order tracking form edit
  */
 
+//Total of all costs
+function totaloftotalprice()
+{
+    var total = 0;
+    $('#apr-products').find('fieldset.fieldset-product:not(.dummy)').each(function(){
+        var $this = $(this),price = $(this).find('p.totalprice').attr('data-price'), qty = parseInt($(this).find('a.editable[data-name="quantity"]').editable('getValue',true));
+        if(parseInt(price) > 0 && qty > 0)
+        {
+            total += price * qty;
+        }           
+    });
+
+    document.getElementById('totaloftotalprice').innerHTML = Math.round(total*100/100);
+}
+
 function addMultiAPR($dummy,pk)
 {
     $clone = $dummy.clone();
@@ -45,8 +60,35 @@ function addMultiAPR($dummy,pk)
                     },
                     initSelection: function (element, callback) {
                         callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
-                    }                     
-                }                 
+                    }
+                }
+            }).on('save',function(e,params){
+                //Call function to get price
+                var $this = $(this);
+                $.ajax({
+                    url:'/aprequest/productprice/'+params.newValue,
+                    success:function(price){
+                        if(price !== "")
+                        {
+                            $this.parents('fieldset').find('p.totalprice').attr('data-price',price);
+                            var qty = parseInt($this.parents('fieldset').find('a.product-editable[data-name="quantity"]').editable('getValue',true));
+                            if(parseInt(qty) > 0)
+                            {
+                                $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100) / 100));
+                                totaloftotalprice();
+                            }
+                            else
+                            {
+                                $this.parents('fieldset').find('p.totalprice').html("(Rs "+(Math.round(price*100)/100)+")");
+                            }
+                        }
+                        else
+                        {
+                            $this.parents('fieldset').find('p.totalprice').attr('data-price',0);
+                            $this.parents('fieldset').find('p.totalprice').html('N/A');
+                        }
+                    }
+                });
             });
         }
         else
@@ -70,16 +112,35 @@ function addMultiAPR($dummy,pk)
             presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
         }).on('save',function(e,params){
             //First time save, set primary key
-            if($(this).attr('data-pk') == "0")
+            var $this = $(this);
+            if($this.attr('data-pk') == "0")
             {
                 var response = $.parseJSON(params.response);
                 //Set new pk value
-                addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
+                addEditablePk($this.parents('fieldset'),response.encrypted_id,response.id);
+                $this.parents('fieldset.multi').find('div.loading-overlay').remove();
                 //Trigger Channel Event
                 presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
             }
+            
+            if($this.attr('data-name') == "quantity")
+            {
+                var price = $this.parents('fieldset').find('p.totalprice').attr('data-price'), qty = parseInt($this.editable('getValue'));
+                if(parseInt(price) > 0 && qty > 0)
+                {
+                    $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100)/100));
+                    totaloftotalprice();
+                }
+            }
+            
+            
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})        
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})        
+        }).on('submit',function(e){
+            if($(this).attr('data-pk') == "0")
+            {
+                $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
+            }            
         });        
     });
     
@@ -264,6 +325,33 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                         callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
                     }                     
                 }                 
+            }).on('save',function(e,params){
+                //Call function to get price
+                var $this = $(this);
+                $.ajax({
+                    url:'/aprequest/productprice/'+params.newValue,
+                    success:function(price){
+                        if(price !== "")
+                        {
+                            $this.parents('fieldset').find('p.totalprice').attr('data-price',price);
+                            var qty = parseInt($this.parents('fieldset').find('a.product-editable[data-name="quantity"]').editable('getValue',true));
+                            if(parseInt(qty) > 0)
+                            {
+                                $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100) / 100));
+                                totaloftotalprice();
+                            }
+                            else
+                            {
+                                $this.parents('fieldset').find('p.totalprice').html("(Rs "+(Math.round(price*100)/100)+")");
+                            }
+                        }
+                        else
+                        {
+                            $this.parents('fieldset').find('p.totalprice').attr('data-price',0);
+                            $this.parents('fieldset').find('p.totalprice').html('N/A');
+                        }
+                    }
+                });
             });
         }
         else
@@ -293,6 +381,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             /*
              * Approvals only
              */
+
             $this.on('save',function(e,params){
                 if($this.attr('data-pk') == "0")
                 {
@@ -335,12 +424,35 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             var response = $.parseJSON(params.response);
             //Set new pk value
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
+            
+            $this.parents('fieldset.multi').find('div.loading-overlay').remove();
             //Trigger Channel Event
             presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $(this).parents('fieldset').attr('data-name')});
             //Trigger Single Value Save as well
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
         }
         return true;
+    }).on('submit',function(){
+        if($(this).attr('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
+        }
+    });
+    
+    /*
+     * On Quantity change: calculate total price
+     */
+    $('.product-editable[data-name="quantity"]').on('save',function(e,params){
+        console.log('qty ran');
+        var $this = $(this);
+        var price = $this.parents('fieldset').find('p.totalprice').attr('data-price'), qty = parseInt($this.editable('getValue'));
+        console.log(price);
+        console.log(qty);
+        if(parseInt(price) > 0 && qty > 0)
+        {
+            $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100)/100));
+            totaloftotalprice();
+        }
     });
     
     /*

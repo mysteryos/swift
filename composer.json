@@ -28,7 +28,8 @@
                 "phpunit/phpunit": "4.3.*",
                 "mockery/mockery": "dev-master",
                 "doctrine/dbal": "2.4",
-                "xethron/migrations-generator": "dev-master"
+                "xethron/migrations-generator": "dev-master",
+                "kmd/logviewer": "1.2.*"
 	},
         "repositories": [
             {

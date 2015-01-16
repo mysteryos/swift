@@ -22,73 +22,13 @@ class APRequestController extends UserController {
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
         
-        
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
         
-        $aprequest_inprogress = SwiftAPRequest::orderBy('updated_at','desc')
-                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                        ->whereHas('nodes',function($q){
-                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                            },'=',0);
-                                        }); 
-                            })->whereHas('flag',function($q){
-                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->take($this->data['inprogress_limit'])->get();
-                            
-        $aprequest_inprogress_count = SwiftAPRequest::orderBy('updated_at','desc')
-                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                        ->whereHas('nodes',function($q){
-                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                            },'=',0);
-                                        }); 
-                            })->whereHas('flag',function($q){
-                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->count();
-                            
-        $aprequest_inprogress_important = SwiftAPRequest::orderBy('updated_at','desc')
-                           ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                               return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                       ->whereHas('nodes',function($q){
-                                            return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                       ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                           },'=',0);
-                                       }); 
-                           })->whereHas('flag',function($q){
-                               return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                           })->get();       
-                            
-       $aprequest_inprogress_responsible = SwiftAPRequest::orderBy('updated_at','desc')
-                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                        ->whereHas('nodes',function($q){
-                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                            });
-                                        }); 
-                            })->whereHas('flag',function($q){
-                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->get(); 
-                            
-       $aprequest_inprogress_important_responsible = SwiftAPRequest::orderBy('updated_at','desc')
-                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                        ->whereHas('nodes',function($q){
-                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                            });
-                                        }); 
-                            })->whereHas('flag',function($q){
-                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            })->get();                            
+        $aprequest_inprogress = SwiftAPRequest::getInProgress($this->data['inprogress_limit']);
+        $aprequest_inprogress_count = SwiftAPRequest::getInProgressCount();
+        $aprequest_inprogress_important = SwiftAPRequest::getInProgress(0,true);       
+        $aprequest_inprogress_responsible = SwiftAPRequest::getInProgressResponsible();
+        $aprequest_inprogress_important_responsible = SwiftAPRequest::getInProgressResponsible(0,true);                       
         
         $aprequest_inprogress = $aprequest_inprogress->diff($aprequest_inprogress_responsible);
         $aprequest_inprogress_important = $aprequest_inprogress_important->diff($aprequest_inprogress_important_responsible);
@@ -109,8 +49,17 @@ class APRequestController extends UserController {
                 $apr->current_activity = WorkflowActivity::progress($apr,'aprequest');
                 $apr->activity = Helper::getMergedRevision(array('product','product.approval','order','approval','delivery','document'),$apr);
             }
-        }     
-
+        }
+        
+        /*
+         * Stories
+         */
+        
+        $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
+        //$this->data['dynamicStory'] = OrderTrackingHelper::dynamicStory();        
+        
+        $this->data['rootURL'] = $this->rootURL;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->editPermission,$this->adminPermission));
         $this->data['inprogress'] = $aprequest_inprogress;
         $this->data['inprogress_responsible'] = $aprequest_inprogress_responsible;
         $this->data['inprogress_important'] = $aprequest_inprogress_important;
@@ -186,6 +135,7 @@ class APRequestController extends UserController {
                     {
                         /*
                          * Detect buggy workflows
+                         * Update on the spot
                          */
                         WorkflowActivity::update($apr);
                     }
@@ -234,9 +184,10 @@ class APRequestController extends UserController {
                         $total += $p->quantity * $p->price;
                     }
                 }
-                $this->data['product_price_total'] = "(Rs. ".round($total, 2).")";
+                $this->data['product_price_total'] = round($total, 2);
             }
             
+            //Save recently viewed form
             Helper::saveRecent($apr,$this->currentUser);
 
             return $this->makeView("$this->rootURL/edit");
@@ -475,6 +426,7 @@ class APRequestController extends UserController {
         
         //The Data
         $this->data['type'] = $type;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
         $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
         $this->data['forms'] = $forms;
         $this->data['count'] = isset($filter) ? count($forms) : SwiftAPRequest::count();
@@ -519,9 +471,12 @@ class APRequestController extends UserController {
                 //Start the Workflow
                 if(\WorkflowActivity::update($aprequest,'aprequest'))
                 {
-                    //Search Indexing - Insert
-                    Queue::push('APRequestHelper@esIndex',array('order_id'=>$order->id,
-                                                                    'context'=>$this->context));                    
+                    //Story Relate
+                    Queue::push('Story@relateTask',array('obj_class'=>get_class($aprequest),
+                                                         'obj_id'=>$aprequest->id,
+                                                         'action'=>SwiftStory::ACTION_CREATE,
+                                                         'user_id'=>$this->currentUser->id,
+                                                         'context'=>get_class($aprequest)));                    
                     //Success
                     echo json_encode(['success'=>1,'url'=>Helper::generateUrl($aprequest)]);
                 }
@@ -576,7 +531,7 @@ class APRequestController extends UserController {
             $aprequest->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($aprequest->save())
             {
-                WorkflowActivity::update($aprequest);
+                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($aprequest),'id'=>$aprequest->id,'user_id'=>$this->currentUser->id));
                 return Response::make('Success', 200);
             }
             else
@@ -639,7 +594,7 @@ class APRequestController extends UserController {
                             Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id));
                             break;
                     }
-                    WorkflowActivity::update($form);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($APProduct->id),'id'=>$APProduct->id]));
                 }
                 else
@@ -664,7 +619,7 @@ class APRequestController extends UserController {
                     $APProduct->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($APProduct->save())
                     {
-                        WorkflowActivity::update($form);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -791,7 +746,7 @@ class APRequestController extends UserController {
                 $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($form->order()->save($erpOrder))
                 {
-                    WorkflowActivity::update($form);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($erpOrder->id),'id'=>$erpOrder->id]));
                 }
                 else
@@ -808,7 +763,7 @@ class APRequestController extends UserController {
                     $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($erpOrder->save())
                     {
-                        WorkflowActivity::update($form);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -900,7 +855,7 @@ class APRequestController extends UserController {
                 $delivery->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($form->delivery()->save($delivery))
                 {
-                    WorkflowActivity::update($form);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($delivery->id),'id'=>$delivery->id]));
                 }
                 else
@@ -917,7 +872,7 @@ class APRequestController extends UserController {
                     $delivery->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($delivery->save())
                     {
-                        WorkflowActivity::update($form);
+                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }
                     else
@@ -1029,7 +984,7 @@ class APRequestController extends UserController {
             $approval = $form->approval()->where('type','=',SwiftApproval::APR_REQUESTER,'AND')->where('approved','=',SwiftApproval::APPROVED)->get();
             if(count($approval))
             {
-                WorkflowActivity::update($form);
+                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                 /*
                  * Check if form has already been approved
                  */
@@ -1046,7 +1001,7 @@ class APRequestController extends UserController {
                 if($form->approval()->save($approval))
                 {
                     Queue::push('APRequestHelper@autoexecapproval',array('aprequest_id'=>$form->id));
-                    WorkflowActivity::update($form);
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                     return Response::make('success');
                 }
                 else
@@ -1094,7 +1049,7 @@ class APRequestController extends UserController {
                             if($product->approval()->save($approval))
                             {
                                 $apr = $product->aprequest()->first();
-                                WorkflowActivity::update($apr);
+                                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($apr),'id'=>$apr->id,'user_id'=>$this->currentUser->id));
                                 return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($approval->id),'id'=>$approval->id]));
                             }
                             else
@@ -1112,7 +1067,7 @@ class APRequestController extends UserController {
                                 if($approval->save())
                                 {
                                     $apr = $product->aprequest()->first();
-                                    WorkflowActivity::update($apr);
+                                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($apr),'id'=>$apr->id,'user_id'=>$this->currentUser->id));
                                     return Response::make('Success');
                                 }
                                 else
@@ -1541,6 +1496,23 @@ class APRequestController extends UserController {
          */
         if(Input::has('type'))
         {
+            try
+            {
+                $dateFrom = (Input::has('date-from')? Carbon::createFromFormat('Y/m/d',Input::get('date-from')) : new Carbon("first day of this month"));
+                $dateTo = (Input::has('date-to') ? Carbon::createFromFormat('Y/m/d',Input::get('date-to')) : new Carbon("last day of this month"));
+            }
+            catch(InvalidArgumentException $e)
+            {
+                return Response::make($e->getMessage(),500);
+            }
+            
+            
+            if($dateFrom->diffInDays($dateTo,false) < 0)
+            {
+                return Response::make("'From' date must be less than 'To' Date",500);
+            }
+
+            
             switch(Input::get('type'))
             {
                 case "product":
@@ -1554,16 +1526,51 @@ class APRequestController extends UserController {
                                   ->orderBy('value','DESC')
                                   ->take(10)->get();
 
-                    return Response::json($products_chart);
                     break;
                 case "requester":
                     //Requester
-                    
+                    $products_chart = SwiftAPProduct::whereHas('approval',function($q){
+                                        return $q->where('approved','=',SwiftApproval::APPROVED);
+                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price),0) as value, CONCAT(users.first_name," ",users.last_name) as label'))
+                                  ->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')
+                                  ->join('users','swift_ap_request.requester_user_id','=','users.id')
+                                  ->groupBy('swift_ap_request.requester_user_id')
+                                  ->whereBetween('swift_ap_request.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                                  ->orderBy('value','DESC')
+                                  ->take(10)->get();
                     break;
                 case "customer":
+                    $products_chart = SwiftAPProduct::whereHas('approval',function($q){
+                                        return $q->where('approved','=',SwiftApproval::APPROVED);
+                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price),0) as value, TRIM(sct_jde.jdecustomers.ALPH) as label'))
+                                  ->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')
+                                  ->join('sct_jde.jdecustomers','swift_ap_request.customer_code','=','sct_jde.jdecustomers.AN8')
+                                  ->groupBy('swift_ap_request.customer_code')
+                                  ->whereBetween('swift_ap_request.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                                  ->orderBy('value','DESC')
+                                  ->take(10)->get();                    
                     break;
             }
-       
+            return Response::json($products_chart);
         }
+    }
+    
+    /*
+     * Fetch product price based on ITM
+     */
+    public function getProductprice($product_code="")
+    {
+        if($product_code !== "")
+        {
+            $price = JdeSales::getProductLatestCostPrice($product_code);
+            if(count($price))
+            {
+                echo round($price->UPRC,2);
+                return;
+            }
+            echo "";
+            return;
+        }
+        return Response::make("Product code missing",500);
     }
 }

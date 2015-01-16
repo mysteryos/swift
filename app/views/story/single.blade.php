@@ -1,4 +1,4 @@
-<li>
+<li class="timeline-post">
         <?php 
             switch($story->action)
             {

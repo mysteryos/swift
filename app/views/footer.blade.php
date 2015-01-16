@@ -73,16 +73,19 @@
                         }
                     },this);
                     queue.on('complete',function(e){
+                        var loadingdiv = document.getElementById('loading');
+                        loadingdiv.style.opacity = "0";
                         //Run Main Script for Page
-                        if(typeof $('#content').attr('data-js') !== "undefined")
-                        {
-                            main[$('#content').attr('data-js').toString()]();
-                        }
                         window.setTimeout(function(){
-                            var loadingdiv = document.getElementById('loading');
+                            if(typeof $('#content').attr('data-js') !== "undefined")
+                            {
+                                main[$('#content').attr('data-js').toString()]();
+                            }
+                        },700);
+                        window.setTimeout(function(){
                             loadingdiv.parentNode.removeChild(loadingdiv);                            
                             clearTimeout(slowconnection);
-                        },500);
+                        },1500);
                     },this);
                     queue.on('error',function(e){
                         clearTimeout(slowconnection);

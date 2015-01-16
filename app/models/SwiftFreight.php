@@ -89,7 +89,7 @@ class SwiftFreight extends Eloquent{
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
-    public $esContext = "order-tracking";    
+    public $esContext = "order-tracking";
     
     /*
      * ElasticSearch Utility Id

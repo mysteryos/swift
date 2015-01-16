@@ -32,7 +32,9 @@
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Total Price</label>
             <div class="col-md-10">
-                <p class="form-control-static">@if(!isset($dummy) && (isset($p) && $p->price > 0 && $p->quantity > 0)) {{ "Rs ".round($p->price*$p->quantity,2) }} @else {{ "N/A" }} @endif</p>
+                <p class="form-control-static totalprice" data-price="@if(!isset($dummy) && (isset($p) && $p->price > 0)) {{ $p->price }} @else {{ "0" }} @endif">
+                    @if(!isset($dummy) && (isset($p) && $p->totalprice() > 0)) {{ "Rs ".$p->totalprice() }} @else {{ "N/A" }} @endif
+                </p>
             </div>
         </div>              
     </div>

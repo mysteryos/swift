@@ -243,7 +243,6 @@ var BigBoxes = 0;
 
                 audioElement.setAttribute('src', $.sound_path + 'bigbox.mp3');
 
-                $.get();
                 audioElement.addEventListener("load", function () {
                     audioElement.play();
                 }, true);
@@ -419,8 +418,6 @@ var SmallBoxes = 0,
                 var audioElement = document.createElement('audio');
 
                 audioElement.setAttribute('src', $.sound_path + 'smallbox.mp3');
-
-                $.get();
                 audioElement.addEventListener("load", function () {
                     audioElement.play();
                 }, true);

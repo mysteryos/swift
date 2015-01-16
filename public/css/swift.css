@@ -3,6 +3,12 @@
  * Description: All custom styles related to swift goes here.
  */
 
+/*Initial Loading Bar*/
+
+#pl-loading-bar {
+    
+}
+
 /*
 * Plugin: At Who
 */
@@ -340,8 +346,25 @@ fieldset.multi a.top-left,fieldset.multi a.top-left:active,fieldset.multi a.top-
 
 fieldset.multi span.float-id{
     position: absolute;
-    right:0px;
-    top: 5px;
+    right: 30px;
+    top: 2px;
+}
+
+/*
+* Loading overlay
+*/
+
+div.loading-overlay {
+    position:   absolute;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba(255,255,255, .7) 
+                url('/img/ajax-loader.gif') 
+                50% 50% 
+                no-repeat;
 }
 
 .unread td {

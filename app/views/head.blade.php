@@ -20,7 +20,7 @@
                 <link rel="stylesheet" type="text/css" href="/css/all.css"/>
                 
 	</head>
-        <body class="fixed-header fixed-ribbon smart-style-3" style="overflow:hidden;position:relative;">
+        <body class="fixed-header fixed-ribbon smart-style-3 minified" style="overflow:hidden;position:relative;">
             <!-- PRE-LOADER -->
             @include('preloader')
             <!-- END PRE-LOADER -->

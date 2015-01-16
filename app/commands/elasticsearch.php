@@ -66,7 +66,6 @@ class elasticsearch extends Command {
                     $params['id']= $ap->id;
                     $params['timestamp'] = $ap->updated_at->toIso8601String();
                     $params['body']['aprequest'] = $ap->toArray();
-                    $params['body']['customer'] = $ap->customer()->get()->toArray();
                     $params['body']['product'] = $ap->product()->with('jdeproduct')->get()->toArray();
                     $params['body']['delivery'] = $ap->delivery()->get()->toArray();
                     $params['body']['order'] = $ap->order()->get()->toArray();

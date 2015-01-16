@@ -1,12 +1,13 @@
 <?php
 /*
- * Name: Swift A&P Product
+ * Name: Swift Account Payables Order
  * Description:
  */
 
 class SwiftAPOrder extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
-    use \Venturecraft\Revisionable\RevisionableTrait; 
+    use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\ElasticSearchEventTrait;    
     
     protected $table = "swift_ap_order";
     
@@ -37,6 +38,25 @@ class SwiftAPOrder extends Eloquent {
     public $softDelete = true;
     
     /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "aprequest";
+    public $esInfoContext = "order";
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->aprequest_id;
+    }
+    
+    /*
      * Constants
      */
     
@@ -64,6 +84,20 @@ class SwiftAPOrder extends Eloquent {
             return "";
         }        
     }
+    
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
+    }    
+        
     
     /*
      * Relationships

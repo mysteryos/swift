@@ -7,12 +7,13 @@
 class SwiftDelivery extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait; 
+    use \Swift\ElasticSearchEventTrait;
     
     protected $table = "swift_delivery";
     
     protected $guarded = array('id');
     
-    protected $fillable = array('status','status_comment','invoice_number','invoice_recipient','delivery_person','delivery_date');
+    protected $fillable = array('status','status_comment','invoice_number','invoice_recipient','delivery_person','delivery_date','deliverable_type','deliverable_id');
     
     protected $dates = ['deleted_at','delivery_date'];
     
@@ -52,6 +53,41 @@ class SwiftDelivery extends Eloquent {
                                     self::DELIVERED=>'Delivered',
                                     self::PENDING=>'Pending');
     
+    /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    public $esInfoContext = "delivery";
+    public $esExcludes = array('created_at','updated_at','deleted_at','status_comment','deliverable_type','deliverable_id');
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->deliverable_id;
+    }
+    
+    //Context for Indexing
+    public function esGetContext()
+    {
+        switch($this->deliverable_type)
+        {
+            case "SwiftAPRequest":
+                return "aprequest";
+                break;
+            default:
+                return false;
+        }
+    }
+    
+    public function getStatusEsAttribute($val)
+    {
+        return $this->getStatusRevisionAttribute($val);
+    }
     
     /*
      * Revisionable Functions
@@ -68,6 +104,18 @@ class SwiftDelivery extends Eloquent {
             return "";
         }        
     }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
+    }    
     
     /*
      * PolyMorphic Relationships

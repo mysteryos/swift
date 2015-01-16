@@ -28,57 +28,13 @@ class OrderTrackingController extends UserController {
         
         $order_inprogress = $order_inprogress_important = $order_inprogress_responsible = $order_inprogress_important_responsible = array();
         
-        $order_inprogress = SwiftOrder::orderBy('swift_order.updated_at','desc')
-                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                        ->whereHas('nodes',function($q){
-                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                            },'=',0);
-                                        }); 
-                            })->whereHas('flag',function($q){
-                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->take($this->data['inprogress_limit'])->remember(5)->get();                            
+        $order_inprogress = SwiftOrder::getInProgress($this->data['inprogress_limit']);                            
         
-        $order_inprogress_important = SwiftOrder::orderBy('swift_order.updated_at','desc')
-                           ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                               return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                       ->whereHas('nodes',function($q){
-                                            return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                       ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                           },'=',0);
-                                       }); 
-                           })->whereHas('flag',function($q){
-                               return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                           })->remember(5)->get();
+        $order_inprogress_important = SwiftOrder::getInProgress(0,true);
                             
-       $order_inprogress_responsible = SwiftOrder::orderBy('swift_order.updated_at','desc')
-                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                        ->whereHas('nodes',function($q){
-                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                            });
-                                        });
-                            })->whereHas('flag',function($q){
-                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->remember(5)->get(); 
+        $order_inprogress_responsible = SwiftOrder::getInProgressResponsible(); 
                             
-       $order_inprogress_important_responsible = SwiftOrder::orderBy('swift_order.updated_at','desc')
-                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                        ->whereHas('nodes',function($q){
-                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                            });
-                                        }); 
-                            })->whereHas('flag',function($q){
-                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            })->remember(5)->get();                            
+        $order_inprogress_important_responsible = SwiftOrder::getInProgressResponsible(0,true);                           
         
         $order_inprogress = $order_inprogress->diff($order_inprogress_responsible);
         $order_inprogress_important = $order_inprogress_important->diff($order_inprogress_important_responsible);
@@ -804,7 +760,6 @@ class OrderTrackingController extends UserController {
             $order->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
             if($order->save())
             {
-                Queue::push('ElasticSearchHelper@updateTask',array('order_id'=>$order->id,'context'=>$this->context,'info-context'=>'order-tracking'));
                 return Response::make('Success', 200);
             }
             else
@@ -1746,5 +1701,4 @@ class OrderTrackingController extends UserController {
             return "We can't find the resource that you were looking for.";
         }
     }
-    
 }

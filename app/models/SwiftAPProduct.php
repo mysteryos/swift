@@ -7,12 +7,15 @@
 class SwiftAPProduct extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait; 
+    use \Swift\ElasticSearchEventTrait;
     
     protected $table = "swift_ap_product";
     
     protected $fillable = array("aprequest_id","jde_itm","quantity","price","reason_code","reason_others");
     
     protected $guarded = array('id');
+    
+    protected $appends = array('name');
     
     public $timestamps = true;
     
@@ -74,6 +77,64 @@ class SwiftAPProduct extends Eloquent {
         {
             return "";
         }           
+    }
+    
+    /*
+     * Elastic Search Indexing
+     */
+    
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "aprequest";
+    public $esInfoContext = "product";
+    
+    /*
+     * ElasticSearch Utility Id
+     */
+    
+    public function esGetId()
+    {
+        return $this->aprequest_id;
+    }
+    
+    public function getReasonCodeEsAttribute($val)
+    {
+        return $this->getReasonCodeRevisionAttribute($val);         
+    }
+    
+    /*
+     * Event Observers
+     */
+    
+    public static function boot() {
+        parent:: boot();
+        
+        static::bootElasticSearchEvent();
+        
+        static::bootRevisionable();
+    }
+    
+    /*
+     * Accessor
+     */
+    public function getNameAttribute()
+    {
+        if($this->ITM !== "" && count($this->jdeproduct) !== 0)
+        {
+            return trim($this->jdeproduct->DSC1);
+        }
+        
+        return "";
+    }
+    
+    public function totalprice()
+    {
+        if($this->price > 0 && $this->quantity >0)
+        {
+            return round($this->price*$this->quantity,2);
+        }
+        return 0;
     }
     
     /*

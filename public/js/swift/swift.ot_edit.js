@@ -13,6 +13,7 @@ function addMulti($dummy,pk)
         if($(this).attr('data-pk') == "0")
         {
             var response = $.parseJSON(params.response);
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
             //Set new pk value
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
             //Trigger Channel Event
@@ -24,15 +25,16 @@ function addMulti($dummy,pk)
         presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
     }).on('hidden',function(e,reason){
         presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
-        if(reason === 'save' && $(this).attr('data-pk') === "0")
-        {
-            $(this).parents('fieldset.multi').find('a.editable').editable('disable');
-        }
     }).on('save',function(e,params){
         if($(this).editable('option','pk') !== "0")
         {
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
         }
+    }).on('submit',function(){
+        if($(this).attr('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
+        }        
     });
     if(typeof pk !== "undefined")
     {
@@ -211,6 +213,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         if($(this).attr('data-pk') == "0")
         {
             var response = $.parseJSON(params.response);
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
             //Set new pk value
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
             //Trigger Channel Event
@@ -219,15 +222,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
         }
         return true;
-    });
-    
-    $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable').on('hidden',function(e,reason){
-        //First time save, set primary key
-        if(reason === 'save' && $(this).attr('data-pk') === "0")
+    }).on('submit',function(){
+        if($(this).attr('data-pk') == "0")
         {
-            $(this).parents('fieldset.multi').find('a.editable').editable('disable');
-        }
-    });    
+            $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
+        }        
+    });
 
     /*
      * Add New

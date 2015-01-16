@@ -6,10 +6,8 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <!--<a class="btn btn-default" href="javascript:void(0);"><i class="fa fa-gear"></i> Icon Left</a>-->
-<!--            <span id="search" class="btn btn-ribbon hidden-xs" data-title="search"><i class="fa fa-grid"></i> Change Grid</span>
-            <span id="add" class="btn btn-ribbon hidden-xs" data-title="add"><i class="fa fa-plus"></i> Add</span>
-            <span id="search" class="btn btn-ribbon" data-title="search"><i class="fa fa-search"></i> <span class="hidden-mobile">Search</span></span>-->
+            <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
+            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
 
 </div>
@@ -68,19 +66,19 @@
                                                                 <input type="hidden" value="product" name="type" />
                                                                 <div class="form-group">
                                                                         <label class="sr-only" for="s123">Show From</label>
-                                                                        <input type="date" class="form-control input-sm" id="date-form" placeholder="Show From">
+                                                                        <input type="date" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                        <input type="date" class="form-control input-sm" id="date-to" placeholder="To">
+                                                                        <input type="date" class="form-control input-sm datepicker" id="date-to" name="date-to" placeholder="To" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <button type="submit" class="btn btn-default btn-sm">Submit</button>
+                                                                    <button type="submit" class="btn btn-default btn-sm" autocomplete="off">Submit</button>
                                                                 </div>
                                                         </form>
 
                                                 </div>
                                                 <div class="padding-10">
-                                                        <div id="productPieChart" class="chart-xl has-legend-unique"></div>
+                                                        <div id="productPieChart" class="chart chart-xl has-legend-unique"></div>
                                                 </div>
                                         </div>
                                         <!-- end content -->
@@ -109,19 +107,19 @@
                                                                 <input type="hidden" value="customer" name="type" />
                                                                 <div class="form-group">
                                                                         <label class="sr-only" for="s123">Show From</label>
-                                                                        <input type="date" class="form-control input-sm" id="date-form" placeholder="Show From">
+                                                                        <input type="date" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                        <input type="date" class="form-control input-sm" id="date-to" placeholder="To">
+                                                                        <input type="date" class="form-control input-sm datepicker" id="date-to" name="date-to" placeholder="To" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <button type="submit" class="btn btn-default btn-sm">Submit</button>
+                                                                    <button type="submit" class="btn btn-default btn-sm" autocomplete="off">Submit</button>
                                                                 </div>
                                                         </form>
 
                                                 </div>
                                                 <div class="padding-10">
-                                                        <div id="customerPieChart" class="chart-xl has-legend-unique"></div>
+                                                        <div id="customerPieChart" class="chart chart-xl has-legend-unique"></div>
                                                 </div>
                                         </div>
                                         <!-- end content -->
@@ -146,23 +144,23 @@
                                             <!-- content -->
                                                 <div class="widget-body-toolbar bg-color-white">
 
-                                                        <form id="customerPieChartForm" class="form-inline" role="form">
+                                                        <form id="requesterPieChartForm" class="form-inline" role="form">
                                                                 <input type="hidden" value="requester" name="type" />
                                                                 <div class="form-group">
                                                                         <label class="sr-only" for="s123">Show From</label>
-                                                                        <input type="date" class="form-control input-sm" id="date-form" placeholder="Show From">
+                                                                        <input type="date" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                        <input type="date" class="form-control input-sm" id="date-to" placeholder="To">
+                                                                        <input type="date" class="form-control input-sm datepicker" id="date-to" nam="date-to" placeholder="To" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <button type="submit" class="btn btn-default btn-sm">Submit</button>
+                                                                    <button type="submit" class="btn btn-default btn-sm" autocomplete="off">Submit</button>
                                                                 </div>
                                                         </form>
 
                                                 </div>
                                                 <div class="padding-10">
-                                                        <div id="requesterPieChart" class="chart-xl has-legend-unique"></div>
+                                                        <div id="requesterPieChart" class="chart chart-xl has-legend-unique"></div>
                                                 </div>
                                         </div>
                                         <!-- end content -->

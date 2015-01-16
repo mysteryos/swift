@@ -11,6 +11,8 @@ use \Cartalyst\Sentry\Users\Eloquent\User as SentryUser;
 
 class User extends SentryUser
 {
+    
+    protected $attributes = array('last_seen');
 
     // Override the SentryUser getPersistCode method.
 
@@ -33,5 +35,11 @@ class User extends SentryUser
     public function checkPersistCode($persistCode)
     {
         return true;
+    }
+    
+    public function lastSeen()
+    {
+        $this->last_seen = Carbon::now();
+        $this->save();
     }
 }

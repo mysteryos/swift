@@ -44,6 +44,7 @@ class SwiftApproval extends Eloquent {
     const APR_REQUESTER = 1;
     const APR_CATMAN = 2;
     const APR_EXEC = 3;
+    const PR_RETAILMAN = 4;
     
     /*
      * Approved Constants

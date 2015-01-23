@@ -4,18 +4,9 @@
  */
 
 //Total of all costs
-function totaloftotalprice()
+function totaloftotalprice(o,n)
 {
-    var total = 0;
-    $('#apr-products').find('fieldset.fieldset-product:not(.dummy)').each(function(){
-        var $this = $(this),price = $(this).find('p.totalprice').attr('data-price'), qty = parseInt($(this).find('a.editable[data-name="quantity"]').editable('getValue',true));
-        if(parseInt(price) > 0 && qty > 0)
-        {
-            total += price * qty;
-        }           
-    });
-
-    document.getElementById('totaloftotalprice').innerHTML = Math.round(total*100/100);
+    document.getElementById('totaloftotalprice').innerHTML = Math.round((parseFloat(document.getElementById('totaloftotalprice').innerHTML) - o + n)*100/100);
 }
 
 function addMultiAPR($dummy,pk)
@@ -24,7 +15,7 @@ function addMultiAPR($dummy,pk)
     $clone.removeClass('hide dummy');
     $clone.find('.editable').removeClass('dummy');
     $clone.find('.editable').each(function(){
-        if($(this).attr('data-type')=="select2" && $(this).hasClass('product-editable'))
+        if(this.getAttribute('data-type')=="select2" && $(this).hasClass('product-editable'))
         {
             $(this).editable({
                 placeholder: 'Select a product',
@@ -65,6 +56,7 @@ function addMultiAPR($dummy,pk)
             }).on('save',function(e,params){
                 //Call function to get price
                 var $this = $(this);
+                var oldprice = $this.parents('fieldset').find('p.totalprice').attr('data-price');
                 $.ajax({
                     url:'/aprequest/productprice/'+params.newValue,
                     success:function(price){
@@ -75,7 +67,7 @@ function addMultiAPR($dummy,pk)
                             if(parseInt(qty) > 0)
                             {
                                 $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100) / 100));
-                                totaloftotalprice();
+                                totaloftotalprice(oldprice > 0 ? Math.round(oldprice*qty*100) / 100 : 0,Math.round(price*qty*100) / 100);
                             }
                             else
                             {
@@ -100,7 +92,7 @@ function addMultiAPR($dummy,pk)
         
         $(this).on('shown',function(e){
             presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
-            if($(this).attr('data-type')=="select2")
+            if(this.getAttribute('data-type')=="select2")
             {
                 /*
                  * Resize to fit within space
@@ -113,34 +105,39 @@ function addMultiAPR($dummy,pk)
         }).on('save',function(e,params){
             //First time save, set primary key
             var $this = $(this);
-            if($this.attr('data-pk') == "0")
+            if(this.getAttribute('data-pk') == "0")
             {
+                $this.parents('fieldset.multi').find('div.loading-overlay').remove();
                 var response = $.parseJSON(params.response);
                 //Set new pk value
                 addEditablePk($this.parents('fieldset'),response.encrypted_id,response.id);
-                $this.parents('fieldset.multi').find('div.loading-overlay').remove();
                 //Trigger Channel Event
                 presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
             }
             
-            if($this.attr('data-name') == "quantity")
+            if(this.getAttribute('data-name') == "quantity")
             {
-                var price = $this.parents('fieldset').find('p.totalprice').attr('data-price'), qty = parseInt($this.editable('getValue'));
+                
+                var price = $this.parents('fieldset').find('p.totalprice').attr('data-price'), oldqty = $this.editable('getValue',true), qty = parseInt(params.newValue);
                 if(parseInt(price) > 0 && qty > 0)
                 {
                     $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100)/100));
-                    totaloftotalprice();
+                    totaloftotalprice(Math.round(price*oldqty*100)/100,Math.round(price*qty*100)/100);
                 }
             }
             
-            
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})        
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})        
         }).on('submit',function(e){
-            if($(this).attr('data-pk') == "0")
+            if(this.getAttribute('data-pk') == "0")
             {
                 $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
             }            
+        }).on('error',function(e){
+            if(this.getAttribute('data-pk') == "0")
+            {
+                $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+            }             
         });        
     });
     
@@ -328,6 +325,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             }).on('save',function(e,params){
                 //Call function to get price
                 var $this = $(this);
+                var oldprice = $this.parents('fieldset').find('p.totalprice').attr('data-price');
                 $.ajax({
                     url:'/aprequest/productprice/'+params.newValue,
                     success:function(price){
@@ -338,7 +336,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                             if(parseInt(qty) > 0)
                             {
                                 $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100) / 100));
-                                totaloftotalprice();
+                                totaloftotalprice(oldprice > 0 ? Math.round(oldprice*qty*100) / 100 : 0,Math.round(price*qty*100) / 100);
                             }
                             else
                             {
@@ -364,7 +362,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         
         $this.on('shown',function(e){
             presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
-            if($(this).attr('data-type')=="select2")
+            if(this.getAttribute('data-type')=="select2")
             {
                 /*
                  * Resize to fit within space
@@ -383,7 +381,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
              */
 
             $this.on('save',function(e,params){
-                if($this.attr('data-pk') == "0")
+                if(this.getAttribute('data-pk') == "0")
                 {
                     var response = $.parseJSON(params.response);
                     //Set new pk value
@@ -418,41 +416,44 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     
     //Multi
     $('.product-editable, .erporder-editable, .delivery-editable, .delivery-editable:not(.productcatman-editable):not(.productexec-editable)').on('save',function(e,params){
+        var $this = $(this);
         //First time save, set primary key
-        if($(this).attr('data-pk') == "0")
+        if(this.getAttribute('data-pk') == "0")
         {
+            //Remove Overlay
+            $this.parents('fieldset.multi').find('div.loading-overlay').remove();
             var response = $.parseJSON(params.response);
             //Set new pk value
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
-            
-            $this.parents('fieldset.multi').find('div.loading-overlay').remove();
             //Trigger Channel Event
-            presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $(this).parents('fieldset').attr('data-name')});
+            presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $this.parents('fieldset').attr('data-name')});
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})
+        }
+        
+        /*
+         * On Quantity change: calculate total price
+         */
+        if(this.getAttribute('data-name')=== "quantity")
+        {
+            var price = $this.parents('fieldset').find('p.totalprice').attr('data-price'), oldqty = $this.editable('getValue',true), qty = parseInt(params.newValue);
+            if(parseInt(price) > 0 && qty > 0)
+            {
+                $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100)/100));
+                totaloftotalprice(Math.round(price*oldqty*100)/100,Math.round(price*qty*100)/100);
+            }            
         }
         return true;
     }).on('submit',function(){
-        if($(this).attr('data-pk') == "0")
+        if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
         }
-    });
-    
-    /*
-     * On Quantity change: calculate total price
-     */
-    $('.product-editable[data-name="quantity"]').on('save',function(e,params){
-        console.log('qty ran');
-        var $this = $(this);
-        var price = $this.parents('fieldset').find('p.totalprice').attr('data-price'), qty = parseInt($this.editable('getValue'));
-        console.log(price);
-        console.log(qty);
-        if(parseInt(price) > 0 && qty > 0)
+    }).on('error',function(){
+        if(this.getAttribute('data-pk') == "0")
         {
-            $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100)/100));
-            totaloftotalprice();
-        }
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+        }        
     });
     
     /*

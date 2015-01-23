@@ -11,7 +11,7 @@ class elasticsearch extends Command {
 	 *
 	 * @var string
 	 */
-	protected $name = 'elasticsearch:index';
+	protected $name = 'elasticsearch:reindex';
 
 	/**
 	 * The console command description.
@@ -39,38 +39,38 @@ class elasticsearch extends Command {
 	{
             try {
                 //Crawl all Order-tracking and add to elasticsearch
-                $ordertrackingall = SwiftOrder::all();
+                $ordertrackingall = \SwiftOrder::all();
                 foreach($ordertrackingall as $o)
                 {
                     $params = array();
-                    $params['index'] = App::environment();
+                    $params['index'] = \App::environment();
                     $params['type'] = 'order-tracking';
                     $params['id'] = $o->id;
                     $params['timestamp'] = $o->updated_at->toIso8601String();
-                    $params['body']['order-tracking'] = $o->toArray();
-                    $params['body']['purchaseOrder'] = $o->purchaseOrder()->get()->toArray();
-                    $params['body']['reception'] = $o->reception()->get()->toArray();
-                    $params['body']['freight'] = $o->freight()->get()->toArray();
-                    $params['body']['shipment'] = $o->shipment()->get()->toArray();
-                    $params['body']['customsDeclaration'] = $o->customsDeclaration()->get()->toArray();
-                    Es::index($params);
+                    $params['body']['order-tracking'] = \ElasticSearchHelper::saveFormat($o);
+                    $params['body']['purchaseOrder'] = \ElasticSearchHelper::saveFormat($o->purchaseOrder()->get());
+                    $params['body']['reception'] = \ElasticSearchHelper::saveFormat($o->reception()->get());
+                    $params['body']['freight'] = \ElasticSearchHelper::saveFormat($o->freight()->get());
+                    $params['body']['shipment'] = \ElasticSearchHelper::saveFormat($o->shipment()->get());
+                    $params['body']['customsDeclaration'] = \ElasticSearchHelper::saveFormat($o->customsDeclaration()->get());
+                    \Es::index($params);
                     $this->info('OT Indexed ID:'.$o->id);
                 }
                 
-                $aprequestall = SwiftAPRequest::all();
+                $aprequestall = \SwiftAPRequest::all();
                 foreach($aprequestall as $ap)
                 {
                     $params = array();
-                    $params['index'] = App::environment();
+                    $params['index'] = \App::environment();
                     $params['type'] = 'aprequest';
                     $params['id']= $ap->id;
                     $params['timestamp'] = $ap->updated_at->toIso8601String();
-                    $params['body']['aprequest'] = $ap->toArray();
-                    $params['body']['product'] = $ap->product()->with('jdeproduct')->get()->toArray();
-                    $params['body']['delivery'] = $ap->delivery()->get()->toArray();
-                    $params['body']['order'] = $ap->order()->get()->toArray();
+                    $params['body']['aprequest'] = \ElasticSearchHelper::saveFormat($ap);
+                    $params['body']['product'] = \ElasticSearchHelper::saveFormat($ap->product()->get());
+                    $params['body']['delivery'] = \ElasticSearchHelper::saveFormat($ap->delivery()->get());
+                    $params['body']['order'] = \ElasticSearchHelper::saveFormat($ap->order()->get());
                     
-                    Es::index($params);
+                    \Es::index($params);
                     $this->info('APR Indexed ID:'.$ap->id);                    
                 }
             } 

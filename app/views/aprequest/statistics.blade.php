@@ -66,10 +66,10 @@
                                                                 <input type="hidden" value="product" name="type" />
                                                                 <div class="form-group">
                                                                         <label class="sr-only" for="s123">Show From</label>
-                                                                        <input type="date" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
+                                                                        <input type="text" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                        <input type="date" class="form-control input-sm datepicker" id="date-to" name="date-to" placeholder="To" autocomplete="off">
+                                                                        <input type="text" class="form-control input-sm datepicker" id="date-to" name="date-to" placeholder="To" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <button type="submit" class="btn btn-default btn-sm" autocomplete="off">Submit</button>
@@ -107,10 +107,10 @@
                                                                 <input type="hidden" value="customer" name="type" />
                                                                 <div class="form-group">
                                                                         <label class="sr-only" for="s123">Show From</label>
-                                                                        <input type="date" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
+                                                                        <input type="text" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                        <input type="date" class="form-control input-sm datepicker" id="date-to" name="date-to" placeholder="To" autocomplete="off">
+                                                                        <input type="text" class="form-control input-sm datepicker" id="date-to" name="date-to" placeholder="To" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <button type="submit" class="btn btn-default btn-sm" autocomplete="off">Submit</button>
@@ -148,10 +148,10 @@
                                                                 <input type="hidden" value="requester" name="type" />
                                                                 <div class="form-group">
                                                                         <label class="sr-only" for="s123">Show From</label>
-                                                                        <input type="date" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
+                                                                        <input type="text" class="form-control input-sm datepicker" id="date-form" name="date-from" placeholder="Show From" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
-                                                                        <input type="date" class="form-control input-sm datepicker" id="date-to" nam="date-to" placeholder="To" autocomplete="off">
+                                                                        <input type="text" class="form-control input-sm datepicker" id="date-to" nam="date-to" placeholder="To" autocomplete="off">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <button type="submit" class="btn btn-default btn-sm" autocomplete="off">Submit</button>

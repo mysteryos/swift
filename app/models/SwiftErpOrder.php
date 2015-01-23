@@ -1,5 +1,7 @@
 <?php
 
+Use \Swift\Core\Collection;
+
 class SwiftErpOrder extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
@@ -88,16 +90,7 @@ class SwiftErpOrder extends Eloquent {
     //Indexing Enabled
     public $esEnabled = true;
     public $esInfoContext = "order";
-    public $esExcludes = array('created_at','updated_at','deleted_at','status','orderable_type','orderable_id');
-    
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
-    {
-        return $this->orderable_id;
-    }
+    public $esRemove = ['status','orderable_type','orderable_id'];
     
     public function esGetContext()
     {
@@ -114,6 +107,11 @@ class SwiftErpOrder extends Eloquent {
     public function getTypeEsAttribute($val)
     {
         return $this->getTypeRevisionAttribute($val);
+    }
+    
+    public function esGetParent()
+    {
+        return $this->orderable;
     }
     
     /*

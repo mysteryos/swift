@@ -181,7 +181,7 @@ class APRequestController extends UserController {
                     }
                     if((int)$p->quantity > 0 && (float)$p->price > 0)
                     {
-                        $total += $p->quantity * $p->price;
+                        $total += ($p->quantity * $p->price);
                     }
                 }
                 $this->data['product_price_total'] = round($total, 2);
@@ -368,6 +368,7 @@ class APRequestController extends UserController {
         }
         
         $forms = $aprequestquery->get();
+        $formsCount = $aprequestquery->count();
         
         /*
          * Fetch latest history;
@@ -400,6 +401,7 @@ class APRequestController extends UserController {
                 if(!$hasAccess)
                 {
                     unset($forms[$k]);
+                    $formsCount--;
                     continue;
                 }
             }
@@ -410,6 +412,7 @@ class APRequestController extends UserController {
                     if(!isset($f->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$f->current_activity['definition']))
                     {
                         unset($forms[$k]);
+                        $formsCount--;
                         break;
                     }
                 }
@@ -429,7 +432,7 @@ class APRequestController extends UserController {
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
         $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
         $this->data['forms'] = $forms;
-        $this->data['count'] = isset($filter) ? count($forms) : SwiftAPRequest::count();
+        $this->data['count'] = isset($filter) ? $formsCount : SwiftAPRequest::count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);

@@ -4,6 +4,8 @@
  * Description:
  */
 
+Use \Swift\Core\Collection;
+
 class SwiftAPOrder extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
@@ -46,14 +48,11 @@ class SwiftAPOrder extends Eloquent {
     //Context for Indexing
     public $esContext = "aprequest";
     public $esInfoContext = "order";
+    public $esRemove = ['created_at','deleted_at','updated_at','aprequest_id'];
     
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
+    public function esGetParent()
     {
-        return $this->aprequest_id;
+        return $this->aprequest;
     }
     
     /*

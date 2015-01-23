@@ -13,11 +13,13 @@ class SwiftFreight extends Eloquent{
     
     protected $guarded = array('id');
     
-    protected $fillable = array('order_id','freight_company_id','freight_type','bol_no','vessel_name','vessel_voyage','incoterms','freight_etd','freight_eta','shipment_type','volume');
+    protected $fillable = array('order_id','freight_company_id','freight_type','bol_no','vessel_name','vessel_voyage','incoterms','freight_etd','freight_eta');
     
     public $timestamps = true;
     
     protected $touches = array('order');
+    
+    protected $appends = array('freight_company');
     
     protected $dates = ['deleted_at','freight_etd','freight_eta'];
     
@@ -57,7 +59,6 @@ class SwiftFreight extends Eloquent{
     const INCOTERM_DDP = 11;
     const INCOTERM_DDU = 12;
     
-    
     /* Revisionable Attributes */
     
     protected $revisionEnabled = true;
@@ -90,19 +91,12 @@ class SwiftFreight extends Eloquent{
     public $esEnabled = true;
     //Context for Indexing
     public $esContext = "order-tracking";
-    
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
+    public $esInfoContext = "freight";
+    public $esRemove = ['order_id','freight_company_id'];
+
+    public function esGetParent()
     {
-        return $this->order_id;
-    }
-    
-    public function esGetInfoContext()
-    {
-        return "freight";
+        return $this->order;
     }
     
     /*
@@ -121,6 +115,11 @@ class SwiftFreight extends Eloquent{
     /*
      * Revision - Accessors
      */
+    
+    public function getFreightCompanyAttribute()
+    {
+        return $this->getFreightCompanyIdRevisionAttribute($this->freight_company_id);
+    }
     
     public function getIncotermsRevisionAttribute($val)
     {
@@ -144,6 +143,16 @@ class SwiftFreight extends Eloquent{
         {
             return "";
         }        
+    }
+    
+    public function getIncotermsEsAttribute($val)
+    {
+        return $this->getIncotermsRevisionAttribute($val);
+    }
+    
+    public function getFreightTypeEsAttribute($val)
+    {
+        return $this->getFreightTypeRevisionAttribute($val);
     }
     
     public function getFreightEtaRevisionAttribute($val)

@@ -39,6 +39,10 @@
             {
                 "type": "vcs",
                 "url": "https://github.com/mysteryos/revisionable/"
+            },
+            {
+                "type": "vcs",
+                "url": "https://github.com/mysteryos/syntara"
             }
         ],
 	"autoload": {

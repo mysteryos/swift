@@ -11,19 +11,9 @@ class ElasticSearchHelper {
     
     public function indexTask($job,$data)
     {
-        /*
-         * Router
-         */
         if(isset($data['context']))
         {
-            if(is_callable("ElasticSearchHelper::".studly_case("index-".$data['context'])))
-            {
-                call_user_func_array("ElasticSearchHelper::".studly_case("index-".$data['context']),array("data"=>$data));
-            }
-            else
-            {
-                \Log::error('ElasticSearchHelper: Unable to call function with name: ElasticSearchHelper::'.studly_case("index-".$data['context']));
-            }            
+            $this->IndexEs($data);
         }
         else
         {
@@ -36,17 +26,7 @@ class ElasticSearchHelper {
     {
         if(isset($data['context']))
         {
-            /*
-             * Router
-             */
-            if(is_callable("ElasticSearchHelper::".studly_case("update-".$data['context'])))
-            {
-                call_user_func_array("ElasticSearchHelper::".studly_case("update-".$data['context']),array("data"=>$data));
-            }
-            else
-            {
-                \Log::error('ElasticSearchHelper: Unable to call function with name: ElasticSearchHelper::'.studly_case("update-".$data['context']));
-            }
+            $this->UpdateEs($data);
         }
         else
         {
@@ -55,171 +35,57 @@ class ElasticSearchHelper {
         $job->delete();        
     }
     
-    /*
-     * Context: order-tracking
-     */
-    public function IndexOrderTracking($data)
+    public function IndexEs($data)
     {
         $params = array();
         $params['index'] = \App::environment();
         $params['type'] = $data['context'];
-        $order = \SwiftOrder::find($data['id']);
-        if(count($order))
+        $model = new $data['class'];
+        $form = $model::find($data['id']);
+        if(count($form))
         {
-            $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at->toIso8601String();
-            $params['body']['order-tracking'] = $order->toArray();
-            \Es::index($params);
-        }
-    }
-    
-    public function UpdateOrderTracking($data)
-    {
-        $params = array();
-        $params['index'] = \App::environment();
-        $params['type'] = $data['context'];
-        $order = \SwiftOrder::find($data['id']);
-        if(count($order))
-        {
-            $params['id'] = $order->id;
-            $params['timestamp'] = $order->updated_at->toIso8601String();
-            switch($data['info-context'])
+            $params['id'] = $form->id;
+            if($form->timestamps)
             {
-                case 'order-tracking':
-                    $relation = $order;
-                    $relation = $relation->toArray();
-                    foreach($relation as $k => $v)
-                    {
-                        if(in_array($k,$data['excludes']))
-                        {
-                            unset($relation[$k]);
-                        }
-                    }
-                    $params['body']['doc'][$data['info-context']] = $relation;                    
-                    break;
-                case 'purchaseOrder':
-                case 'reception':
-                case 'freight':
-                case 'shipment':
-                case 'customsDeclaration':
-                    $relation = $order->{$data['info-context']}()->get();
-                    if(count($relation))
-                    {
-                        foreach($relation as &$l)
-                        {
-                            foreach($data['excludes'] as $ex)
-                            {
-                                if(isset($l->{$ex}))
-                                {
-                                    unset($l->{$ex});
-                                }
-                            }
-                            if(isset($l->dates))
-                            {
-                                foreach($l->dates as $date)
-                                {
-                                    if(isset($l->{$date}) && get_class($l->{$date}) == "Carbon")
-                                    {
-                                        $l->{$date} = $l->{$date}->toIso8601String();
-                                    }
-                                }
-                            }
-                        }
-                        $relation = $relation->toArray();
-                        $params['body']['doc'][$data['info-context']] = $relation;
-                    }
-                    else
-                    {
-                        $params['body']['doc'][$data['info-context']] = array();
-                    }                    
-                    break;
-                default:
-                    return;
-                    break;
+                $params['timestamp'] = $form->updated_at->toIso8601String();
             }
-            \Es::update($params);
-        }
-    }
-    
-    public function IndexAprequest($data)
-    {
-        $params = array();
-        $params['index'] = \App::environment();
-        $params['type'] = $data['context'];
-        $aprequest = \SwiftAPRequest::find($data['id']);
-        if(count($aprequest))
-        {
-            $this->esAccessor($aprequest);
-            $params['id'] = $aprequest->id;
-            $params['timestamp'] = $aprequest->updated_at->toIso8601String();
-            $params['body']['aprequest'] = $aprequest->toArray();
+            $params['body'][$data['context']] = $this->saveFormat($form);
             \Es::index($params);
         }
     }
     
-    public function UpdateAprequest($data)
+    public function UpdateEs($data)
     {
         $params = array();
         $params['index'] = \App::environment();
         $params['type'] = $data['context'];
-        $aprequest = \SwiftAPRequest::find($data['id']);
-        if(count($aprequest))
+        $model = new $data['class'];
+        $form = $model::withTrashed()->find($data['id']);
+        
+        if(count($form))
         {
-            $params['id'] = $aprequest->id;
-            $params['timestamp'] = $aprequest->updated_at->toIso8601String();
-            switch($data['info-context'])
+            if($data['info-context'] === $data['context'])
             {
-                case 'aprequest':
-                    $this->esAccessor($aprequest);
-                    $relation = $aprequest;
-                    $relation = $relation->toArray();
-                    foreach($relation as $k => $v)
+                $params['id'] = $data['id'];
+                $params['body']['doc'][$data['info-context']] = $this->saveFormat($form);                  
+            }
+            else
+            {
+                //Form is child, we get parent
+                $parent = $form->esGetParent();
+                if(count($parent))
+                {
+                    $params['id'] = $parent->id;
+                    $children = $parent->{$data['info-context']}()->get();
+                    if(count($children))
                     {
-                        if(in_array($k,$data['excludes']))
-                        {
-                            unset($relation[$k]);
-                        }
-                    }
-                    $params['body']['doc'][$data['info-context']] = $relation;                    
-                    break;
-                case 'order':
-                case 'product':
-                case 'delivery':
-                    $relation = $aprequest->{$data['info-context']}()->get();
-                    if(count($relation))
-                    {
-                        foreach($relation as &$l)
-                        {
-                            foreach($data['excludes'] as $ex)
-                            {
-                                if(isset($l->{$ex}))
-                                {
-                                    unset($l->{$ex});
-                                }
-                            }
-                            if(isset($l->dates))
-                            {
-                                foreach($l->dates as $date)
-                                {
-                                    if(isset($l->{$date}) && get_class($l->{$date}) == "Carbon")
-                                    {
-                                        $l->{$date} = $l->{$date}->toIso8601String();
-                                    }
-                                }
-                            }
-                            $this->esAccessor($l);
-                        }
-                        $relation = $relation->toArray();
-                        $params['body']['doc'][$data['info-context']] = $relation;
+                        $params['body']['doc'][$data['info-context']] = $this->saveFormat($children);
                     }
                     else
                     {
                         $params['body']['doc'][$data['info-context']] = array();
                     }
-                    break;
-                default:
-                    return;
-                    break;
+                }
             }
             \Es::update($params);
         }
@@ -228,22 +94,40 @@ class ElasticSearchHelper {
     /*
      * Iterate through all Es accessors of the model.
      */
-    private function esAccessor(&$object)
+    public function esAccessor(&$object)
     {
         if(is_object($object))
         {
             $attributes = $object->getAttributes();
-            foreach($attributes as $attr)
+            foreach($attributes as $name => $value)
             {
-                $esMutator = 'get' . studly_case($attr) . 'EsAttribute';
+                $esMutator = 'get' . studly_case($name) . 'EsAttribute';
                 if (method_exists($object, $esMutator)) {
-                    $object->{$attr} = $object->$esMutator($object->{$attr});
+                    $object->{$name} = $object->$esMutator($object->{$name});
                 }
             }
         }
         else
         {
             throw New \RuntimeException("Expected type object");
+        }
+    }
+    
+    /*
+     * Iterates over a collection applying the getEsSaveFormat function
+     */
+    public function saveFormat($obj)
+    {
+        if($obj instanceof \Illuminate\Database\Eloquent\Model)
+        {
+            return $obj->getEsSaveFormat();
+        }
+        else
+        {
+            return array_map(function($value)
+            {
+                return $value->getEsSaveFormat();
+            }, $obj->all());
         }
     }
 }

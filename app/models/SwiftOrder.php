@@ -16,7 +16,7 @@ class SwiftOrder extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('name','description','business_unit','data');
+    protected $fillable = array('name','description','business_unit');
     
     public $timestamps = true;
     
@@ -55,20 +55,8 @@ class SwiftOrder extends Eloquent {
     public $esContext = "order-tracking";
     //Main Document
     public $esMain = true;
-    
-    /*
-     * ElasticSearch Utility functions
-     */
-    
-    public function esGetId()
-    {
-        return $this->id;
-    }
-    
-    public function esGetInfoContext()
-    {
-        return "order-tracking";
-    }
+    //Info Context
+    public $esInfoContext = "order-tracking";
     
     /*
      * Event Observers
@@ -97,6 +85,15 @@ class SwiftOrder extends Eloquent {
             return "";
         }        
     }
+    
+    public function getBusinessUnitEsAttribute($val)
+    {
+        return $this->getBusinessUnitRevisionAttribute($val);
+    }
+    
+    /*
+     * Utility Functions
+     */
     
     public function getClassName()
     {

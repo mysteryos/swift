@@ -101,7 +101,7 @@
 				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-gift"></i> </span>
-                                        <h2>Products - Total: Rs <span id="totaloftotalprice">{{ $product_price_total or 0 }}</span></h2>
+                                        <h2>Products</h2>
                                         @if(($edit && $canAddProduct) || $isAdmin)
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
@@ -134,6 +134,9 @@
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
+                                            <div class="well well-sm text-center">
+                                                Total cost of products: Rs <span id="totaloftotalprice">{{ $product_price_total or 0 }}</span>                                                
+                                            </div>
                                             <form class="form-horizontal">
                                                     @if(count($form->product))
                                                         @foreach($form->product as &$p)

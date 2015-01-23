@@ -198,6 +198,12 @@ Editableform is linked with one of input types, e.g. 'text', 'select' etc.
                 }
                 $group.addClass($.fn.editableform.errorGroupClass);
                 $block.addClass($.fn.editableform.errorBlockClass).html(msg).show();
+                /**        
+                Fired when error occurs
+                @event error 
+                @param {Object} event event object
+                **/                    
+                this.$div.triggerHandler('error');                
             }
         },
 
@@ -1042,6 +1048,7 @@ Applied as jQuery method.
             .on({
                 save: $.proxy(this.save, this), //click on submit button (value changed)
                 submit: $.proxy(this.submit,this),
+                error: $.proxy(this.error,this),
                 nochange: $.proxy(function(){ this.hide('nochange'); }, this), //click on submit button (value NOT changed)                
                 cancel: $.proxy(function(){ this.hide('cancel'); }, this), //click on calcel button
                 show: $.proxy(function() {
@@ -1195,6 +1202,10 @@ Applied as jQuery method.
         
         submit: function(e) {
             this.$element.triggerHandler('submit');
+        },
+        
+        error: function(e) {
+            this.$element.triggerHandler('error');
         },
 
         save: function(e, params) {

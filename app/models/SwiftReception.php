@@ -50,19 +50,12 @@ class SwiftReception extends Eloquent {
     public $esEnabled = true;
     //Context for Indexing
     public $esContext = "order-tracking";    
+    public $esInfoContext = "reception";
+    public $esRemove = ['order_id'];
     
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
+    public function esGetParent()
     {
-        return $this->order_id;
-    }
-    
-    public function esGetInfoContext()
-    {
-        return "shipment";
+        return $this->order;
     }
     
     /*
@@ -75,7 +68,21 @@ class SwiftReception extends Eloquent {
         static::bootElasticSearchEvent();
         
         static::bootRevisionable();
-    }    
+    }
+    
+    public function getReceptionUserEsAttribute($val)
+    {
+        if((int)$val !== 0)
+        {
+            $user = \Sentry::findUserById($val);
+            if(count($user))
+            {
+                return $user->first_name." ".$user->last_name;
+            }
+        }
+        
+        return "";
+    }
     
     /*
      * Mutator

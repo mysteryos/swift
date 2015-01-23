@@ -56,16 +56,7 @@ class SwiftAPRequest extends Eloquent {
     //Main Document
     public $esMain = true;
     //Excludes
-    public $esExcludes = array('created_at','updated_at','deleted_at','feedback_star','feedback_text');
-    
-    /*
-     * ElasticSearch Utility functions
-     */
-    
-    public function esGetId()
-    {
-        return $this->id;
-    }
+    public $esRemove = ['feedback_star','feedback_text'];
     
     /*
      * Event Observers

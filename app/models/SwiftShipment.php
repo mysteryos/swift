@@ -56,19 +56,12 @@ class SwiftShipment extends Eloquent {
     public $esEnabled = true;
     //Context for Indexing
     public $esContext = "order-tracking";
+    public $esInfoContext = "shipment";
+    public $esRemove = ['order_id','volume',''];
     
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
+    public function esGetParent()
     {
-        return $this->order_id;
-    }
-    
-    public function esGetInfoContext()
-    {
-        return "shipment";
+        return $this->order;
     }
     
     /*
@@ -94,6 +87,18 @@ class SwiftShipment extends Eloquent {
             return "";
         }         
     }
+    
+    public function getTypeEsAttribute($val)
+    {
+        if(key_exists($val,self::$type))
+        {
+            return self::$type[$val];
+        }
+        else
+        {
+            return "";
+        }         
+    }    
     
     /*
      * Relationships

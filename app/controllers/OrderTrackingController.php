@@ -422,6 +422,7 @@ class OrderTrackingController extends UserController {
         }
         
         $orders = $orderquery->get();
+        $orderCount = $orderquery->count();
         
         /*
          * Fetch latest history;
@@ -453,6 +454,7 @@ class OrderTrackingController extends UserController {
                 if(!$hasAccess)
                 {
                     unset($orders[$k]);
+                    $orderCount--;
                     continue;
                 }
             }
@@ -463,6 +465,7 @@ class OrderTrackingController extends UserController {
                     if(!isset($o->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$o->current_activity['definition']))
                     {
                         unset($orders[$k]);
+                        $orderCount--;
                         break;
                     }
                 }
@@ -484,7 +487,7 @@ class OrderTrackingController extends UserController {
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
         
         $this->data['orders'] = $orders;
-        $this->data['count'] = isset($filter) ? count($orders) : SwiftOrder::count();
+        $this->data['count'] = isset($filter) ? $orderCount : SwiftOrder::count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);

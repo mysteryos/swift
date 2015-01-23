@@ -88,19 +88,16 @@ class SwiftAPProduct extends Eloquent {
     //Context for Indexing
     public $esContext = "aprequest";
     public $esInfoContext = "product";
-    
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
-    {
-        return $this->aprequest_id;
-    }
+    public $esRemove = ['aprequest_id'];
     
     public function getReasonCodeEsAttribute($val)
     {
         return $this->getReasonCodeRevisionAttribute($val);         
+    }
+    
+    public function esGetParent()
+    {
+        return $this->aprequest;
     }
     
     /*

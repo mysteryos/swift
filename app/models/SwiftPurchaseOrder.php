@@ -45,20 +45,17 @@ class SwiftPurchaseOrder extends Eloquent {
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
-    public $esContext = "order-tracking";    
+    public $esContext = "order-tracking";
+    public $esInfoContext = "purchaseOrder";
+    public $esRemove = ['order_id'];
     
     /*
-     * ElasticSearch Utility Id
+     * ElasticSearch Get Parent
      */
     
-    public function esGetId()
+    public function esGetParent()
     {
-        return $this->order_id;
-    }
-    
-    public function esGetInfoContext()
-    {
-        return "purchaseOrder";
+        return $this->order;
     }
     
     /*

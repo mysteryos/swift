@@ -60,16 +60,11 @@ class SwiftDelivery extends Eloquent {
     //Indexing Enabled
     public $esEnabled = true;
     public $esInfoContext = "delivery";
-    public $esExcludes = array('created_at','updated_at','deleted_at','status_comment','deliverable_type','deliverable_id');
+    public $esRemove = ['status_comment','deliverable_type','deliverable_id'];
     
     /*
      * ElasticSearch Utility Id
      */
-    
-    public function esGetId()
-    {
-        return $this->deliverable_id;
-    }
     
     //Context for Indexing
     public function esGetContext()
@@ -82,6 +77,11 @@ class SwiftDelivery extends Eloquent {
             default:
                 return false;
         }
+    }
+    
+    public function esGetParent()
+    {
+        return $this->deliverable;
     }
     
     public function getStatusEsAttribute($val)

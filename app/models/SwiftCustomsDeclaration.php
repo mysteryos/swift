@@ -68,20 +68,13 @@ class SwiftCustomsDeclaration extends Eloquent {
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
-    public $esContext = "order-tracking";    
+    public $esContext = "order-tracking";
+    public $esInfoContext = "customsDeclaration";
+    public $esRemove = ['order_id'];
     
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
+    public function esGetParent()
     {
-        return $this->order_id;
-    }
-    
-    public function esGetInfoContext()
-    {
-        return "customsDeclaration";
+        return $this->order;
     }
     
     /*
@@ -112,8 +105,13 @@ class SwiftCustomsDeclaration extends Eloquent {
         }         
     }
     
+    public function getCustomsStatusEsAttribute($val)
+    {
+        return $this->getCustomsStatusRevisionAttribute($val);
+    }
+    
     /*
-     * Functions
+     * Relationships
      */
     public function order()
     {

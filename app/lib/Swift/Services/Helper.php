@@ -72,10 +72,10 @@ class Helper {
             $prod = \SwiftAPProduct::find((int)$data['product_id']);
             if(count($prod) && isset($prod->jde_itm) && (int)$prod->jde_itm > 0)
             {
-                $result = \JdeSales::getProductHighestPrice($prod->jde_itm);
+                $result = \JdeSales::getProductLatestCostPrice($prod->jde_itm);
                 if(count($result))
                 {
-                    $prod->price = $result->first()->UPRC;
+                    $prod->price = round($result->UPRC,2);
                 }
                 else
                 {

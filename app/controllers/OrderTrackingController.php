@@ -323,15 +323,6 @@ class OrderTrackingController extends UserController {
         
         if($type != 'inprogress')
         {
-            /*
-             * If not in progress, we limit rows
-             */
-            $orderquery->take($limitPerPage);
-            if($page > 1)
-            {
-                $orderquery->offset(($page-1)*$limitPerPage);
-            }
-            
             //Get node definition list
             $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','order_tracking')->first()->id)->all();
             $node_definition_list = array();
@@ -421,8 +412,21 @@ class OrderTrackingController extends UserController {
             Session::forget('ot_form_filter');
         }
         
-        $orders = $orderquery->get();
+        
         $orderCount = $orderquery->count();
+        if($type != 'inprogress')
+        {
+            /*
+             * If not in progress, we limit rows
+             */
+            $orderquery->take($limitPerPage);
+            if($page > 1)
+            {
+                $orderquery->offset(($page-1)*$limitPerPage);
+            }
+        }
+        $orders = $orderquery->get();
+        
         
         /*
          * Fetch latest history;

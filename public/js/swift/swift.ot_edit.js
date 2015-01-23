@@ -10,7 +10,7 @@ function addMulti($dummy,pk)
     $clone.find('.editable').removeClass('dummy');
     $clone.find('.editable').editable().on('save',function(e,params){
         //First time save, set primary key
-        if($(this).attr('data-pk') == "0")
+        if(this.getAttribute('data-pk') == "0")
         {
             var response = $.parseJSON(params.response);
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
@@ -19,22 +19,27 @@ function addMulti($dummy,pk)
             //Trigger Channel Event
             presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
         }
     }).on('shown',function(e){
-        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
+        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id})
     }).on('hidden',function(e,reason){
-        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
+        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id})
     }).on('save',function(e,params){
         if($(this).editable('option','pk') !== "0")
         {
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
         }
     }).on('submit',function(){
-        if($(this).attr('data-pk') == "0")
+        if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
         }        
+    }).on('error',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+        }          
     });
     if(typeof pk !== "undefined")
     {
@@ -192,17 +197,17 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
     //General Info
     $('.editable:not(.dummy)').editable().on('shown',function(e){
-        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id});
         return true;
     }).on('hidden',function(e,reason){
-        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id});
         return true;
     }).on('save',function(e,params){
         if($(this).editable('option','pk') !== "0")
         {
             //Bug fix for disappearing pks - Weird
-            $(this).editable('option','pk',$(this).attr('data-pk'));
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
+            $(this).editable('option','pk',this.getAttribute('data-pk'));
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id});
         }
         return true;
     });
@@ -210,7 +215,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     //Multi X-editable save
     $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable').on('save',function(e,params){
         //First time save, set primary key
-        if($(this).attr('data-pk') == "0")
+        if(this.getAttribute('data-pk') == "0")
         {
             var response = $.parseJSON(params.response);
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
@@ -219,14 +224,19 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             //Trigger Channel Event
             presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $(this).parents('fieldset').attr('data-name')});
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
         }
         return true;
     }).on('submit',function(){
-        if($(this).attr('data-pk') == "0")
+        if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
         }        
+    }).on('error',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+        }          
     });
 
     /*
@@ -539,7 +549,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
        e.preventDefault();
        vex.open({
            className: 'vex-theme-default vex-file-viewer',
-           content:'<div class="row"><div class="col-xs-12 text-align-center">'+$(this).html()+'</div></div><iframe src="http://docs.google.com/viewer?url='+encodeURIComponent($(this).attr('href'))+'&embedded=true" class="file-viewer"></iframe>',
+           content:'<div class="row"><div class="col-xs-12 text-align-center">'+$(this).html()+'</div></div><iframe src="http://docs.google.com/viewer?url='+encodeURIComponent(this.getAttribute('href'))+'&embedded=true" class="file-viewer"></iframe>',
        }).height($(window).height()).width($(window).width()*0.9);
 
        return false;

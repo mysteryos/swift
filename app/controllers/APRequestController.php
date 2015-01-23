@@ -274,15 +274,6 @@ class APRequestController extends UserController {
         
         if($type != 'inprogress')
         {
-            /*
-             * If not in progress, we limit rows
-             */
-            $aprequestquery->take($limitPerPage);
-            if($page > 1)
-            {
-                $aprequestquery->offset(($page-1)*$limitPerPage);
-            }
-            
             //Get node definition list
             $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','aprequest')->first()->id)->all();
             $node_definition_list = array();
@@ -367,8 +358,19 @@ class APRequestController extends UserController {
             Session::forget('apr_form_filter');
         }
         
-        $forms = $aprequestquery->get();
         $formsCount = $aprequestquery->count();
+        if($type != 'inprogress')
+        {
+            /*
+             * If not in progress, we limit rows
+             */
+            $aprequestquery->take($limitPerPage);
+            if($page > 1)
+            {
+                $aprequestquery->offset(($page-1)*$limitPerPage);
+            }
+        }
+        $forms = $aprequestquery->get();
         
         /*
          * Fetch latest history;

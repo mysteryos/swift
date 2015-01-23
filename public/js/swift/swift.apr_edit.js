@@ -283,7 +283,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     //General Info
     $('.editable:not(.dummy)').each(function(){
         var $this = $(this);
-        if($this.attr('data-type')=="select2" && $this.hasClass('product-editable'))
+        if(this.getAttribute('data-type')=="select2" && $this.hasClass('product-editable'))
         {
             $this.editable({
                 disabled: $this.hasClass('editable-disabled'),

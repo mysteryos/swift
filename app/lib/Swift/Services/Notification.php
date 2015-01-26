@@ -132,7 +132,7 @@ class Notification {
     {
         $definition = $object->definition;
         $workflow = $object->workflowactivity;
-        if(count($definition))
+        if(count($definition) && $definition->php_notification_function !== null)
         {
             $this->notification = new \SwiftNotification;
             $this->notification->msg = 'You completed step <b>'.$definition->label.'</b>';

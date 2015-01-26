@@ -352,6 +352,59 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 });
             });
         }
+        else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="customer_code" && this.getAttribute('data-context')=="generalinfo")
+        {
+            console.log('select2 ran');
+            $this.editable({
+                disabled: $this.hasClass('editable-disabled'),
+                placeholder: "Select a customer",
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },
+                    ajax: {
+                        url: "/ajaxsearch/customercode",
+                        dataType: "json",
+                        quietMillis: 500,
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 10,
+                                page: page
+                            };
+                        },
+                        results: function (data, page){
+                            var more = (page * 10) < data.total
+                            if(data.total > 0)
+                            {
+                                var found;
+                                found = $.map(data.customers, function (item) {
+                                    return {
+                                        id: item.AN8,
+                                        name: item.ALPH,
+                                        text: item.ALPH+" (Code:"+item.AN8+")",
+                                        category: item.AC09
+                                    }
+                                 });
+                                return {results: found, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        },
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
+                    }                    
+                }
+            });
+        }
         else
         {
             $this.editable({

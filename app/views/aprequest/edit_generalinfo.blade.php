@@ -15,8 +15,8 @@
     
          <div class="form-group">
             <label class="col-md-2 control-label">Customer*</label>
-            <div class="col-md-10">
-                <a href="#" id="generalinfo_customer_{{ $form->id }}" class="editable editable-click @if(!$isCreator && !$isAdmin) editable-disabled @endif" data-type="select2" data-name="customer_code" data-pk="{{ Crypt::encrypt($form->id) }}" data-context="generalinfo" data-url="/{{ $rootURL }}/generalinfo"  data-source="/ajaxsearch/customercodeplain" data-placeholder="Select a customer" data-value="{{ $form->customer_code }}">{{ $form->customer->ALPH or "" }}</a>
+            <div class="col-md-10 editable-select2">
+                <a href="#" id="generalinfo_customer_{{ $form->id }}" class="editable editable-click @if(!$isCreator && !$isAdmin) editable-disabled @endif" data-type="select2" data-name="customer_code" data-pk="{{ Crypt::encrypt($form->id) }}" data-context="generalinfo" data-url="/{{ $rootURL }}/generalinfo" data-value="{{ $form->customer_code }}">@if($form->customer_code > 0 ){{ $form->customer->ALPH." (Code:".$form->customer_code.")" }}@endif</a>
             </div>
         </div>       
 </fieldset>

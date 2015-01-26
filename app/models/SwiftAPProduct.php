@@ -56,12 +56,14 @@ class SwiftAPProduct extends Eloquent {
     const RC_SPONSOR = 3;
     const RC_TRAINING = 4;
     const RC_CONTRIBUTION = 5;
+    const RC_LISTING = 6;
     
-    public static $reason = array(self::RC_EVENT => 'Event',
-                                  self::RC_TESTING => 'Testing/Tasting',
+    public static $reason = array(self::RC_CONTRIBUTION=> 'Contribution',
+                                  self::RC_EVENT => 'Event',
+                                  self::RC_LISTING => 'Listing',
                                   self::RC_SPONSOR => 'Sponsorship',
-                                  self::RC_TRAINING => 'Training',
-                                  self::RC_CONTRIBUTION=> 'Contribution');
+                                  self::RC_TESTING => 'Testing/Tasting',        
+                                  self::RC_TRAINING => 'Training');
     
     /*
      * Revisionable Accessors

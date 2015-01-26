@@ -57,13 +57,13 @@
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Cat Man Approval</label>
             <div class="col-md-10">
-                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_catmanapproval_".Crypt::decrypt($p->id)."\"" }} @endif class="editable productcatman-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isCatMan) editable-disabled @endif" data-type="select" data-context="product" data-name="approval_approved" data-pk="@if(isset($p->approvalcatman->id)){{ Crypt::encrypt($p->approvalcatman->id) }}@else{{ "0" }}@endif" data-source='{{ $approval_code }}' data-url="/{{ $rootURL }}/productapproval/{{ SwiftApproval::APR_CATMAN }}/{{ $p->id }}" data-value="{{ $p->approvalcatman->approved or 0 }}"></a>
+                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_catmanapproval_".Crypt::decrypt($p->id)."\"" }} @endif class="editable productcatman-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isCatMan || !$edit) editable-disabled @endif" data-type="select" data-context="product" data-name="approval_approved" data-pk="@if(isset($p->approvalcatman->id)){{ Crypt::encrypt($p->approvalcatman->id) }}@else{{ "0" }}@endif" data-source='{{ $approval_code }}' data-url="/{{ $rootURL }}/productapproval/{{ SwiftApproval::APR_CATMAN }}/{{ $p->id }}" data-value="{{ $p->approvalcatman->approved or 0 }}"></a>
             </div>
         </div>
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Cat Man Approval Comment</label>
             <div class="col-md-10">
-                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_catmanapprovalcomment_".Crypt::decrypt($p->id)."\"" }} @endif class="editable productcatman-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isCatMan) editable-disabled @endif" data-type="textarea" data-context="product" data-name="approval_comment" data-pk="@if(isset($p->approvalcatman->id)){{ Crypt::encrypt($p->approvalcatman->id) }}@else{{ "0" }}@endif" data-url="/{{ $rootURL }}/productapprovalcomment/{{ SwiftApproval::APR_CATMAN }}/{{ $p->id }}" data-value="{{ $p->approvalcatman->comment->comment or "" }}"></a>
+                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_catmanapprovalcomment_".Crypt::decrypt($p->id)."\"" }} @endif class="editable productcatman-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isCatMan || !$edit) editable-disabled @endif" data-type="textarea" data-context="product" data-name="approval_comment" data-pk="@if(isset($p->approvalcatman->id)){{ Crypt::encrypt($p->approvalcatman->id) }}@else{{ "0" }}@endif" data-url="/{{ $rootURL }}/productapprovalcomment/{{ SwiftApproval::APR_CATMAN }}/{{ $p->id }}" data-value="{{ $p->approvalcatman->comment->comment or "" }}"></a>
             </div>
         </div>        
     </div>
@@ -83,6 +83,6 @@
     </div>    
     @endif    
     <legend class="top"></legend>
-    @if($edit && (isset($canModifyProduct) || $isAdmin))<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/product" title="Delete Product"><i class="fa fa-trash-o"></i></a>@endif
+    @if(($edit && isset($canModifyProduct) && $isCreator) || $isAdmin)<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/product" title="Delete Product"><i class="fa fa-trash-o"></i></a>@endif
     @if(!isset($dummy) && isset($p))<span class="float-id">ID: {{ Crypt::decrypt($p->id) }}</span> @endif
 </fieldset>

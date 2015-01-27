@@ -119,7 +119,7 @@ class SwiftAPProduct extends Eloquent {
      */
     public function getNameAttribute()
     {
-        if($this->ITM !== "" && count($this->jdeproduct) !== 0)
+        if($this->jde_itm !== "" && count($this->jdeproduct) !== 0)
         {
             return trim($this->jdeproduct->DSC1);
         }

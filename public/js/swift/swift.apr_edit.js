@@ -57,28 +57,34 @@ function addMultiAPR($dummy,pk)
                 //Call function to get price
                 var $this = $(this);
                 var oldprice = $this.parents('fieldset').find('p.totalprice').attr('data-price');
+                var totalpriceElement = $this.parents('fieldset').find('p.totalprice');
+                totalpriceElement.addClass('loading');                
                 $.ajax({
                     url:'/aprequest/productprice/'+params.newValue,
                     success:function(price){
                         if(price !== "")
                         {
-                            $this.parents('fieldset').find('p.totalprice').attr('data-price',price);
+                            totalpriceElement.attr('data-price',price);
                             var qty = parseInt($this.parents('fieldset').find('a.product-editable[data-name="quantity"]').editable('getValue',true));
                             if(parseInt(qty) > 0)
                             {
-                                $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100) / 100));
+                                totalpriceElement.html("Rs "+(Math.round(price*qty*100) / 100));
                                 totaloftotalprice(oldprice > 0 ? Math.round(oldprice*qty*100) / 100 : 0,Math.round(price*qty*100) / 100);
                             }
                             else
                             {
-                                $this.parents('fieldset').find('p.totalprice').html("(Rs "+(Math.round(price*100)/100)+")");
+                                totalpriceElement.html("(Rs "+(Math.round(price*100)/100)+")");
                             }
                         }
                         else
                         {
-                            $this.parents('fieldset').find('p.totalprice').attr('data-price',0);
-                            $this.parents('fieldset').find('p.totalprice').html('N/A');
+                            totalpriceElement.attr('data-price',0);
+                            totalpriceElement.html('N/A');
                         }
+                        totalpriceElement.removeClass('loading');
+                    },
+                    error: function() {
+                        totalpriceElement.removeClass('loading');
                     }
                 });
             });
@@ -326,35 +332,40 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 //Call function to get price
                 var $this = $(this);
                 var oldprice = $this.parents('fieldset').find('p.totalprice').attr('data-price');
+                var totalpriceElement = $this.parents('fieldset').find('p.totalprice');
+                totalpriceElement.addClass('loading');
                 $.ajax({
                     url:'/aprequest/productprice/'+params.newValue,
                     success:function(price){
                         if(price !== "")
                         {
-                            $this.parents('fieldset').find('p.totalprice').attr('data-price',price);
+                            totalpriceElement.attr('data-price',price);
                             var qty = parseInt($this.parents('fieldset').find('a.product-editable[data-name="quantity"]').editable('getValue',true));
                             if(parseInt(qty) > 0)
                             {
-                                $this.parents('fieldset').find('p.totalprice').html("Rs "+(Math.round(price*qty*100) / 100));
+                                totalpriceElement.html("Rs "+(Math.round(price*qty*100) / 100));
                                 totaloftotalprice(oldprice > 0 ? Math.round(oldprice*qty*100) / 100 : 0,Math.round(price*qty*100) / 100);
                             }
                             else
                             {
-                                $this.parents('fieldset').find('p.totalprice').html("(Rs "+(Math.round(price*100)/100)+")");
+                                totalpriceElement.html("(Rs "+(Math.round(price*100)/100)+")");
                             }
                         }
                         else
                         {
-                            $this.parents('fieldset').find('p.totalprice').attr('data-price',0);
-                            $this.parents('fieldset').find('p.totalprice').html('N/A');
+                            totalpriceElement.attr('data-price',0);
+                            totalpriceElement.html('N/A');
                         }
+                        totalpriceElement.removeClass('loading');
+                    },
+                    error: function() {
+                        totalpriceElement.removeClass('loading');
                     }
                 });
             });
         }
         else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="customer_code" && this.getAttribute('data-context')=="generalinfo")
         {
-            console.log('select2 ran');
             $this.editable({
                 disabled: $this.hasClass('editable-disabled'),
                 placeholder: "Select a customer",

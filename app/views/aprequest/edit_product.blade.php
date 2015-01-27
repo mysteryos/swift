@@ -18,7 +18,7 @@
         <div class="form-group col-lg-12 col-xs-12">
             <label class="col-md-1 control-label">Name*</label>
             <div class="col-md-11 editable-select2">
-                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_ref_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$canModifyProduct) editable-disabled @endif" data-type="select2" data-context="product" data-name="jde_itm" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->jde_itm or "" }}">{{ $p->jdeproduct->DSC1 or "" }}@if(isset($p->jdeproduct->ITM)){{ " - ".$p->jdeproduct->ITM }}@endif</a>
+                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_ref_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$canModifyProduct) editable-disabled @endif" data-type="select2" data-context="product" data-name="jde_itm" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->jde_itm or "" }}">{{ $p->jdeproduct->DSC1 or "" }}@if(isset($p->jdeproduct->AITM)){{ " - ".$p->jdeproduct->AITM }}@endif</a>
             </div>                                                                                        
         </div>
     </div>

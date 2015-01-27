@@ -22,6 +22,8 @@ class APRequestController extends UserController {
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
         
+        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('aprequest');
+        
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
         
         $aprequest_inprogress = SwiftAPRequest::getInProgress($this->data['inprogress_limit']);
@@ -56,7 +58,7 @@ class APRequestController extends UserController {
          */
         
         $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
-        //$this->data['dynamicStory'] = OrderTrackingHelper::dynamicStory();        
+        $this->data['dynamicStory'] = false;
         
         $this->data['rootURL'] = $this->rootURL;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->editPermission,$this->adminPermission));
@@ -1568,11 +1570,11 @@ class APRequestController extends UserController {
         if($product_code !== "")
         {
             $price = JdeSales::getProductLatestCostPrice($product_code);
-            if(count($price))
-            {
-                echo round($price->UPRC,2);
-                return;
-            }
+                if(count($price))
+                {
+                    echo round($price->UPRC,2);
+                    return;
+                }
             echo "";
             return;
         }

@@ -147,7 +147,7 @@ Class AjaxSearchController extends UserController {
         {
             foreach($searchresult as $s)
             {
-                $result[] = array('id'=>trim($s->ITM),'text'=>trim($s->DSC1)." - ".trim($s->ITM));
+                $result[] = array('id'=>trim($s->ITM),'text'=>trim($s->DSC1)." - ".trim($s->AITM));
             }
             echo json_encode(['products'=>$result,'total'=>$total]);
         }

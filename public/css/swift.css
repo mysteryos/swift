@@ -624,6 +624,20 @@ Order Tracking - Edit Form
 }
 
 /*
+*  APrequest - Edit Form
+*/
+
+p.totalprice.loading:after {
+    content:" \f021" !important;
+    font-family: "FontAwesome";
+    display: inline-block;
+    -webkit-animation:spin 2s infinite linear;
+    -moz-animation:spin 2s infinite linear;
+    -o-animation:spin 2s infinite linear;
+    animation:spin 2s infinite linear;    
+}
+
+/*
 * 404 Not found
 */
 

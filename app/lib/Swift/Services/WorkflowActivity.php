@@ -326,4 +326,58 @@ class WorkflowActivity {
         return false;
     }
     
+    /*
+     * @parameter workflowTypes: string | array
+     * Returns list of all nodes pending of workflow type
+     */
+    public function statusByType($workflowTypes)
+    {
+        if(!is_array($workflowTypes))
+        {
+            $workflowTypes = array($workflowTypes);
+        }
+        
+        $nodeActivities = \SwiftNodeActivity::where('user_id','=',0)->whereHas('workflowactivity',function($q) use ($workflowTypes){
+                                return $q->whereHas('type',function($q) use ($workflowTypes){
+                                    return $q->whereIn('name',$workflowTypes);
+                                })->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
+                          })->join('swift_node_definition','swift_node_definition.id','=','swift_node_activity.node_definition_id')
+                          ->groupBy('swift_node_activity.node_definition_id')
+                          ->select(\DB::raw('count(*) as count,swift_node_activity.node_definition_id,swift_node_definition.name,MIN(swift_node_activity.created_at) as min_created_at'))
+                          ->get();
+        if(count($nodeActivities))
+        {
+            foreach($nodeActivities as &$n)
+            {
+                $permissions = \SwiftNodePermission::where('node_definition_id','=',$n->node_definition_id)
+                                ->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND')
+                                ->select('permission_name')->distinct()->get()->toArray();
+                if(count($permissions))
+                {
+                    $permissionsArray = array();
+                    array_walk($permissions,function($v,$k) use (&$permissionsArray){
+                        $permissionsArray[] = $v['permission_name'];
+                    });
+
+                    $users = \Sentry::findAllUsersWithAccess($permissionsArray);
+                    foreach($users as $i => $u)
+                    {
+                       if($u->isSuperUser() || !$u->activated)
+                       {
+                           unset($users[$i]);
+                       }                    
+                    }
+
+                    if(!empty($users))
+                    {
+                        $n->users = $users;
+                    }
+                }
+            }
+            return $nodeActivities;
+        }
+        
+        return false;
+    }
+    
 }

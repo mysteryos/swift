@@ -15,3 +15,4 @@ Artisan::add(new chclcrawler);
 Artisan::add(new elasticsearch);
 Artisan::add(new sctjdeProducts);
 Artisan::add(new elasticsearchmapping);
+Artisan::add(new dbclean);

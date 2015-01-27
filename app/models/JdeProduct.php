@@ -15,6 +15,11 @@ class JdeProduct extends Eloquent {
     
     private static $cache_expiry_time = 240;
     
+    public function getAITMAttribute($val)
+    {
+        return str_pad(trim($val), 5, '0', STR_PAD_LEFT);
+    }
+    
     public static function getByName($term,$offset,$limit)
     {
         return self::where('DSC1','LIKE',"%$term%")

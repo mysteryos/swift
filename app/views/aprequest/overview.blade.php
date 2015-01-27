@@ -34,6 +34,37 @@
 
 	<div class="row">
 
+                <!-- NEW COL START -->
+                <article class="col-md-6 col-xs-12">
+                    <div class="jarviswidget" id="ot-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                        <header>
+                                <span class="widget-icon"> <i class="fa fa-globe"></i> </span>
+                                <h2>Stories</h2>
+                        </header>                        
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+                                        <div class="widget-body" id="timeline-body">
+                                                <div class="smart-timeline">
+                                                    <ul class="smart-timeline-list" id="timeline-list">
+                                                        @if($dynamicStory !== false)
+                                                            @include('story.dynamic')
+                                                        @endif
+                                                        @if(count($stories))
+                                                            @foreach($stories as $story)
+                                                                @include('story.single')
+                                                            @endforeach
+                                                        @else
+                                                        <li class="text-center"><h2>No posts yet</h2></li>
+                                                        @endif
+                                                    </ul>
+                                                </div>                                            
+                                        </div>
+                                </div>
+                    </div>
+                </article>
+                <!-- NEW COL END -->                
+            
 		<!-- NEW COL START -->
 		<article class="col-md-6 col-xs-12">
 			<!-- Widget ID (each widget will need unique ID)-->

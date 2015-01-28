@@ -40,6 +40,25 @@ class SwiftWorkflowActivity extends Eloquent {
     protected $keepCreateRevision = true;    
     
     /*
+     * Scopes
+     */
+    
+    public function scopeInprogress($query)
+    {
+        return $query->where('status','=',self::INPROGRESS);
+    }
+    
+    public function scopeComplete($query)
+    {
+        return $query->where('status','=',self::COMPLETE);
+    }
+    
+    public function scopeRejected($query)
+    {
+        return $query->where('status','=',self::REJECTED);
+    }    
+    
+    /*
      * Relationship: Workflow
      */
     

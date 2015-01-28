@@ -77,13 +77,16 @@ class Story {
             if(count($users))
             {
                 $storyHtml = \View::make('story/single',array('story'=>$this->story))->render();
-                $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
-                foreach($users as $u)
+                if(\Config::get('pusher.enabled'))
                 {
-                    $pusher->trigger('private-user-story-'.$u->id,
-                                     'story_new',
-                                     array('id'=>$this->story->id,
-                                           'html'=>$storyHtml));                 
+                    $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
+                    foreach($users as $u)
+                    {
+                        $pusher->trigger('private-user-story-'.$u->id,
+                                         'story_new',
+                                         array('id'=>$this->story->id,
+                                               'html'=>$storyHtml));                 
+                    }
                 }
             }
         }

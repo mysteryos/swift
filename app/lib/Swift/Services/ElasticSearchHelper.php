@@ -11,26 +11,32 @@ class ElasticSearchHelper {
     
     public function indexTask($job,$data)
     {
-        if(isset($data['context']))
+        if(\Config::get('elasticsearch.enabled') === true)
         {
-            $this->IndexEs($data);
-        }
-        else
-        {
-            \Log::error('ElasticSearchHelper: No context set for the following dataset: '.json_encode($data));
+            if(isset($data['context']))
+            {
+                $this->IndexEs($data);
+            }
+            else
+            {
+                \Log::error('ElasticSearchHelper: No context set for the following dataset: '.json_encode($data));
+            }
         }
         $job->delete();
     }
     
     public function updateTask($job,$data)
     {
-        if(isset($data['context']))
-        {
-            $this->UpdateEs($data);
-        }
-        else
-        {
-            \Log::error('ElasticSearchHelper: No context set for the following dataset: '.json_encode($data));
+        if(\Config::get('elasticsearch.enabled') === true)
+        {        
+            if(isset($data['context']))
+            {
+                $this->UpdateEs($data);
+            }
+            else
+            {
+                \Log::error('ElasticSearchHelper: No context set for the following dataset: '.json_encode($data));
+            }
         }
         $job->delete();        
     }

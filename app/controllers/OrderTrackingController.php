@@ -23,6 +23,10 @@ class OrderTrackingController extends UserController {
         $this->data['inprogress_limit'] = 15;
         
         $this->data['pending_node_activity'] = WorkflowActivity::statusByType('order_tracking');
+        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('order_tracking');
+        $this->data['late_node_forms_count'] = count($this->data['late_node_forms']);
+        //All pending nodes with Eta
+        $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('order_tracking');
         
         /*
          * Order in Progress

@@ -295,6 +295,11 @@
     user-drag: none;    
 }
 
+.widget-body-compressed {
+    max-height: 400px;
+    overflow-y: scroll;
+}
+
 .full-width{
     width:100%;
 }

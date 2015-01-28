@@ -271,6 +271,24 @@ class SwiftOrder extends Eloquent {
                                         }); 
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                            },'=',0)->count();
-    }    
+                            },'=',0)->remember(5)->count();
+    }
+    
+    public static function getInProgressWithEta()
+    {
+        $query = self::query();
+        
+        return $query->orderBy('swift_order.updated_at','asc')
+                            ->with(array('nodes.permission' => function($q){
+                                return $q->wherePermissionType(SwiftNodePermission::RESPONSIBLE);
+                            },'workflow','workflow.nodes'))
+                            ->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('definition',function($q){
+                                                return $q->where('eta','>',0);
+                                             });
+                                        }); 
+                            })->remember(5)->get();        
+    }
 }

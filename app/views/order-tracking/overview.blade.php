@@ -22,8 +22,9 @@
 <!-- MAIN CONTENT -->
 <div id="content" data-js="ot_overview">
     <div class="row">
-        <div class="col-md-4 col-lg-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i> Overview &nbsp;</h1>            
+        <div class="col-xs-12">
+            <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i> Overview &nbsp;</h1>
+            <h1 class="pull-right hidden-tablet">Module Health: {{ \Helper::systemHealth($late_node_forms_count,$pending_node_count) }}</h1>
         </div>
     </div>
     
@@ -63,20 +64,29 @@
                                 </div>
                     </div>
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="ot-overview-latenodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <div class="jarviswidget" id="ot-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                             <header>
-                                    <span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
-                                    <h2>Late Nodes </h2>
+                                    <span class="widget-icon"> <i class="fa fa-refresh"></i> </span>
+                                    <h2>Pending Nodes </h2>
                             </header>
-                            <!-- widget div-->
                             <div class="no-padding">
-                                    <!-- widget content -->
-                                    <div class="widget-body">
+                                    <div class="widget-body widget-body-compressed">
                                             @include('workflow.overview_pendingnodes')
                                     </div>
-                                    <!-- end widget content -->
                             </div>
-                            <!-- end widget div -->
+                    </div>
+                    
+                    <!-- Widget ID (each widget will need unique ID)-->
+                    <div class="jarviswidget" id="ot-overview-latenodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                            <header>
+                                    <span class="widget-icon"> <i class="fa fa-bell"></i> </span>
+                                    <h2>Late Nodes </h2>
+                            </header>
+                            <div class="no-padding">
+                                    <div class="widget-body widget-body-compressed">
+                                            @include('workflow.overview_latenodes')
+                                    </div>
+                            </div>
                     </div>                    
                 </article>
                 <!-- NEW COL END -->            

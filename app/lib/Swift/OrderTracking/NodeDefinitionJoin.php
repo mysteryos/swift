@@ -43,7 +43,43 @@ Class NodeDefinitionJoin {
         return true;
     }
     
-    public static function receptionToEnd($nodeActivity)
+    public static function receptionToReceptionconsumer($nodeActivity)
+    {
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+        
+        if(count($order))
+        {
+            if(in_array($order->business_unit,array(\SwiftOrder::SCOTT_CONSUMER,\SwiftOrder::SEBNA)))
+            {
+                return true;
+            }
+        }
+        
+        return false;
+        
+    }
+    
+    public static function receptionToReceptionhealth($nodeActivity)
+    {
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+        
+        if(count($order))
+        {
+            if(in_array($order->business_unit,array(\SwiftOrder::SCOTT_HEALTH)))
+            {
+                return true;
+            }
+        }
+        
+        return false;        
+    }
+    
+    public static function receptionhealthToEnd($nodeActivity)
+    {
+        return true;
+    }
+    
+    public static function receptionconsumerToEnd($nodeActivity)
     {
         return true;
     }

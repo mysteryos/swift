@@ -263,7 +263,13 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;       
     }
     
+    //Routing of reception based on business unit
     public static function otReception($nodeActivity,$returnReason=false)
+    {
+       return true;       
+    }
+    
+    public static function otReceptionConsumer($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -273,46 +279,40 @@ Class NodeDefinition {
         $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($order))
         {
-            //Check if bill of lading has been uploaded
-            //If it is, Order is now in transit
-            /*$docs = $order->document()->get();
-            if(count($docs))
+            $order->load('reception');
+            if(count($order->reception))
             {
-                $docs = $docs->load('tag');
-                foreach($docs as $d)
+                foreach($order->reception as $r)
                 {
-                    $tagfound = false;
-                    //Get Tags
-                    if(count($d->tag))
+                    if($r->grn != "")
                     {
-                        foreach($d->tag as $tag)
-                        {
-                            if($tag->type == \SwiftTag::OT_GRN)
-                            {
-                                $tagfound = true;
-                                break;
-                            }
-                        }
+                        return true;                                    
                     }
-                    if($tagfound)
+                    elseif($returnReason)
                     {
-                        $order->load('reception');
-                        if(count($order->reception))
-                        {
-                            foreach($order->reception as $r)
-                            {
-                                if($r->grn != "")
-                                {
-                                    return true;                                    
-                                }
-                            }
-                        }
-                        break;
-                    }
+                        $returnReasonList['reception_grn'] = "Set GRN number";
+                    }                    
                 }
-                
-                return $tagfound;
-            }*/
+            }
+            elseif($returnReason)
+            {
+                $returnReasonList['reception_entry'] = "Create a Reception entry";
+            }            
+        }
+        
+        return $returnReason ? $returnReasonList : false;
+    }
+    
+    public static function otReceptionHealth($nodeActivity,$returnReason=false)
+    {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }        
+        
+        $order = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+        if(count($order))
+        {
             $order->load('reception');
             if(count($order->reception))
             {

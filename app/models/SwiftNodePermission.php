@@ -23,6 +23,15 @@ Class SwiftNodePermission extends Eloquent
     const RESPONSIBLE = 2;
     
     /*
+     * Query Scopes
+     */
+    
+    public function scopeResponsible($query)
+    {
+        return $query->where('permission_type','=',self::RESPONSIBLE);
+    }
+    
+    /*
      * Relationship: Node
      */
     

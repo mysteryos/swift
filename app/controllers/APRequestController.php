@@ -23,6 +23,9 @@ class APRequestController extends UserController {
         $this->data['inprogress_limit'] = 15;
         
         $this->data['pending_node_activity'] = WorkflowActivity::statusByType('aprequest');
+        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('aprequest');
+        $this->data['late_node_forms_count'] = count($this->data['late_node_forms']);
+        $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('aprequest');
         
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
         

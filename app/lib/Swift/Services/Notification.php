@@ -93,16 +93,19 @@ class Notification {
         }
         
         $this->notification->load('notifiable');
-        $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
-        $pusher->trigger('private-user-'.$this->notification->to,
-                         'notification_new',
-                         array('id'=>$this->notification->id,
-                               'color'=>$color,
-                               'html'=>\View::make('notification/single',array('notification'=>$this->notification))->render(),
-                               'title'=>"<i class=\"fa {$this->notification->notifiable->getIcon()}\"></i> ".$this->notification->notifiable->getReadableName(),
-                               'content'=>$this->notification->msg,
-                               'url'=>\Helper::generateUrl($this->notification->notifiable),
-                               'icon'=>$icon));
+        if(\Config::get('pusher.enabled'))
+        {
+            $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
+            $pusher->trigger('private-user-'.$this->notification->to,
+                             'notification_new',
+                             array('id'=>$this->notification->id,
+                                   'color'=>$color,
+                                   'html'=>\View::make('notification/single',array('notification'=>$this->notification))->render(),
+                                   'title'=>"<i class=\"fa {$this->notification->notifiable->getIcon()}\"></i> ".$this->notification->notifiable->getReadableName(),
+                                   'content'=>$this->notification->msg,
+                                   'url'=>\Helper::generateUrl($this->notification->notifiable),
+                                   'icon'=>$icon));
+        }
     }
     
     /*

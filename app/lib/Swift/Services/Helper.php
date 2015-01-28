@@ -345,4 +345,76 @@ class Helper {
         return $workingDays;
     }
     
+    public function previousBusinessDay(\Carbon\Carbon $date)
+    {
+        if(!$date->isWeekday())
+        {
+            $date->subDay();
+        }
+        foreach(\Config::get('holidays.days') as $holiday)
+        {
+            $holidayDate = Carbon::createFromFormat('Y-m-d',$holiday);
+            if($holidayDate->diffInDays($date) == 0)
+            {
+                $date->subDay();
+                $date = self::previousBusinessDay($date);
+            }
+        }
+        
+        return $date;
+    }
+    
+    public function nextBusinessDay(\Carbon\Carbon $date)
+    {
+        //is Weekend
+        if(!$date->isWeekday())
+        {
+            $date->addDay();
+        }
+        foreach(\Config::get('holidays.days') as $holiday)
+        {
+            $holidayDate = Carbon::createFromFormat('Y-m-d',$holiday);
+            if($holidayDate->diffInDays($date) == 0)
+            {
+                $date->addDay();
+                $date = self::nextBusinessDay($date);
+            }
+        }
+        
+        return $date;        
+    }
+    
+    public function systemHealth($lateCount,$totalCount)
+    {
+        if($totalCount == 0)
+        {
+            return "<span class='color-greenDark' title='No pending tasks at all'>Heavenly</span>";
+        }
+        else
+        {
+            //percent of nodes not overdue.
+            $percentOfNodes = (($totalCount-$lateCount)/$totalCount) * 100;
+            if($percentOfNodes >= 90)
+            {
+                return "<span class='color-greenDark' title='There is little or no late tasks on the system'>Awesome</span><span> | Overdue tasks: ".round(($lateCount/$totalCount)*100,2)."% out of $totalCount</span>";
+            }
+            elseif($percentOfNodes >= 75)
+            {
+                return "<span class='color-greenDark' title='There is some late tasks on the system'>Great</span><span> | Overdue tasks: ".round(($lateCount/$totalCount)*100,2)."% out of $totalCount</span>";
+            }
+            elseif($percentOfNodes >= 50)
+            {
+                return "<span class='color-orangeDark' title='Late tasks are starting to accumulate on the system'>Not Bad</span><span> | Overdue tasks: ".round(($lateCount/$totalCount)*100,2)."% out of $totalCount</span>";
+            }
+            elseif($percentOfNodes >= 25)
+            {
+                return "<span class='color-redDark' title='Late tasks are now a sore sight for our eyes'>Bad</span><span> | Overdue tasks: ".round(($lateCount/$totalCount)*100,2)."% out of $totalCount</span>";
+            }
+            else
+            {
+                return "<span class='color-red' title='R.I.P'>ICU</span><span> | Overdue tasks: ".round(($lateCount/$totalCount)*100,2)."% out of $totalCount</span>";
+            }
+        }
+    }
+    
 }

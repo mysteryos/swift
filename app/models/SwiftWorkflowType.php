@@ -6,6 +6,14 @@
 
 Class SwiftWorkflowType extends Eloquent 
 {    
+    
+    /*
+     * List of Workflow Types:
+     * @order_tracking
+     * @aprequest
+     * @ocr_textfield
+     */
+    
     protected $table = 'swift_workflow_type';
     
     protected $guarded = array('id');

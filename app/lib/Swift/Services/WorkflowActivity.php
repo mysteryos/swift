@@ -145,8 +145,11 @@ class WorkflowActivity {
             {
                 $progress = $this->progress($relation_object);
                 $progressHTML = 'Current Step: <span class="'.$progress['status_class'].'">'.$progress['label'].'</span>';
-                $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
-                $pusher->trigger('presence-'.$relation_object->channelName(), 'html-update', array('id'=>'workflow_status','html'=>$progressHTML));
+                if(\Config::get('pusher.enabled'))
+                {
+                    $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
+                    $pusher->trigger('presence-'.$relation_object->channelName(), 'html-update', array('id'=>'workflow_status','html'=>$progressHTML));
+                }
             }
         }
         
@@ -219,6 +222,8 @@ class WorkflowActivity {
                         return array('label'=>$n->definition->label,'status'=>SwiftWorkflowActivity::COMPLETE,'status_class'=>'color-green','definition'=>array($n->definition->id),'definition_obj'=>$n->definition);
                     }
                 }
+                //Something's wrong with the workflow. Rerun WorkflowActivity Update
+                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($relation_object),'id'=>$relation_object->id,'user_id'=>\Sentry::findUserByLogin(\Config::get('website.system_mail'))->id));
             }
         }
         else
@@ -378,6 +383,57 @@ class WorkflowActivity {
             return $nodeActivities;
         }
         
+        return false;
+    }
+    
+    public function lateNodeByForm($workflowTypes)
+    {
+        $nodeActivities = \SwiftNodeActivity::getLateNodes($workflowTypes);
+        
+        if(count($nodeActivities))
+        {
+            foreach($nodeActivities as $k => &$activity)
+            {
+                $workingDaysSinceUpdate = \Helper::getWorkingDays($activity->updated_at->toDateString(),\Carbon::now()->toDateString());
+                //Eta not due
+                if($workingDaysSinceUpdate <= $activity->definition->eta)
+                {
+                    unset($nodeActivities[$k]);
+                }
+                else
+                {
+                    if(count($activity->permission))
+                    {
+                        $permissions = $activity->permission->toArray();
+                        $permissionsArray = array();
+                        array_walk($permissions,function($v,$k) use (&$permissionsArray){
+                            $permissionsArray[] = $v['permission_name'];
+                        });
+
+                        $users = \Sentry::findAllUsersWithAccess($permissionsArray);
+                        foreach($users as $i => $u)
+                        {
+                           if($u->isSuperUser() || !$u->activated)
+                           {
+                               unset($users[$i]);
+                           }
+                        }
+
+                        if(!empty($users))
+                        {
+                            $activity->users = $users;
+                        }
+                    }
+                    
+                    $activity->dueSince = \Helper::nextBusinessDay($activity->updated_at->addDays($activity->definition->eta));
+                }
+            }
+            
+            if(!$nodeActivities->isEmpty())
+            {
+                return $nodeActivities;
+            }
+        }
         return false;
     }
     

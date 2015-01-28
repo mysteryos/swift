@@ -543,6 +543,18 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
            uploadmsg.hide();
        }            
     });
+    
+    //Drag & Drop File Fix
+    
+    var dragEle = document.getElementById( "content" );
+    new Dragster(dragEle);
+    dragEle.addEventListener( "dragster:enter", function (e) {
+        e.target.classList.add( "dragged-over" );
+    }, false );
+    
+    dragEle.addEventListener( "dragster:leave", function (e) {
+        e.target.classList.remove( "dragged-over" );
+    }, false );
 
     //File View
     $('#ot-docs').on('click','a.file-view',function(e){

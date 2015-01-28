@@ -46,6 +46,20 @@ class SwiftNodeActivity extends Eloquent
     }
     
     /*
+     * Query Scope
+     */
+    
+    public function scopeInprogress($query)
+    {
+        return $query->where('user_id','=',0);
+    }
+    
+    public function scopeComplete($query)
+    {
+        return $query->where('user_id','>',0);
+    }
+    
+    /*
      * Relationship: Parent
      * Class: Self
      */
@@ -117,5 +131,46 @@ class SwiftNodeActivity extends Eloquent
     public static function getLatestByWorkflow($workflow_activity_id)
     {
         return self::where('workflow_activity_id','=',$workflow_activity_id)->orderBy('created_at','desc')->get();
+    }
+    
+    public static function getLateNodes($workflowType)
+    {
+        if(!is_array($workflowType))
+        {
+            $workflowType = array($workflowType);
+        }
+        
+        return self::whereHas('definition',function($q){
+                    return $q->where('eta','>',0);
+                })
+                ->inprogress()
+                ->whereHas('workflowactivity',function($q) use ($workflowType){
+                    return $q->inprogress()->whereHas('type',function($q) use ($workflowType){
+                        return $q->whereIn('name',$workflowType);
+                    });
+                })
+                ->with(array('workflowactivity.workflowable','definition','permission' => function($q) {
+                    return $q->responsible();
+                }))
+                ->orderBy('updated_at','ASC')->remember(60)->get();
+                
+    }
+    
+    public static function countPendingNodesWithEta($workflowType)
+    {
+        if(!is_array($workflowType))
+        {
+            $workflowType = array($workflowType);
+        }
+        
+        return self::whereHas('definition',function($q){
+                    return $q->where('eta','>',0);
+                })
+                ->inprogress()
+                ->whereHas('workflowactivity',function($q) use ($workflowType){
+                    return $q->inprogress()->whereHas('type',function($q) use ($workflowType){
+                        return $q->whereIn('name',$workflowType);
+                    });
+                })->remember(60)->count();        
     }
 }

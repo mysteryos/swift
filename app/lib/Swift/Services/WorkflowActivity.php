@@ -342,8 +342,9 @@ class WorkflowActivity {
                                     return $q->whereIn('name',$workflowTypes);
                                 })->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
                           })->join('swift_node_definition','swift_node_definition.id','=','swift_node_activity.node_definition_id')
+                          ->where('swift_node_definition.eta','>',0)
                           ->groupBy('swift_node_activity.node_definition_id')
-                          ->select(\DB::raw('count(*) as count,swift_node_activity.node_definition_id,swift_node_definition.name,MIN(swift_node_activity.created_at) as min_created_at'))
+                          ->select(\DB::raw('count(*) as count,swift_node_activity.node_definition_id,swift_node_definition.label,MIN(swift_node_activity.created_at) as min_created_at'))
                           ->get();
         if(count($nodeActivities))
         {

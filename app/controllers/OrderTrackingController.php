@@ -22,6 +22,8 @@ class OrderTrackingController extends UserController {
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
         
+        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('order_tracking');
+        
         /*
          * Order in Progress
          */

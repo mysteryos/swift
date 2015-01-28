@@ -751,6 +751,10 @@ class APRequestController extends UserController {
                 //All Validation Passed, let's save
                 $erpOrder = new SwiftErpOrder();
                 $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                if(!$this->currentUser->hasAccess($this->adminPermission))
+                {
+                    $erpOrder->type = \SwiftErpOrder::TYPE_ORDER_AP;
+                }
                 if($form->order()->save($erpOrder))
                 {
                     Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
@@ -764,10 +768,16 @@ class APRequestController extends UserController {
             }
             else
             {
+                if(!$this->currentUser->hasAccess($this->adminPermission) && Input::get('name') == 'type')
+                {
+                    return Response::make("You don't have permission to modify type of order.",400);
+                }
+                
                 $erpOrder = SwiftErpOrder::find(Crypt::decrypt(Input::get('pk')));
                 if($erpOrder)
                 {
                     $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    
                     if($erpOrder->save())
                     {
                         Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));

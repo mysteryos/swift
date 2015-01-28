@@ -122,7 +122,7 @@ Class NodeDefinition {
             {
                 foreach($order as $o)
                 {
-                    if($o->ref != "" && $o->status = \SwiftAPOrder::FILLED)
+                    if($o->ref != "" && $o->status == \SwiftAPOrder::FILLED)
                     {
                         return true;
                     }

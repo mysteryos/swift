@@ -102,9 +102,13 @@ class Helper {
         return $converted_array;
     }
     
-    public function getUserName($user_id,$current_user,$me=true)
+    public function getUserName($user,$current_user,$me=true)
     {
-        $user = User::find($user_id);
+//        if(!$user  instanceof \Cartalyst)
+//        {
+            $user = User::find($user);
+//        }
+        
         if($user)
         {
             

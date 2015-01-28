@@ -36,7 +36,7 @@
 
                 <!-- NEW COL START -->
                 <article class="col-md-6 col-xs-12">
-                    <div class="jarviswidget" id="ot-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                    <div class="jarviswidget" id="ap-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
                         <header>
                                 <span class="widget-icon"> <i class="fa fa-globe"></i> </span>
                                 <h2>Stories</h2>
@@ -62,13 +62,29 @@
                                         </div>
                                 </div>
                     </div>
+                    <!-- Widget ID (each widget will need unique ID)-->
+                    <div class="jarviswidget" id="ap-overview-latenodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                            <header>
+                                    <span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
+                                    <h2>Late Nodes </h2>
+                            </header>
+                            <!-- widget div-->
+                            <div class="no-padding">
+                                    <!-- widget content -->
+                                    <div class="widget-body">
+                                            @include('workflow.overview_pendingnodes')
+                                    </div>
+                                    <!-- end widget content -->
+                            </div>
+                            <!-- end widget div -->
+                    </div>                    
                 </article>
                 <!-- NEW COL END -->                
             
 		<!-- NEW COL START -->
 		<article class="col-md-6 col-xs-12">
 			<!-- Widget ID (each widget will need unique ID)-->
-			<div class="jarviswidget" id="ot-overview-inprogress" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+			<div class="jarviswidget" id="ap-overview-inprogress" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
 					<span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
                                         <h2>Work Spot </h2>

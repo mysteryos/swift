@@ -17,7 +17,7 @@
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Type*</label>
             <div class="col-md-10 editable-select2">
-                <a href="#" @if(isset($e->id)) {{ "id=\"erporder_type_".Crypt::decrypt($e->id)."\"" }} @endif class="editable erporder-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isCcare && !$isAdmin) editable-disabled @endif" data-type="select" data-context="erporder" data-name="type" data-source='{{ $erporder_type }}' data-pk="{{ $e->id or 0 }}" data-url="/{{ $rootURL }}/erporder/{{ Crypt::encrypt($form->id) }}" data-value="{{ $e->type or "" }}"></a>
+                <a href="#" @if(isset($e->id)) {{ "id=\"erporder_type_".Crypt::decrypt($e->id)."\"" }} @endif class="editable erporder-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin) editable-disabled @endif" data-type="select" data-context="erporder" data-name="type" data-source='{{ $erporder_type }}' data-pk="{{ $e->id or 0 }}" data-url="/{{ $rootURL }}/erporder/{{ Crypt::encrypt($form->id) }}" data-value="{{ \SwiftErpOrder::TYPE_ORDER_AP }}"></a>
             </div>                                                                                        
         </div>        
     </div>

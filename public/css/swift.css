@@ -273,6 +273,28 @@
 * Extend SmartAdmin Production
 */
 
+.undraggable {
+    /* For Opera and <= IE9, we need to add unselectable="on" attribute onto each element */
+    /* Check this site for more details: http://help.dottoro.com/lhwdpnva.php */
+    -moz-user-select: none; /* These user-select properties are inheritable, used to prevent text selection */
+    -webkit-user-select: none;
+    -ms-user-select: none; /* From IE10 only */
+    user-select: none; /* Not valid CSS yet, as of July 2012 */
+
+    -webkit-user-drag: none; /* Prevents dragging of images/divs etc */
+    user-drag: none;    
+}
+
+.btn, .editable, form, fieldset, i.fa , a {
+    -moz-user-select: none; /* These user-select properties are inheritable, used to prevent text selection */
+    -webkit-user-select: none;
+    -ms-user-select: none; /* From IE10 only */
+    user-select: none; /* Not valid CSS yet, as of July 2012 */
+
+    -webkit-user-drag: none; /* Prevents dragging of images/divs etc */
+    user-drag: none;    
+}
+
 .full-width{
     width:100%;
 }
@@ -391,6 +413,8 @@ ul.messenger.messenger-fixed.messenger-on-top {
 
 #draghover {
     display:none;
+    opacity: 0.7;
+    transition: opacity 0.5s ease-in-out;    
 }
 
 #draghover div.circle {
@@ -400,27 +424,23 @@ ul.messenger.messenger-fixed.messenger-on-top {
     padding-top: 25px;
     color:white;
     border-radius:50%;
-    opacity: 1;
 }
 
-#content.dz-drag-hover {
-    -webkit-animation-name:fadeIn;
-    -moz-animation-name:fadeIn;
-    -o-animation-name:fadeIn;
-    animation-name:fadeIn;
+#content.dragged-over {
     background-color: white;
     opacity: 0.7;
     position:relative;
     z-index:2;
 }
 
-#content.dz-drag-hover #draghover {
+#content.dragged-over #draghover {
     z-index:3;
     display:block;
-    position:absolute;
+    position:fixed;
     width:100%;
-    top:10%;
+    top:30%;
     left:0;
+    opacity:1;
 }
 
 /*

@@ -20,9 +20,10 @@ class SwiftErpOrder extends Eloquent {
     const FILLED = 1;
     const CANCELLED = 2;
     
-    const TYPE_CASH = 1;
-    const TYPE_CREDIT = 2;
-    const TYPE_AP = 3;
+    const TYPE_RETURN_CASH = 1;
+    const TYPE_RETURN_CREDIT = 2;
+    const TYPE_RETURN_AP = 3;
+    const TYPE_ORDER_AP = 4;
     
     public static $status = array(
                                 self::FILLED => 'Filled',
@@ -30,9 +31,10 @@ class SwiftErpOrder extends Eloquent {
                             );
     
     public static $type = array(
-                                self::TYPE_CASH => '3C - Cash',
-                                self::TYPE_CREDIT => '4C - Credit',
-                                self::TYPE_AP => '9C - A&P'
+                                self::TYPE_RETURN_CASH => '3C - Cash Return',
+                                self::TYPE_RETURN_CREDIT => '4C - Credit Return',
+                                self::TYPE_RETURN_AP => '9C - A&P Return',
+                                self::TYPE_ORDER_AP=>'S9 - A&P Sale'
                             );
     
     

@@ -17,7 +17,6 @@ class APRequestHelper{
     
     public function autoexecapproval($job,$data)
     {
-        
         if(!\Helper::loginSysUser())
         {
             \Log::error('Unable to login system user');

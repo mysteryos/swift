@@ -20,6 +20,8 @@ class SwiftNodeActivity extends Eloquent
     
     protected $touches = array('workflowactivity');
     
+    private $cachedQueries = array('countPendingNodesWithEta','getLateNodes','getPendingNodes');
+    
     /*
      * Flow Constants
      */
@@ -140,21 +142,50 @@ class SwiftNodeActivity extends Eloquent
             $workflowType = array($workflowType);
         }
         
-        return self::whereHas('definition',function($q){
+        $query = self::query();
+        
+        return $query->whereHas('definition',function($q){
                     return $q->where('eta','>',0);
                 })
                 ->inprogress()
                 ->whereHas('workflowactivity',function($q) use ($workflowType){
-                    return $q->inprogress()->whereHas('type',function($q) use ($workflowType){
+                    return $q->whereHas('type',function($q) use ($workflowType){
                         return $q->whereIn('name',$workflowType);
-                    });
+                    })
+                    ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
                 })
                 ->with(array('workflowactivity.workflowable','definition','permission' => function($q) {
                     return $q->responsible();
                 }))
-                ->orderBy('updated_at','ASC')->remember(60)->get();
+                ->orderBy('updated_at','ASC')->remember(30)->get();
                 
     }
+    
+    //@use: WorkflowActivity::statusByType
+    
+    public static function getPendingNodes($workflowType)
+    {
+        if(!is_array($workflowType))
+        {
+            $workflowType = array($workflowType);
+        }
+        
+        $query = self::query();        
+        
+        return $query->inprogress()
+                    ->whereHas('workflowactivity',function($q) use ($workflowType){
+                            return $q->whereHas('type',function($q) use ($workflowType){
+                                return $q->whereIn('name',$workflowType);
+                            })
+                            ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
+                    })
+                    ->join('swift_node_definition','swift_node_definition.id','=','swift_node_activity.node_definition_id')
+                    ->where('swift_node_definition.eta','>',0)
+                    ->groupBy('swift_node_activity.node_definition_id')
+                    ->select(\DB::raw('count(*) as count,swift_node_activity.node_definition_id,swift_node_definition.label,MIN(swift_node_activity.created_at) as min_created_at'))
+                    ->remember(30)
+                    ->get();        
+  }
     
     public static function countPendingNodesWithEta($workflowType)
     {
@@ -171,6 +202,6 @@ class SwiftNodeActivity extends Eloquent
                     return $q->inprogress()->whereHas('type',function($q) use ($workflowType){
                         return $q->whereIn('name',$workflowType);
                     });
-                })->remember(60)->count();        
+                })->remember(30)->count();        
     }
 }

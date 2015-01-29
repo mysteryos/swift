@@ -67,7 +67,7 @@
                     <div class="jarviswidget" id="ap-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-refresh"></i> </span>
-                                    <h2>Pending Tasks </h2>
+                                    <h2>Pending Tasks (Refreshed every 30 mins)</h2>
                             </header>
                             <div class="no-padding">
                                     <div class="widget-body widget-body-compressed">
@@ -80,7 +80,7 @@
                     <div class="jarviswidget" id="ap-overview-latetasks" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-bell"></i> </span>
-                                    <h2>Late Tasks </h2>
+                                    <h2>Late Tasks (Refreshed every 30 mins)</h2>
                             </header>
                             <div class="no-padding">
                                     <div class="widget-body widget-body-compressed">

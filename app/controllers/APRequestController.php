@@ -136,7 +136,7 @@ class APRequestController extends UserController {
             {
                 if($this->data['current_activity']['status'] == SwiftWorkflowActivity::INPROGRESS)
                 {
-                    if(!isset($this->data['current_activity']['definition_obj']))
+                    if(!array_key_exists('definition_obj',$this->data['current_activity']))
                     {
                         /*
                          * Detect buggy workflows
@@ -144,25 +144,27 @@ class APRequestController extends UserController {
                          */
                         WorkflowActivity::update($apr);
                     }
-                    
-                    foreach($this->data['current_activity']['definition_obj'] as $d)
+                    else
                     {
-                        if($d->data != "")
+                        foreach($this->data['current_activity']['definition_obj'] as $d)
                         {
-                            if(isset($d->data->addproduct))
+                            if($d->data != "")
                             {
-                                $this->data['canAddProduct'] = true;
-                            }
-                            
-                            if((isset($d->data->modifyproduct) && $this->data['isCreator'] == true) || $this->data['isAdmin'] == true)
-                            {
-                                $this->data['canModifyProduct'] = true;
-                            }
-                            
-                            if(isset($d->data->manualpublish) && ($this->data['isAdmin'] || $apr->revisionHistory()->orderBy('created_at','ASC')->first()->user_id == $this->currentUser->id))
-                            {
-                                $this->data['canPublish'] = true;
-                                break;
+                                if(isset($d->data->addproduct))
+                                {
+                                    $this->data['canAddProduct'] = true;
+                                }
+
+                                if((isset($d->data->modifyproduct) && $this->data['isCreator'] == true) || $this->data['isAdmin'] == true)
+                                {
+                                    $this->data['canModifyProduct'] = true;
+                                }
+
+                                if(isset($d->data->manualpublish) && ($this->data['isAdmin'] || $apr->revisionHistory()->orderBy('created_at','ASC')->first()->user_id == $this->currentUser->id))
+                                {
+                                    $this->data['canPublish'] = true;
+                                    break;
+                                }
                             }
                         }
                     }

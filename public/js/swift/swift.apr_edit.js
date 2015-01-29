@@ -830,7 +830,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     var dragEle = document.getElementById( "content" );
     new Dragster(dragEle);
     dragEle.addEventListener( "dragster:enter", function (e) {
-        e.target.classList.add( "dragged-over" );
+        for (n in e.detail.dataTransfer.types)
+        {
+            if (e.detail.dataTransfer.types[n] === "Files"){
+                e.target.classList.add( "dragged-over" );
+                break;
+            }
+        }        
+        
     }, false );
     
     dragEle.addEventListener( "dragster:leave", function (e) {

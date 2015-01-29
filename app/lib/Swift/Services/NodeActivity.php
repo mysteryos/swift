@@ -261,7 +261,11 @@ class NodeActivity {
                             //Save Current
                             self::save($nodeActivity,$flow);
                             //Story Relate
-                            \Story::relate($nodeActivity,\SwiftStory::ACTION_COMPLETE);                            
+                            //If Notification has to be sent
+                            if($nodeActivity->definition->php_notification_function)
+                            {
+                                \Story::relate($nodeActivity,\SwiftStory::ACTION_COMPLETE);
+                            }
                             //Send Notification of Success
                             \Notification::send(\SwiftNotification::TYPE_SUCCESS,$nodeActivity);
                         }

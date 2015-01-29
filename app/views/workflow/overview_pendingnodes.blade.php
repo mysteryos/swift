@@ -20,6 +20,7 @@
                 <td>
                     @if(isset($p->users))
                         <?php 
+                            $userArray = array();
                             foreach($p->users as $u)
                             {
                                 $userArray[] = \Helper::getUserName($u->id,\Sentry::getUser());

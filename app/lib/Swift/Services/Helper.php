@@ -386,7 +386,7 @@ class Helper {
     
     public function systemHealth($lateCount,$totalCount)
     {
-        if($totalCount == 0)
+        if($totalCount == 0 || $lateCount == 0)
         {
             return "<span class='color-greenDark' title='No pending tasks at all'>Heavenly</span>";
         }

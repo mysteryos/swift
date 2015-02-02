@@ -27,7 +27,16 @@
             <h1 class="pull-right hidden-tablet">Module Health: {{ \Helper::systemHealth($late_node_forms_count,$pending_node_count) }}</h1>
         </div>
     </div>
-    
+    <ul class="nav nav-tabs row-space-4">
+        <li class="@if($business_unit === false){{ "active" }}@endif">
+            <a href="/order-tracking/overview" class="pjax">All</a>
+        </li>
+        @foreach(SwiftOrder::$business_unit as $k => $bu)
+            <li class="@if($business_unit == $k){{ "active" }}@endif">
+                    <a href="/order-tracking/overview/{{ $k }}" class="pjax">{{ $bu }}</a>
+            </li>                                        
+        @endforeach
+    </ul>    
 <!-- widget grid -->
     <section id="widget-grid">
 
@@ -37,54 +46,49 @@
 
                 <!-- NEW COL START -->
                 <article class="col-md-6 col-xs-12">
-                    <div class="jarviswidget" id="ot-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                    <div class="jarviswidget" id="ot-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/order-tracking/stories/{{ $business_unit }}">
                         <header>
                                 <span class="widget-icon"> <i class="fa fa-globe"></i> </span>
-                                <h2>Stories</h2>
+                                <h2>Stories</h2>                               
                         </header>                        
                                 <!-- widget div-->
 				<div>
 					<!-- widget content -->
                                         <div class="widget-body" id="timeline-body">
-                                                <div class="smart-timeline">
-                                                    <ul class="smart-timeline-list" id="timeline-list">
-                                                        @if($dynamicStory !== false)
-                                                            @include('story.dynamic')
-                                                        @endif
-                                                        @if(count($stories))
-                                                            @foreach($stories as $story)
-                                                                @include('story.single')
-                                                            @endforeach
-                                                        @else
-                                                        <li class="text-center"><h2>No posts yet</h2></li>
-                                                        @endif
-                                                    </ul>
-                                                </div>                                            
+                                            <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
                                         </div>
                                 </div>
                     </div>
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="ot-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <div class="jarviswidget" id="ot-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" @if($business_unit==0)data-widget-load="/order-tracking/pending-nodes/"@endif>
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-refresh"></i> </span>
                                     <h2>Pending Nodes (Refreshed every 30 mins)</h2>
                             </header>
                             <div class="no-padding">
                                     <div class="widget-body widget-body-compressed">
-                                            @include('workflow.overview_pendingnodes')
+                                        @if($business_unit==0)
+                                            <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
+                                        @else
+                                            <p class="text-center h3"><i class="fa fa-lg fa-exclamation-triangle"></i> Data unavailable when filtered by business unit</p>
+                                        @endif
                                     </div>
                             </div>
                     </div>
                     
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="ot-overview-latenodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <div class="jarviswidget" id="ot-overview-latenodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" @if($business_unit==0)data-widget-load="/order-tracking/late-nodes/"@endif>
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-bell"></i> </span>
                                     <h2>Late Nodes (Refreshed every 30 mins)</h2>
                             </header>
                             <div class="no-padding">
                                     <div class="widget-body widget-body-compressed">
-                                            @include('workflow.overview_latenodes')
+                                        @if($business_unit==0)
+                                            <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
+                                        @else
+                                            <p class="text-center h3"><i class="fa fa-lg fa-exclamation-triangle"></i> Data unavailable when filtered by business unit</p>
+                                        @endif
                                     </div>
                             </div>
                     </div>                    

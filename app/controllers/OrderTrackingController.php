@@ -16,15 +16,13 @@ class OrderTrackingController extends UserController {
      * Overview
      */
     
-    public function getOverview()
+    public function getOverview($business_unit=false)
     {
         
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
         
-        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('order_tracking');
-        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('order_tracking');
-        $this->data['late_node_forms_count'] = count($this->data['late_node_forms']);
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order_tracking');
         //All pending nodes with Eta
         $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('order_tracking');
         
@@ -34,13 +32,13 @@ class OrderTrackingController extends UserController {
         
         $order_inprogress = $order_inprogress_important = $order_inprogress_responsible = $order_inprogress_important_responsible = array();
         
-        $order_inprogress = SwiftOrder::getInProgress($this->data['inprogress_limit']);                            
+        $order_inprogress = SwiftOrder::getInProgress($this->data['inprogress_limit'],false,$business_unit);                            
         
-        $order_inprogress_important = SwiftOrder::getInProgress(0,true);
+        $order_inprogress_important = SwiftOrder::getInProgress(0,true,$business_unit);
                             
-        $order_inprogress_responsible = SwiftOrder::getInProgressResponsible(); 
+        $order_inprogress_responsible = SwiftOrder::getInProgressResponsible(0,false,$business_unit); 
                             
-        $order_inprogress_important_responsible = SwiftOrder::getInProgressResponsible(0,true);                           
+        $order_inprogress_important_responsible = SwiftOrder::getInProgressResponsible(0,true,$business_unit);                           
         
         $order_inprogress = $order_inprogress->diff($order_inprogress_responsible);
         $order_inprogress_important = $order_inprogress_important->diff($order_inprogress_important_responsible);
@@ -63,35 +61,6 @@ class OrderTrackingController extends UserController {
                 $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
             }
         }
-        
-        /*
-         * Late Nodes
-         */
-        
-        /*$late_node_activity = SwiftNodeActivity::whereHas('workflowactivity',function($q){
-                                    return $q->where('status','=',SwiftWorkflowActivity::PENDING)->has('order','>',0);
-                              })->where('user_id','=',0)->with('definition');
-                              
-        $late_node_definition = array();
-        foreach($late_node_activity as $act)
-        {
-            if($act->created_at->diffInDaysFiltered(function(Carbon $date){
-                return !$date->isWeekend();
-                },Carbon::now()) > $act->definition->eta)
-            {
-                if(!isset($late_node_definition[$act->node_definition_id]))
-                {
-                    $late_node_definition[$act->node_definition_id] = array(
-                        'definition' => $act->definition,
-                        'count' => 1,
-                    );
-                }
-                else
-                {
-                    $late_node_definition[$act->node_definition_id]['count'] += 1;
-                }
-            }
-        }*/
         
         /*
          * Storage Tracking - SEA
@@ -161,9 +130,7 @@ class OrderTrackingController extends UserController {
          * Stories
          */
         
-        $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
-        $this->data['dynamicStory'] = OrderTrackingHelper::dynamicStory();
-        
+        $this->data['business_unit'] = $business_unit;
         $this->data['rootURL'] = $this->rootURL;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
         $this->data['order_inprogress'] = $order_inprogress;
@@ -1145,7 +1112,6 @@ class OrderTrackingController extends UserController {
         $shipment = SwiftShipment::find($shipment_id);
         if(count($shipment))
         {
-            $order_id = $shipment->order_id;
             if($shipment->delete())
             {
                 return Response::make('Success');
@@ -1160,6 +1126,113 @@ class OrderTrackingController extends UserController {
             return Response::make('Freight entry not found',400);
         }        
     }
+    
+    public function putStorage($order_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }        
+        
+        $order = SwiftOrder::find(Crypt::decrypt($order_id));
+        
+        if(count($order))
+        {
+            /*
+             * Manual Validation
+             */
+            switch(Input::get('name'))
+            {
+                case 'storage_charges':
+                case 'demurrage_charges':
+                    if(Input::get('value') != "" && !is_numeric(Input::get('value')))
+                    {
+                        return Response::make('Please enter only numbers.',400);
+                    }
+                    
+                    if(is_numeric(Input::get('value')) && (int)Input::get('value') < 0)
+                    {
+                        return Response::make('Please enter a positive value',400);
+                    }                    
+                    break;
+            }
+
+            /*
+             * New Freight
+             */
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $storage = new SwiftStorage();
+                $storage->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                if($order->storage()->save($storage))
+                {
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($storage->id),'id'=>$storage->id]));
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }
+                
+            }
+            else
+            {
+                $storage = SwiftStorage::find(Crypt::decrypt(Input::get('pk')));
+                if($storage)
+                {
+                    $storage->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    if($storage->save())
+                    {
+                        return Response::make('Success');
+                    }
+                    else
+                    {
+                        return Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return Response::make('Error saving shipment: Invalid PK',400);
+                }
+            }
+        }
+        else
+        {
+            return Response::make('Order process form not found',404);
+        }        
+    }
+    
+    public function deleteStorage()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }        
+        
+        $storage_id = Crypt::decrypt(Input::get('pk'));
+        $storage = SwiftStorage::find($storage_id);
+        if(count($storage))
+        {
+            if($storage->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return Response::make('Storage entry not found',400);
+        }        
+    }    
     
     /*
      * Purchase Order: REST
@@ -1616,23 +1689,33 @@ class OrderTrackingController extends UserController {
      * Transit Calendar data by AJAX
      */
     
-    public function postTransitcalendar()
+    public function postTransitcalendar($business_unit=false)
     {
         $startdate = gmdate("Y-m-d",Input::get('start'));
         $enddate = gmdate("Y-m-d",Input::get('end'));
         
-        $freight = SwiftFreight::where('freight_eta','>=',$startdate,'and')
+        $freight = SwiftFreight::query();
+        
+        $freight->where('freight_eta','>=',$startdate,'and')
                     ->where('freight_eta','<=',$enddate)
-                    ->with('order','order.workflow')
-                    ->whereHas('order',function($q){
-                        return $q->whereHas('workflow',function($q2){
+                    ->with(['order','order.workflow'])
+                    ->whereHas('order',function($q) use ($business_unit){
+                        $q->whereHas('workflow',function($q2){
                             return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
                         });
-                    })->get()->all();
-        if(count($freight))
+                        if($business_unit !== false && array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                        {
+                            $q->where('business_unit','=',$business_unit);
+                        }    
+                        return $q;
+                    });
+        
+        $freightResult = $freight->get()->all();
+        
+        if(count($freightResult))
         {
             $freightresponse = array();
-            foreach($freight as $f)
+            foreach($freightResult as $f)
             {
                 switch($f->order->business_unit)
                 {
@@ -1713,5 +1796,28 @@ class OrderTrackingController extends UserController {
         {
             return "We can't find the resource that you were looking for.";
         }
+    }
+    
+    public function getLateNodes()
+    {
+        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('order_tracking');
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order_tracking');
+        
+        echo View::make('workflow/overview_latenodes',$this->data)->render();
+    }
+    
+    public function getPendingNodes()
+    {
+        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('order_tracking');
+        
+        echo View::make('workflow/overview_pendingnodes',$this->data)->render();
+    }
+    
+    public function getStories($business_unit=0)
+    {
+        $this->data['stories'] = Story::fetch(Config::get('context')[$this->context],10,0,$business_unit > 0 ? array(array('business_unit','=',(int)$business_unit)) : array());
+        $this->data['dynamicStory'] = OrderTrackingHelper::dynamicStory($business_unit > 0 ? array(array('business_unit','=',$business_unit)) : array());
+        
+        echo View::make('story/chapter',$this->data)->render();
     }
 }

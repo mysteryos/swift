@@ -89,6 +89,15 @@ class elasticsearchmapping extends Command {
                                                                 "type"=>["type"=>"string"],
                                                                 "container_no"=>["type"=>"string","index"=>"not_analyzed"]
                                                             ]],
+                                                            "storage"=>["properties"=>[
+                                                                "id"=>["type"=>"long","index"=>"no"],
+                                                                "storage_start"=>["type"=>"date","index"=>"no"],
+                                                                "demurrage_start"=>["type"=>"date","index"=>"no"],
+                                                                "invoice_no"=>["type"=>"string","index"=>"not_analyzed"],
+                                                                "storage_charges"=>["type"=>"float","index"=>"no"],
+                                                                "demurrage_charges"=>["type"=>"float","index"=>"no"],
+                                                                "reason"=>["type"=>"string","index"=>"no"]
+                                                            ]]
                                                         ]];
                     break;
                 case "aprequest":

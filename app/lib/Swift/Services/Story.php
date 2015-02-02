@@ -7,7 +7,7 @@ class Story {
     private $story;
     
     //I.e Save function
-    public function relate($obj,$action,$type=1,$context=false)
+    public function relate($obj,$action,$type=1,$context_type=false,$context_id=0)
     {
         $this->story = new \SwiftStory;
         if($context===false)
@@ -15,22 +15,27 @@ class Story {
             switch(get_class($obj))
             {
                 case "SwiftComment":
-                    $this->story->context = $obj->commentable_type;
+                    $this->story->context_type = $obj->commentable_type;
+                    $this->story->context_id = $obj->commentable_id;
                     break;
                 case "SwiftWorkflowActivity":
-                    $this->story->context = $obj->workflowable_type;
+                    $this->story->context_type = $obj->workflowable_type;
+                    $this->story->context_id = $obj->workflowable_id;
                     break;
                 case "SwiftNodeActivity":
-                    $this->story->context = $obj->workflowactivity->workflowable_type;
+                    $this->story->context_type = $obj->workflowactivity->workflowable_type;
+                    $this->story->context_id = $obj->workflowactivity->workflowable_id;
                     break;
                 default:
-                    $this->story->context = \get_class($obj);
+                    $this->story->context_type = \get_class($obj);
+                    $this->story->context_id = $obj->id;
                     break;
             }
         }
         else
         {
-            $this->story->context = $context;
+            $this->story->context_type = $context_type;
+            $this->story->context_id = $context_id;
         }
         
         $this->story->action = $action;
@@ -70,7 +75,7 @@ class Story {
     
     public function push()
     {
-        $context = array_search($this->story->context,\Config::get('context'));
+        $context = array_search($this->story->context_type,\Config::get('context'));
         if($context !== false)
         {
             $users = \Sentry::findAllUsersWithAnyAccess((array)\Config::get('permission.'.$context.'.view'));
@@ -92,7 +97,7 @@ class Story {
         }
     }
     
-    public function fetch($context=false,$take=10,$offsetId=0)
+    public function fetch($context=false,$take=10,$offsetId=0,$filters=array())
     {
         $contextArray = array();
         
@@ -107,12 +112,23 @@ class Story {
         
         if(!empty($contextArray))
         {
-            $stories = \SwiftStory::orderBy('created_at','DESC')->whereIn('context',$contextArray)->take($take)->with('storyfiable','byUser');
+            $stories = \SwiftStory::orderBy('created_at','DESC')->whereIn('context_type',$contextArray)->take($take)->with(array('storyfiable','byUser'));
             if($offsetId>0)
             {
                 $stories->where('id','<',$offsetId);
             }
-
+            
+            if(!empty($filters))
+            {
+                $stories->with(['context'=>function ($q) use ($filters){
+                    foreach($filters as $f)
+                    {
+                        $q->where($f[0],$f[1],$f[2]);
+                    }
+                    return $q;
+                }]);
+            }
+            
             $stories = $stories->get();
             //increment View count
             if(count($stories))

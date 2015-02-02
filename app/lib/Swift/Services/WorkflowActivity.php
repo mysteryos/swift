@@ -376,44 +376,34 @@ class WorkflowActivity {
     public function lateNodeByForm($workflowTypes)
     {
         $nodeActivities = \SwiftNodeActivity::getLateNodes($workflowTypes);
-        
         if(count($nodeActivities))
         {
             foreach($nodeActivities as $k => &$activity)
             {
-                $workingDaysSinceUpdate = \Helper::getWorkingDays($activity->updated_at->toDateString(),\Carbon::now()->toDateString());
-                //Eta not due
-                if($workingDaysSinceUpdate <= $activity->definition->eta)
+                if(count($activity->permission))
                 {
-                    unset($nodeActivities[$k]);
-                }
-                else
-                {
-                    if(count($activity->permission))
+                    $permissions = $activity->permission->toArray();
+                    $permissionsArray = array();
+                    array_walk($permissions,function($v,$k) use (&$permissionsArray){
+                        $permissionsArray[] = $v['permission_name'];
+                    });
+
+                    $users = \Sentry::findAllUsersWithAccess($permissionsArray);
+                    foreach($users as $i => $u)
                     {
-                        $permissions = $activity->permission->toArray();
-                        $permissionsArray = array();
-                        array_walk($permissions,function($v,$k) use (&$permissionsArray){
-                            $permissionsArray[] = $v['permission_name'];
-                        });
-
-                        $users = \Sentry::findAllUsersWithAccess($permissionsArray);
-                        foreach($users as $i => $u)
-                        {
-                           if($u->isSuperUser() || !$u->activated)
-                           {
-                               unset($users[$i]);
-                           }
-                        }
-
-                        if(!empty($users))
-                        {
-                            $activity->users = $users;
-                        }
+                       if($u->isSuperUser() || !$u->activated)
+                       {
+                           unset($users[$i]);
+                       }
                     }
-                    
-                    $activity->dueSince = \Helper::nextBusinessDay($activity->updated_at->addDays($activity->definition->eta));
+
+                    if(!empty($users))
+                    {
+                        $activity->users = $users;
+                    }
                 }
+                
+                $activity->dueSince = \Helper::nextBusinessDay($activity->updated_at->addDays($activity->definition->eta));
             }
             
             if(!$nodeActivities->isEmpty())

@@ -8,7 +8,7 @@ class SwiftStory extends Eloquent {
     
     protected $table = "swift_story";
     
-    protected $fields = array('action','by','context','type','view','storyfiable_type');
+    protected $fields = array('action','by','context_type','context_id','type','view','storyfiable_type');
     
     protected $guarded = array('id');
     
@@ -61,6 +61,11 @@ class SwiftStory extends Eloquent {
     }    
     
     public function storyfiable()
+    {
+        return $this->morphTo();
+    }
+    
+    public function context()
     {
         return $this->morphTo();
     }

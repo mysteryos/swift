@@ -37,7 +37,7 @@
 
                 <!-- NEW COL START -->
                 <article class="col-md-6 col-xs-12">
-                    <div class="jarviswidget" id="ap-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
+                    <div class="jarviswidget" id="ap-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/aprequest/stories">
                         <header>
                                 <span class="widget-icon"> <i class="fa fa-globe"></i> </span>
                                 <h2>Stories</h2>
@@ -46,45 +46,32 @@
 				<div>
 					<!-- widget content -->
                                         <div class="widget-body" id="timeline-body">
-                                                <div class="smart-timeline">
-                                                    <ul class="smart-timeline-list" id="timeline-list">
-                                                        @if($dynamicStory !== false)
-                                                            @include('story.dynamic')
-                                                        @endif
-                                                        @if(count($stories))
-                                                            @foreach($stories as $story)
-                                                                @include('story.single')
-                                                            @endforeach
-                                                        @else
-                                                        <li class="text-center"><h2>No posts yet</h2></li>
-                                                        @endif
-                                                    </ul>
-                                                </div>                                            
+                                            <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
                                         </div>
                                 </div>
                     </div>
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="ap-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <div class="jarviswidget" id="ap-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/aprequest/pending-nodes">
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-refresh"></i> </span>
                                     <h2>Pending Tasks (Refreshed every 30 mins)</h2>
                             </header>
                             <div class="no-padding">
                                     <div class="widget-body widget-body-compressed">
-                                            @include('workflow.overview_pendingnodes')
+                                        <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
                                     </div>
                             </div>
                     </div>
                     
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="ap-overview-latetasks" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <div class="jarviswidget" id="ap-overview-latetasks" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/aprequest/late-nodes">
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-bell"></i> </span>
                                     <h2>Late Tasks (Refreshed every 30 mins)</h2>
                             </header>
                             <div class="no-padding">
                                     <div class="widget-body widget-body-compressed">
-                                            @include('workflow.overview_latenodes')
+                                        <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
                                     </div>
                             </div>
                     </div>                    

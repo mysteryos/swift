@@ -109,6 +109,7 @@ class SearchController extends UserController {
             
         } catch (\Exception $e)
         {
+            \Log::error($e->getMessage());
             return Response::make("An error occured with the search server.",500);
         }
         
@@ -126,6 +127,7 @@ class SearchController extends UserController {
             $queryResponse = Es::search($params);
         } catch (Exception $e)
         {
+            \Log::error($e->getMessage());
             return Response::make("An error occured with the search server.",500);
         }        
 
@@ -223,7 +225,8 @@ class SearchController extends UserController {
             $params['body']['size'] = 15;
             $queryResponse = Es::search($params);
         } catch (Exception $e) {
-            
+            \Log::error($e->getMessage());
+            return Response::make("An error occured with the search server.",500);
         }
         
         $this->data['hits_count'] = $queryResponse['hits']['total'];         

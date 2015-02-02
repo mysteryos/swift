@@ -239,7 +239,41 @@
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget shipment -->                        
+                        <!-- end widget shipment -->
+                        
+                        <!-- Widget Storage Start -->
+			<div class="jarviswidget" id="ot-storage" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				
+				<header>
+					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                                        <h2>Storage & Demurrage </h2>
+                                        @if($edit)
+                                            <div class="widget-toolbar" role="menu">
+                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                                            </div>
+                                        @endif
+				</header>
+                                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body">
+                                            <form class="form-horizontal">
+                                                    @if(count($order->storage))
+                                                        @foreach($order->storage as &$sto)
+                                                            <?php $sto->id = Crypt::encrypt($sto->id); ?>
+                                                            @include('order-tracking.edit_storage',array('s'=>$sto))
+                                                        @endforeach
+                                                    @else
+                                                        @include('order-tracking.edit_storage')
+                                                    @endif
+                                                    @include('order-tracking.edit_storage',array('dummy'=>true,'s'=>null))
+                                            </form>
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>                        
+                        <!-- end widget Storage -->
                         
                         <!-- Widget Customs START-->
 			<div class="jarviswidget" id="ot-customs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">

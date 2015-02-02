@@ -242,13 +242,12 @@
                             self.o.afterLoad.call(this, awidget);
                         }
                     }
+                        
+                    /*
+                     * Run function for the indicator image.
+                     **/
+                    self._runLoaderWidget(loader);
                 });
-
-            /**
-             * Run function for the indicator image.
-             **/
-            self._runLoaderWidget(loader);
-
         },
 
         /**

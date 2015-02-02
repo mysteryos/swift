@@ -21,8 +21,8 @@
         unselectAuto : true,
         disableResizing : false,
         eventSources: [{
-            url:'/order-tracking/transitcalendar',
-            type: 'POST'
+            url: document.getElementById('transit_calendar').getAttribute('data-url'),
+            type: 'POST',
         }],
         loading: function(isLoading,view) {
             if(isLoading)

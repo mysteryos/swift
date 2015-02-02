@@ -129,6 +129,11 @@ class SwiftOrder extends Eloquent {
         return $this->hasMany('SwiftFreight','order_id');
     }
     
+    public function storage()
+    {
+        return $this->hasMany('SwiftStorage','order_id');
+    }
+    
     public function shipment()
     {
         return $this->hasMany('SwiftShipment','order_id');
@@ -199,7 +204,7 @@ class SwiftOrder extends Eloquent {
     
     public static function getById($id)
     {
-        return self::with('purchaseOrder','reception','freight','shipment','customsDeclaration','document')->find($id);
+        return self::with('purchaseOrder','reception','freight','shipment','customsDeclaration','storage','document')->find($id);
     }
     
     /*
@@ -214,12 +219,24 @@ class SwiftOrder extends Eloquent {
     /*
      * Query
      */
-    public static function getInProgress($limit=0,$important = false)
+    public static function getInProgress($limit=0,$important = false,$business_unit=0)
     {
         $query = self::query();
         if($limit > 0)
         {
             $query->take($limit);
+        }
+        
+        if($business_unit > 0)
+        {
+            if(array_key_exists($business_unit,self::$business_unit))
+            {
+                $query->whereBusinessUnit($business_unit);
+            }
+            else
+            {
+                throw new Exception("Business unit with ID:".$business_unit." is not defined");
+            }
         }
         
         return $query->orderBy('swift_order.updated_at','desc')
@@ -236,13 +253,25 @@ class SwiftOrder extends Eloquent {
                             },($important === true ? ">" : "="),0)->remember(5)->get();        
     }
     
-    public static function getInProgressResponsible($limit=0,$important=false)
+    public static function getInProgressResponsible($limit=0,$important=false,$business_unit=0)
     {
         $query = self::query();
         if($limit > 0)
         {
             $query->take($limit);
         }
+        
+        if($business_unit > 0)
+        {
+            if(array_key_exists($business_unit,self::$business_unit))
+            {
+                $query->whereBusinessUnit($business_unit);
+            }
+            else
+            {
+                throw new Exception("Business unit with ID:".$business_unit." is not defined");
+            }
+        }        
         
         return $query->orderBy('swift_order.updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
@@ -258,9 +287,23 @@ class SwiftOrder extends Eloquent {
                             },($important === true ? ">" : "="),0)->remember(5)->get();       
     }
     
-    public static function getInProgressCount()
+    public static function getInProgressCount($business_unit=0)
     {
-        return self::orderBy('updated_at','desc')
+        $query = self::query();
+        
+        if($business_unit > 0)
+        {
+            if(array_key_exists($business_unit,self::$business_unit))
+            {
+                $query->whereBusinessUnit($business_unit);
+            }
+            else
+            {
+                throw new Exception("Business unit with ID:".$business_unit." is not defined");
+            }
+        }
+        
+        return $query->orderBy('updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
                                 return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
                                         ->whereHas('nodes',function($q){
@@ -274,9 +317,21 @@ class SwiftOrder extends Eloquent {
                             },'=',0)->remember(5)->count();
     }
     
-    public static function getInProgressWithEta()
+    public static function getInProgressWithEta($business_unit=0)
     {
         $query = self::query();
+        
+        if($business_unit > 0)
+        {
+            if(array_key_exists($business_unit,self::$business_unit))
+            {
+                $query->whereBusinessUnit($business_unit);
+            }
+            else
+            {
+                throw new Exception("Business unit with ID:".$business_unit." is not defined");
+            }
+        }        
         
         return $query->orderBy('swift_order.updated_at','asc')
                             ->with(array('nodes.permission' => function($q){

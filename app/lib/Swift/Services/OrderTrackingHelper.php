@@ -46,17 +46,12 @@ class OrderTrackingHelper{
         return Es::search($params);
     }
     
-    public function dynamicStory()
-    {
-        return $this->dynamicStoryLateNode();
-    }
-    
-    public function dynamicStoryLateNode()
+    public function dynamicStory($filters=array())
     {
         $nodes_inprogress_responsible_witheta = SwiftNodeActivity::orderBy('updated_at','asc')
                                                 ->with('definition')
                                                 ->with('workflowactivity')
-                                                ->whereHas('workflowactivity',function($q){
+                                                ->whereHas('workflowactivity',function($q) use ($filters){
                                                     return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')->where('workflowable_type','=','SwiftOrder');
                                                 })
                                                 ->where('user_id','=',0,'AND')
@@ -66,8 +61,20 @@ class OrderTrackingHelper{
                                                 })
                                                 ->whereHas('definition',function($q){
                                                     return $q->where('eta','>',0);
-                                                })
-                                                ->get();
+                                                });
+                                                
+        if(!empty($filters))
+        {
+            $nodes_inprogress_responsible_witheta->with(['workflowactivity.workflowable' => function($q) use ($filters){
+                foreach($filters as $f)
+                {
+                    $q->where($f[0],$f[1],$f[2]);
+                }
+                return $q;
+            }]);
+        }
+        
+        $nodes_inprogress_responsible_witheta->get();
                                                 
         if(count($nodes_inprogress_responsible_witheta))
         {
@@ -85,9 +92,8 @@ class OrderTrackingHelper{
                 }
             }
         }
-        else
-        {
-            return false;
-        }
+
+        return false;
+        
     }
 }

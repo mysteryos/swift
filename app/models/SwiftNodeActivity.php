@@ -135,7 +135,46 @@ class SwiftNodeActivity extends Eloquent
         return self::where('workflow_activity_id','=',$workflow_activity_id)->orderBy('created_at','desc')->get();
     }
     
-    public static function getLateNodes($workflowType)
+    public static function getLateNodes($workflowType,$limit=0,$offset=0)
+    {
+        if(!is_array($workflowType))
+        {
+            $workflowType = array($workflowType);
+        }
+        
+        $query = self::query();
+        
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+        
+        if($offset > 0)
+        {
+            $query->offset($offset);
+        }
+        
+        return $query->whereHas('definition',function($q){
+                    return $q->where('eta','>',0);
+                })
+                ->join('swift_node_definition','swift_node_activity.node_definition_id','=','swift_node_definition.id')
+                ->inprogress()
+                ->whereHas('workflowactivity',function($q) use ($workflowType){
+                    return $q->whereHas('type',function($q) use ($workflowType){
+                        return $q->whereIn('name',$workflowType);
+                    })
+                    ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
+                })
+                ->select(DB::Raw("swift_node_activity.*,swift_node_definition.eta, 5 * (DATEDIFF(CURDATE(), swift_node_activity.updated_at) DIV 7) + MID('0123444401233334012222340111123400012345001234550', 7 * WEEKDAY('2012-01-01') + WEEKDAY('2012-12-31') + 1, 1) - (SELECT COUNT(*) FROM holidays WHERE DAYOFWEEK(date) < 6) as business_count_days"))
+                ->having("business_count_days",'>','eta')
+                ->with(array('workflowactivity.workflowable','definition','permission' => function($q) {
+                    return $q->responsible();
+                }))
+                ->orderBy('business_count_days','DESC')->remember(30)->get();
+                
+    }
+    
+    public static function countLateNodes($workflowType)
     {
         if(!is_array($workflowType))
         {
@@ -147,6 +186,7 @@ class SwiftNodeActivity extends Eloquent
         return $query->whereHas('definition',function($q){
                     return $q->where('eta','>',0);
                 })
+                ->join('swift_node_definition','swift_node_activity.node_definition_id','=','swift_node_definition.id')
                 ->inprogress()
                 ->whereHas('workflowactivity',function($q) use ($workflowType){
                     return $q->whereHas('type',function($q) use ($workflowType){
@@ -154,11 +194,8 @@ class SwiftNodeActivity extends Eloquent
                     })
                     ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
                 })
-                ->with(array('workflowactivity.workflowable','definition','permission' => function($q) {
-                    return $q->responsible();
-                }))
-                ->orderBy('updated_at','ASC')->remember(30)->get();
-                
+                ->where(DB::raw("(5 * (DATEDIFF(CURDATE(), swift_node_activity.updated_at) DIV 7) + MID('0123444401233334012222340111123400012345001234550', 7 * WEEKDAY('2012-01-01') + WEEKDAY('2012-12-31') + 1, 1) - (SELECT COUNT(*) FROM holidays WHERE DAYOFWEEK(date) < 6))"),'>','eta')
+                ->remember(30)->count();
     }
     
     //@use: WorkflowActivity::statusByType
@@ -174,10 +211,10 @@ class SwiftNodeActivity extends Eloquent
         
         return $query->inprogress()
                     ->whereHas('workflowactivity',function($q) use ($workflowType){
-                            return $q->whereHas('type',function($q) use ($workflowType){
-                                return $q->whereIn('name',$workflowType);
-                            })
-                            ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
+                        return $q->whereHas('type',function($q) use ($workflowType){
+                            return $q->whereIn('name',$workflowType);
+                        })
+                        ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
                     })
                     ->join('swift_node_definition','swift_node_definition.id','=','swift_node_activity.node_definition_id')
                     ->where('swift_node_definition.eta','>',0)
@@ -194,7 +231,9 @@ class SwiftNodeActivity extends Eloquent
             $workflowType = array($workflowType);
         }
         
-        return self::whereHas('definition',function($q){
+        $query = self::query();
+        
+        return $query->whereHas('definition',function($q){
                     return $q->where('eta','>',0);
                 })
                 ->inprogress()

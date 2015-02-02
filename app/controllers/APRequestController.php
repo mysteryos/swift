@@ -11,6 +11,7 @@ class APRequestController extends UserController {
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
         $this->ccarePermission = \Config::get("permission.{$this->context}.ccare");
         $this->storePermission = \Config::get("permission.{$this->context}.store");
+        $this->createPermission = \Config::get("permission.{$this->context}.create");
     }
     
     /*
@@ -22,9 +23,7 @@ class APRequestController extends UserController {
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
         
-        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('aprequest');
-        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('aprequest');
-        $this->data['late_node_forms_count'] = count($this->data['late_node_forms']);
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('aprequest');
         $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('aprequest');
         
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
@@ -56,15 +55,8 @@ class APRequestController extends UserController {
             }
         }
         
-        /*
-         * Stories
-         */
-        
-        $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
-        $this->data['dynamicStory'] = false;
-        
         $this->data['rootURL'] = $this->rootURL;
-        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->editPermission,$this->adminPermission));
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
         $this->data['inprogress'] = $aprequest_inprogress;
         $this->data['inprogress_responsible'] = $aprequest_inprogress_responsible;
         $this->data['inprogress_important'] = $aprequest_inprogress_important;
@@ -438,7 +430,7 @@ class APRequestController extends UserController {
         
         //The Data
         $this->data['type'] = $type;
-        $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->createPermission,$this->adminPermission]);
         $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
         $this->data['forms'] = $forms;
         $this->data['count'] = isset($filter) ? $formsCount : SwiftAPRequest::count();
@@ -1595,4 +1587,30 @@ class APRequestController extends UserController {
         }
         return Response::make("Product code missing",500);
     }
+    
+    /*
+     * Overview : Ajax Widgets
+     */
+    public function getLateNodes()
+    {
+        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('aprequest');
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('aprequest');
+        
+        echo View::make('workflow/overview_latenodes',$this->data)->render();
+    }
+    
+    public function getPendingNodes()
+    {
+        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('aprequest');
+        
+        echo View::make('workflow/overview_pendingnodes',$this->data)->render();
+    }
+    
+    public function getStories()
+    {
+        $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
+        $this->data['dynamicStory'] = false;     
+        
+        echo View::make('story/chapter',$this->data)->render();
+    }    
 }

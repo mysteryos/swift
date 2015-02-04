@@ -17,55 +17,73 @@ Class DashboardController extends UserController {
          * Todo List
          */
         
-        $this->data['todoList'] = false;
+        $userMergedPermissions = (array)array_keys($this->currentUser->getMergedPermissions());
         
-        //TodoList - Order-tracking Edit User
-        if(in_array(\Config::get('permission.order-tracking.edit'),(array)array_keys($this->currentUser->getMergedPermissions())))
+        $context = Config::get('context');
+        $this->data['todoList'] = new \Illuminate\Support\Collection;
+        
+        foreach($context as $k=>$v)
         {
-            $this->data['todoList']['order-tracking'] = SwiftOrder::orderBy('swift_order.updated_at','desc')
-                                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                                        ->whereHas('nodes',function($q){
-                                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                                        ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                                            });
-                                                        });
-                                            })->whereHas('flag',function($q){
-                                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                                            },'=',0)->remember(5)->get();
+            if(is_callable($v."::getInProgressResponsible"))
+            {
+                $contextClass = new $v;
+                //Get Responsible workflows - important and not important data
+                $result = $contextClass::getInProgressResponsible()
+                            ->merge($contextClass::getInProgressResponsible(0,true));
+                $this->data['todoList']->merge($result);
+            }
         }
-        
-        //TodoList - A&P Request Edit User
-        if(in_array(\Config::get('permission.aprequest.edit'),(array)array_keys($this->currentUser->getMergedPermissions())))
-        {
-            $this->data['todoList']['aprequest'] = SwiftAPRequest::orderBy('updated_at','desc')
-                                        ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                            return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
-                                                    ->whereHas('nodes',function($q){
-                                                         return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                             return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
-                                                                    ->whereIn('permission_name',(array)array_keys($this->currentUser->getMergedPermissions()));
-                                                        });
-                                                    }); 
-                                        })->whereHas('flag',function($q){
-                                            return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
-                                        },'=',0)->get();
-        }
-        
-        /*
-         * Static Stories
-         */
-        
-        
-        
-        /*
-         * Actionable Stories
-         */
-        
-        
-        
         
         return $this->makeView('dashboard');
+    }
+    
+    public function getStories($startfrom=0)
+    {
+        $context = Config::get('context');
+        $contextArray = array();
+        
+        foreach($context as $k=>$v)
+        {
+            if($this->currentUser->hasAccess(\Config::get('permission.'.$k.'.view')))
+            {
+                $contextArray[] = $v;
+            }            
+        }
+        
+        if(!empty($contextArray))
+        {
+            $this->data['stories'] = Story::fetch($contextArray,30,0);
+        }
+        else
+        {
+            $this->data['stories'] = [];
+        }
+        
+        $this->data['dynamicStory'] = false;
+        
+        echo View::make('story/chapter',$this->data)->render();
+    }
+    
+    public function getLatenodes()
+    {
+        $lateNodes = array();
+        $context = Config::get('context');
+        
+        foreach($context as $k=>$v)
+        {
+            if($this->currentUser->hasAnyAccess([\Config::get('permission.'.$k.'.view'),\Config::get('permission.'.$k.'.admin')]))
+            {
+                $lateNodes[$k] = array(
+                    'late_count' => SwiftNodeActivity::countLateNodes($k),
+                    'late_total_count' => SwiftNodeActivity::countPendingNodesWithEta($k),
+                    'name'=> (new $v)->readableName,
+                    'icon'=> (new $v)->getIcon()
+                );
+            }
+        }
+        
+        $this->data['lateNodes'] = $lateNodes;
+        
+        echo View::make('dashboard/systemhealth',$this->data)->render();
     }
 }

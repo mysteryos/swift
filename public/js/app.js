@@ -74,7 +74,7 @@
         /*
          * PJAX Global Defaults
          */
-        $.pjax.defaults.timeout = 10000;
+        $.pjax.defaults.timeout = 30000;
         $.pjax.defaults.container = "#main";
         
         /*
@@ -1925,14 +1925,7 @@ var main = {
     dashboard: function () {
         if(typeof window['dashboard'] === "undefined")
         {
-            jsLoader(['/js/plugin/easy-pie-chart/jquery.easy-pie-chart.min.js',
-            '/js/plugin/sparkline/jquery.sparkline.min.js',
-            '/js/plugin/flot/jquery.flot.cust.js',
-            '/js/plugin/flot/jquery.flot.resize.js',
-            '/js/plugin/flot/jquery.flot.tooltip.js',
-            '/js/plugin/vectormap/jquery-jvectormap-1.2.2.min.js',
-            '/js/plugin/vectormap/jquery-jvectormap-world-mill-en.js',
-            '/js/plugin/fullcalendar/jquery.fullcalendar.min.js', 'js/swift/swift.dashboard.js']);            
+            jsLoader(['/js/plugin/fullcalendar/jquery.fullcalendar.min.js', 'js/swift/swift.dashboard.js']);            
         }
         else
         {

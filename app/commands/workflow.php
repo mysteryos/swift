@@ -66,7 +66,7 @@ class workflow extends Command {
                         {
                             foreach($forms as $f)
                             {
-                                \WorkflowActivity::update($f,'order_tracking');
+                                \WorkflowActivity::update($f,'order-tracking');
                                 $this->info("Workflow Update on Form ID: ".$f->id);
                             }
                         }

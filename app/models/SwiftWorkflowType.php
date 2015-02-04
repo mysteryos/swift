@@ -9,7 +9,7 @@ Class SwiftWorkflowType extends Eloquent
     
     /*
      * List of Workflow Types:
-     * @order_tracking
+     * @order-tracking
      * @aprequest
      * @ocr_textfield
      */

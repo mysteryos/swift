@@ -14,6 +14,11 @@ class APRequestController extends UserController {
         $this->createPermission = \Config::get("permission.{$this->context}.create");
     }
     
+    public function getIndex()
+    {
+        return Redirect::to('/'.$this->context.'/overview');
+    }    
+    
     /*
      * Overview
      */
@@ -1609,7 +1614,7 @@ class APRequestController extends UserController {
     public function getStories()
     {
         $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
-        $this->data['dynamicStory'] = false;     
+        $this->data['dynamicStory'] = false;
         
         echo View::make('story/chapter',$this->data)->render();
     }    

@@ -10,7 +10,7 @@ class Story {
     public function relate($obj,$action,$type=1,$context_type=false,$context_id=0)
     {
         $this->story = new \SwiftStory;
-        if($context===false)
+        if($context_type===false)
         {
             switch(get_class($obj))
             {
@@ -107,7 +107,14 @@ class Story {
         }
         else
         {
-            $contextArray[] = $context;
+            if(is_array($context))
+            {
+                $contextArray = $context;
+            }
+            else
+            {
+                $contextArray[] = $context;
+            }
         }
         
         if(!empty($contextArray))

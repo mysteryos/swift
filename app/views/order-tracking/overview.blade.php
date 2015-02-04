@@ -29,7 +29,7 @@
     </div>
     <ul class="nav nav-tabs row-space-4">
         <li class="@if($business_unit === false){{ "active" }}@endif">
-            <a href="/order-tracking/overview" class="pjax">All</a>
+            <a href="/order-tracking/overview/0" class="pjax">All</a>
         </li>
         @foreach(SwiftOrder::$business_unit as $k => $bu)
             <li class="@if($business_unit == $k){{ "active" }}@endif">

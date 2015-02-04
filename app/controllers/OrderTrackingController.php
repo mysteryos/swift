@@ -12,19 +12,41 @@ class OrderTrackingController extends UserController {
         $this->createPermission = \Config::get("permission.{$this->context}.create");
     }
     
+    public function getIndex()
+    {
+        return Redirect::to('/'.$this->context.'/overview');
+    }
+    
     /*
      * Overview
-     */
+     */    
     
     public function getOverview($business_unit=false)
     {
+        //Fetch preference from session for business unit filter
+        if($business_unit === false)
+        {
+            $business_unit = Session::get('order_tracking_overview_business_unit',function(){return false;});
+        }
+        else
+        {
+            if($business_unit != 0)
+            {
+                Session::put('order_tracking_overview_business_unit',$business_unit);
+            }
+            else
+            {
+                Session::forget('order_tracking_overview_business_unit');
+                $business_unit = false;
+            }
+        }
         
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
         
-        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order_tracking');
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order-tracking');
         //All pending nodes with Eta
-        $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('order_tracking');
+        $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('order-tracking');
         
         /*
          * Order in Progress
@@ -57,7 +79,7 @@ class OrderTrackingController extends UserController {
         {
             foreach($orderarray as &$o)
             {
-                $o->current_activity = WorkflowActivity::progress($o,'order_tracking');
+                $o->current_activity = WorkflowActivity::progress($o,$this->context);
                 $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
             }
         }
@@ -153,11 +175,11 @@ class OrderTrackingController extends UserController {
             $query->whereBusinessUnit($business_unit);
         }
         
-        $result = $query->with(['freight','customsDeclaration','storage','shipment','purchaseOrder','reception'])->take(20)->get();
+        $result = $query->with(['freight','customsDeclaration','storage','shipment','purchaseOrder','reception'])->remember(60)->get();
         
         foreach($result as &$r)
         {
-            $r->current_activity = WorkflowActivity::progress($r,'order_tracking');
+            $r->current_activity = WorkflowActivity::progress($r,$this->context);
             
             //define all data variables
             $r->data_freight_name = 
@@ -178,18 +200,18 @@ class OrderTrackingController extends UserController {
             if(count($r->freight))
             {
                 $freight =  implode(",",array_filter(array_map(function($v){
-                                        if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                        if(array_key_exists('freight_type',$v) && in_array($v['freight_type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
                                         {
                                             return $v['freight_company'];
                                         }
                                         else
                                         {
-                                            return "";
+                                            return false;
                                         }
                                     },$r->freight->toArray()),function($v){
-                                        return $v !== "";
+                                        return $v !== false;
                                     }));
-                if(!empty($freight))
+                if($freight!=="")
                 {
                     $r->data_freight_name = $freight;
                 }
@@ -198,23 +220,23 @@ class OrderTrackingController extends UserController {
                                     array_filter(
                                         array_map(
                                             function($v){
-                                                if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                                if(array_key_exists('freight_type',$v) && in_array($v['freight_type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
                                                 {
                                                     return $v['vessel_name'];
                                                 }
                                                 else
                                                 {
-                                                    return "";
+                                                    return false;
                                                 }
                                             },$r->freight->toArray()
                                         ),
                                         function($v)
                                         {
-                                            return $v !== "";
+                                            return $v !== false;
                                         }
                                     )
                                 );
-                if(!empty($vessel_name))
+                if($vessel_name !== "")
                 {
                     $r->data_vessel_name = $vessel_name;
                 }
@@ -223,23 +245,23 @@ class OrderTrackingController extends UserController {
                             array_filter(
                                 array_map(function($v)
                                 {
-                                    if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                    if(array_key_exists('freight_type',$v) && in_array($v['freight_type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
                                     {
-                                        return $v['freight_etd'];
+                                        return (new Carbon($v['freight_etd']))->toDateString();
                                     }
                                     else
                                     {
-                                        return "";
+                                        return false;
                                     }
                                 },$r->freight->toArray()),
                                 function($v)
                                 {
-                                    return $v !== "";
+                                    return $v !== false;
                                 }
                             )
                         );
 
-                if(!empty($etd))
+                if($etd !== "")
                 {
                     $r->data_freight_etd = $etd;
                 }
@@ -248,22 +270,22 @@ class OrderTrackingController extends UserController {
                             array_filter(
                                 array_map(function($v)
                                 {
-                                    if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                    if(array_key_exists('freight_type',$v) && in_array($v['freight_type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
                                     {
-                                        return $v['freight_etd'];
+                                        return (new Carbon($v['freight_eta']))->toDateString();
                                     }
                                     else
                                     {
-                                        return "";
+                                        return false;
                                     }
                                 },$r->freight->toArray()),
                                 function($v)
                                 {
-                                    return $v !== "";
+                                    return $v !== false;
                                 }
                             )
                         );
-                if(!empty($eta))
+                if($eta !== "")
                 {
                     $r->data_freight_eta = $eta;
                 }                
@@ -428,7 +450,7 @@ class OrderTrackingController extends UserController {
             $this->data['shipment_type'] = json_encode(Helper::jsonobject_encode(SwiftShipment::$type));
             $this->data['order'] = $order;
             $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
-            $this->data['current_activity'] = WorkflowActivity::progress($order,'order_tracking');
+            $this->data['current_activity'] = WorkflowActivity::progress($order,$this->context);
             $this->data['edit'] = $edit;
             $this->data['flag_important'] = Flag::isImportant($order);
             $this->data['flag_starred'] = Flag::isStarred($order);
@@ -542,7 +564,7 @@ class OrderTrackingController extends UserController {
         if($type != 'inprogress')
         {
             //Get node definition list
-            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','order_tracking')->first()->id)->all();
+            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
             $node_definition_list = array();
             foreach($node_definition_result as $v)
             {
@@ -896,7 +918,7 @@ class OrderTrackingController extends UserController {
         /*
          * Check Permission
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->createPermission]) || !NodeActivity::hasStartAccess('order_tracking'))
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->createPermission]) || !NodeActivity::hasStartAccess($this->context))
         {
             return parent::forbidden();
         }
@@ -921,7 +943,7 @@ class OrderTrackingController extends UserController {
             if($order->save())
             {
                 //Start the Workflow
-                if(\WorkflowActivity::update($order,'order_tracking'))
+                if(\WorkflowActivity::update($order,$this->context))
                 {
                     //Story Relate
                     Queue::push('Story@relateTask',array('obj_class'=>get_class($order),
@@ -2045,15 +2067,15 @@ class OrderTrackingController extends UserController {
     
     public function getLateNodes()
     {
-        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('order_tracking');
-        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order_tracking');
+        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('order-tracking');
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order-tracking');
         
         echo View::make('workflow/overview_latenodes',$this->data)->render();
     }
     
     public function getPendingNodes()
     {
-        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('order_tracking');
+        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('order-tracking');
         
         echo View::make('workflow/overview_pendingnodes',$this->data)->render();
     }

@@ -37,7 +37,7 @@
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Delivered On</label>
             <div class="col-md-10">
-                <a href="#" @if(isset($d->id)) {{ "id=\"delivery_delivery_date_".Crypt::decrypt($d->id)."\"" }} @endif class="editable delivery-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isStore && !$isAdmin) editable-disabled @endif" data-type="date" data-viewformat="dd/mm/yyyy" data-date="@if(isset($d->delivery_date)){{$d->delivery_date->format('d/m/Y')}}@endif" data-context="delivery" data-name="delivery_date" data-pk="{{ $d->id or 0 }}" data-url="/{{ $rootURL }}/delivery/{{ Crypt::encrypt($form->id) }}" data-value="@if(isset($d->delivery_date)){{$d->delivery_date->format('d/m/Y')}}@endif"></a>
+                <a href="#" @if(isset($d->id)) {{ "id=\"delivery_delivery_date_".Crypt::decrypt($d->id)."\"" }} @endif class="editable delivery-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isStore && !$isAdmin) editable-disabled @endif" data-type="date" data-viewformat="dd/mm/yyyy" data-date="@if(isset($d->delivery_date)){{$d->delivery_date->format('d/m/Y')}}@endif" data-context="delivery" data-name="delivery_date" data-pk="{{ $d->id or 0 }}" data-url="/{{ $rootURL }}/delivery/{{ Crypt::encrypt($form->id) }}">@if(isset($d->delivery_date)){{$d->delivery_date->format('d/m/Y')}}@endif</a>
             </div>                                                                                        
         </div>        
     </div>

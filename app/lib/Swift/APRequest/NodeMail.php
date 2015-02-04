@@ -22,12 +22,19 @@ class NodeMail {
                 {
                     if($u->activated && !$u->isSuperUser())
                     {
-                        //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
-                        \Mail::send('emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$u),function($message) use ($u,$aprequest){
-                            $message->from('no-reply@scottltd.net','Scott Swift');
-                            $message->subject(\Config::get('website.name').' - Status update on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
-                            $message->to($u->email);
-                        });     
+                        try
+                        {
+                            //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
+                            \Mail::send('emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$u),function($message) use ($u,$aprequest){
+                                $message->from('no-reply@scottltd.net','Scott Swift');
+                                $message->subject(\Config::get('website.name').' - Status update on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
+                                $message->to($u->email);
+                            });
+                        }
+                        catch (Exception $e)
+                        {
+                            Log::error(get_class().': Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
+                        }
                     }
                 }   
             }

@@ -143,6 +143,251 @@ class OrderTrackingController extends UserController {
         return $this->makeView('order-tracking/overview');
     }
     
+    public function getSummary($business_unit=false)
+    {
+        $this->pageTitle = 'Summary';
+        
+        $query = SwiftOrder::query();
+        if($business_unit !== false)
+        {
+            $query->whereBusinessUnit($business_unit);
+        }
+        
+        $result = $query->with(['freight','customsDeclaration','storage','shipment','purchaseOrder','reception'])->take(20)->get();
+        
+        foreach($result as &$r)
+        {
+            $r->current_activity = WorkflowActivity::progress($r,'order_tracking');
+            
+            //define all data variables
+            $r->data_freight_name = 
+            $r->data_vessel_name =
+            $r->data_freight_etd = 
+            $r->data_freight_eta =
+            $r->data_purchaseOrder = 
+            $r->data_storage_start =
+            $r->data_demurrage_start =
+            $r->data_customsDeclaration_customs_filled_at =
+            $r->data_customsDeclaration_customs_reference =
+            $r->data_customsDeclaration_customs_processed_at =
+            $r->data_customsDeclaration_customs_cleared_at =
+            $r->data_shipment_container_no =
+            $r->data_reception_grn = "N/A";
+            
+            //Freight
+            if(count($r->freight))
+            {
+                $freight =  implode(",",array_filter(array_map(function($v){
+                                        if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                        {
+                                            return $v['freight_company'];
+                                        }
+                                        else
+                                        {
+                                            return "";
+                                        }
+                                    },$r->freight->toArray()),function($v){
+                                        return $v !== "";
+                                    }));
+                if(!empty($freight))
+                {
+                    $r->data_freight_name = $freight;
+                }
+                
+                $vessel_name = implode(",",
+                                    array_filter(
+                                        array_map(
+                                            function($v){
+                                                if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                                {
+                                                    return $v['vessel_name'];
+                                                }
+                                                else
+                                                {
+                                                    return "";
+                                                }
+                                            },$r->freight->toArray()
+                                        ),
+                                        function($v)
+                                        {
+                                            return $v !== "";
+                                        }
+                                    )
+                                );
+                if(!empty($vessel_name))
+                {
+                    $r->data_vessel_name = $vessel_name;
+                }
+                
+                $etd = implode(",",
+                            array_filter(
+                                array_map(function($v)
+                                {
+                                    if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                    {
+                                        return $v['freight_etd'];
+                                    }
+                                    else
+                                    {
+                                        return "";
+                                    }
+                                },$r->freight->toArray()),
+                                function($v)
+                                {
+                                    return $v !== "";
+                                }
+                            )
+                        );
+
+                if(!empty($etd))
+                {
+                    $r->data_freight_etd = $etd;
+                }
+                
+                $eta = implode(",",
+                            array_filter(
+                                array_map(function($v)
+                                {
+                                    if(array_key_exists('type',$v) && in_array($v['type'],array(\SwiftFreight::TYPE_AIR,\SwiftFreight::TYPE_SEA)))
+                                    {
+                                        return $v['freight_etd'];
+                                    }
+                                    else
+                                    {
+                                        return "";
+                                    }
+                                },$r->freight->toArray()),
+                                function($v)
+                                {
+                                    return $v !== "";
+                                }
+                            )
+                        );
+                if(!empty($eta))
+                {
+                    $r->data_freight_eta = $eta;
+                }                
+                
+            }
+            
+             //purchaseOrder           
+            if(count($r->purchaseOrder))
+            {
+                $po =   implode(",",
+                            array_filter(
+                                array_map(
+                                    function($v){
+                                        return $v['reference'];
+                                    },$r->purchaseOrder->toArray()
+                                ),
+                                function($v){
+                                    return $v !== "";
+                                }
+                            )
+                        );
+                if(!empty($po))
+                {
+                    $r->data_purchaseOrder = $po;
+                }
+            }
+            else
+            {
+                $r->data_purchaseOrder = "N/A";
+            }
+            
+            //Storage
+            if(count($r->storage))
+            {
+                $storage = $r->storage->first();
+                if($storage->storage_start instanceof \Carbon\Carbon)
+                {
+                    $r->data_storage_start = $storage->storage_start->toDateString();
+                }
+                
+                if($storage->demurrage_start instanceof \Carbon\Carbon)
+                {
+                    $r->data_demurrage_start = $storage->demurrage_start->toDateString();
+                }
+            }
+
+            //customsDeclaration
+            if(count($r->customsDeclaration))
+            {
+                $customs = $r->customsDeclaration->first();
+                if($customs->customs_filled_at instanceof \Carbon\Carbon)
+                {
+                    $r->data_customsDeclaration_customs_filled_at = $customs->customs_filled_at->toDateString();
+                }
+                
+                if($customs->customs_reference !== "")
+                {
+                    $r->data_customsDeclaration_customs_reference = $customs->customs_reference;
+                }
+                
+                if($customs->customs_processed_at instanceof \Carbon\Carbon)
+                {
+                    $r->data_customsDeclaration_customs_processed_at = $customs->customs_processed_at->toDateString();
+                }
+                
+                if($customs->customs_cleared_at instanceof \Carbon\Carbon)
+                {
+                    $r->data_customsDeclaration_customs_cleared_at = $customs->customs_cleared_at->toDateString();
+                }
+            }
+            
+            //shipment
+            if(count($r->shipment))
+            {
+                $shipment_container_no =    implode(",",
+                                                array_filter(
+                                                        array_map(function($v)
+                                                        {
+                                                            return $v['container_no'];
+                                                        },$r->shipment->toArray()),
+                                                        function($v)
+                                                        {
+                                                            return $v !== "";
+                                                        }
+                                                )
+                                            );
+                                                
+                if(!empty($shipment_container_no))
+                {
+                    $r->data_shipment_container_no = $shipment_container_no;
+                }
+            }
+            
+            //reception
+            if(count($r->reception))
+            {
+                $reception_grn =    implode(",",
+                                        array_filter(
+                                            array_map(function($v){
+                                                        return $v['grn'];
+                                                },$r->reception->toArray()
+                                            ),
+                                            function($v)
+                                            {
+                                                return $v !== "";
+                                            }
+                                        )
+                                    );
+                                    
+                if(!empty($reception_grn))
+                {
+                    $r->data_reception_grn = $reception_grn;
+                }
+            }
+        }
+        
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
+        $this->data['business_unit'] = $business_unit;
+        $this->data['rootURL'] = $this->rootURL;
+        $this->data['summary_datatable'] = $result;
+        
+        return $this->makeView('order-tracking/summary');
+    }
+    
     /*
      * Private Functions
      */

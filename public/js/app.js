@@ -2105,6 +2105,22 @@ var main = {
     },
     
     /*
+     * Order Tracking - Summary
+     */
+    
+    ot_summary: function() {
+        if(typeof window['ot_summary'] === "undefined")
+        {
+            jsLoader(["/js/plugin/datatables/jquery.dataTables-all.min.js","/js/swift/swift.ot_summary.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            ot_summary();
+        }        
+    },
+    
+    /*
      * Freight Company - Forms
      */
     fc_forms: function () {

@@ -60,6 +60,11 @@
                     <h6> Quick Access <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a>--> </h6>
 
                     <ul class="inbox-menu-sm">
+                            @if($canCreate)
+                                <li @if($type=="mine"){{"class=\"active\""}}@endif >
+                                      <a href="/{{ $rootURL }}/forms/mine" class="form-pjax-filter pjax"><i class="fa fa-heart"></i>Mine</a>
+                                </li>
+                            @endif
                             <li @if($type=="starred"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/forms/starred" class="form-pjax-filter pjax"><i class="fa fa-star"></i>Starred</a>
                             </li>

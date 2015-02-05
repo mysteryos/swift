@@ -313,9 +313,13 @@ class APRequestController extends UserController {
                 $aprequestquery->whereHas('flag',function($q){
                    return $q->where('type','=',SwiftFlag::IMPORTANT,'AND'); 
                 });
+                break;
+            case 'mine':
+                $aprequestquery->where('requester_user_id','=',$this->currentUser->id);
+                break;
             case 'all':
                 $aprequestquery->orderBy('updated_at','desc');
-                break;          
+                break;
         }
         
         //Filters

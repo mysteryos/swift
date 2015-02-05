@@ -9,6 +9,53 @@ function totaloftotalprice(o,n)
     document.getElementById('totaloftotalprice').innerHTML = Math.round((parseFloat(document.getElementById('totaloftotalprice').innerHTML) - o + n)*100/100);
 }
 
+function addMulti($dummy,pk)
+{
+    $clone = $dummy.clone();
+    $clone.removeClass('hide dummy');
+    $clone.find('.editable').removeClass('dummy');
+    $clone.find('.editable').editable().on('save',function(e,params){
+        //First time save, set primary key
+        if(this.getAttribute('data-pk') == "0")
+        {
+            var response = $.parseJSON(params.response);
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+            //Set new pk value
+            addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
+            //Trigger Channel Event
+            presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
+            //Trigger Single Value Save as well
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
+        }
+    }).on('shown',function(e){
+        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id})
+    }).on('hidden',function(e,reason){
+        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id})
+    }).on('save',function(e,params){
+        if($(this).editable('option','pk') !== "0")
+        {
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
+        }
+    }).on('submit',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
+        }        
+    }).on('error',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+        }          
+    });
+    if(typeof pk !== "undefined")
+    {
+        addEditablePk($clone,pk.encrypted_id,pk.id);
+    }
+    
+    $dummy.parents('.jarviswidget').find('form').append($clone);
+    return true;
+}
+
 function addMultiAPR($dummy,pk)
 {
     $clone = $dummy.clone();

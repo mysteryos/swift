@@ -27,9 +27,8 @@ class APRequestController extends UserController {
     {
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
-        
-        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('aprequest');
-        $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('aprequest');
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
+        $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta($this->context);
         
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
         
@@ -55,13 +54,13 @@ class APRequestController extends UserController {
         {
             foreach($aprequestarray as &$apr)
             {
-                $apr->current_activity = WorkflowActivity::progress($apr,'aprequest');
+                $apr->current_activity = WorkflowActivity::progress($apr,$this->context);
                 $apr->activity = Helper::getMergedRevision(array('product','product.approval','order','approval','delivery','document'),$apr);
             }
         }
         
         $this->data['rootURL'] = $this->rootURL;
-        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
+        $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
         $this->data['inprogress'] = $aprequest_inprogress;
         $this->data['inprogress_responsible'] = $aprequest_inprogress_responsible;
         $this->data['inprogress_important'] = $aprequest_inprogress_important;
@@ -103,7 +102,7 @@ class APRequestController extends UserController {
             $owner = $apr->revisionHistory()->orderBy('created_at','asc')->first();
             $this->data['isCreator'] = ($this->currentUser->id == $owner->user_id ? true : false);
             $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
-            $this->data['current_activity'] = WorkflowActivity::progress($apr,'aprequest');
+            $this->data['current_activity'] = WorkflowActivity::progress($apr,$this->context);
             $this->data['activity'] = Helper::getMergedRevision(array('product','document','delivery','order','product.approvalexec','product.approvalcatman'),$apr);
             $this->pageTitle = "{$apr->name} (ID: $apr->id)";
             $this->data['form'] = $apr;
@@ -208,7 +207,7 @@ class APRequestController extends UserController {
     public function getCreate()
     {
         //Check Permission
-        if(NodeActivity::hasStartAccess('aprequest'))
+        if(NodeActivity::hasStartAccess($this->context))
         {
             $this->pageTitle = 'Create';
             return $this->makeView("$this->rootURL/create");
@@ -279,7 +278,7 @@ class APRequestController extends UserController {
         if($type != 'inprogress')
         {
             //Get node definition list
-            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=','aprequest')->first()->id)->all();
+            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
             $node_definition_list = array();
             foreach($node_definition_result as $v)
             {
@@ -457,7 +456,7 @@ class APRequestController extends UserController {
         /*
          * Check Permission
          */
-        if(!$this->currentUser->hasAccess($this->editPermission) || !NodeActivity::hasStartAccess('aprequest'))
+        if(!$this->currentUser->hasAccess($this->editPermission) || !NodeActivity::hasStartAccess($this->context))
         {
             return parent::forbidden();
         }
@@ -478,7 +477,7 @@ class APRequestController extends UserController {
             if($aprequest->save())
             {
                 //Start the Workflow
-                if(\WorkflowActivity::update($aprequest,'aprequest'))
+                if(\WorkflowActivity::update($aprequest,$this->context))
                 {
                     //Story Relate
                     Queue::push('Story@relateTask',array('obj_class'=>get_class($aprequest),
@@ -1598,15 +1597,15 @@ class APRequestController extends UserController {
      */
     public function getLateNodes()
     {
-        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('aprequest');
-        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('aprequest');
+        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
         
         echo View::make('workflow/overview_latenodes',$this->data)->render();
     }
     
     public function getPendingNodes()
     {
-        $this->data['pending_node_activity'] = WorkflowActivity::statusByType('aprequest');
+        $this->data['pending_node_activity'] = WorkflowActivity::statusByType($this->context);
         
         echo View::make('workflow/overview_pendingnodes',$this->data)->render();
     }
@@ -1617,5 +1616,30 @@ class APRequestController extends UserController {
         $this->data['dynamicStory'] = false;
         
         echo View::make('story/chapter',$this->data)->render();
-    }    
+    }
+    
+    public function getMyrequests()
+    {
+        $this->data['pending_requests'] = SwiftAPRequest::getMyPending();
+        $this->data['complete_requests'] = SwiftAPRequest::getMyCompleted(5);
+        
+        if(!$this->data['pending_requests']->isEmpty() || !$this->data['complete_requests']->isEmpty())
+        {
+            $this->data['requests_present'] = true;
+            foreach(array($this->data['pending_requests'],$this->data['complete_requests']) as $apsource)
+            {
+                foreach($apsource as &$apr)
+                {
+                    $apr->current_activity = WorkflowActivity::progress($apr,$this->context);
+                    $apr->activity = Helper::getMergedRevision(array('product','product.approval','order','approval','delivery','document'),$apr);                    
+                }
+            }
+        }
+        else
+        {
+            $this->data['requests_present'] = false;
+        }
+        
+        echo View::make('aprequest/overview_myrequests',$this->data)->render();
+    }
 }

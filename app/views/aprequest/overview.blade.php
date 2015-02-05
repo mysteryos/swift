@@ -35,6 +35,45 @@
 
 	<div class="row">
 
+		<!-- NEW COL START -->
+		<article class="col-md-6 col-xs-12">
+			<!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="ap-overview-inprogress" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				<header>
+					<span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
+                                        <h2>Work Spot </h2>
+				</header>
+                                <!-- widget div-->
+				<div class="no-padding">
+					<!-- widget content -->
+					<div class="widget-body">
+                                                @include('aprequest.overview_inprogress')
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>
+                        @if($canCreate)
+			<!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="ap-overview-myrequests" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/aprequest/myrequests">
+				<header>
+					<span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
+                                        <h2>My Requests </h2>
+				</header>
+                                <!-- widget div-->
+				<div class="no-padding">
+					<!-- widget content -->
+					<div class="widget-body">
+                                            <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
+                                        </div>
+                                        <!-- end widget content -->
+                                </div>
+                                <!-- end widget div -->
+                        </div>                        
+                        @endif
+                </article>
+                <!-- NEW COL END -->            
+            
                 <!-- NEW COL START -->
                 <article class="col-md-6 col-xs-12">
                     <div class="jarviswidget" id="ap-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/aprequest/stories">
@@ -75,33 +114,6 @@
                                     </div>
                             </div>
                     </div>                    
-                </article>
-                <!-- NEW COL END -->                
-            
-		<!-- NEW COL START -->
-		<article class="col-md-6 col-xs-12">
-			<!-- Widget ID (each widget will need unique ID)-->
-			<div class="jarviswidget" id="ap-overview-inprogress" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				<header>
-					<span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
-                                        <h2>Work Spot </h2>
-				</header>
-                                <!-- widget div-->
-				<div class="no-padding">
-					<!-- widget content -->
-					<div class="widget-body">
-                                                @include('aprequest.overview_inprogress')
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                </article>
-                <!-- NEW COL END -->
-                
-                <!-- NEW COL START -->
-                <article class="col-md-6 col-xs-12">   
-                    
                 </article>
                 <!-- NEW COL END -->
         </div>

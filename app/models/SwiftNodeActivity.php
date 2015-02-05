@@ -165,7 +165,7 @@ class SwiftNodeActivity extends Eloquent
                     })
                     ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
                 })
-                ->select(DB::Raw("swift_node_activity.*,swift_node_definition.eta, 5 * (DATEDIFF(CURDATE(), swift_node_activity.updated_at) DIV 7) + MID('0123444401233334012222340111123400012345001234550', 7 * WEEKDAY('2012-01-01') + WEEKDAY('2012-12-31') + 1, 1) - (SELECT COUNT(*) FROM holidays WHERE DAYOFWEEK(date) < 6) as business_count_days"))
+                ->select(DB::Raw("swift_node_activity.*,swift_node_definition.eta, 5 * (DATEDIFF(CURDATE(), swift_node_activity.updated_at) DIV 7) + MID('0123444401233334012222340111123400012345001234550', 7 * WEEKDAY('2012-01-01') + WEEKDAY('2012-12-31') + 1, 1) - (SELECT COUNT(*) FROM `holidays` WHERE DAYOFWEEK(date) < 6) as `business_count_days`"))
                 ->having("business_count_days",'>','eta')
                 ->with(array('workflowactivity.workflowable','definition','permission' => function($q) {
                     return $q->responsible();
@@ -194,7 +194,7 @@ class SwiftNodeActivity extends Eloquent
                     })
                     ->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
                 })
-                ->where(DB::raw("(5 * (DATEDIFF(CURDATE(), swift_node_activity.updated_at) DIV 7) + MID('0123444401233334012222340111123400012345001234550', 7 * WEEKDAY('2012-01-01') + WEEKDAY('2012-12-31') + 1, 1) - (SELECT COUNT(*) FROM holidays WHERE DAYOFWEEK(date) < 6))"),'>','eta')
+                ->where(DB::raw("(5 * (DATEDIFF(CURDATE(), swift_node_activity.updated_at) DIV 7) + MID('0123444401233334012222340111123400012345001234550', 7 * WEEKDAY('2012-01-01') + WEEKDAY('2012-12-31') + 1, 1) - (SELECT COUNT(*) FROM `holidays` WHERE DAYOFWEEK(date) < 6))"),'>','eta')
                 ->remember(30)->count();
     }
     

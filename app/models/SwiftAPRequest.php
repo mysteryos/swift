@@ -205,7 +205,7 @@ class SwiftAPRequest extends Eloquent {
         
         return $query->orderBy('updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                return $q->inprogress()
                                         ->whereHas('nodes',function($q){
                                              return $q->where('user_id','=',0)->whereHas('permission',function($q){
                                                  return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
@@ -227,7 +227,7 @@ class SwiftAPRequest extends Eloquent {
         
         return $query->orderBy('updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                return $q->inprogress()
                                         ->whereHas('nodes',function($q){
                                              return $q->where('user_id','=',0)->whereHas('permission',function($q){
                                                  return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
@@ -243,7 +243,7 @@ class SwiftAPRequest extends Eloquent {
     {
         return self::orderBy('updated_at','desc')
                             ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
-                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                return $q->inprogress()
                                         ->whereHas('nodes',function($q){
                                              return $q->where('user_id','=',0)->whereHas('permission',function($q){
                                                  return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
@@ -253,6 +253,41 @@ class SwiftAPRequest extends Eloquent {
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
                             },'=',0)->count();
+    }
+    
+    public static function getMyPending($limit=0)
+    {
+        
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }        
+        
+        return $query->orderBy('updated_at','desc')
+                    ->with('workflow','workflow.nodes')
+                    ->where('requester_user_id','=',Sentry::getUser()->id)
+                    ->whereHas('workflow',function($q){
+                        return $q->inprogress();
+                    })
+                    ->get();
+    }
+    
+    public static function getMyCompleted($limit=0)
+    {
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+        
+        return $query->orderBy('updated_at','desc')
+                    ->with('workflow','workflow.nodes')
+                    ->where('requester_user_id','=',Sentry::getUser()->id)
+                    ->whereHas('workflow',function($q){
+                        return $q->complete();
+                    })
+                    ->get();
     }
 
 }

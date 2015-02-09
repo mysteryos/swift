@@ -1,5 +1,5 @@
-@if($todoList !== false && !$todoList->isEmpty())
-    @foreach($todoList as $row)
+@if($latestWorkflows !== false && !$latestWorkflows->isEmpty())
+    @foreach($latestWorkflows as $row)
         <tr data-url="{{ \Helper::generateUrl($row->workflowable) }}" class="post">
             <td>
                 <abbr title="{{date("Y/m/d H:i",strtotime($row->activity[0]->created_at))}}" data-livestamp="{{strtotime($row->activity[0]->created_at)}}"></abbr></abbr>
@@ -16,9 +16,9 @@
         </tr>
     @endforeach
     <?php 
-        $todoList->setBaseUrl('/dashboard/todolist');
+        $latestWorkflows->setBaseUrl('/dashboard/latestworkflow');
     ?>
-    {{ $todoList->links() }}      
+    {{ $latestWorkflows->links() }}    
 @else
     <tr>
         <td class="text-center"><h2>No pending tasks. <i class="fa fa-smile-o"></i></h2></td>

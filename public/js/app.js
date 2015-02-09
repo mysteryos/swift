@@ -1925,7 +1925,7 @@ var main = {
     dashboard: function () {
         if(typeof window['dashboard'] === "undefined")
         {
-            jsLoader(['/js/plugin/fullcalendar/jquery.fullcalendar.min.js', 'js/swift/swift.dashboard.js']);            
+            jsLoader(['/js/plugin/jquery-infinitescroll/jquery.infinitescroll.min.js', '/js/swift/swift.dashboard.js']);            
         }
         else
         {
@@ -1937,7 +1937,7 @@ var main = {
     swift_search: function () {
         if(typeof window['swift_search'] === "undefined")
         {
-            jsLoader(['js/swift/swift.search.js']);
+            jsLoader(['/js/swift/swift.search.js']);
         }
         else
         {

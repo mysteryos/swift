@@ -60,13 +60,13 @@
                                          <td height="14">&nbsp;</td>
                                       </tr>
                                       <tr>
-                                         <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user->first_name)." ".ucfirst($user->last_name) }},</td>
+                                         <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user['first_name'])." ".ucfirst($user['last_name']) }},</td>
                                       </tr>
                                       <tr>
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <b>{{ $aprequest->name }} (ID: {{ $aprequest->id }})</b> <span style="color:<?php
-                                                switch($aprequest->current_activity['status'])
+                                                <b>{{ $aprequest['name'] }} (ID: {{ $aprequest['id'] }})</b> <span style="color:<?php
+                                                switch($aprequest['current_activity']['status'])
                                                 {
                                                     case SwiftWorkflowActivity::INPROGRESS:
                                                         echo "#c79121;";
@@ -82,10 +82,10 @@
                                                    
                                                 }                                                
                                                 ?>"><?php 
-                                                switch($aprequest->current_activity['status'])
+                                                switch($aprequest['current_activity']['status'])
                                                 {
                                                     case SwiftWorkflowActivity::INPROGRESS:
-                                                        echo "is currently pending for <u>".$aprequest->current_activity['label'];
+                                                        echo "is currently pending for <u>".$aprequest['current_activity']['label'];
                                                         break;
                                                     case SwiftWorkflowActivity::COMPLETE:
                                                         echo "is complete";
@@ -106,7 +106,7 @@
                                       <tr>
                                           <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ Helper::generateUrl($aprequest,true) }}" target="_blank">Click here to view this A&P Request form</a>                                                 
+                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ $aprequest['url'] }}" target="_blank">Click here to view this A&P Request form</a>                                                 
                                              </p>
                                           </td>
                                       </tr>
@@ -146,7 +146,7 @@
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;" valign="bottom">
                                              Site Access: <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Homepage</a>
                                              <span style="color:#999999;">|</span> <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}/order-tracking/" target="_blank">Order Process</a><br>
-                                             This email was sent to {{ $user->email }} <br>You are receiving this email because you are a registered member of <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Scott Swift</a> <br>
+                                             This email was sent to {{ $user['email'] }} <br>You are receiving this email because you are a registered member of <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Scott Swift</a> <br>
                                              Scott & Co Ltd, Industrial Park 1, Riche-Terre, Mauritius.
                                          </td>
                                       </tr>

@@ -69,8 +69,9 @@
                                         <!-- end widget content -->
                                 </div>
                                 <!-- end widget div -->
-                        </div>                        
+                        </div>
                         @endif
+                        
                 </article>
                 <!-- NEW COL END -->            
             

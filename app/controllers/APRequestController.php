@@ -54,8 +54,8 @@ class APRequestController extends UserController {
         {
             foreach($aprequestarray as &$apr)
             {
-                $apr->current_activity = WorkflowActivity::progress($apr,$this->context);
-                $apr->activity = Helper::getMergedRevision(array('product','product.approval','order','approval','delivery','document'),$apr);
+                $apr->current_activity = WorkflowActivity::progress($apr);
+                $apr->activity = Helper::getMergedRevision($apr->revisionRelations,$apr);
             }
         }
         

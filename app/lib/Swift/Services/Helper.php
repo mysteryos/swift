@@ -34,16 +34,6 @@ class Helper {
         return false;
     }
     
-    /*
-     * Update last seen for user
-     */
-    public function updateUserLastSeen($user)
-    {
-        $last_seen = \Cache::get('last_seen',array());
-        $last_seen[$user->email] = \Carbon::now();
-        \Cache::forever('last_seen',$last_seen);
-    }
-    
     public function saveRecent($obj,$user)
     {
         $recent = $obj->recent()->where('user_id','=',$user->id)->first();

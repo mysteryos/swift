@@ -25,6 +25,56 @@ class NodeActivity {
         return $nodes;
     }
     
+    public function mail(\SwiftWorkflowActivity $workflow_activity)
+    {
+        $nodeActivityInProgress = SwiftNodeActivity::where('workflow_activity_id','=',$workflow_activity->id)
+                                  ->inprogress()
+                                  ->with(['definition','definition.permission'=>function($q){
+                                      return $q->responsible();
+                                  }])
+                                  ->get();
+        if(count($nodeActivityInProgress))
+        {
+            foreach($nodeActivityInProgress as $n)
+            {
+                //Get list of permissions
+                if(count($n->definition->permission))
+                {
+                    $permissionArray = array_map(function($v){
+                                            return $v['permission_name'];
+                                        },$n->definition->permission->toArray());
+                    //send mail
+                    if($n->mailed === 0 && $n->definition->php_mail_function !== "")
+                    {
+                        if(is_callable($n->definition->php_mail_function."::sendMail"))
+                        {
+                            call_user_func_array($n->definition->php_mail_function."::sendMail",array($workflow_activity,$permissionArray));
+                            $n->mailed = 1;
+                        }
+                        else
+                        {
+                            throw new \Exception("Mail php function '{$n->definition->php_mail_function}::sendMail' is not callable");
+                        }
+                    }
+                    //send Notification
+                    if($n->notified === 0 && $n->definition->php_notification_function !== "")
+                    {
+                        if(is_callable($n->definition->php_notification_function."::sendNotification"))
+                        {
+                            call_user_func_array($n->definition->php_notification_function."::sendNotification",array($workflow_activity,$permissionArray));
+                            $n->notified = 1;
+                        }
+                        else
+                        {
+                            throw new \Exception("Notification php function '{$n->definition->php_notification_function}::sendNotification' is not callable");
+                        } 
+                    }
+                    $n->save();
+                }
+            }
+        }
+    }
+    
     /*
      * Create node activity
      */
@@ -39,45 +89,6 @@ class NodeActivity {
             $nodeActivity->workflow_activity_id = $workflow_activity_id;
             if($nodeActivity->save())
             {
-                //New Node Created - Send Mail to responsible parties
-                if($node_definition->php_mail_function != "")
-                {
-                    //Get list of permissions
-                    $node_definition->load('permission');
-                    if(count($node_definition->permission))
-                    {
-                        $permissions = array();
-                        foreach($node_definition->permission as $p)
-                        {
-                            //responsible for Node  = mail sent
-                            if($p->permission_type == SwiftNodePermission::RESPONSIBLE)
-                            {
-                                $permissions[] = $p->permission_name;
-                            }
-                        }
-                        if(!empty($permissions))
-                        {
-                            //send mail
-                            if(is_callable($node_definition->php_mail_function."::sendMail"))
-                            {
-                                call_user_func_array($node_definition->php_mail_function."::sendMail",array($workflow_activity_id,$permissions));
-                            }
-                            else
-                            {
-                                throw new \Exception("Mail php function '{$node_definition->php_mail_function}::sendMail' is not callable");
-                            }
-                            //send Notification
-                            if(is_callable($node_definition->php_notification_function."::sendNotification"))
-                            {
-                                call_user_func_array($node_definition->php_notification_function."::sendNotification",array($workflow_activity_id,$permissions));
-                            }
-                            else
-                            {
-                                throw new \Exception("Notification php function '{$node_definition->php_notification_function}::sendNotification' is not callable");
-                            }                            
-                        }
-                    }
-                }
                 return $nodeActivity;
             }
         }

@@ -586,6 +586,22 @@ Inbox
 }
 
 /*
+* Dashboard
+*/
+
+tr[data-url] td {
+    cursor: pointer;
+}
+
+.infinite-body-scroll ul.pagination {
+    display: none;
+}
+
+.infinite-scroll-loading {
+    width: 100%;
+}
+
+/*
  Order Tracking - Overview
 */
 

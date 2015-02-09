@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Scott - Order Process Status</title>
+        <title>Scott - A&P Request Status</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     <body style="margin: 0; padding: 0;">
@@ -23,7 +23,8 @@
                                  </a>
                              </td>
                              <td style="COLOR:#ccc;" class="ecxglobal-nav" height="51" valign="bottom" width="548" align="right">
-                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="http://swift.scottltd.net/order-tracking/" target="_blank">Order Process</a>
+                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="http://swift.scottltd.net/order-tracking/" target="_blank">Order Process</a> | 
+                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="http://swift.scottltd.net/aprequest/" target="_blank">A&P Request</a>
                              </td>
                           </tr>
                           <tr height="11">
@@ -53,19 +54,19 @@
                                          <td height="20"></td>
                                       </tr>
                                       <tr>
-                                         <td style="LINE-HEIGHT:32px;FONT-FAMILY:arial;COLOR:#f60;FONT-SIZE:24px;" valign="top">Order process form - New status</td>
+                                         <td style="LINE-HEIGHT:32px;FONT-FAMILY:arial;COLOR:#f60;FONT-SIZE:24px;" valign="top">A&P Request form - New status</td>
                                       </tr>
                                       <tr>
                                          <td height="14">&nbsp;</td>
                                       </tr>
                                       <tr>
-                                         <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user['first_name'])." ".ucfirst($user['last_name']) }},</td>
+                                         <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user->first_name)." ".ucfirst($user->last_name) }},</td>
                                       </tr>
                                       <tr>
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <b>{{ $order['name'] }} (ID: {{ $order['id'] }})</b> <span style="color:<?php
-                                                switch($order['current_activity']['status'])
+                                                <b>{{ $aprequest->name }} (ID: {{ $aprequest->id }})</b> <span style="color:<?php
+                                                switch($aprequest->current_activity['status'])
                                                 {
                                                     case SwiftWorkflowActivity::INPROGRESS:
                                                         echo "#c79121;";
@@ -81,10 +82,10 @@
                                                    
                                                 }                                                
                                                 ?>"><?php 
-                                                switch($order['current_activity']['status'])
+                                                switch($aprequest->current_activity['status'])
                                                 {
                                                     case SwiftWorkflowActivity::INPROGRESS:
-                                                        echo "is currently pending for <u>".$order['current_activity']['label'];
+                                                        echo "is currently pending for <u>".$aprequest->current_activity['label'];
                                                         break;
                                                     case SwiftWorkflowActivity::COMPLETE:
                                                         echo "is complete";
@@ -105,7 +106,7 @@
                                       <tr>
                                           <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ $order['url'] }}" target="_blank">Click here to view this order process form</a>                                                 
+                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ Helper::generateUrl($aprequest,true) }}" target="_blank">Click here to view this A&P Request form</a>                                                 
                                              </p>
                                           </td>
                                       </tr>
@@ -143,9 +144,9 @@
                                    <tbody>
                                       <tr>
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;" valign="bottom">
-                                             Site Access: <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ \Config::get('app.url') }}" target="_blank">Homepage</a>
-                                             <span style="color:#999999;">|</span> <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ \Config::get('app.url') }}/order-tracking/" target="_blank">Order Process</a><br>
-                                             This email was sent to {{ $user['email'] }} <br>You are receiving this email because you are a registered member of <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ \Config::get('app.url') }}" target="_blank">Scott Swift</a> <br>
+                                             Site Access: <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Homepage</a>
+                                             <span style="color:#999999;">|</span> <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}/order-tracking/" target="_blank">Order Process</a><br>
+                                             This email was sent to {{ $user->email }} <br>You are receiving this email because you are a registered member of <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Scott Swift</a> <br>
                                              Scott & Co Ltd, Industrial Park 1, Riche-Terre, Mauritius.
                                          </td>
                                       </tr>

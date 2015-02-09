@@ -141,7 +141,8 @@ class WorkflowActivity {
             
             //If Timestamp on workflow Activity changes, Node Activity updates have occured
             //Hence we call pusher to push the update to the UI
-            if($relation_object->workflow()->first()->updated_at !== $updateTimeBefore && is_callable(array($relation_object,"channelName"),true))
+            $workflowUpdated = $relation_object->workflow()->first();
+            if($workflowUpdated->updated_at !== $updateTimeBefore && is_callable(array($relation_object,"channelName"),true))
             {
                 $progress = $this->progress($relation_object);
                 $progressHTML = 'Current Step: <span class="'.$progress['status_class'].'">'.$progress['label'].'</span>';
@@ -150,6 +151,10 @@ class WorkflowActivity {
                     $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
                     $pusher->trigger('presence-'.$relation_object->channelName(), 'html-update', array('id'=>'workflow_status','html'=>$progressHTML));
                 }
+                
+                //Deferred mail send to allow for auto processing of pending nodes - Avoid useless mailing for already completed steps
+                //Send Mail For pending Nodes
+                \NodeActivity::mail($workflowUpdated);
             }
         }
         
@@ -191,7 +196,16 @@ class WorkflowActivity {
             throw new \RuntimeException("Data type 'object' expected.");
         }
         
-        $workflow = $relation_object->workflow()->first();
+        if($relation_object instanceof \SwiftWorkflowActivity)
+        {
+            $workflow = $relation_object;
+            $relation_object = $workflow->workflowable;
+        }
+        else
+        {
+            $workflow = $relation_object->workflow()->first();
+        }
+        
         if(!count($workflow))
         {
             return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');

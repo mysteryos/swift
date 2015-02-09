@@ -79,8 +79,8 @@ class OrderTrackingController extends UserController {
         {
             foreach($orderarray as &$o)
             {
-                $o->current_activity = WorkflowActivity::progress($o,$this->context);
-                $o->activity = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
+                $o->current_activity = WorkflowActivity::progress($o);
+                $o->activity = Helper::getMergedRevision($o->revisionRelations,$o);
             }
         }
         

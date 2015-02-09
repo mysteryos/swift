@@ -8,16 +8,22 @@ NameSpace Swift\APRequest;
 
 class NodeMail {
     
-    public static function sendMail($workflow_activity_id,$permissions)
+    public static function sendMail($workflowActivity,$permissions)
     {
-        $workflowActivity = \SwiftWorkflowActivity::find($workflow_activity_id);
         if(count($workflowActivity))
         {
-            $aprequest = $workflowActivity->workflowable;
-            $aprequest->current_activity = \WorkflowActivity::progress($aprequest);
             $users = \Sentry::findAllUsersWithAnyAccess($permissions);
             if(count($users))
             {
+                $aprequest = $workflowActivity->workflowable;
+                $aprequest->current_activity = \WorkflowActivity::progress($workflowActivity);                
+                $mailData = [
+                        'name'=>$aprequest->name,
+                        'id'=>$aprequest->id,
+                        'current_activity'=>$aprequest->current_activity,
+                        'url'=>\Helper::generateUrl($aprequest,true),
+                        ];
+                
                 foreach($users as $u)
                 {
                     if($u->activated && !$u->isSuperUser())
@@ -25,7 +31,7 @@ class NodeMail {
                         try
                         {
                             //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
-                            \Mail::queue('emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$u),function($message) use ($u,$aprequest){
+                            \Mail::queue('emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$u),function($message) use ($u,$aprequest){
                                 $message->from('swift@scott.mu','Scott Swift');
                                 $message->subject(\Config::get('website.name').' - Status update on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
                                 $message->to($u->email);
@@ -33,7 +39,7 @@ class NodeMail {
                         }
                         catch (Exception $e)
                         {
-                            Log::error(get_class().': Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
+                            \Log::error(get_class().': Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
                         }
                     }
                 }   

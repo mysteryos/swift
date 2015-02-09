@@ -101,4 +101,68 @@ class SwiftWorkflowActivity extends Eloquent {
     {
         return $this->morphMany('SwiftStory','storyfiable');
     }
+    
+    public static function getInProgressResponsible($classList=array(),$perPage=0)
+    {
+        $query = self::query();
+        
+        if(!is_array($classList))
+        {
+            $classList = array($classList);
+        }
+        
+        if(!empty($classList))
+        {
+            $query->whereIn('workflowable_type',$classList);
+        }        
+        
+        $query->inprogress()
+                ->whereIn('workflowable_type',$classList)
+                ->with('nodes','workflowable')
+                ->whereHas('nodes',function($q){
+                    return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                        return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                               ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                    });
+                })
+                ->orderBy('updated_at','DESC');
+        
+        if($perPage > 0)
+        {
+            return $query->simplePaginate($perPage);
+        }
+        else
+        {
+            return $query->get();
+        }                
+    }
+    
+    public static function getInProgress($classList=array(),$perPage=0)
+    {
+        $query = self::query();
+        
+        if(!is_array($classList))
+        {
+            $classList = array($classList);
+        }
+        
+        if(!empty($classList))
+        {
+            $query->whereIn('workflowable_type',$classList);
+        }
+        
+        $query->inprogress()
+                    ->with('nodes','workflowable')
+                    ->orderBy('updated_at','DESC')
+                    ->remember(1);
+        
+        if($perPage > 0 )
+        {
+            return $query->simplePaginate($perPage);
+        }
+        else
+        {
+            return $query->get();
+        }
+    }
 }

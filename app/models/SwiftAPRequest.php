@@ -44,6 +44,9 @@ class SwiftAPRequest extends Eloquent {
     public $keepCreateRevision = true;
     public $softDelete = true;
     
+    //Used to retrieve last user who worked on this main model
+    public $revisionRelations = ['product','product.approval','order','approval','delivery','document'];
+    
     /*
      * Elastic Search Indexing
      */

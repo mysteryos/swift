@@ -12,7 +12,7 @@ class SwiftNodeActivity extends Eloquent
     
     protected $guarded = array('id');
     
-    protected $fillable = array('node_definition_id','parent_id','workflow_activity_id','user_id','flow');
+    protected $fillable = array('node_definition_id','parent_id','workflow_activity_id','user_id','flow','mailed','notified');
     
     public $timestamps = true;
     
@@ -43,6 +43,8 @@ class SwiftNodeActivity extends Eloquent
             if(is_null($model->user_id))
             {
                 $model->user_id = 0;
+                $model->mailed = 0;
+                $model->notified = 0;
             }
         });
     }

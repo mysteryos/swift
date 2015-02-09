@@ -55,6 +55,9 @@ Route::group(array('before' => array('auth')), function()
     //Notification
     Route::controller('notification','NotificationController');
     
+    //Subscription
+    Route::controller('subscription','SubscriptionController');
+    
 });
 
 Route::group(array('before'=> array('admin')), function()

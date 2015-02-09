@@ -47,6 +47,8 @@ class SwiftOrder extends Eloquent {
     public $revisionClassName =  "Order Process";
     public $revisionPrimaryIdentifier = "id";
     
+    public $revisionRelations = ['reception','purchaseOrder','customsDeclaration','freight','shipment','document'];
+    
     /* Elastic Search */
     
     //Indexing Enabled

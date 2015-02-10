@@ -175,7 +175,7 @@ class OrderTrackingController extends UserController {
             $query->whereBusinessUnit($business_unit);
         }
         
-        $result = $query->with(['freight','customsDeclaration','storage','shipment','purchaseOrder','reception'])->remember(60)->get();
+        $result = $query->with(['freight','freight.company','customsDeclaration','storage','shipment','purchaseOrder','reception'])->remember(60)->get();
         
         foreach($result as &$r)
         {

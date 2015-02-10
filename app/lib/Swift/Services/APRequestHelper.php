@@ -4,7 +4,6 @@ Namespace Swift\Services;
 
 Use SwiftApproval;
 Use SwiftComment;
-Use WorkflowActivity;
 
 class APRequestHelper{
     /*
@@ -80,7 +79,7 @@ class APRequestHelper{
                             $approval->comments()->save($newcomment);
                         }
                     }
-                    WorkflowActivity::update($form);
+                    \WorkflowActivity::update($form);
                 }
                 else
                 {

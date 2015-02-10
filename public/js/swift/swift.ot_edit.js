@@ -213,7 +213,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     //Multi X-editable save
-    $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable').on('save',function(e,params){
+    $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable','.storage-editable').on('save',function(e,params){
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
         {

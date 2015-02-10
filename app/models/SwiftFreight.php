@@ -118,7 +118,7 @@ class SwiftFreight extends Eloquent{
     
     public function getFreightCompanyAttribute()
     {
-        return $this->getFreightCompanyIdRevisionAttribute($this->freight_company_id);
+        return $this->freight_company_id >0 ? $this->company->name : "";
     }
     
     public function getIncotermsRevisionAttribute($val)
@@ -175,9 +175,9 @@ class SwiftFreight extends Eloquent{
     
     public function getFreightCompanyIdRevisionAttribute($val)
     {
-        if($val != "")
+        if((int)$val > 0)
         {
-            return SwiftFreightCompany::find($val)->first()->name;
+            return SwiftFreightCompany::find($val)->name;
         }
         return "";
     }

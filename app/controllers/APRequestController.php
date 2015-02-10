@@ -1463,7 +1463,7 @@ class APRequestController extends UserController {
         
         $product_id = SwiftAPProduct::whereHas('approval',function($q){
                             return $q->where('approved','=',SwiftApproval::APPROVED);
-                      })->select(DB::raw('TRUNCATE(SUM(price),0) as price_sum, jde_itm, TRIM(sct_jde.jdeproducts.DSC1) as label'))
+                      })->select(DB::raw('TRUNCATE(SUM(price*quantity),0) as price_sum, jde_itm, TRIM(sct_jde.jdeproducts.DSC1) as label'))
                       ->join('sct_jde.jdeproducts','sct_jde.jdeproducts.itm','=','swift_ap_product.jde_itm')
                       ->groupBy('jde_itm')
                       ->whereBetween('created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
@@ -1476,8 +1476,8 @@ class APRequestController extends UserController {
         
         $customer_code = SwiftAPProduct::whereHas('approval',function($q){
                             return $q->where('approved','=',SwiftApproval::APPROVED);
-                      })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price),0) as price_sum, jde_itm','swift_ap_request.customer_code'))
-                      ->groupBy('swift_ap_product.jde_itm','swift_ap_request.customer_code')
+                      })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price*quantity),0) as price_sum, swift_ap_request.customer_code'))
+                      ->groupBy('swift_ap_request.customer_code')
                       ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
                       ->orderBy('price_sum','DESC')
                       ->first();
@@ -1490,12 +1490,12 @@ class APRequestController extends UserController {
         
         $this->data['topstat_customer'] = $customer_code;
                       
-        //Top A&P Initiator
+        //Top A&P Requester
         
         $requester = SwiftAPProduct::whereHas('approval',function($q){
                             return $q->where('approved','=',SwiftApproval::APPROVED);
-                      })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price),0) as price_sum, jde_itm, swift_ap_request.requester_user_id'))
-                      ->groupBy('swift_ap_product.jde_itm','swift_ap_request.customer_code')
+                      })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price*quantity),0) as price_sum, swift_ap_request.requester_user_id'))
+                      ->groupBy('swift_ap_request.requester_user_id')
                       ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
                       ->orderBy('price_sum','DESC')
                       ->first();
@@ -1541,7 +1541,7 @@ class APRequestController extends UserController {
                     //Products
                     $products_chart = SwiftAPProduct::whereHas('approval',function($q){
                                         return $q->where('approved','=',SwiftApproval::APPROVED);
-                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price),0) as value, TRIM(sct_jde.jdeproducts.DSC1) as label'))
+                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price*swift_ap_product.quantity),0) as value, TRIM(sct_jde.jdeproducts.DSC1) as label'))
                                   ->join('sct_jde.jdeproducts','sct_jde.jdeproducts.itm','=','swift_ap_product.jde_itm')
                                   ->groupBy('jde_itm')
                                   ->whereBetween('created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
@@ -1553,7 +1553,7 @@ class APRequestController extends UserController {
                     //Requester
                     $products_chart = SwiftAPProduct::whereHas('approval',function($q){
                                         return $q->where('approved','=',SwiftApproval::APPROVED);
-                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price),0) as value, CONCAT(users.first_name," ",users.last_name) as label'))
+                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price*swift_ap_product.quantity),0) as value, CONCAT(users.first_name," ",users.last_name) as label'))
                                   ->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')
                                   ->join('users','swift_ap_request.requester_user_id','=','users.id')
                                   ->groupBy('swift_ap_request.requester_user_id')
@@ -1564,7 +1564,7 @@ class APRequestController extends UserController {
                 case "customer":
                     $products_chart = SwiftAPProduct::whereHas('approval',function($q){
                                         return $q->where('approved','=',SwiftApproval::APPROVED);
-                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price),0) as value, TRIM(sct_jde.jdecustomers.ALPH) as label'))
+                                  })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price*swift_ap_product.quantity),0) as value, TRIM(sct_jde.jdecustomers.ALPH) as label'))
                                   ->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')
                                   ->join('sct_jde.jdecustomers','swift_ap_request.customer_code','=','sct_jde.jdecustomers.AN8')
                                   ->groupBy('swift_ap_request.customer_code')

@@ -261,7 +261,7 @@
                                                     @if(count($order->storage))
                                                         @foreach($order->storage as &$sto)
                                                             <?php $sto->id = Crypt::encrypt($sto->id); ?>
-                                                            @include('order-tracking.edit_storage',array('s'=>$sto))
+                                                            @include('order-tracking.edit_storage',array('sto'=>$sto))
                                                         @endforeach
                                                     @else
                                                         @include('order-tracking.edit_storage')

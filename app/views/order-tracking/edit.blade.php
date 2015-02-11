@@ -58,7 +58,7 @@
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">
             <h1 class="page-title">
                 <span>Last update was by <?php echo Helper::getUserName($activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($activity[0]->created_at))}}" data-livestamp="{{strtotime($activity[0]->created_at)}}"></abbr></span>
-            </h>
+            </h1>
         </div>
     </div>
     @if(isset($message) && $message !== false)

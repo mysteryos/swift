@@ -2242,6 +2242,50 @@ var main = {
         {
             pageSetUp();
             apr_statistics();
+        }
+    },
+    salesman_lists: function() {
+        if(typeof window['salesman_lists'] === "undefined")
+        {
+            jsLoader(["/js/swift/swift.salesman_lists.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            salesman_lists();
         }        
+    },
+    salesman_create: function() {
+        if(typeof window['salesman_create'] === "undefined")
+        {
+            jsLoader(["/js/swift/swift.salesman_create.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            salesman_create();
+        }        
+    },
+    salesman_edit: function() {
+        if(typeof window['salesman_edit'] === "undefined")
+        {
+            jsLoader(["/js/swift/swift.salesman_edit.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            salesman_edit();
+        }        
+    },
+    salesman_view: function() {
+        if(typeof window['salesman_view'] === "undefined")
+        {
+            jsLoader(["/js/swift/swift.salesman_view.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            salesman_view();
+        }         
     }
 }

@@ -210,7 +210,7 @@ class SwiftOrder extends Eloquent {
     }
     
     /*
-     * Utility
+     * Pusher Channel Name
      */
     
     public function channelName()

@@ -58,6 +58,12 @@ Route::group(array('before' => array('auth')), function()
     //Subscription
     Route::controller('subscription','SubscriptionController');
     
+    //Sales Commission
+    Route::controller('sales-commission','SalesCommissionController');
+    
+    //Salesman
+    Route::controller('salesman','SalesmanController');
+    
 });
 
 Route::group(array('before'=> array('admin')), function()

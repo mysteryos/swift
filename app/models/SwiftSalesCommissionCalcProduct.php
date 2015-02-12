@@ -10,7 +10,7 @@ class SwiftSalesCommissionCalcProduct extends Eloquent {
     
     protected $table = "swift_com_sales_calc_prod";
     
-    protected $fillable = ['calc_id','category_rate_id','category_id','jde_itm','jde_doc','jde_an8','jde_qty','total'];
+    protected $fillable = ['calc_id','scheme_rate_id','scheme_id','jde_itm','jde_doc','jde_an8','jde_qty','total'];
     
     protected $dates = ['deleted_at'];
     
@@ -25,12 +25,12 @@ class SwiftSalesCommissionCalcProduct extends Eloquent {
     
     public function rate()
     {
-        return $this->belongsTo('SwiftSalesCommissionProductCategoryRate','category_rate_id')->withTrashed();
+        return $this->belongsTo('SwiftSalesCommissionSchemeRate','category_rate_id')->withTrashed();
     }
     
     public function category()
     {
-        return $this->belongsTo('SwiftSalesCommissionProductCategory','category_id')->withTrashed();
+        return $this->belongsTo('SwiftSalesCommissionScheme','scheme_id')->withTrashed();
     }
     
     public function jdeproduct()

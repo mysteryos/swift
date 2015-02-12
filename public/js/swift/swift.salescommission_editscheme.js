@@ -1,15 +1,10 @@
-/* 
- * Name: Salesman Edit
- * Description: Salesman form edit
- */
-
 function addMulti($dummy,pk)
 {
     $clone = $dummy.clone();
     $clone.removeClass('hide dummy');
     $clone.find('.editable').removeClass('dummy');
     $clone.find('.editable').each(function(){
-        if(this.getAttribute('data-type')=="select2" && $(this).hasClass('client-editable'))
+        if(this.getAttribute('data-type')=="select2" && $(this).hasClass('product-editable'))
         {
             $(this).editable({
                 disabled: $this.hasClass('editable-disabled'),
@@ -19,11 +14,9 @@ function addMulti($dummy,pk)
                     minimumInputLength: 3,
                     id: function (item) {
                         return item.id;
-                    },
+                    },                    
                     ajax: {
-                        url: "/ajaxsearch/customercode",
-                        dataType: "json",
-                        quietMillis: 500,
+                        url: '/ajaxsearch/product',
                         data: function (term, page) {
                             return {
                                 term: term,
@@ -31,49 +24,68 @@ function addMulti($dummy,pk)
                                 page: page
                             };
                         },
-                        results: function (data, page){
-                            var more = (page * 10) < data.total
+                        results: function (data, page) {
+                            var more = (page * 10) < data.total;
                             if(data.total > 0)
                             {
-                                var found;
-                                found = $.map(data.customers, function (item) {
-                                    return {
-                                        id: item.AN8,
-                                        name: item.ALPH,
-                                        text: item.ALPH+" (Code:"+item.AN8+")",
-                                        category: item.AC09
-                                    }
-                                 });
-                                return {results: found, more:more};
+                                return {results: data.products, more:more};
                             }
                             else
                             {
                                 return {results: ''};
                             }
-                        },
+                        }
                     },
                     formatSelection: function (item) {
                         return item.text;
                     },
                     initSelection: function (element, callback) {
-                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
-                    }                    
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
+                    }
                 }
             });
         }
-        else if(this.getAttribute('data-type')=="date" && this.getAttribute('data-name')=="date" && this.getAttribute('data-context')=="budget")
+        else if (this.getAttribute('data-type')=="select2" && $(this).hasClass('salesman-editable'))
         {
             $(this).editable({
                 disabled: $this.hasClass('editable-disabled'),
-                format: 'mm-yyyy',
-                viewformat: 'mm-yyyy',
-                datepicker: {
-                    onChangeMonthYear: function(  year,  month,  inst){
-                        $(this).datepicker('setDate', new Date(year, month-1, 1));
+                placeholder: "Select a salesman",
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },                    
+                    ajax: {
+                        url: '/ajaxsearch/salesmanbyname',
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 5,
+                                page: page
+                            };
+                        },
+                        results: function (data, page) {
+                            var more = (page * 10) < data.total;
+                            if(data.total > 0)
+                            {
+                                return {results: data.salesman, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        }
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.salesman-editable').html()});
                     }
-                }                
-            });
-        }        
+                }
+            });            
+        }
         else
         {
             $(this).editable({
@@ -95,23 +107,24 @@ function addMulti($dummy,pk)
             presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id})
         }).on('save',function(e,params){
             //First time save, set primary key
+            var $this = $(this);
             if(this.getAttribute('data-pk') == "0")
             {
-                $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+                $this.parents('fieldset.multi').find('div.loading-overlay').remove();
                 var response = $.parseJSON(params.response);
                 //Set new pk value
-                addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
+                addEditablePk($this.parents('fieldset'),response.encrypted_id,response.id);
                 //Trigger Channel Event
                 presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
                 
-                if(this.getAttribute('data-context') == "client")
+                if($this.hasClass('product-editable'))
                 {
-                    $(this).editable('disable');
+                    $this.editable('disable');
                 }
             }
             
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})        
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})        
         }).on('submit',function(e){
             if(this.getAttribute('data-pk') == "0")
             {
@@ -149,71 +162,30 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     return true;
 }
 
-(window.salesman_edit = function () {
-    
-//Ribbon Buttons
-    $('#ribbon a.btn-delete').on('click',function(e){
-        e.preventDefault();
-        var $this = $(this);
-        var $delete = $this.children('i').hasClass('fa-trash-o');
-        $.SmartMessageBox({
-                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($delete? "delete" : "restore")+" this salesman?</strong></span> ?",
-                content : "The salesman will be "+($delete? "locked from" : "unlocked for")+" editing after deletion",
-                buttons : '[No][Yes]'
-
-        }, function(ButtonPressed) {
-                if (ButtonPressed == "Yes") {
-                    Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
-                        id: 'notif-top',
-                        errorMessage: 'Error processing command',
-                        successMessage: 'Salesman has been '+($delete? "deleted" : "restored"),
-                        progressMessage: 'Please Wait...',
-                        action: $.ajax,
-                    },
-                    {
-                        type:'POST',
-                        url: $this.attr('href'),
-                        success:function()
-                        {
-                            window.setTimeout(function(){
-                                $('a.btn-ribbon-refresh').click();
-                            },'2000');
-                        },
-                        error:function(xhr, status, error)
-                        {
-                            return xhr.responseText;
-                        }
-                    });                        
-                }
-
-        });
-        return false;
-    });    
-    
-    //Bind pusher channel
+(window.salescommission_editscheme = function () {
+    //Bind pusher channel & events
     pusherSubscribeCurrentPresenceChannel(true,true);
 
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
-
+    
+//General Info
     $('.editable:not(.dummy)').each(function(){
         var $this = $(this);
-        if(this.getAttribute('data-type')=="select2" && $(this).hasClass('client-editable'))
+        if(this.getAttribute('data-type')=="select2" && $this.hasClass('product-editable'))
         {
-            $(this).editable({
+            $this.editable({
                 disabled: $this.hasClass('editable-disabled'),
-                placeholder: "Select a customer",
+                placeholder: 'Select a product',
                 select2: {
                     allowClear: false,
                     minimumInputLength: 3,
                     id: function (item) {
                         return item.id;
-                    },
+                    },                    
                     ajax: {
-                        url: "/ajaxsearch/customercode",
-                        dataType: "json",
-                        quietMillis: 500,
+                        url: '/ajaxsearch/product',
                         data: function (term, page) {
                             return {
                                 term: term,
@@ -221,49 +193,68 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                                 page: page
                             };
                         },
-                        results: function (data, page){
-                            var more = (page * 10) < data.total
+                        results: function (data, page) {
+                            var more = (page * 10) < data.total;
                             if(data.total > 0)
                             {
-                                var found;
-                                found = $.map(data.customers, function (item) {
-                                    return {
-                                        id: item.AN8,
-                                        name: item.ALPH,
-                                        text: item.ALPH+" (Code:"+item.AN8+")",
-                                        category: item.AC09
-                                    }
-                                 });
-                                return {results: found, more:more};
+                                return {results: data.products, more:more};
                             }
                             else
                             {
                                 return {results: ''};
                             }
-                        },
+                        }
                     },
                     formatSelection: function (item) {
                         return item.text;
                     },
                     initSelection: function (element, callback) {
-                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
-                    }                    
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
+                    }                     
                 }
             });
         }
-        else if(this.getAttribute('data-type')=="date" && this.getAttribute('data-name')=="date" && this.getAttribute('data-context')=="budget")
+        else if (this.getAttribute('data-type')=="select2" && $(this).hasClass('salesman-editable'))
         {
             $(this).editable({
                 disabled: $this.hasClass('editable-disabled'),
-                format: 'mm-yyyy',
-                viewformat: 'mm-yyyy',
-                datepicker: {
-                    onChangeMonthYear: function(  year,  month,  inst){
-                        $(this).datepicker('setDate', new Date(year, month-1, 1));
+                placeholder: "Select a salesman",
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },                    
+                    ajax: {
+                        url: '/ajaxsearch/salesmanbyname',
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 5,
+                                page: page
+                            };
+                        },
+                        results: function (data, page) {
+                            var more = (page * 10) < data.total;
+                            if(data.total > 0)
+                            {
+                                return {results: data.salesman, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        }
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.salesman-editable').html()});
                     }
-                }                
-            });
-        }
+                }
+            });            
+        }        
         else
         {
             $this.editable({
@@ -271,6 +262,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             });
 
         }
+        
         
         $this.on('shown',function(e){
             presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
@@ -292,17 +284,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 $(this).editable('option','pk',$(this).attr('data-pk'));
                 presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
             }
-            if(this.getAttribute('data-context') === "client")
-            {
-                $(this).editable('disable');
-            }
             return true;
-        });            
+        });
     });
     
     //Multi X-editable save
-    $('.client-editable, .budget-editable').on('save',function(e,params){
-        console.log('hum');
+    $('.product-editable,.rate-editable,.salesman-editable').on('save',function(e,params){
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
         {
@@ -315,9 +302,39 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             //Trigger Single Value Save as well
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id});
             
-            if(this.getAttribute('data-context') == "client")
+            if(this.getAttribute('data-context')=="product")
             {
                 $(this).editable('disable');
+            }
+        }
+        else
+        {
+            if(this.getAttribute('data-name')==="status")
+            {
+                var $this = $(this);
+                if(params.newValue == "1")
+                {
+                    //Check if current rate is active
+                    $.ajax({
+                        url: '/sales-commission/period-is-active/'+encodeURIComponent(this.getAttribute('data-pk')),
+                        dataType: 'html',
+                        success:function(data)
+                        {
+                            if(data === "1")
+                            {
+                                $this.parents('fieldset.multi').addClass('bg-color-lighten');
+                            }
+                            else
+                            {
+                                $this.parents('fieldset.multi').removeClass('bg-color-lighten');
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    $this.parents('fieldset.multi').removeClass('bg-color-lighten');
+                }
             }
         }
         return true;
@@ -331,7 +348,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         {
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
         }          
-    });    
+    });
     
     /*
      * Add New
@@ -391,11 +408,49 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             }
         }
         return false;
-    });    
+    });
+    
+    $('#ribbon a.btn-delete').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        var $delete = $this.children('i').hasClass('fa-trash-o');
+        $.SmartMessageBox({
+                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($delete? "delete" : "restore")+" this scheme?</strong></span> ?",
+                content : "The scheme will be "+($delete? "locked from" : "unlocked for")+" editing after deletion",
+                buttons : '[No][Yes]'
+
+        }, function(ButtonPressed) {
+                if (ButtonPressed == "Yes") {
+                    Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                        id: 'notif-top',
+                        errorMessage: 'Error processing command',
+                        successMessage: 'scheme has been '+($delete? "deleted" : "restored"),
+                        progressMessage: 'Please Wait...',
+                        action: $.ajax,
+                    },
+                    {
+                        type:'POST',
+                        url: $this.attr('href'),
+                        success:function()
+                        {
+                            window.setTimeout(function(){
+                                $('a.btn-ribbon-refresh').click();
+                            },'2000');
+                        },
+                        error:function(xhr, status, error)
+                        {
+                            return xhr.responseText;
+                        }
+                    });                        
+                }
+
+        });
+        return false;
+    });      
     
     //Enable Commenting
-    enableComments();    
+    enableComments();
     
     //Hide Loading Message
-    messenger_hidenotiftop();    
+    messenger_hidenotiftop();     
 })();

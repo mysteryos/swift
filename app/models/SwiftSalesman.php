@@ -100,9 +100,19 @@ class SwiftSalesman extends Eloquent {
         return $this->hasMany('SwiftSalesmanClient','salesman_id');
     }
     
+    public function scheme()
+    {
+        return $this->belongsToMany('SwiftSalesCommissionScheme','swift_com_scheme_salesman','salesman_id','scheme_id');
+    }
+    
     public function salesbudget()
     {
         return $this->hasMany('SwiftSalesCommissionBudget','salesman_id');
+    }
+    
+    public function department()
+    {
+        return $this->belongsTo('SwiftSalesmanDepartment','department_id');
     }
     
     public function comments()
@@ -113,7 +123,7 @@ class SwiftSalesman extends Eloquent {
     public function story()
     {
         return $this->morphMany('SwiftStory','storyfiable');
-    }    
+    }
     
     /*
      * Utility
@@ -123,11 +133,11 @@ class SwiftSalesman extends Eloquent {
     {
         if(!$trashed)
         {
-            return self::with('client','salesbudget')->find($id);
+            return self::with('client','salesbudget','scheme')->find($id);
         }
         else
         {
-            return self::withTrashed()->with('client','salesbudget')->find($id);
+            return self::withTrashed()->with('client','salesbudget','scheme')->find($id);
         }
     }    
 

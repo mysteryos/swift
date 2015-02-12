@@ -664,7 +664,7 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        $product = SwiftAPProduct::find(Crypt::decrypt(Input::get('pk')));
+        $product = SwiftAPProduct::with('aprequest')->find(Crypt::decrypt(Input::get('pk')));
         if(count($product))
         {
             /*
@@ -672,7 +672,7 @@ class APRequestController extends UserController {
              */
             if($this->currentUser->hasAccess($this->editPermission) && 
                 !$this->currentUser->isSuperUser() && 
-                $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
+                $product->aprequest->requester_user_id != $this->currentUser->id)
             {
                 return Response::make('Do not delete, that which is not yours',400);
             }            

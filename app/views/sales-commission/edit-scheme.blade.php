@@ -8,34 +8,34 @@
         <div class="ribbon-button-alignment hidden-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore" }}@else{{ "delete" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
+            @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore-scheme" }}@else{{ "delete-scheme" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore" }}@else{{ "delete" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
+            @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore-scheme" }}@else{{ "delete-scheme" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
         </div>
 
 </div>
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="@if($edit){{"salesman_edit"}}@else{{"salesman_view"}}@endif">
+<div id="content" data-js="@if($edit){{"salescommission_editscheme"}}@else{{"salescommission_viewscheme"}}@endif">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($form->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $form->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $form->channelName() }}" />
     <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
-    <input type="hidden" id="project-name" value='<i class="fa-fw fa {{ $form->getIcon() }}"></i> {{ $form->name }} (ID: {{ $form->id }})'/>
+    <input type="hidden" id="project-name" value='<i class="fa-fw fa {{ $form->getIcon() }}"></i> {{ $form->getReadableName() }}'/>
     <input type="hidden" id="project-id" value='{{ $form->channelName() }}' />
     <div class="row">
 	<div class="col-xs-12 col-sm-6 col-md-4 col-lg-8">
 		<h1 class="page-title txt-color-blueDark">
 			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-map-marker"></i> 
-				Salesman
-			<span>&gt;  
-				{{ $form->getReadableName() }}
+			<i class="fa-fw fa {{ $form->getIcon() }}"></i>
+				{{ $form->getClassName() }}
+			<span>&gt;
+				Id: {{ $form->id }}
 			</span>
 		</h1>
 	</div>
@@ -105,7 +105,7 @@
 		<article class="col-lg-8 col-xs-12">
                     
 			<!-- Widget ID (each widget will need unique ID)-->
-			<div class="jarviswidget" id="salesman-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+			<div class="jarviswidget" id="salescommission-scheme-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
@@ -116,7 +116,7 @@
 					<!-- widget content -->
 					<div class="widget-body">
                                             <form class="form-horizontal">
-                                                @include('salesman.edit_generalinfo')
+                                                @include('sales-commission.edit-scheme_generalinfo')
                                             </form>
                                         </div>
                                         <!-- end widget content -->
@@ -125,11 +125,46 @@
                         </div>
                         <!-- end widget -->
                         
-                        <!-- Widget Clients-->
-			<div class="jarviswidget" id="salesman-clients" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                        @if($form->type === \SwiftSalesCommissionScheme::DYNAMIC_PRODUCTCATEGORY)
+                            <!-- Widget Products-->
+                            <div class="jarviswidget" id="salescommission-scheme-products" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                                    <header>
+                                            <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                                            <h2>Products </h2>
+                                            @if($edit)
+                                                <div class="widget-toolbar" role="menu">
+                                                    <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                                                </div>
+                                            @endif
+                                    </header>
+                                    <!-- widget div-->
+                                    <div>
+                                            <!-- widget content -->
+                                            <div class="widget-body">
+                                                <form class="form-horizontal">
+                                                        @if(count($form->product))
+                                                            @foreach($form->product as &$p)
+                                                                <?php $p->id = Crypt::encrypt($p->id); ?>
+                                                                @include('sales-commission.edit-scheme_product',array('p'=>$p))
+                                                            @endforeach
+                                                        @else
+                                                            @include('sales-commission.edit-scheme_product')
+                                                        @endif
+                                                        @include('sales-commission.edit-scheme_product',array('dummy'=>true,'p'=>null))
+                                                </form>
+                                            </div>
+                                            <!-- end widget content -->
+                                    </div>
+                                    <!-- end widget div -->
+                            </div>
+                            <!-- end widget -->
+                        @endif
+                        
+                        <!-- Widget Rates-->
+			<div class="jarviswidget" id="salescommission-scheme-rates" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Clients </h2>
+                                        <h2>Rates </h2>
                                         @if($edit)
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
@@ -141,15 +176,15 @@
 					<!-- widget content -->
 					<div class="widget-body">
                                             <form class="form-horizontal">
-                                                    @if(count($form->client))
-                                                        @foreach($form->client as &$c)
-                                                            <?php $c->id = Crypt::encrypt($c->id); ?>
-                                                            @include('salesman.edit_client',array('c'=>$c))
+                                                    @if(count($form->rate))
+                                                        @foreach($form->rate as &$r)
+                                                            <?php $r->id = Crypt::encrypt($r->id); ?>
+                                                            @include('sales-commission.edit-scheme_rate',array('r'=>$r))
                                                         @endforeach
                                                     @else
-                                                        @include('salesman.edit_client')
+                                                        @include('sales-commission.edit-scheme_rate')
                                                     @endif
-                                                    @include('salesman.edit_client',array('dummy'=>true,'c'=>null))                                                
+                                                    @include('sales-commission.edit-scheme_rate',array('dummy'=>true,'r'=>null))
                                             </form>
                                         </div>
                                         <!-- end widget content -->
@@ -158,11 +193,11 @@
                         </div>
                         <!-- end widget -->
                         
-                        <!-- Widget Budget-->
-			<div class="jarviswidget" id="salesman-budget" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                        <!-- Widget Rates-->
+			<div class="jarviswidget" id="salescommission-scheme-salesman" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Budget </h2>
+                                        <h2>Salesman </h2>
                                         @if($edit)
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
@@ -174,22 +209,22 @@
 					<!-- widget content -->
 					<div class="widget-body">
                                             <form class="form-horizontal">
-                                                    @if(count($form->salesbudget))
-                                                        @foreach($form->salesbudget as &$b)
-                                                            <?php $b->id = Crypt::encrypt($b->id); ?>
-                                                            @include('salesman.edit_budget',array('b'=>$b))
+                                                    @if(count($form->salesman))
+                                                        @foreach($form->salesman as &$s)
+                                                            <?php $s->id = Crypt::encrypt($s->id); ?>
+                                                            @include('sales-commission.edit-scheme_salesman',array('s'=>$s))
                                                         @endforeach
                                                     @else
-                                                        @include('salesman.edit_budget')
+                                                        @include('sales-commission.edit-scheme_salesman')
                                                     @endif
-                                                    @include('salesman.edit_budget',array('dummy'=>true,'b'=>null))                                                
+                                                    @include('sales-commission.edit-scheme_salesman',array('dummy'=>true,'s'=>null))
                                             </form>
                                         </div>
                                         <!-- end widget content -->
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->-
+                        <!-- end widget -->                        
                 </article>
                 <!-- NEW COL END -->
                 
@@ -197,7 +232,7 @@
                 <article class="col-lg-4 col-xs-12">                
                 
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="salesman-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <div class="jarviswidget" id="salescommission-scheme-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 
                            <header>
                                    <span class="widget-icon"> <i class="fa fa-comment"></i> </span>
@@ -216,7 +251,7 @@
                     <!-- end widget -->
                     
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="salesman-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <div class="jarviswidget" id="salescommission-scheme-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-history"></i> </span>
@@ -227,7 +262,7 @@
                                     <!-- widget content -->
                                     <div class="widget-body nopadding">
                                         <div class="activity-container">
-                                            @include('salesman.edit_activity')
+                                            @include('sales-commission.edit_activity')
                                         </div>
                                     </div>
                                     <!-- end widget content -->
@@ -246,4 +281,4 @@
 
 </div>
 
-@stop                
+@stop

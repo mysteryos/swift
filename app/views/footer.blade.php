@@ -77,10 +77,7 @@
                         loadingdiv.style.opacity = "0";
                         //Run Main Script for Page
                         window.setTimeout(function(){
-                            if(typeof $('#content').attr('data-js') !== "undefined")
-                            {
-                                main[$('#content').attr('data-js').toString()]();
-                            }
+                            executePageScript();
                         },700);
                         window.setTimeout(function(){
                             loadingdiv.parentNode.removeChild(loadingdiv);                            

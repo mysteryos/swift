@@ -234,6 +234,39 @@ Class AjaxSearchController extends UserController {
         
     }
     
+    public function getSalesmanbyname()
+    {
+        $limit = 5;
+        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);        
+        
+        $term = Input::get('term');
+        $users = SwiftSalesman::whereHas('user',function($q) use ($term){
+                    return $q->where('first_name','LIKE','%'.$term.'%')
+                    ->where('last_name','LIKE','%'.$term.'%','OR')
+                    ->where('activated','=',1,'AND');
+                })->with('user')->take($limit)->offset($offset)
+                ->get();
+        if(count($users))
+        {
+            $total = SwiftSalesman::whereHas('user',function($q) use ($term){
+                        return $q->where('first_name','LIKE','%'.$term.'%')
+                        ->where('last_name','LIKE','%'.$term.'%','OR')
+                        ->where('activated','=',1,'AND');
+                    })
+                    ->count();
+            
+            $salesmanArray = array_map(function($v){
+                                return array('id'=>$v['id'],'text'=>$v['user']['first_name']." ".$v['user']['last_name']);
+                            },$users->toArray());
+            
+            $result = array('salesman'=>$salesmanArray,'total'=>$total);
+            return Response::json($result);
+        }
+        
+        return Response::json(array('total'=>0));
+        
+    }    
+    
     public function getUserall()
     {
         $users = User::where('id','!=',Sentry::getUser()->id)->get();

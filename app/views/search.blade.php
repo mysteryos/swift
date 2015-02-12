@@ -16,7 +16,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="swift_search">
+<div id="content" data-js="elastic_search">
 
     <!-- row -->
 

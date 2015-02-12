@@ -47,10 +47,18 @@ class SwiftSalesmanClient extends Eloquent {
     {
         if((int)$val > 0)
         {
-            return \JdeCustomer::where('AN8','=',$val)->first()->DSC1;
+            $jdeCustomer = JdeCustomer::where('AN8','=',$val)->first();
+            if($jdeCustomer)
+            {
+                return trim($jdeCustomer->ALPH." (Code: ".$jdeCustomer->AN8.")");
+            }
         }
         return "";
-    }    
+    }
+    
+    /*
+     * Relationships
+     */
     
     public function salesman()
     {
@@ -61,5 +69,14 @@ class SwiftSalesmanClient extends Eloquent {
     {
         return $this->belongsTo('JdeCustomer','customer_code','AN8');
     }
-
+    
+    
+    /*
+     * Utility
+     */
+    
+    public static function getBySalesmanId($salesman_id)
+    {
+        return self::whereSalesmanId($salesman_id)->get();
+    }
 }

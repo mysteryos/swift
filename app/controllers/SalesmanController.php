@@ -22,7 +22,7 @@ class SalesmanController extends UserController {
     public function getAdministration($department='all',$page=1)
     {
         $limitPerPage = 15;
-        $this->pageTitle = "Administration - All";
+        $this->pageTitle = "Administration - ".$department;
         
         $salesmanQuery = SwiftSalesman::query();
         
@@ -136,6 +136,7 @@ class SalesmanController extends UserController {
             $this->data['edit'] = $edit;
             $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
             $this->data['activity'] = Helper::getMergedRevision(['client','salesbudget'],$salesman);
+            $this->data['departmentList'] = json_encode(\SwiftSalesmanDepartment::getList($this->currentUser->isSuperUser()));
             $this->data['form'] = $salesman;
             $this->data['rootURL'] = $this->rootURL;
             return $this->makeView('salesman/edit');
@@ -214,7 +215,7 @@ class SalesmanController extends UserController {
             {
                 return Response::make("Failed to save salesman",500);
             }            
-        }        
+        }
     }
     
     public function putGeneralinfo()
@@ -237,6 +238,12 @@ class SalesmanController extends UserController {
             switch(Input::get('name'))
             {
                 case 'notes':
+                    break;
+                case 'department_id':
+                    if(!array_key_exists(Input::get('value'),\SwiftSalesmanDepartment::getList($this->currentUser->isSuperUser())))
+                    {
+                        return Response::make('Department doesn\'t exist',400);
+                    }
                     break;
                 default:
                     return Response::make('Unknown field',400);
@@ -269,7 +276,7 @@ class SalesmanController extends UserController {
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission]))
         {
             return parent::forbidden();
-        }        
+        }
         
         $salesman = \SwiftSalesman::find(Crypt::decrypt($salesman_id));
         
@@ -367,6 +374,144 @@ class SalesmanController extends UserController {
         {
             return Response::make('Client entry not found',400);
         }        
+    }
+    
+    public function putBudget($salesman_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $salesman = \SwiftSalesman::find(Crypt::decrypt($salesman_id));
+        
+        if(count($salesman))
+        {
+            //Validation
+            switch(Input::get('name'))
+            {
+                case 'date':
+                    if(!date_parse_from_format('m-Y', Input::get('value')))
+                    {
+                        return Response::make('Please input a valid date (m-Y)',400);
+                    }
+                    else
+                    {
+                        //Duplicate months
+                        $budgetDuplicates = SwiftSalesCommissionBudget::whereSalesmanId($salesman->id)
+                                            ->where('date_end','>',Carbon::createFromFormat('m-Y',Input::get('value'))->day(1),'AND')
+                                            ->where('date_start','<',Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0),'AND')
+                                            ->get();
+                        if(count($budgetDuplicates))
+                        {
+                            $budgetIds = implode(", ",array_map(function($v){
+                                return $v['id'];
+                            },$budgetDuplicates->toArray()));
+                            
+                            return Response::make('Budget period overlaps with IDs: '.$budgetIds,400);
+                        }
+                    }
+                    break;
+                case 'value':
+                    if(!is_numeric(Input::get('value')) || Input::get('value')<=0)
+                    {
+                        return Response::make('Please input a valid value for budget',400);
+                    }
+                    break;
+                default:
+                    return Response::make('Unknown Field',400);
+                    break;
+            }
+            
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $budget = new SwiftSalesCommissionBudget();
+                if(Input::get('name')==="date")
+                {
+                    $budget->date_start = Carbon::createFromFormat('m-Y',Input::get('value'))->day(1);
+                    $budget->date_end = Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0);
+                }
+                else
+                {
+                    $budget->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                }
+                
+                if($salesman->salesbudget()->save($budget))
+                {
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($budget->id),'id'=>$budget->id]));
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }                
+            }
+            else
+            {
+                $budget = SwiftSalesCommissionBudget::find(Crypt::decrypt(Input::get('pk')));
+                if($budget)
+                {
+                    if(Input::get('name')==="date")
+                    {
+                        $budget->date_start = Carbon::createFromFormat('m-Y',Input::get('value'))->day(1);
+                        $budget->date_end = Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0);
+                    }
+                    else
+                    {
+                        $budget->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    }
+                    
+                    if($budget->save())
+                    {
+                        return Response::make('Success');
+                    }
+                    else
+                    {
+                        return Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return Response::make('Error saving budget: Invalid PK',400);
+                }                
+            }
+        }
+        else
+        {
+            return Response::make('Salesman record not found',400);
+        }
+    }
+    
+    public function deleteBudget()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission]))
+        {
+            return parent::forbidden();
+        }        
+        
+        $id = Crypt::decrypt(Input::get('pk'));
+        $row = SwiftSalesCommissionBudget::find($id);
+        if(count($row))
+        {
+            if($row->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return Response::make('Budget entry not found',400);
+        }         
     }
     
     public function postDelete($salesman_id)

@@ -6,7 +6,7 @@
 /*
 * Fixed table height
 */
-(window.salesman_lists = function(){
+(window.salescommission_schemelists = function(){
     tableHeightSize();
 
     $(window).resize(function() {

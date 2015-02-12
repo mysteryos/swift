@@ -6,20 +6,20 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <ol class="breadcrumb"><li>Home</li><li>Salesman</li><li>Create</li></ol>            
+            <ol class="breadcrumb"><li>Home</li><li>scheme</li><li>Create</li></ol>            
         </div>
 
 </div>
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="salesman_create">
+<div id="content" data-js="salescommission_createscheme">
     <div class="row">
 	<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
 		<h1 class="page-title txt-color-blueDark">
 			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-user"></i> 
-				Salesman
+			<i class="fa-fw fa fa-list"></i> 
+				Scheme
 			<span>&gt;  
 				Create
 			</span>
@@ -42,14 +42,14 @@
 				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-					<h2>Create Form </h2>				
+					<h2>Create scheme </h2>				
 					
 				</header>
 				<!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body no-padding">
-                                            <form action="/salesman/create" method="POST" id="salesman-create-form" enctype="multipart/form-data" class="form-horizontal" name="aprequest-create" novalidate="novalidate">                                            
+                                            <form action="/{{ $rootURL }}/create-scheme" method="POST" id="create-form" enctype="multipart/form-data" class="form-horizontal" name="salescommission-createscheme" novalidate="novalidate">                                            
                                                 <input type="hidden" name="id" value="" />
                                                 <div class="panel-group smart-accordion-default" id="accordion">
                                                     <div class="panel panel-default" id="generalInfo">
@@ -66,24 +66,25 @@
                                                                     <div class="panel-body">
                                                                             <fieldset>
                                                                                     <div class="form-group">
-                                                                                        <label class="col-md-2 control-label">Salesman*</label>
-                                                                                        <div class="col-md-10">
-                                                                                            <select id="select_user_id" name="salesman" class="full-width">
-                                                                                                <option></option>
-                                                                                                @foreach($userList as $u)
-                                                                                                    <option value="{{ Crypt::encrypt($u->id) }}">{{ $u->first_name." ".$u->last_name }}</option>
-                                                                                                @endforeach
-                                                                                            </select>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="form-group">
-                                                                                            <label class="col-md-2 control-label">Notes</label>
+                                                                                            <label class="col-md-2 control-label">Name*</label>
                                                                                             <div class="col-md-10">
-                                                                                                <textarea name="notes" rows="2" class="form-control" placeholder="Enter your notes"></textarea>
+                                                                                                <input type='text' name='name' value='' autocomplete='off' class="form-control" placeholder='Enter a unique name' />
                                                                                             </div>
                                                                                     </div>
-
                                                                             </fieldset>
+                                                                            <fieldset>
+                                                                                    <div class="form-group">
+                                                                                            <label class="col-md-2 control-label">Type</label>
+                                                                                            <div class="col-md-10">
+                                                                                                <select name='type' class="full-width" autocomplete='off' id="select_type">
+                                                                                                    <option></option>
+                                                                                                    @foreach($typeList as $k=>$t)
+                                                                                                        <option value="{{ $k }}">{{ $t }}</option>
+                                                                                                    @endforeach
+                                                                                                </select>
+                                                                                            </div>
+                                                                                    </div>
+                                                                            </fieldset>                                                                        
                                                                     </div>
                                                             </div>
                                                     </div>

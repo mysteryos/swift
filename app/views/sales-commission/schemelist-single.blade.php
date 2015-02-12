@@ -1,4 +1,4 @@
-<tr class="form" data-pk="{{ Crypt::encrypt($s->id) }}" data-view="/salesman/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($s->id) }}">
+<tr class="form" data-pk="{{ Crypt::encrypt($s->id) }}" data-view="/{{ $rootURL }}/@if($edit_access){{ "edit-scheme" }}@else{{ "view-scheme" }}@endif/{{ Crypt::encrypt($s->id) }}">
     <td class="inbox-table-icon @if($s->deleted_at !== null) bg-color-red color-white @endif">
             <div class="checkbox">
                     <label>

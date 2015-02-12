@@ -152,7 +152,7 @@ function addMulti($dummy,pk)
         addEditablePk($clone,pk.encrypted_id,pk.id);
     }
     
-    $dummy.parents('.jarviswidget').find('form').append($clone);
+    $dummy.parents('.jarviswidget').find('form').prepend($clone);
     return true;
 }
 

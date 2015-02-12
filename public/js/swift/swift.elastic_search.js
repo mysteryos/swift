@@ -2,7 +2,7 @@
  * /Search Js
  */
 
-(window.swift_search = function () {
+(window.elastic_search = function () {
     
     $('#search_again').on('submit',function(e){
        $.pjax ({

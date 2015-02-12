@@ -69,6 +69,30 @@ class SwiftSalesCommissionSchemeRate extends Eloquent {
         return false;
     }
     
+    public function isActive(\Carbon\Carbon $date)
+    {
+        if($this->effective_date_start !== null && $this->effective_date_end !== null && $this->status === self::ACTIVE)
+        {
+            if($date->between($this->effective_date_start,$this->effective_date_end))
+            {
+                return true;
+            }
+        }
+        return false;        
+    }
+    
+    public function isActiveBetween(\Carbon\Carbon $date_start, \Carbon\Carbon $date_end)
+    {
+        if($this->effective_date_start !== null && $this->effective_date_end !== null && $this->status === self::ACTIVE)
+        {
+            if($date_start <= $this->effective_date_end && $date_end >= $this->effective_date_start)
+            {
+                return true;
+            }
+        }
+        return false;        
+    }    
+    
     /*
      * Relationships
      */

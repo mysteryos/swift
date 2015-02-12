@@ -33,12 +33,12 @@ class SwiftSalesCommissionScheme extends Eloquent {
     public $keepCreateRevision = true;
     public $softDelete = true;
     
-    const FLAT_SALES = 1;
-    const DYNAMIC_PRODUCTCATEGORY = 2;
+    const KEYACCOUNT_FLAT_SALES = 1;
+    const KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY = 2;
     
     public static $type = [
-                        self::FLAT_SALES => 'Commision from sales figures',
-                        self::DYNAMIC_PRODUCTCATEGORY => 'Commission from product classification'
+                        self::KEYACCOUNT_FLAT_SALES => 'Key-account commision from monhtly sales figures',
+                        self::KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY => 'Key-account commission from monhtly sales of product by category'
                     ];
     
     public static function boot() {
@@ -61,6 +61,42 @@ class SwiftSalesCommissionScheme extends Eloquent {
         {
             return "";
         }        
+    }
+    
+    public function getIsActiveAttribute()
+    {
+        foreach($this->rate as $r)
+        {
+            if($r->isActive)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public function isActive(\Carbon\Carbon $date)
+    {
+        foreach($this->rate as $r)
+        {
+            if($r->isActive($date))
+            {
+                return true;
+            }
+        }
+        return false;        
+    }
+    
+    public function isActiveBetween(\Carbon\Carbon $date_start, \Carbon\Carbon $date_end)
+    {
+        foreach($this->rate as $r)
+        {
+            if($r->isActiveBetween($date_start,$date_end))
+            {
+                return true;
+            }
+        }
+        return false;         
     }
     
     /*

@@ -7,6 +7,7 @@ class SalesCommissionController extends UserController {
         $this->rootURL = $this->data['rootURL'] = $this->context = "sales-commission";
         $this->adminPermission = \Config::get("permission.{$this->context}.admin");
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
+        $this->keyaccountmanagerPermission = \Config::get("permission.{$this->context}.key-account-manager");
     }
     
     public function getIndex()
@@ -19,10 +20,89 @@ class SalesCommissionController extends UserController {
         
     }
     
-    public function getCommission($department='all')
+    /*
+     * Commission Info: Start
+     */
+    
+    public function getCommissionOverview($selectedDepartment=false)
     {
+        //SalesCommission::calculatePerSalesman(1,(new Carbon('first day of last month')), (new Carbon('last day of last month')),true);
+        $this->pageTitle = "Commision - Overview";
         
+        //Get list of authorized departments to view
+        if($this->currentUser->isSuperUser() || $this->currentUser->hasAccess($this->adminPermission))
+        {
+            $superUser = true;
+            $departmentList = SwiftSalesmanDepartment::all();
+        }
+        else
+        {
+            $superUser = false;
+            $departmentList = SwiftSalesmanDepartment::whereHas('permission',function($q){
+                                return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                              })->get();
+                              
+            if(!count($departmentList))
+            {
+                return parent::forbidden();
+            }
+        }
+        
+        $commissionQuery = \SwiftSalesCommissionCalc::query()->with('salesman','salesman.user');
+        
+        //Filter by Department
+        if($selectedDepartment !== false)
+        {
+            if(!$superUser)
+            {
+                //Check access again
+                $departmentCheck = SwiftSalesmanDepartment::whereHas('permission',function($q){
+                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                  })->where('id','=',(int)$selectedDepartment)->count();
+                                  
+                if($departmentCheck === 0)
+                {
+                    return parent::forbidden();
+                }
+            }
+            
+            //Department Filter
+            $commissionQuery->whereHas('salesman',function($q) use ($selectedDepartment){
+                return $q->whereHas('department',function($q) use ($selectedDepartment){
+                    return $q->where('id','=',(int)$selectedDepartment);
+                });
+            });
+        }
+        
+        /*
+         * Last three months worth of commission
+         */
+        $commissionQuery->groupBy('salesman_id',DB::raw("MONTH(date_start)"),DB::raw("YEAR(date_start)"))
+                        ->select(DB::raw('*, SUM(total) as total,MONTH(date_start) as date_month'))
+                        ->where('date_start','>=',Carbon::now()->subMonths(3)->day(1))
+                        ->orderBy('date_start','DESC');
+        
+        $lastThreeMonthsCommission = $commissionQuery->get();
+        
+        $this->data['lastThreeMonthsCommission'] = $lastThreeMonthsCommission;
+        $this->data['selectedDepartment'] = $selectedDepartment;
+        $this->data['departmentList'] = $departmentList;
+        
+        return $this->makeView('sales-commission/commission-overview');
     }
+    
+    public function getCommissionStories($selectedDepartment=false)
+    {
+        $this->data['stories'] = new \Illuminate\Support\Collection;
+        $this->data['dynamicStory'] = false;
+        
+        echo View::make('story/chapter',$this->data)->render();        
+    }
+            
+            
+    /*
+     * Commission Info: End
+     */            
     
     /*
      * Scheme: Start
@@ -434,7 +514,7 @@ class SalesCommissionController extends UserController {
                     }
                     break;
                 case 'rate':
-                    if(!is_numeric(Input::get('value')) || Input::get('value') <= 0)
+                    if(!is_numeric(Input::get('value')) || Input::get('value') < 0)
                     {
                         return Response::make('Please input a valid rate',400);
                     }
@@ -482,7 +562,7 @@ class SalesCommissionController extends UserController {
                         if((int)Input::get('value',0) === SwiftSalesCommissionSchemeRate::ACTIVE)
                         {
                             //Is all Info set?
-                            if($rate->effective_date_start === null || $rate->effective_date_end === null || $rate->rate <=0)
+                            if($rate->effective_date_start === null || $rate->effective_date_end === null || $rate->rate <0)
                             {
                                 return Response::make('Please set all required fields before activating rate',400);
                             }

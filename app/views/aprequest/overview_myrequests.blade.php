@@ -53,6 +53,7 @@
                 </div>
             </div>
         @endif
+    </div>
 @else
     <h1 class="text-align-center"><i class="fa fa-smile-o"></i> You have no A&P requests so far.</h1>
 @endif

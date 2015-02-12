@@ -44,6 +44,15 @@ class SwiftSalesmanDepartment extends Eloquent {
         return $this->hasMany('SwiftSalesman','department_id');
     }
     
+    public function permission()
+    {
+        return $this->hasMany('SwiftSalesmanDepartmentPermission','department_id');
+    }
+    
+    
+    /*
+     * Query
+     */
     public static function getList($trashed=false)
     {
         $query = self::query();

@@ -125,7 +125,7 @@
                         </div>
                         <!-- end widget -->
                         
-                        @if($form->type === \SwiftSalesCommissionScheme::DYNAMIC_PRODUCTCATEGORY)
+                        @if($form->type === \SwiftSalesCommissionScheme::KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY)
                             <!-- Widget Products-->
                             <div class="jarviswidget" id="salescommission-scheme-products" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                                     <header>

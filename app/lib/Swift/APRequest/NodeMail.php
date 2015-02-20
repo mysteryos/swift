@@ -31,7 +31,7 @@ class NodeMail {
                         try
                         {
                             //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
-                            \Mail::queue('emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$u),function($message) use ($u,$aprequest){
+                            \Mail::queueOn('sqs-mail','emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$u),function($message) use ($u,$aprequest){
                                 $message->from('swift@scott.mu','Scott Swift');
                                 $message->subject(\Config::get('website.name').' - Status update on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
                                 $message->to($u->email);
@@ -54,7 +54,7 @@ class NodeMail {
         
         if($owner_user->activated)
         {
-            \Mail::queue('emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$owner_user),function($message) use ($owner_user,$aprequest){
+            \Mail::queueOn('sqs-mail','emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$owner_user),function($message) use ($owner_user,$aprequest){
                 $message->from('swift@scott.mu','Scott Swift');
                 $message->subject(\Config::get('website.name').' - A&P Request Cancelled"'.$aprequest->name.'" ID: '.$aprequest->id);
                 $message->to($owner_user->email);

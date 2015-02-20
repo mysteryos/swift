@@ -20,7 +20,7 @@
 <div id="content" data-js="salescommission_commissionoverview">
     <div class="row">
         <div class="col-xs-12">
-            <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i> Overview &nbsp;</h1>
+            <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i>Commission - Overview &nbsp;</h1>
         </div>
     </div>
     <ul class="nav nav-tabs row-space-4">

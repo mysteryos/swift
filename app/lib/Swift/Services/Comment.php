@@ -52,7 +52,7 @@ class Comment {
                 if(count($user))
                 {
                     //Mail
-                    \Mail::send('emails.comment.notify',array('obj'=>$classObj,'user'=>$user ,
+                    \Mail::queueOn('sqs-mail','emails.comment.notify',array('obj'=>$classObj,'user'=>$user ,
                                                                 'comment_user'=>$current_user,
                                                                 'comment' => $comment),function($message) use ($user){
                         $message->from('no-reply@scottltd.net','Scott Swift');

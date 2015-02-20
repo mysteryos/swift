@@ -38,4 +38,9 @@ class SwiftSalesCommissionCalcProduct extends Eloquent {
         return $this->belongsTo('JdeProduct','jde_itm','ITM');
     }
     
+    public function customer()
+    {
+        return $this->belongsTo('JdeCustomer','jde_an8','AN8');
+    }
+    
 }

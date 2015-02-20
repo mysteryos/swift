@@ -738,7 +738,7 @@ Order Tracking - Edit Form
 *  APrequest - Edit Form
 */
 
-p.totalprice.loading:after {
+p.totalprice.loading:after, a.loading:after {
     content:" \f021" !important;
     font-family: "FontAwesome";
     display: inline-block;

@@ -15,7 +15,7 @@
 <div id="content" data-js="salesman_lists">
     <div class="row">
         <div class="col-md-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> List &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Salesman Administration &nbsp;</h1>            
         </div>
         <div class="col-md-10 col-lg-10 hidden-mobile">
             <div class="inbox-inline-actions page-title">

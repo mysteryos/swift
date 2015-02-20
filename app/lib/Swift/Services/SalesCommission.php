@@ -60,7 +60,8 @@ class SalesCommission {
     private function saveCalculationPerSalesman($data)
     {
         $commissionCalculation = new \SwiftSalesCommissionCalc([
-            'salesman_id'   =>  $data['salesman_id'],
+            'salesman_id'   =>  $data['salesman']->id,
+            'salesman_info' =>  $data['salesman']->toJson(),
             'budget_id'     =>  isset($data['budget']) ? $data['budget']->id : 0,
             'scheme_id'     =>  isset($data['scheme']) ? $data['scheme']->id : 0,
             'rate_id'       =>  isset($data['rate']) ? $data['rate']->id : 0,
@@ -129,7 +130,7 @@ class SalesCommission {
                                 ->whereIn('AN8',$customerCodes)
                                 ->get();
                     $this->saveCalculationPerSalesman([
-                        'salesman_id' => $salesman->id,
+                        'salesman' => $salesman,
                         'budget' => $budget,
                         'scheme' => $scheme,
                         'commission_value'=>$commissionValue,
@@ -188,7 +189,7 @@ class SalesCommission {
                                     ->get();
                     
                     $this->saveCalculationPerSalesman([
-                        'salesman_id' => $salesman->id,
+                        'salesman' => $salesman,
                         'scheme' => $scheme,
                         'rate'   => $activeRate,
                         'commission_value'=>$commissionValue,

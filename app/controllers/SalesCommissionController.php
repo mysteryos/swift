@@ -17,12 +17,18 @@ class SalesCommissionController extends UserController {
     
     public function getOverview()
     {
+        //Stats
         
     }
     
     /*
      * Commission Info: Start
      */
+    
+    public function getCommissionCalc()
+    {
+        SalesCommission::calculatePerSalesman(1,(new Carbon('first day of last month'))->subMonth(), (new Carbon('last day of last month'))->subMonth(),true);
+    }
     
     public function getCommissionOverview($selectedDepartment=false)
     {
@@ -97,6 +103,93 @@ class SalesCommissionController extends UserController {
         $this->data['dynamicStory'] = false;
         
         echo View::make('story/chapter',$this->data)->render();        
+    }
+    
+    public function getCommissionView($salesman_id,$date_start)
+    {
+        //check Permission
+        
+        if($this->currentUser->isSuperUser() || $this->currentUser->hasAccess($this->adminPermission))
+        {
+            $superUser = true;
+        }
+        else
+        {
+            $superUser = false;
+            $isAllowed = SwiftSalesman::where('salesman_id','=',$salesman_id)
+                            ->whereHas('department',function($q){
+                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                            })->count();
+            
+            if($isAllowed === 0)
+            {
+                return parent::forbidden();
+            }
+        }
+        
+        $commissions = SwiftSalesCommissionCalc::where('salesman_id','=',$salesman_id)
+                       ->where('date_start','=',Carbon::createFromFormat('Y-m-d',$date_start)->format('Y-m-d'))
+                       ->with('scheme','budget','rate','salesman','salesman.department')
+                       ->orderBy('created_at','ASC')
+                       ->get();
+        
+        $salesman = SwiftSalesman::withTrashed()->find($salesman_id);
+        
+        if(count($salesman))
+        {
+            $this->data['message'][] = ['type'=>'info',
+                                        'msg'=>'This represents a snapshot of all information used to calculate the commission of the salesman as at '.$commissions->first()->created_at->toDateTimeString()];
+            $this->data['commissions'] = $commissions;
+            $this->data['salesman'] = $salesman;
+            $this->data['date_start'] = Carbon::createFromFormat('Y-m-d',$date_start)->format('Y-m-d');
+            $this->data['salesman_id'] = $salesman->id;
+            return $this->makeView('sales-commission/commission-view');
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+    
+    public function getCommissionDetailCalcView($salesman_id,$date_start)
+    {
+        //check Permission
+        
+        if($this->currentUser->isSuperUser() || $this->currentUser->hasAccess($this->adminPermission))
+        {
+            $superUser = true;
+        }
+        else
+        {
+            $superUser = false;
+            $isAllowed = SwiftSalesman::where('salesman_id','=',$salesman_id)
+                            ->whereHas('department',function($q){
+                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                            })->count();
+            
+            if($isAllowed === 0)
+            {
+                return parent::forbidden();
+            }
+        }
+        
+        $commissions = SwiftSalesCommissionCalc::where('salesman_id','=',$salesman_id)
+                       ->where('date_start','=',Carbon::createFromFormat('Y-m-d',$date_start)->format('Y-m-d'))
+                       ->with(['scheme','budget','rate','salesman.department','product'=>function($q){
+                           return $q->orderBy('jde_doc','ASC');
+                       },'product.jdeproduct'])
+                       ->orderBy('created_at','ASC')
+                       ->get();
+        
+        if(count($commissions))
+        {
+            $this->data['commissions'] = $commissions;
+            echo View::make('sales-commission/commission-view_commission_detailed',$this->data)->render();
+        }
+        else
+        {
+            return parent::notfound();
+        }        
     }
             
             

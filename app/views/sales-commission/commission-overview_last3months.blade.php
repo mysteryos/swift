@@ -33,7 +33,7 @@
                                 </th>
         @endif
         <?php $currentMonth = $com->date_start->month; ?>
-                                <tr>
+                                <tr data-url="/{{ $rootURL }}/commission-view/{{ $com->salesman_id }}/{{ $com->date_start->toDateString() }}">
                                     <td>
                                         {{ \Helper::getUserName($com->salesman->user_id,$currentUser) }}
                                     </td>

@@ -27,7 +27,8 @@ class SalesCommissionController extends UserController {
     
     public function getCommissionCalc()
     {
-        SalesCommission::calculatePerSalesman(1,(new Carbon('first day of last month'))->subMonth(), (new Carbon('last day of last month'))->subMonth(),true);
+        SalesCommission::calculatePerSalesman(3,(new Carbon('first day of last month')), (new Carbon('last day of last month')),true);
+        //SalesCommission::calculateAll((new Carbon('first day of last month')), (new Carbon('last day of last month')));
     }
     
     public function getCommissionOverview($selectedDepartment=false)
@@ -84,7 +85,7 @@ class SalesCommissionController extends UserController {
          * Last three months worth of commission
          */
         $commissionQuery->groupBy('salesman_id',DB::raw("MONTH(date_start)"),DB::raw("YEAR(date_start)"))
-                        ->select(DB::raw('*, SUM(total) as total,MONTH(date_start) as date_month'))
+                        ->select(DB::raw('*, SUM(value) as total,MONTH(date_start) as date_month'))
                         ->where('date_start','>=',Carbon::now()->subMonths(3)->day(1))
                         ->orderBy('date_start','DESC');
         
@@ -403,6 +404,7 @@ class SalesCommissionController extends UserController {
            
            $this->data['status_list'] = json_encode(Helper::jsonobject_encode(SwiftSalesCommissionSchemeRate::$status));
            $this->data['type_list'] = json_encode(Helper::jsonobject_encode(SwiftSalesCommissionScheme::$type));
+           $this->data['product_category_list'] = json_encode(Helper::jsonobject_encode(SwiftSalesCommissionSchemeProductCategory::$category));
            $this->pageTitle = $scheme->getReadableName();
            $this->data['edit'] = $edit;
            $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
@@ -565,6 +567,121 @@ class SalesCommissionController extends UserController {
         }
         
         $prod = SwiftSalesCommissionSchemeProduct::find(Crypt::decrypt(Input::get('pk')));
+        
+        if(count($prod))
+        {
+            if($prod->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }                        
+        }
+        else
+        {
+            return Response::make('JDE order not found',404);
+        }        
+    }
+    
+    public function putSchemeProductCategory($id)
+    {
+        /*  
+         * Check Permissions
+         */        
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $form = SwiftSalesCommissionScheme::find(Crypt::decrypt($id));
+        
+        /*
+         * Manual Validation
+         */
+        if(count($form))
+        {
+            switch(Input::get('name'))
+            {
+                case 'category':
+                    if(!array_key_exists(Input::get('value'),SwiftSalesCommissionSchemeProductCategory::$category))
+                    {
+                        return Response::make('Invalid product category',400);
+                    }
+                    else
+                    {
+                        $count = SwiftSalesCommissionSchemeProductCategory::where('scheme_id','=',$form->id)
+                                ->where('category','=',Input::get('value'),'AND')
+                                ->count();
+                        if($count > 0)
+                        {
+                            return Response::make('Product Category already exists for this scheme',400);
+                        }
+                    }
+                    break;
+                default:
+                    return Response::make('Cannot save - Unknown field',400);
+                    break;
+            }
+            
+            /*
+             * New AP Product
+             */
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $cat = new SwiftSalesCommissionSchemeProductCategory();
+                $cat->{Input::get('name')} = Input::get('value');
+                if($form->product()->save($cat))
+                {
+                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($cat->id),'id'=>$cat->id]));
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }
+                
+            }
+            else
+            {
+                $cat = SwiftSalesCommissionSchemeProduct::find(Crypt::decrypt(Input::get('pk')));
+                if(count($cat))
+                {
+                    
+                    $cat->{Input::get('name')} = Input::get('value');
+                    if($cat->save())
+                    {
+                        return Response::make('Success');
+                    }
+                    else
+                    {
+                        return Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return Response::make('Error saving category: Invalid PK',400);
+                }                
+            }
+        }
+        else
+        {
+            return Response::make('Scheme not found',400);
+        }        
+    }
+    
+    public function deleteSchemeProductCategory()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission]))
+        {
+            return parent::forbidden();
+        }
+        
+        $prod = SwiftSalesCommissionSchemeProductCategory::find(Crypt::decrypt(Input::get('pk')));
         
         if(count($prod))
         {
@@ -760,7 +877,7 @@ class SalesCommissionController extends UserController {
             switch(Input::get('name'))
             {
                 case 'salesman_id':
-                    if(!User::find(Input::get('value')))
+                    if(!\SwiftSalesman::find(Input::get('value')))
                     {
                         return Response::make('Please select a valid user',400);
                     }

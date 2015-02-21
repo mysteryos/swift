@@ -137,6 +137,7 @@ class SalesmanController extends UserController {
             $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
             $this->data['activity'] = Helper::getMergedRevision(['client','salesbudget'],$salesman);
             $this->data['departmentList'] = json_encode(\SwiftSalesmanDepartment::getList($this->currentUser->isSuperUser()));
+            $this->data['schemeList']= json_encode(Helper::jsonobject_encode(SwiftSalesCommissionScheme::getAll()));
             $this->data['form'] = $salesman;
             $this->data['rootURL'] = $this->rootURL;
             return $this->makeView('salesman/edit');
@@ -398,27 +399,18 @@ class SalesmanController extends UserController {
                     {
                         return Response::make('Please input a valid date (m-Y)',400);
                     }
-                    else
-                    {
-                        //Duplicate months
-                        $budgetDuplicates = SwiftSalesCommissionBudget::whereSalesmanId($salesman->id)
-                                            ->where('date_end','>',Carbon::createFromFormat('m-Y',Input::get('value'))->day(1),'AND')
-                                            ->where('date_start','<',Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0),'AND')
-                                            ->get();
-                        if(count($budgetDuplicates))
-                        {
-                            $budgetIds = implode(", ",array_map(function($v){
-                                return $v['id'];
-                            },$budgetDuplicates->toArray()));
-                            
-                            return Response::make('Budget period overlaps with IDs: '.$budgetIds,400);
-                        }
-                    }
                     break;
                 case 'value':
-                    if(!is_numeric(Input::get('value')) || Input::get('value')<=0)
+                    $num = (new \NumberFormatter('en_US',NumberFormatter::DECIMAL))->parse(trim(Input::get('value')));
+                    if($num === false)
                     {
                         return Response::make('Please input a valid value for budget',400);
+                    }
+                    break;
+                case 'scheme_id':
+                    if(!\SwiftSalesCommissionScheme::find(Input::get('value')))
+                    {
+                        return Response::make('Please select a valid scheme',400);
                     }
                     break;
                 default:
@@ -430,14 +422,18 @@ class SalesmanController extends UserController {
             {
                 //All Validation Passed, let's save
                 $budget = new SwiftSalesCommissionBudget();
-                if(Input::get('name')==="date")
+                switch(Input::get('name'))
                 {
-                    $budget->date_start = Carbon::createFromFormat('m-Y',Input::get('value'))->day(1);
-                    $budget->date_end = Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0);
-                }
-                else
-                {
-                    $budget->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    case 'date':
+                        $budget->date_start = Carbon::createFromFormat('m-Y',Input::get('value'))->day(1);
+                        $budget->date_end = Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0);
+                        break;
+                    case 'value':
+                        $budget->{Input::get('name')} = Input::get('value') == "" ? null : (new \NumberFormatter('en_US',NumberFormatter::DECIMAL))->parse(trim(Input::get('value')));
+                        break;
+                    default:
+                        $budget->{Input::get('name')} = Input::get('value');
+                        break;
                 }
                 
                 if($salesman->salesbudget()->save($budget))
@@ -454,14 +450,39 @@ class SalesmanController extends UserController {
                 $budget = SwiftSalesCommissionBudget::find(Crypt::decrypt(Input::get('pk')));
                 if($budget)
                 {
-                    if(Input::get('name')==="date")
+                    /*
+                     * Validation
+                     */
+                    
+                    //Duplicate months
+//                    $budgetDuplicates = SwiftSalesCommissionBudget::whereSalesmanId($salesman->id)
+//                                        ->where('date_end','>',Carbon::createFromFormat('m-Y',Input::get('value'))->day(1),'AND')
+//                                        ->where('date_start','<',Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0),'AND')
+//                                        ->where('scheme_id','=',(int)$budget->scheme_id)
+//                                        ->where('id','!=',$budget->id)
+//                                        ->get();
+                    
+//                    if(count($budgetDuplicates))
+//                    {
+//                        $budgetIds = implode(", ",array_map(function($v){
+//                            return $v['id'];
+//                        },$budgetDuplicates->toArray()));
+//
+//                        return Response::make('Budget period overlaps with IDs: '.$budgetIds,400);
+//                    }                    
+                    
+                    switch(Input::get('name'))
                     {
-                        $budget->date_start = Carbon::createFromFormat('m-Y',Input::get('value'))->day(1);
-                        $budget->date_end = Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0);
-                    }
-                    else
-                    {
-                        $budget->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                        case 'date':
+                            $budget->date_start = Carbon::createFromFormat('m-Y',Input::get('value'))->day(1);
+                            $budget->date_end = Carbon::createFromFormat('m-Y',Input::get('value'))->addMonth()->day(0);
+                            break;
+                        case 'value':
+                            $budget->{Input::get('name')} = Input::get('value') == "" ? null : (new \NumberFormatter('en_US',NumberFormatter::DECIMAL))->parse(trim(Input::get('value')));
+                            break;
+                        default:
+                            $budget->{Input::get('name')} = Input::get('value');
+                            break;
                     }
                     
                     if($budget->save())

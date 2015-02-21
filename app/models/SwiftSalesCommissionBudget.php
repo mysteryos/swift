@@ -74,12 +74,18 @@ class SwiftSalesCommissionBudget extends Eloquent {
         return $this->belongsTo('SwiftSalesman','salesman_id');
     }
     
+    public function scheme()
+    {
+        return $this->belongTo('SwiftSalesCommissionScheme','scheme_id');
+    }
+    
     /*
      * Query
      */
-    public static function getActiveBudgetBySalesman($salesman_id,$date_start,$date_end)
+    public static function getActiveBudgetBySalesman($salesman_id,$scheme_id,$date_start,$date_end)
     {
         return self::whereSalesmanId($salesman_id)
+                ->whereSchemeId($scheme_id)
                 ->where('date_start','>=',$date_start,'AND')
                 ->where('date_end','<=',$date_end,'AND')
                 ->first();

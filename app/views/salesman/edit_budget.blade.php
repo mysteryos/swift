@@ -15,6 +15,15 @@
             </div>
         </div>        
     </div>
+    <div class="row">
+        <div class="form-group col-md-6">
+            <label class="col-md-4 control-label">Scheme*</label>
+            <div class="col-md-8">
+                <a href="#" @if(isset($b->id)) {{ "id=\"budget_scheme_".Crypt::decrypt($b->id)."\"" }} @endif class="editable budget-editable" data-type="select" data-name="scheme_id" data-pk="{{ $b->id or 0 }}" data-context="budget" data-url="/{{ $rootURL }}/budget/{{ Crypt::encrypt($form->id) }}" data-title="Select type of scheme" data-value="{{ $b->scheme_id or "" }}" data-source='{{ $schemeList }}'></a>
+            </div>
+        </div>        
+    </div>
+    <legend class="top"></legend>    
     @if($edit || $isAdmin)<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/budget" title="Delete Budget"><i class="fa fa-trash-o"></i></a>@endif
     @if(!isset($dummy) && isset($b))<span class="float-id">ID: {{ Crypt::decrypt($b->id) }}</span> @endif    
 </fieldset>

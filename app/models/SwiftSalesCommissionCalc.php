@@ -10,7 +10,7 @@ class SwiftSalesCommissionCalc extends Eloquent {
     
     protected $table = 'swift_com_sales_calc';
     
-    protected $fillable = ['salesman_id','budget_id','type','scheme_id','rate_id','total','date_start','date_end','budget_info','scheme_info','rate_info','salesman_info'];
+    protected $fillable = ['salesman_id','budget_id','type','scheme_id','rate_id','total','value','date_start','date_end','budget_info','scheme_info','rate_info','salesman_info'];
     
     protected $dates = ['date_start','date_end','deleted_at'];
     

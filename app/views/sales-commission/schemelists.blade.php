@@ -15,7 +15,7 @@
 <div id="content" data-js="salescommission_schemelists">
     <div class="row">
         <div class="col-md-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> scheme &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Scheme &nbsp;</h1>            
         </div>
         <div class="col-md-10 col-lg-10 hidden-mobile">
             <div class="inbox-inline-actions page-title">
@@ -85,7 +85,7 @@
                                         <tr id="noorders" class="empty">
                                             <td class="text-align-center">
                                                 <h1>
-                                                    <i class="fa fa-smile-o"></i> <span>No categories at all. Clean & Shiny!</span>
+                                                    <i class="fa fa-smile-o"></i> <span>No schemes at all. Clean & Shiny!</span>
                                                 </h1>
                                             </td>
                                         </tr>

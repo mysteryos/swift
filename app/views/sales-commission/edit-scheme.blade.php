@@ -160,6 +160,41 @@
                             <!-- end widget -->
                         @endif
                         
+                        @if($form->type === \SwiftSalesCommissionScheme::KEYACCOUNT_FLAT_SALES_PRODUCTCATEGORY)
+                            <!-- Widget Products-->
+                            <div class="jarviswidget" id="salescommission-scheme-product-category" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                                    <header>
+                                            <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                                            <h2>Product Category </h2>
+                                            @if($edit)
+                                                <div class="widget-toolbar" role="menu">
+                                                    <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                                                </div>
+                                            @endif
+                                    </header>
+                                    <!-- widget div-->
+                                    <div>
+                                            <!-- widget content -->
+                                            <div class="widget-body">
+                                                <form class="form-horizontal">
+                                                        @if(count($form->productCategory))
+                                                            @foreach($form->productCategory as &$pc)
+                                                                <?php $pc->id = Crypt::encrypt($pc->id); ?>
+                                                                @include('sales-commission.edit-scheme_productCategory',array('pc'=>$pc))
+                                                            @endforeach
+                                                        @else
+                                                            @include('sales-commission.edit-scheme_productCategory')
+                                                        @endif
+                                                        @include('sales-commission.edit-scheme_productCategory',array('dummy'=>true,'pc'=>null))
+                                                </form>
+                                            </div>
+                                            <!-- end widget content -->
+                                    </div>
+                                    <!-- end widget div -->
+                            </div>
+                            <!-- end widget -->
+                        @endif                        
+                        
                         <!-- Widget Rates-->
 			<div class="jarviswidget" id="salescommission-scheme-rates" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>

@@ -9,7 +9,7 @@
     <div class="form-group">
         <label class="col-md-2 control-label">Department</label>
         <div class="col-md-10">
-            <p class="form-control-static">{{ $salesman->department->name }}</p>
+            <p class="form-control-static">{{ $salesman->department->name or "(Not set)" }}</p>
         </div>
     </div>
     

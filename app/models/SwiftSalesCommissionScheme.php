@@ -33,12 +33,12 @@ class SwiftSalesCommissionScheme extends Eloquent {
     public $keepCreateRevision = true;
     public $softDelete = true;
     
-    const KEYACCOUNT_FLAT_SALES = 1;
+    const KEYACCOUNT_FLAT_SALES_PRODUCTCATEGORY = 1;
     const KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY = 2;
     
     public static $type = [
-                        self::KEYACCOUNT_FLAT_SALES => 'Key-account commision from monhtly sales figures',
-                        self::KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY => 'Key-account commission from monhtly sales of product by category'
+                        self::KEYACCOUNT_FLAT_SALES_PRODUCTCATEGORY => 'Key-account commision from monthly sales by product category',
+                        self::KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY => 'Key-account commission from monhtly sales of product by dynamic categorization'
                     ];
     
     public static function boot() {
@@ -150,6 +150,16 @@ class SwiftSalesCommissionScheme extends Eloquent {
         return $this->belongsToMany('SwiftSalesman','swift_com_scheme_salesman','scheme_id','salesman_id');
     }
     
+    public function productCategory()
+    {
+        return $this->hasMany('SwiftSalesCommissionSchemeProductCategory','scheme_id');
+    }
+    
+    public function budget()
+    {
+        return $this->hasMany('SwiftSalesCommissionBudget','scheme_id');
+    }
+    
     /*
      * Utility
      */
@@ -162,8 +172,18 @@ class SwiftSalesCommissionScheme extends Eloquent {
             $query->withTrashed();
         }
         
-        return $query->with('rate','product','salesman','salesman.user')->find($id);
+        return $query->with('rate','product','productCategory','salesman','salesman.user')->find($id);
     }
     
-    
+    public static function getAll()
+    {
+        $list = self::all();
+        $listArray = array();
+        foreach($list as $l)
+        {
+            $listArray[$l->id] = $l->name;
+        }
+        
+        return $listArray;
+    }
 }

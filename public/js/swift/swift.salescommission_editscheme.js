@@ -289,7 +289,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
     
     //Multi X-editable save
-    $('.product-editable,.rate-editable,.salesman-editable').on('save',function(e,params){
+    $('.product-editable,.rate-editable,.salesman-editable,.product-category-editable').on('save',function(e,params){
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
         {

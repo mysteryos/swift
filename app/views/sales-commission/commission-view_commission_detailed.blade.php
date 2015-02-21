@@ -26,7 +26,7 @@
                             <div class="col-md-10">
                                 <p class="form-control-static">@if($c->budget_info === "" || $c->budget_info_data->value == 0)  N/A @else{{ "Rs. ".number_format($c->budget_info_data->value) }}@endif</p>
                             </div>
-                        </div>        
+                        </div>
                         <div class="form-group">
                             <label class="col-md-2 control-label">Commission Value under this scheme</label>
                             <div class="col-md-10">

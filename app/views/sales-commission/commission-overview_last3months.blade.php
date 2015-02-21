@@ -38,7 +38,7 @@
                                         {{ \Helper::getUserName($com->salesman->user_id,$currentUser) }}
                                     </td>
                                     <td>
-                                        Rs. {{ round($com->total,4) }}
+                                        Rs. {{ round($com->total,0) }}
                                     </td>
                                 </tr>
 

@@ -64,6 +64,9 @@ Route::group(array('before' => array('auth')), function()
     //Salesman
     Route::controller('salesman','SalesmanController');
     
+    //Product Returns
+    Route::controller('product-returns','ProductReturnsController');
+    
 });
 
 Route::group(array('before'=> array('admin')), function()

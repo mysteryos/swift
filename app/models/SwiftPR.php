@@ -15,7 +15,7 @@ class SwiftPR extends Eloquent {
     
     protected $appends = array('customer_name');
     
-    protected $fillable = array('name','description','customer_code','return_user_id');
+    protected $fillable = array('name','description','customer_code','owner_user_id','driver_id');
     
     protected $dates = ['deleted_at'];
     
@@ -24,13 +24,14 @@ class SwiftPR extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'name','description','customer_code'
+        'name','description','customer_code', 'driver_id'
     );
     
     protected $revisionFormattedFieldNames = array(
         'customer_code' => 'Customer Code',
         'name' => 'Name',
         'description' => 'Description',
+        'driver_id' => 'Driver'
     );
     
     public $revisionClassName = "Produt Returns";
@@ -78,6 +79,31 @@ class SwiftPR extends Eloquent {
     }  
     
     /*
+     * Accessors
+     */
+    
+    public function getDriverIdRevisionableAttribute($val)
+    {
+        $driver = \SwiftStoreDriver::find($val);
+        if($driver)
+        {
+            return $driver->name;
+        }
+        
+        return "N/A";
+    }
+    
+    public function getCustomerNameAttribute()
+    {
+        if($this->customer_code !== "" && count($this->customer) !== 0)
+        {
+            return trim($this->customer->ALPH);
+        }
+        
+        return "";
+    }    
+    
+    /*
      * Utility
      */
     
@@ -116,9 +142,9 @@ class SwiftPR extends Eloquent {
         return $this->hasMany('SwiftPRProduct','pr_id');
     }
     
-    public function requester()
+    public function owner()
     {
-        return $this->belongsTo('users','return_user_id');
+        return $this->belongsTo('users','owner_user_id');
     }
     
     /*

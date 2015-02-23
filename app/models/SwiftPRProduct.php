@@ -11,8 +11,8 @@ class SwiftPRProduct extends Eloquent {
     
     protected $table = "swift_pr_product";
     
-    protected $fillable = array("pr_id","jde_itm","qty_client","qty_pickup","qty_store",
-                                "qty_triage_picking","qty_triage_disposal","invoice_id","invoice_recognition","price","reason_code","reason_others","pickup");
+    protected $fillable = array("pr_id","jde_itm","reason_id","qty_client","qty_pickup","qty_store",
+                                "qty_triage_picking","qty_triage_disposal","invoice_id","invoice_recognition","price","reason_others","pickup");
     
     protected $attributes = array('pickup'=>self::PICKUP);
     
@@ -29,7 +29,7 @@ class SwiftPRProduct extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'jde_itm','quantity','reason_code','reason_others'
+        'jde_itm','quantity','reason_id','reason_others'
     );
     
     protected $revisionFormattedFieldNames = array(
@@ -84,6 +84,15 @@ class SwiftPRProduct extends Eloquent {
     const PICKUP = 1;
     const NO_PICKUP = 0;
     
+    /*
+     * Invoice Recognition
+     */
+    
+    const INVOICE_USER_FOUND = 1;
+    const INVOICE_USER_MISSING = 2;
+    const INVOICE_SYSTEM_FOUND = 3;
+    const INVOICE_SYSTEM_MISSING = 4;
+    
     //Reason Codes
     
     public static $reason_client = array(self::RC_CLIENT_BROKEN => 'Broken',
@@ -108,31 +117,13 @@ class SwiftPRProduct extends Eloquent {
                                   
     
     /*
-     * Revisionable Accessors
-     */
-    
-    public function getReasonCodeRevisionAttribute($val)
-    {
-        if(key_exists($val,self::$reason_client))
-        {
-            return self::$reason[$val]. "(At Client)";
-        }
-        if(key_exists($val,self::$reason_scott))
-        {
-               return self::$reason[$val]. "(At Scott)"; 
-        }
-        
-        return "";        
-    }
-    
-    /*
      * Elastic Search Indexing
      */
     
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
-    public $esContext = "aprequest";
+    public $esContext = "pr";
     public $esInfoContext = "product";
     
     /*
@@ -144,9 +135,9 @@ class SwiftPRProduct extends Eloquent {
         return $this->aprequest_id;
     }
     
-    public function getReasonCodeEsAttribute($val)
+    public function getReasonIdEsAttribute($val)
     {
-        return $this->getReasonCodeRevisionAttribute($val);         
+        return $this->getReasonIdRevisionAttribute($val);         
     }
     
     /*
@@ -177,24 +168,32 @@ class SwiftPRProduct extends Eloquent {
     
     public function getReasontextAttribute()
     {
-        if(key_exists($val,self::$reason_client))
+        if(count($this->reason))
         {
-            return $this->$reason_client[$val]. "(At Client)";
-        }
-        if(key_exists($val,self::$reason_scott))
-        {
-               return self::$reason_scott[$val]. "(At Scott)"; 
+            return $this->reason->name." (At ".$this->reason->category.")";
         }
         
         return "";         
+    }
+    
+    public function getReasonIdRevisionAttribute($val)
+    {
+        $reason = \SwiftPRReason::find($val);
+        if($reason)
+        {
+            return $reason->name." (At ".$reason->category.")";
+        }
+        
+        return "";        
     }    
+    
     
     /*
      * Relationships
      */
-    public function aprequest()
+    public function pr()
     {
-        return $this->belongsTo('SwiftAPRequest','aprequest_id');
+        return $this->belongsTo('SwiftPR','pr_id');
     }
     
     public function approval()
@@ -207,24 +206,9 @@ class SwiftPRProduct extends Eloquent {
         return $this->belongsTo('JdeProduct','jde_itm','ITM');
     }
     
-    public function approvalretailman()
+    public function reason()
     {
-        return $this->morphOne('SwiftApproval','approvable')->with('comment')->where('type','=',SwiftApproval::PR_RETAILMAN);
-    }
-    
-    
-    /*
-     * Utility
-     */
-    
-    public function reasonScott()
-    {
-        return $this->reason_scott;
-    }
-    
-    public function reasonClient()
-    {
-        return $this->reason_client;
+        return $this->hasOne('SwiftPRReason','reason_id');
     }
     
 }

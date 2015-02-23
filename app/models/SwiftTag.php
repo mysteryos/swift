@@ -45,6 +45,8 @@ class SwiftTag extends eloquent {
     const OT_GRN = 14;
     const OT_PACKING_LIST = 15;
     const AP_EVENTFLYER = 16;
+    const PR_RETURNRECEIPT = 17;
+    const PR_PRODUCTIMAGE = 18;
         
     /*
      * Compilation of Order Tracking Tags
@@ -63,6 +65,12 @@ class SwiftTag extends eloquent {
      * Compilation of A&P Request Tags
      */
     public static $aprequestTags = [self::AP_EVENTFLYER => "Event flyer"];
+    
+    /*
+     * Compilation of Product Returns Tags
+     */
+    
+    public static $prTags = [self::PR_RETURNRECEIPT => "Return Receipt",self::PR_PRODUCTIMAGE => "Products"];
     
     /*
      * Event Observers

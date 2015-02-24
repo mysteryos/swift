@@ -11,7 +11,7 @@ class ElasticSearchHelper {
     
     public function indexTask($job,$data)
     {
-        if(\Config::get('elasticsearch.enabled') === true)
+        if(\Config::get('website.elasticsearch') === true)
         {
             if(isset($data['context']))
             {
@@ -27,7 +27,7 @@ class ElasticSearchHelper {
     
     public function updateTask($job,$data)
     {
-        if(\Config::get('elasticsearch.enabled') === true)
+        if(\Config::get('website.elasticsearch') === true)
         {        
             if(isset($data['context']))
             {

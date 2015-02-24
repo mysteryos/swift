@@ -331,6 +331,54 @@ div.FixedHeader_Cloned td {
     margin-top: 37.5px;
 }
 
+.row-space-left-1 {
+    margin-left: 6.25px;
+}
+
+.row-space-left-2 {
+    margin-left: 12.5px;
+}
+
+.row-space-left-3 {
+    margin-left: 18.75px;
+}
+
+.row-space-left-4 {
+    margin-left: 25px;
+}
+
+.row-space-left-5 {
+    margin-left: 31.25px;
+}
+
+.row-space-left-6 {
+    margin-left: 37.5px;
+}
+
+.row-space-right-1 {
+    margin-right: 6.25px;
+}
+
+.row-space-right-2 {
+    margin-right: 12.5px;
+}
+
+.row-space-right-3 {
+    margin-right: 18.75px;
+}
+
+.row-space-right-4 {
+    margin-right: 25px;
+}
+
+.row-space-right-5 {
+    margin-right: 31.25px;
+}
+
+.row-space-right-6 {
+    margin-right: 37.5px;
+}
+
 /*
 * Extend SmartAdmin Production
 */

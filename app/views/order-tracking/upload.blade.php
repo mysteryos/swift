@@ -32,7 +32,7 @@
                                 echo '<i class="fa fa-file-o"></i>';
                                 break;                
                         }
-                        ?>{{$d->getAttachedfiles()['document']->originalFilename()}}</a></span>
+                        ?>{{$d->getAttachedfiles()['document']->originalFilename()}}</a> <a class="row-space-left-1" target="_blank" href="http://docs.google.com/viewer?url={{$d->getAttachedfiles()['document']->url()}}" rel="tooltip" data-original-title="Open in new window" data-placement="bottom"><i class="fa fa-external-link"></i></a></span>
                         <strong class="error text-danger" data-dz-errormessage=""></strong>
                     </div>
                     <div class="col-xs-4">

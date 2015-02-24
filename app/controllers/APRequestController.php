@@ -395,12 +395,15 @@ class APRequestController extends UserController {
                 /*
                  * Loop through node definition and check access
                  */
-                foreach($f->current_activity['definition'] as $d)
+                if(isset($f->current_activity['definition']))
                 {
-                    if(NodeActivity::hasAccess($d,SwiftNodePermission::RESPONSIBLE))
+                    foreach($f->current_activity['definition'] as $d)
                     {
-                        $hasAccess = true;
-                        break;
+                        if(NodeActivity::hasAccess($d,SwiftNodePermission::RESPONSIBLE))
+                        {
+                            $hasAccess = true;
+                            break;
+                        }
                     }
                 }
                 

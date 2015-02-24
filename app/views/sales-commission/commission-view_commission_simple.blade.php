@@ -1,6 +1,6 @@
-<?php $total = 0; ?>
+<?php $totalCommission = 0; ?>
 @foreach($commissions as $c)
-    <?php $total += $c->value ?>
+    <?php $totalCommission += $c->value; ?>
     <fieldset>
         <legend>Scheme: {{ $c->scheme_info_data->name }}</legend>
         <div class="form-group">
@@ -17,7 +17,6 @@
             </div>
         </div>
         @endif
-        
         <div class="form-group">
             <label class="col-md-2 control-label">Commission Value</label>
             <div class="col-md-10">
@@ -31,7 +30,13 @@
     <div class="form-group">
         <label class="col-md-2 control-label">Commission Value</label>
         <div class="col-md-10">
-            <p class="form-control-static">Rs. {{ number_format($total) }}</p>
+            <p class="form-control-static">Rs. {{ number_format($totalCommission) }}</p>
         </div>
-    </div>       
+    </div>
+    <div class="form-group">
+        <label class="col-md-2 control-label">Sales Value</label>
+        <div class="col-md-10">
+            <p class="form-control-static">Rs. {{ number_format($totalSales) }}</p>
+        </div>
+    </div>    
 </fieldset>

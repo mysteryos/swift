@@ -192,5 +192,4 @@ class chclcrawler extends ScheduledCommand {
 	{
 		return [];
 	}
-
 }

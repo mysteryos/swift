@@ -133,11 +133,15 @@ class SwiftSalesman extends Eloquent {
     {
         if(!$trashed)
         {
-            return self::with('client','salesbudget','scheme','department')->find($id);
+            return self::with(['client','salesbudget'=>function($q){
+                return $q->orderBy('date_start','desc');
+            },'scheme','department'])->find($id);
         }
         else
         {
-            return self::withTrashed()->with('client','salesbudget','scheme','department')->find($id);
+            return self::withTrashed()->with(['client','salesbudget'=>function($q){
+                return $q->orderBy('date_start','desc');
+            },'scheme','department'])->find($id);
         }
     }    
 

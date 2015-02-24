@@ -27,8 +27,8 @@ class SalesCommissionController extends UserController {
     
     public function getCommissionCalc()
     {
-        SalesCommission::calculatePerSalesman(3,(new Carbon('first day of last month')), (new Carbon('last day of last month')),true);
-        //SalesCommission::calculateAll((new Carbon('first day of last month')), (new Carbon('last day of last month')));
+        //SalesCommission::calculatePerSalesman(3,(new Carbon('first day of last month')), (new Carbon('last day of last month')),true);
+        SalesCommission::calculateAll((new Carbon('first day of last month')), (new Carbon('last day of last month')));
     }
     
     public function getCommissionOverview($selectedDepartment=false)
@@ -86,7 +86,7 @@ class SalesCommissionController extends UserController {
          */
         $commissionQuery->groupBy('salesman_id',DB::raw("MONTH(date_start)"),DB::raw("YEAR(date_start)"))
                         ->select(DB::raw('*, SUM(value) as total,MONTH(date_start) as date_month'))
-                        ->where('date_start','>=',Carbon::now()->subMonths(3)->day(1))
+                        ->where('date_start','>=',Carbon::now()->subMonths(4)->day(1))
                         ->orderBy('date_start','DESC');
         
         $lastThreeMonthsCommission = $commissionQuery->get();
@@ -136,11 +136,20 @@ class SalesCommissionController extends UserController {
         
         $salesman = SwiftSalesman::withTrashed()->find($salesman_id);
         
+        $customerCodes = array_map(function($v){
+                            return $v['customer_code'];
+                        },$salesman->client->toArray());
+        $totalSalesValue = \JdeSales::where('IVD','>=',Carbon::createFromFormat('Y-m-d',$date_start)->format('Y-m-d'))
+                            ->where('IVD','<=',Carbon::createFromFormat('Y-m-d',$date_start)->addMonth()->day(0)->format('Y-m-d'),'AND')
+                            ->whereIn('AN8',$customerCodes)
+                            ->sum('AEXP');
+        
         if(count($salesman))
         {
             $this->data['message'][] = ['type'=>'info',
                                         'msg'=>'This represents a snapshot of all information used to calculate the commission of the salesman as at '.$commissions->first()->created_at->toDateTimeString()];
             $this->data['commissions'] = $commissions;
+            $this->data['totalSales'] = $totalSalesValue;
             $this->data['salesman'] = $salesman;
             $this->data['date_start'] = Carbon::createFromFormat('Y-m-d',$date_start)->format('Y-m-d');
             $this->data['salesman_id'] = $salesman->id;

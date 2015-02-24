@@ -177,7 +177,7 @@ class SwiftSalesCommissionScheme extends Eloquent {
     
     public static function getAll()
     {
-        $list = self::all();
+        $list = self::orderBy('name','ASC')->get();
         $listArray = array();
         foreach($list as $l)
         {

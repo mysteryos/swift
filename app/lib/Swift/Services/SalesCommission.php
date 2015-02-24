@@ -73,7 +73,7 @@ class SalesCommission {
     
     private function saveCalculationPerSalesman($data)
     {
-        $commissionCalculation = new \SwiftSalesCommissionCalc([
+        $savedata = [
             'salesman_id'   =>  $data['salesman']->id,
             'salesman_info' =>  $data['salesman']->toJson(),
             'budget_id'     =>  isset($data['budget']) ? $data['budget']->id : 0,
@@ -86,7 +86,27 @@ class SalesCommission {
             'budget_info'   =>  isset($data['budget']) ? $data['budget']->toJson() : "",
             'scheme_info'   =>  isset($data['scheme']) ? $data['scheme']->toJson() : "",
             'rate_info'     =>  isset($data['rate']) ? $data['rate']->toJson() : "",
-        ]);
+        ];
+        
+        $commissionCalculation = new \SwiftSalesCommissionCalc($savedata);
+        
+        //Check if data already exists
+        $duplicateData = \SwiftSalesCommissionCalc::where('salesman_id','=',$data['salesman']->id)
+                        ->where('budget_id','=',$savedata['budget_id'],'AND')
+                        ->where('scheme_id','=',$savedata['scheme_id'],'AND')
+                        ->where('rate_id','=',$savedata['rate_id'],'AND')
+                        ->where('date_start','=',$savedata['date_start'],'AND')
+                        ->where('date_end','=',$savedata['date_end'],'AND')
+                        ->get();
+        
+        if(count($duplicateData))
+        {
+            foreach($duplicateData as $d)
+            {
+                $d->product()->delete();
+                $d->delete();
+            }
+        }
         
         $commissionCalculation->save();
         
@@ -224,6 +244,7 @@ class SalesCommission {
                         'scheme' => $scheme,
                         'rate'   => $activeRate,
                         'commission_value'=>$commissionValue,
+                        'sales_value' => $salesSum,
                         'product_list'=>$product_list,
                         'date_start'=>$date_start,
                         'date_end' =>$date_end,

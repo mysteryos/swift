@@ -175,7 +175,7 @@ Class NodeDefinitionJoin {
             
             if($productcount == $approvedproductcount)
             {
-                //All products have been processed for that Cat MAN
+                //All products have been processed for that exec
                 return true;
             }
         }

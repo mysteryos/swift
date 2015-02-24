@@ -54,6 +54,12 @@ class SalesmanController extends UserController {
             $salesmanQuery->offset(($page-1)*$limitPerPage);
         }
         
+        /*
+         * Relations
+         */
+        
+        $salesmanQuery->with(['department']);
+        
         $salesmanList = $salesmanQuery->get();
         
         foreach($salesmanList as $s)
@@ -146,6 +152,96 @@ class SalesmanController extends UserController {
         {
             return parent::notfound();
         }        
+    }
+    
+    public function getBudget($selectedDepartment=false)
+    {
+        $this->pageTitle = "Salesman - Budget";
+        
+        //Get list of authorized departments to view
+        if($this->currentUser->isSuperUser() || $this->currentUser->hasAccess($this->adminPermission))
+        {
+            $superUser = true;
+            $departmentList = SwiftSalesmanDepartment::all();
+        }
+        else
+        {
+            $superUser = false;
+            $departmentList = SwiftSalesmanDepartment::whereHas('permission',function($q){
+                                return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                              })->get();
+                              
+            if(!count($departmentList))
+            {
+                return parent::forbidden();
+            }
+        }
+        
+        $commissionQuery = \SwiftSalesCommissionCalc::query();
+        $commissionQuery->with('salesman','salesman.user','budget','scheme');
+        
+        //Filter by Department
+        if($selectedDepartment !== false)
+        {
+            if(!$superUser)
+            {
+                //Check access again
+                $departmentCheck = SwiftSalesmanDepartment::whereHas('permission',function($q){
+                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                  })->where('id','=',(int)$selectedDepartment)->count();
+                                  
+                if($departmentCheck === 0)
+                {
+                    return parent::forbidden();
+                }
+            }
+            
+            //Department Filter
+            $commissionQuery->whereHas('salesman',function($q) use ($selectedDepartment){
+                return $q->whereHas('department',function($q) use ($selectedDepartment){
+                    return $q->where('id','=',(int)$selectedDepartment);
+                });
+            });
+        }
+        
+        //Must have budget
+        $commissionQuery->has('budget');
+        
+        //Date Filter
+        
+        $dateStart = Input::get('date_start',(new Carbon('first day of last month'))->format('m-Y'));
+        $dateEnd = Input::get('date_start',(new Carbon('first day of last month'))->format('m-Y'));
+        $dateStart = Carbon::createFromFormat('m-Y',$dateStart)->day(1)->format('Y-m-d');
+        $dateEnd = Carbon::createFromFormat('m-Y',$dateEnd)->addMonth()->day(0)->format('Y-m-d');
+        
+        $commissionQuery->where('date_start','>=',$dateStart)
+                        ->where('date_end','<=',$dateEnd,'AND')
+                        ->orderBy('salesman_id','ASC');
+                
+        //Fetch results
+        
+        $commissionResult = $commissionQuery->get();
+        
+        $salesmanCommission = array();
+        $currentSalesman = 0;
+        foreach($commissionResult as $c)
+        {
+            if($currentSalesman !== $c->salesman_id)
+            {
+                $currentSalesman = $c->salesman_id;
+                $salesmanCommission[$c->salesman_id]['salesman'] = $c->salesman;
+            }
+            
+            $salesmanCommission[$c->salesman_id]['chart'][] = ['scheme_name'=>$c->scheme->name,
+                                                        'budget'=>$c->budget->value,
+                                                        'actual'=>$c->total];
+        }
+        
+        $this->data['salesmanCommission'] = $salesmanCommission;
+        $this->data['datePeriodStart'] = $dateStart;
+        $this->data['datePeriodEnd'] = $dateEnd;
+
+        return $this->makeView('salesman/budget');
     }
     
     public function getCreate()

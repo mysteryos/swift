@@ -413,6 +413,7 @@ class SalesCommissionController extends UserController {
            
            $this->data['status_list'] = json_encode(Helper::jsonobject_encode(SwiftSalesCommissionSchemeRate::$status));
            $this->data['type_list'] = json_encode(Helper::jsonobject_encode(SwiftSalesCommissionScheme::$type));
+           $this->data['budget_list'] = json_encode(Helper::jsonobject_encode(SwiftSalesCommissionScheme::$budget));
            $this->data['product_category_list'] = json_encode(Helper::jsonobject_encode(SwiftSalesCommissionSchemeProductCategory::$category));
            $this->pageTitle = $scheme->getReadableName();
            $this->data['edit'] = $edit;
@@ -457,6 +458,12 @@ class SalesCommissionController extends UserController {
                         return Response::make('Please select a valid type');
                     }
                     break;
+                case 'has_budget':
+                    if(!array_key_exists(Input::get('value'),SwiftSalesCommissionScheme::$budget))
+                    {
+                        return Response::make('Please select a valid budget');
+                    }
+                    break;                    
                 default:
                     return Response::make('Cannot save - Unknown field',400);
                     break;

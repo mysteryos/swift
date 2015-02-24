@@ -37,7 +37,7 @@
             </div>
     </td>
     <td class="inbox-data-message @if($s->deleted_at !== null) bg-color-red color-white @endif">
-                {{ $s->name }}
+                {{ count($s->department) ? $s->department->name : "(Unknown)" }} - {{ $s->name }} 
     </td>
 
     <td class="inbox-data-date hidden-xs @if($s->deleted_at !== null) bg-color-red color-white @endif">

@@ -1707,5 +1707,16 @@ var main = {
             pageSetUp();
             apr_statistics();
         }
+    },
+    salesman_budget: function() {
+        if(typeof window['salesman_budget'] === "undefined")
+        {
+            jsLoader(["/js/plugin/morris/raphael.2.1.0.min.js","/js/plugin/morris/morris.min.js","/js/swift/swift.salesman_budget.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            salesman_budget();
+        }        
     }
 }

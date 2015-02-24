@@ -11,7 +11,7 @@ class SwiftSalesCommissionScheme extends Eloquent {
     
     protected $table = "swift_com_scheme";
     
-    protected $fillable = ['name','notes','type'];
+    protected $fillable = ['name','notes','type','has_budget'];
     
     protected $dates = ['deleted_at'];
     
@@ -39,6 +39,11 @@ class SwiftSalesCommissionScheme extends Eloquent {
     public static $type = [
                         self::KEYACCOUNT_FLAT_SALES_PRODUCTCATEGORY => 'Key-account commision from monthly sales by product category',
                         self::KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY => 'Key-account commission from monhtly sales of product by dynamic categorization'
+                    ];
+    
+    public static $budget = [
+                        0 => 'No',
+                        1 => 'Yes',
                     ];
     
     public static function boot() {
@@ -97,6 +102,20 @@ class SwiftSalesCommissionScheme extends Eloquent {
             }
         }
         return false;         
+    }
+    
+    /*
+     * Scope
+     */
+    
+    public function scopeHasBudget($query)
+    {
+        return $query->where('has_budget','=',1);
+    }
+    
+    public function scopeHasNoBudget($query)
+    {
+        return $query->where('has_budget','=',0);
     }
     
     /*

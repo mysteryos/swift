@@ -28,7 +28,7 @@ class ElasticSearchHelper {
     public function updateTask($job,$data)
     {
         if(\Config::get('website.elasticsearch') === true)
-        {        
+        {
             if(isset($data['context']))
             {
                 $this->UpdateEs($data);

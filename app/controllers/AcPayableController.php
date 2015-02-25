@@ -4,7 +4,7 @@ class AcPayableController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "Accounts Payable";
-        $this->rootURL = "acpayable";
+        $this->rootURL = $this->context = "acpayable";
         $this->adminPermission = "ap-admin";
         $this->viewPermission = "ap-view";
         $this->editPermission = "ap-edit";

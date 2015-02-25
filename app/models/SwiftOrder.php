@@ -116,11 +116,6 @@ class SwiftOrder extends Eloquent {
      * Relationships
      */
     
-    public function purchaseOrder()
-    {
-        return $this->hasMany('SwiftPurchaseOrder','order_id');
-    }
-    
     public function reception()
     {
         return $this->hasMany('SwiftReception','order_id');
@@ -150,6 +145,12 @@ class SwiftOrder extends Eloquent {
     /*
      * Morphic
      */
+    
+    public function purchaseOrder()
+    {
+        return $this->morphMany('SwiftPurchaseOrder','purchasable');
+    }    
+    
     public function document()
     {
         return $this->morphMany('SwiftDocument','document');

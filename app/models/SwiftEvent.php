@@ -1,6 +1,7 @@
 <?php
 
-class SwiftEvent extends Eloquent {
+class SwiftEvent extends Eloquent 
+{
     
     use Illuminate\Database\Eloquent\SoftDeletingTrait;    
     

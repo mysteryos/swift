@@ -13,11 +13,9 @@ class SwiftPurchaseOrder extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('order_id','reference');
+    protected $fillable = array('reference');
     
     public $timestamps = true;
-    
-    protected $touches = array('order');
     
     public $dates = ['deleted_at'];
     
@@ -47,7 +45,7 @@ class SwiftPurchaseOrder extends Eloquent {
     //Context for Indexing
     public $esContext = "order-tracking";
     public $esInfoContext = "purchaseOrder";
-    public $esRemove = ['order_id'];
+    public $esRemove = ['purchasable_id','purchasable_type'];
     
     /*
      * ElasticSearch Get Parent
@@ -55,7 +53,11 @@ class SwiftPurchaseOrder extends Eloquent {
     
     public function esGetParent()
     {
-        return $this->order;
+        return $this->purchasable;
+    }
+    
+    public function esGetContext() {
+        return array_search($this->purchasable_type,Config::get('context'));
     }
     
     /*
@@ -74,8 +76,8 @@ class SwiftPurchaseOrder extends Eloquent {
      * Relationships
      */
     
-    public function order()
+    public function purchasable()
     {
-        return $this->belongsTo('SwiftOrder','order_id');
+        return $this->morphTo();
     }
 }

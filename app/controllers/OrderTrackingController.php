@@ -1531,6 +1531,7 @@ class OrderTrackingController extends UserController {
                 $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($order->purchaseOrder()->save($po))
                 {
+                    $order->touch();
                     Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                     return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($po->id),'id'=>$po->id]));
                 }
@@ -1548,6 +1549,7 @@ class OrderTrackingController extends UserController {
                     $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($po->save())
                     {
+                        $order->touch();
                         Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
                         return Response::make('Success');
                     }

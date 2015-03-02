@@ -10,7 +10,7 @@
                 "intervention/image": "2.*",
                 "pusher/pusher-php-server": "dev-master",
                 "simonstamm/laravel-pjax": "dev-master",
-                "vespakoen/menu": "dev-master",
+                "vespakoen/menu": "2.*",
                 "barryvdh/laravel-ide-helper": "1.*",
                 "dflydev/markdown":"1.0.*",
                 "erusev/parsedown":"0.7.*",

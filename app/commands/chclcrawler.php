@@ -1,12 +1,10 @@
 <?php
 
-use Indatus\Dispatcher\Scheduling\ScheduledCommand;
-use Indatus\Dispatcher\Scheduling\Schedulable;
-use Indatus\Dispatcher\Drivers\Cron\Scheduler;
+use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class chclcrawler extends ScheduledCommand {
+class chclcrawler extends Command {
 
 	/**
 	 * The console command name.
@@ -30,20 +28,20 @@ class chclcrawler extends ScheduledCommand {
 	public function __construct()
 	{
 		parent::__construct();
-                if ( ! Sentry::check())
-                {
-                    Helper::loginSysUser();
-                }
-	}
-        
-        public function getName()
+        if ( ! Sentry::check())
         {
-            return $this->name;
+            Helper::loginSysUser();
         }
-        
-        public function isEnabled() {
-            return true;
-        }
+	}
+    
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function isEnabled() {
+        return true;
+    }
 
 	/**
 	 * Execute the console command.
@@ -61,11 +59,14 @@ class chclcrawler extends ScheduledCommand {
                 {
                     if($td->textContent == 'STORAGE REEFER')
                     {
+                        $this->info('Storage info found');
                         $parentTable = $td->parentNode->parentNode;
 
                         $childrenTr = $parentTable->childNodes;
                         foreach($childrenTr as $tr)
                         {
+                            $this->info('Children node found');
+                            //
                             $td = $tr->childNodes;
                             $count = 0;
                             $cargo = array();
@@ -125,11 +126,13 @@ class chclcrawler extends ScheduledCommand {
                                 }
                             }
 
+                            $this->info(var_dump($cargo));
+
                             //Do save of cargo here
                             if(isset($cargo) && isset($cargo['storage_rate']))
                             {
                                 $count = CHCLStorage::getByVesselAndVoyage($cargo['vessel'],$cargo['voy']);
-                                if($count != 0)
+                                if($count > 0)
                                 {
                                     unset($cargo);
                                 }
@@ -145,20 +148,28 @@ class chclcrawler extends ScheduledCommand {
                                      * Save to ElasticSearch Index
                                      */
                                     
-                                    $params = array('index'=>'chcl',
-                                                    'type'=>'storage',
-                                                    'id'=>$savecargo->id,
-                                                    'body'=>$cargo);
-                                    Es::index($params);
+//                                    $params = array('index'=>'chcl',
+//                                                    'type'=>'storage',
+//                                                    'id'=>$savecargo->id,
+//                                                    'body'=>$cargo);
+//                                    Es::index($params);
                                 }
+                            }
+                            else
+                            {
+                                $this->info('Cargo found, Storage rate not found');
                             }
                         }
                         break;
                     }
+                    else
+                    {
+                        $this->info('Storage info NOT found');
+                    }
                 }
                 catch(Exception $e)
                 {
-                    $this->error($e->getMessage());
+                    $this->info($e->getMessage());
                     Log::error($e);
                 }
             }
@@ -170,7 +181,7 @@ class chclcrawler extends ScheduledCommand {
         public function schedule(Schedulable $scheduler)
         {
             //Every Day at 4a.m
-            return $scheduler->daily()->hours(4);
+            //return $scheduler->daily()->hours(4);
         }        
         
 	/**

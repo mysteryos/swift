@@ -76,6 +76,7 @@ class SwiftFreight extends Eloquent{
         'freight_etd' => 'Freight ETD',
         'freight_eta' => 'Freight ETA',
         'freight_company' => 'Freight Company',
+        'id' => "ID"
     );
     
     public $keepCreateRevision = true;

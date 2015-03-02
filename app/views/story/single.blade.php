@@ -1,4 +1,4 @@
-<li class="timeline-post">
+<li class="timeline-post" id="post_{{ $story->id }}">
         <?php 
             switch($story->action)
             {
@@ -19,6 +19,9 @@
                     break;
                 case SwiftStory::ACTION_COMPLETE:
                     echo '<div class="smart-timeline-icon bg-color-greenDark"><i class="fa fa-check"></i></div>';
+                    break;
+                case SwiftStory::ACTION_VESSEL:
+                    echo '<div class="smart-timeline-icon bg-color-green"><i class="fa fa-check fa-anchor"></i></div>';
                     break;
             }
         ?>    

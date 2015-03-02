@@ -5,7 +5,7 @@ class OrderTrackingController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "Order Process";
-        $this->rootURL = $this->context = "order-tracking";
+        $this->rootURL = $this->context = $this->data['context'] = "order-tracking";
         $this->adminPermission = \Config::get("permission.{$this->context}.admin");
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
@@ -1736,7 +1736,8 @@ class OrderTrackingController extends UserController {
                 {
                     echo json_encode(['success'=>1,
                                     'url'=>$doc->getAttachedFiles()['document']->url(),
-                                    'id'=>Crypt::encrypt($doc->id), 
+                                    'id'=>Crypt::encrypt($doc->id),
+                                    'id_normal'=>$doc->id,
                                     'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(), 
                                     'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
                 }

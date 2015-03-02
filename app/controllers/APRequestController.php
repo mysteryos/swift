@@ -5,7 +5,7 @@ class APRequestController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "A&P Request";
-        $this->rootURL = $this->context = "aprequest";
+        $this->rootURL = $this->context = $this->data['context'] = "aprequest";
         $this->adminPermission = \Config::get("permission.{$this->context}.admin");
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
@@ -36,7 +36,7 @@ class APRequestController extends UserController {
         $aprequest_inprogress_count = SwiftAPRequest::getInProgressCount();
         $aprequest_inprogress_important = SwiftAPRequest::getInProgress(0,true);       
         $aprequest_inprogress_responsible = SwiftAPRequest::getInProgressResponsible();
-        $aprequest_inprogress_important_responsible = SwiftAPRequest::getInProgressResponsible(0,true);                       
+        $aprequest_inprogress_important_responsible = SwiftAPRequest::getInProgressResponsible(0,true);
         
         $aprequest_inprogress = $aprequest_inprogress->diff($aprequest_inprogress_responsible);
         $aprequest_inprogress_important = $aprequest_inprogress_important->diff($aprequest_inprogress_important_responsible);
@@ -66,7 +66,7 @@ class APRequestController extends UserController {
         $this->data['inprogress_important'] = $aprequest_inprogress_important;
         $this->data['inprogress_important_responsible'] = $aprequest_inprogress_important_responsible;
         /*$this->data['aprequest_storage'] = $storage_array*/
-        $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
+        $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
         
         return $this->makeView('aprequest/overview');        
         

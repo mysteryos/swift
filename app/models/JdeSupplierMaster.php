@@ -4,7 +4,7 @@
  * Description: Eloquent Model
  */
 
-class JdeSupplierMaster extends eloquent {
+class JdeSupplierMaster extends Eloquent {
     protected $connection = 'sct_jde';
     
     protected $table = 'sct_jde.jdesuppliermaster';

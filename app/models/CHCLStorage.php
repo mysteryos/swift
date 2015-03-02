@@ -21,5 +21,10 @@ class CHCLStorage extends Eloquent {
     {
         return self::where('vessel','=',$vessel)->where('voy','=',$voy,'AND')->count();
     }
+
+    public function story()
+    {
+        return $this->morphMany('SwiftStory','storyfiable');
+    }
 }
 

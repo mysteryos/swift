@@ -25,6 +25,7 @@ class SwiftStory extends Eloquent {
     const ACTION_COMMENT = 4;
     const ACTION_COMPLETE = 5;
     const ACTION_STATISTICS = 6;
+    const ACTION_VESSEL = 7;
     
     //Context
     const NODE_ACTIVITY = "SwiftNodeActivity";
@@ -32,6 +33,7 @@ class SwiftStory extends Eloquent {
     const ORDER_TRACKING = "SwiftOrder";
     const APREQUEST = "SwiftAPRequest";
     const COMMENT = "SwiftComment";
+    const VESSELLIVE = "CHCLLive";
     
     //Type
     const TYPE_STATIC = 1;
@@ -93,6 +95,8 @@ class SwiftStory extends Eloquent {
             case self::ACTION_STATISTICS:
                 $action = "generated";
                 break;
+            case self::ACTION_VESSEL:
+                $action = "foresaw the unloading of";
         }
         return $action;
     }
@@ -100,7 +104,6 @@ class SwiftStory extends Eloquent {
     public function contextText()
     {
         $context = false;
-        $yolo = $this->storyfiable;
         switch($this->storyfiable_type)
         {
             case self::NODE_ACTIVITY:
@@ -115,6 +118,9 @@ class SwiftStory extends Eloquent {
                 break;
             case self::COMMENT:
                 $context = "on <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->commentable->getIcon()}\"></i> {$this->storyfiable->commentable->getReadableName()}</a>: '{$this->storyfiable->comment}'";
+                break;
+            case self::VESSELLIVE:
+                $context = "{$this->storyfiable->voyage} - <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->context->getIcon()}\"></i> {$this->context->getReadableName()}</a>";
                 break;
         }
         return $context;
@@ -137,6 +143,9 @@ class SwiftStory extends Eloquent {
                 break;
             case self::COMMENT:
                 $link = \Helper::generateUrl($this->storyfiable->commentable);
+                break;
+            case self::VESSELLIVE:
+                $link = \Helper::generateUrl($this->context);
                 break;
         }
         return $link;        

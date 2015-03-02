@@ -1,5 +1,5 @@
 <div class="smart-timeline">
-    <ul class="smart-timeline-list" id="timeline-list">
+    <ul class="smart-timeline-list" id="timeline-list" data-context="{{ $context or "" }}">
         @if($dynamicStory !== false)
             @include('story.dynamic')
         @endif

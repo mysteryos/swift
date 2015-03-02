@@ -37,27 +37,57 @@ class elasticsearchmapping extends Command {
 	 */
 	public function fire()
 	{
-            $context = $this->ask('What is the context?');
             $client = new Elasticsearch\Client();
             $params = array();
-            $params['index'] = \App::environment();            
-            switch($context)
+            $params['index'] = \App::environment();
+            
+            $action = $this->ask("Create or Delete?");
+            switch(strtolower($action))
             {
-                case "order-tracking":
-                case "aprequest":
-                case "acpayable":
-                    $params['type'] = $context;
-                    $params['body'][$context] = Config::get('elasticsearchmapping.'.$context);
+                case "create":
+                    $context = $this->ask('What is the context?');
+                    switch($context)
+                    {
+                        case "order-tracking":
+                        case "aprequest":
+                        case "acpayable":
+                            $params['type'] = $context;
+                            $params['body'][$context] = Config::get('elasticsearchmapping.'.$context);
+                            break;
+                        default:
+                            $this->error("We don't support this context!");
+                            return;
+                    }
+                    if($client->indices()->putMapping($params))
+                    {
+                        $this->info("Your mapping has been created for '$context'");
+                    }
+                    return;
+                    break;
+                case "delete":
+                    $context = $this->ask('What is the context?');
+                    switch($context)
+                    {
+                        case "order-tracking":
+                        case "aprequest":
+                        case "acpayable":
+                            $params['type'] = $context;
+                            break;
+                        default:
+                            $this->error("We don't support this context!");
+                            return;
+                    }
+                    
+                    if($client->indices()->deleteMapping($params))
+                    {
+                        $this->info("Your mapping has been deleted for '$context'");
+                    }
+                    return;
                     break;
                 default:
-                    $this->error("We don't support this context!");
-                    return;
+                    $this->error("This action is not supported.");
+                    break;
             }
-                   
-            if($client->indices()->putMapping($params))
-            {
-                $this->info("Your mapping has been created for '$context'");
-            }            
         }    
             
 	/**

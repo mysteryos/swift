@@ -562,8 +562,37 @@ ul.messenger.messenger-fixed.messenger-on-top {
 *  Whos Online
 */
 
-#whos-online .avatar {
-    margin-left: 5px;
+@keyframes pulse-opacity {
+    0% {
+        opacity: 1;
+    }
+
+    25% {
+        opacity: 0.75;
+    }
+    
+    50% {
+        opacity: 0.5;
+    }
+    
+    75% {
+        opacity: 0.75;
+    }
+    
+    100% {
+        opacity: 1;
+    }
+}
+
+.whos-online .avatar {
+    margin-left: 10px;
+}
+
+.whos-online .avatar.pulse {
+    -webkit-animation: 1s ease 0s normal none infinite pulse; /* Safari 4+ */
+    -moz-animation:    pulse-opacity 1s infinite; /* Fx 5+ */
+    -o-animation:      pulse-opacity 1s infinite; /* Opera 12+ */
+    animation:         pulse-opacity 1s infinite; /* IE 10+, Fx 29+ */
 }
 
 /*
@@ -758,7 +787,7 @@ Order Tracking - Edit Form
 }
 
 .editable-select2 div.select2-container {
-    width:200px;
+    width:250px;
 }
 
 .fieldset-product {

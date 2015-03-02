@@ -18,3 +18,4 @@ Artisan::add(new elasticsearchmapping);
 Artisan::add(new dbclean);
 Artisan::add(new workflow);
 Artisan::add(new commission);
+Artisan::add(new chclberth);

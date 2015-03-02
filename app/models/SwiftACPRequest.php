@@ -47,7 +47,9 @@ class SwiftACPRequest extends Eloquent
     public $saveCreateRevision = true;
     public $softDelete = true;
     public $revisionClassName =  "Accounts Payable";
-    public $revisionPrimaryIdentifier = "id";    
+    public $revisionPrimaryIdentifier = "id";
+
+    public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','creditNote'];
     
     /*
      * Event Observers
@@ -117,7 +119,16 @@ class SwiftACPRequest extends Eloquent
     public function getIcon()
     {
         return "fa-money";
-    }    
+    }
+
+    /*
+     * Pusher Channel Name
+     */
+
+    public function channelName()
+    {
+        return "acp_".$this->id;
+    }
     
     /*
      * Relationship
@@ -162,10 +173,164 @@ class SwiftACPRequest extends Eloquent
     {
         return $this->hasMany('SwiftACPCreditNote','acp_id');
     }
+
+    /*
+     * Polymorphic Relation
+     */
+
+    public function workflow()
+    {
+        return $this->morphOne('SwiftWorkflowActivity', 'workflowable');
+    }
+
+    public function comments()
+    {
+        return $this->morphMany('SwiftComment', 'commentable');
+    }
+
+    public function notification()
+    {
+        return $this->morphMany('SwiftNotification','notifiable');
+    }
+
+    public function story()
+    {
+        return $this->morphMany('SwiftStory','storyfiable');
+    }
+
+    public function document()
+    {
+        return $this->morphMany('SwiftDocument','document');
+    }
+
+    public function flag()
+    {
+        return $this->morphMany('SwiftFlag','flaggable');
+    }
+
+    public function recent()
+    {
+        return $this->morphMany('SwiftRecent','recentable');
+    }
+
+    public function event()
+    {
+        return $this->morphMany('SwiftEvent','eventable');
+    }
+
+    public function approval()
+    {
+        return $this->morphMany('SwiftApproval','approvable');
+    }
     
-    
+
     /*
      * Query
      */
-    
+
+    public static function getById($id)
+    {
+        return self::with('suppler','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote')
+                    ->find($id);
+    }
+
+    public static function getInProgress($limit=0,$important = false,$billable_company=0)
+    {
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+
+        if($billable_company > 0)
+        {
+            $query->whereBillableCompanyCode($billable_company);
+        }
+
+        return $query->orderBy('swift_acp_request.updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                            },'=',0);
+                                        });
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },($important === true ? ">" : "="),0)->remember(5)->get();
+    }
+
+    public static function getInProgressResponsible($limit=0,$important=false,$billable_company=0)
+    {
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+
+        if($billable_company > 0)
+        {
+            $query->whereBillableCompanyCode($billable_company);
+        }
+
+        return $query->orderBy('swift_acp_request.updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                            });
+                                        });
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },($important === true ? ">" : "="),0)->remember(5)->get();
+    }
+
+    public static function getInProgressCount($billable_company=0)
+    {
+        $query = self::query();
+
+        if($billable_company > 0)
+        {
+            $query->whereBillableCompanyCode($billable_company);
+        }
+
+        return $query->orderBy('updated_at','desc')
+                            ->with('workflow','workflow.nodes')->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                                                        ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                            },'=',0);
+                                        });
+                            })->whereHas('flag',function($q){
+                                return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                            },'=',0)->remember(5)->count();
+    }
+
+    public static function getInProgressWithEta($billable_company=0)
+    {
+        $query = self::query();
+
+        if($billable_company > 0)
+        {
+            $query->whereBillableCompanyCode($billable_company);
+        }
+
+        return $query->orderBy('swift_order.updated_at','asc')
+                            ->with(array('nodes.permission' => function($q){
+                                return $q->wherePermissionType(SwiftNodePermission::RESPONSIBLE);
+                            },'workflow','workflow.nodes'))
+                            ->whereHas('workflow',function($q){
+                                return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('definition',function($q){
+                                                return $q->where('eta','>',0);
+                                             });
+                                        });
+                            })->remember(5)->get();
+    }
 }

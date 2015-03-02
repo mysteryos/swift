@@ -196,24 +196,83 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
 
     //General Info
-    $('.editable:not(.dummy)').editable().on('shown',function(e){
-        presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id});
-        return true;
-    }).on('hidden',function(e,reason){
-        presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id});
-        return true;
-    }).on('save',function(e,params){
-        if($(this).editable('option','pk') !== "0")
+    $('.editable:not(.dummy)').each(function(){
+        var $this = $(this);
+        if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="supplier_code" && this.getAttribute('data-context')=="generalinfo")
         {
-            //Bug fix for disappearing pks - Weird
-            $(this).editable('option','pk',this.getAttribute('data-pk'));
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id});
+            $this.editable({
+                disabled: $this.hasClass('editable-disabled'),
+                placeholder: 'Select a supplier',
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },                    
+                    ajax: {
+                        url: '/ajaxsearch/searchsupplier',
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 10,
+                                page: page
+                            };
+                        },
+                        results: function (data, page){
+                            var more = (page * 10) < data.total
+                            if(data.total > 0)
+                            {
+                                var found;
+                                found = $.map(data.suppliers, function (item) {
+                                    return {
+                                        id: item.Supplier_Code,
+                                        name: $.trim(item.Supplier_Name),
+                                        text: $.trim(item.Supplier_Name)+" (Code:"+item.Supplier_Code+")"
+                                    }
+                                 });
+                                return {results: found, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        },
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
+                    }                     
+                }                 
+            });
         }
-        return true;
+        else
+        {
+            $this.editable({
+               disabled: $this.hasClass('editable-disabled') 
+            });
+        }
+        
+        $this.on('shown',function(e){
+            presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id});
+            return true;
+        }).on('hidden',function(e,reason){
+            presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id});
+            return true;
+        }).on('save',function(e,params){
+            if($(this).editable('option','pk') !== "0")
+            {
+                //Bug fix for disappearing pks - Weird
+                $(this).editable('option','pk',this.getAttribute('data-pk'));
+                presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id});
+            }
+            return true;
+        });        
     });
 
     //Multi X-editable save
-    $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable','.storage-editable').on('save',function(e,params){
+    $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable,.storage-editable').on('save',function(e,params){
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
         {
@@ -434,9 +493,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 }
                 return false;
             });
-
-            //Init Tags
-
         }
     });
 
@@ -487,7 +543,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         });
         var res = $.parseJSON(response);
         if(res.success)
-        {   
+        {
             //Add File preview anchor
             $(file.previewElement).find('span.name').wrapInner("<a class='file-view' rel='tooltip' data-original-title='Last update: "+res.updated_on+" &#013; Updated By: "+res.updated_by+"' data-placement='bottom' href='"+res.url+"'/>");
             //Set Doc Id
@@ -497,10 +553,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             var $editable = $(file.previewElement).find('a.editable');
             $editable.html('');
             $editable.attr('data-pk',res.id);
+            $editable.attr('id',res.id_normal);
             $editable.removeAttr('data-value');
             $editable.editable();
             $editable.removeClass('dummy hide');
-
         }
         //Hide Progress Bar
         $(file.previewElement).find('div.progress').addClass('hide');

@@ -594,7 +594,7 @@ class NodeActivity {
                     else
                     {
                         throw new \RuntimeException("Function '{$function}' is not callable.");
-                    }                     
+                    }
                     break;
                 case SwiftNodeDefinitionJoin::$P_OR_JOIN:
                 case SwiftNodeDefinitionJoin::$P_XOR_JOIN:

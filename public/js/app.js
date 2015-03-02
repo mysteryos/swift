@@ -83,8 +83,7 @@ $.pjax.defaults.container = "#main";
 
 var pusher = new Pusher('d34044dc68acb4ac2833',{authEndpoint : '/pusher/auth'});
 //Presence Channel for current page
-var presenceChannelCurrent = null;
-var presenceChannelNotification;
+var presenceChannelCurrent = presenceChannelUser = null;
 //List of presence channels subscribed to
 var presenceChannelCurrentSubscriptions = [];
         
@@ -181,6 +180,21 @@ function pusher_user()
             });
             $.notification_count.html(parseInt($.notification_count.html())+1).addClass('bg-color-red');
         });
+        
+       presenceChannelUser.bind('story_new',function(data){
+            if(document.getElementById('timeline-list') !== null)
+            {
+                if(document.getElementById('timeline-list').getAttribute('data-context') !== "" && document.getElementById('timeline-list').getAttribute('data-context') === data.context)
+                {
+                    return false;
+                }
+                
+                if($('#timeline-list').find('#post_'+data.id).length == 0)
+                {
+                    $('#timeline-list').prepend(data.html);
+                }
+            }
+       });
     });
 }
 
@@ -209,6 +223,12 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
             {
                 $('.whos-online').append(avatarHTML(member))
                 $('.whos-online .avatar').tooltip();
+                //Play Sound
+                var audioElement = document.createElement('audio');
+                audioElement.setAttribute('src', $.sound_path + 'smallbox_1.mp3');
+                audioElement.addEventListener("load", function () {
+                    audioElement.play();
+                }, true);
             }
         });
         
@@ -280,6 +300,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                                     });
                     $element.tooltip('show');
                     $element.editable('disable');
+                    $('#user_'+data.user.id).addClass('pulse');
                 }
             });
             presenceChannelCurrent.bind('client-editable-hidden',function(data){
@@ -290,6 +311,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 $element.removeClass('editable-color-'+data.user.info.avatarColor);
                 $element.removeAttr('pusher-user');
                 $element.editable('enable');
+                $('#user_'+data.user.id).removeClass('pulse');
             });
             presenceChannelCurrent.bind('client-editable-save',function(data){
                 //An Editable has changed value, reflect the change

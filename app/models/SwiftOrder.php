@@ -16,7 +16,9 @@ class SwiftOrder extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('name','description','business_unit');
+    protected $fillable = array('name','description','business_unit','supplier_code');
+
+    protected $appends = ['supplier_name'];
     
     public $timestamps = true;
     
@@ -33,13 +35,14 @@ class SwiftOrder extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'name','description','business_unit'
+        'name','description','business_unit', 'supplier_code'
     );
     
     protected $revisionFormattedFieldNames = array(
         'name' => 'Name',
         'description' => 'Description',
-        'business_unit' => 'Business Unit'
+        'business_unit' => 'Business Unit',
+        'supplier_code' => 'Supplier',
     );
     
     public $saveCreateRevision = true;
@@ -59,6 +62,8 @@ class SwiftOrder extends Eloquent {
     public $esMain = true;
     //Info Context
     public $esInfoContext = "order-tracking";
+    //Remove
+    public $esRemove = ['supplier_code'];
     
     /*
      * Event Observers
@@ -91,6 +96,32 @@ class SwiftOrder extends Eloquent {
     public function getBusinessUnitEsAttribute($val)
     {
         return $this->getBusinessUnitRevisionAttribute($val);
+    }
+
+    public function getSupplierCodeRevisionAttribute($val)
+    {
+        $supplier = \JdeSupplierMaster::where('Supplier_Code','=',$val)->first();
+        if($supplier)
+        {
+            return $supplier->Supplier_Name." (Code: ".$val.")";
+        }
+
+        return "";
+    }
+
+    public function getSupplierCodeEsAttribute($val)
+    {
+        return $this->getSupplierCodeRevisionAttribute($val);
+    }
+
+    public function getSupplierNameAttribute()
+    {
+        if($this->supplier)
+        {
+            return $this->supplier->Supplier_Name." (Code: {$this->supplier->Supplier_Code})";
+        }
+
+        return "";
     }
     
     /*
@@ -139,6 +170,11 @@ class SwiftOrder extends Eloquent {
     public function customsDeclaration()
     {
         return $this->hasMany('SwiftCustomsDeclaration','order_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo('JdeSupplierMaster','supplier_code','Supplier_Code');
     }
     
     
@@ -250,7 +286,7 @@ class SwiftOrder extends Eloquent {
                                                  return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
                                                         ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
                                             },'=',0);
-                                        }); 
+                                        });
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
                             },($important === true ? ">" : "="),0)->remember(5)->get();        

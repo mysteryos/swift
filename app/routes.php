@@ -63,6 +63,9 @@ Route::group(array('before' => array('auth')), function()
     
     //Salesman
     Route::controller('salesman','SalesmanController');
+
+    //Accounts Payable
+    Route::controller('accounts-payable','AccountsPayableController');
     
 });
 

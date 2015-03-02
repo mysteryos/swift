@@ -11,7 +11,7 @@ Class AjaxSearchController extends UserController {
      */
     public function getSearchsupplier()
     {
-        $limit = 5;
+        $limit = 10;
         $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
 
         if(is_numeric(Input::get('term')))

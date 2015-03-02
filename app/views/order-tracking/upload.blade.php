@@ -52,7 +52,7 @@
                 <div class="col-xs-12">
                     <div class="col-xs-10">
                         <i class="fa fa-tags"></i>&nbsp;
-                                <a data-title="Select Tags" data-value="<?php 
+                                <a id="document_tag_{{ $d->id }}" data-title="Select Tags" data-value="<?php
                                     if(count($d->tag))
                                     {
                                         $tag = array();

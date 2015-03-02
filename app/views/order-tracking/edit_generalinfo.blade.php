@@ -11,7 +11,12 @@
                 <a href="#" id="generalinfo_name_{{ $order->id }}" class="editable" data-type="text" data-name="name" data-pk="{{ Crypt::encrypt($order->id) }}" data-context="generalinfo" data-url="/order-tracking/generalinfo" data-value="{{ $order->name }}"></a>
             </div>
         </div>
-
+        <div class="form-group">
+            <label class="col-md-2 control-label">Supplier</label>
+            <div class="col-md-10 editable-select2">
+                <a href="#" id="generalinfo_supplier_{{ $order->id }}" class="editable" data-type="select2" data-name="supplier_code" data-pk="{{ Crypt::encrypt($order->id) }}" data-context="generalinfo" data-url="/order-tracking/generalinfo" data-value="{{ $order->supplier_code  }}" data-placeholder="Select a supplier">{{ $order->supplier_name }}</a>
+            </div>
+        </div>
         <div class="form-group">
                 <label class="col-md-2 control-label">Description</label>
                 <div class="col-md-10">

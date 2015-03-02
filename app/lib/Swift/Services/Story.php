@@ -90,6 +90,7 @@ class Story {
                         $pusher->trigger('private-user-story-'.$u->id,
                                          'story_new',
                                          array('id'=>$this->story->id,
+                                               'context'=>$context,
                                                'html'=>$storyHtml));                 
                     }
                 }
@@ -119,7 +120,10 @@ class Story {
         
         if(!empty($contextArray))
         {
-            $stories = \SwiftStory::orderBy('created_at','DESC')->whereIn('context_type',$contextArray)->take($take)->with(array('storyfiable','byUser'));
+            $stories = \SwiftStory::orderBy('created_at','DESC')
+                        ->whereIn('context_type',$contextArray)
+                        ->take($take)
+                        ->with(array('storyfiable','byUser'));
             if($offsetId>0)
             {
                 $stories->where('id','<',$offsetId);

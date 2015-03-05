@@ -13,9 +13,10 @@ class AccountsPayableController extends UserController {
         $this->hodPermission = "acp-hod";
         $this->accountingPaymentVoucherPermission = "acp-paymentvoucher";
         $this->accountingPaymentIssuePermission = "acp-paymentissue";
-        $this->isAdmin = $this->currentUser->hasAccess($this->adminPermission);
-        $this->isAccountingDept = $this->currentUser->hasAnyAccess([$this->accountingPaymentVoucherPermission,
+        $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
+        $this->isAccountingDept = $this->data['isAccountingDept'] = $this->currentUser->hasAnyAccess([$this->accountingPaymentVoucherPermission,
                                                                     $this->accountingPaymentIssuePermission]);
+        $this->isHOD = $this->data['isHOD'] = $this->currentUser->hasAccess($this->hodPermission);
     }
     
     /*
@@ -113,7 +114,7 @@ class AccountsPayableController extends UserController {
         }
         else
         {
-            $acp = new SwiftAccountsPayable();
+            $acp = new SwiftACPRequest();
             $acp->fill(Input::all());
             if($acp->save())
             {
@@ -140,6 +141,192 @@ class AccountsPayableController extends UserController {
                 echo "";
                 return false;
             }
+        }
+    }
+
+    public function getView($id,$override=false)
+    {
+        if($override === true)
+        {
+            return $this->form($id,false);
+        }
+
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        {
+            return Redirect::action('AccountsPayableController@getEdit',array('id'=>$id));
+        }
+        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
+        {
+            return $this->form($id,false);
+        }
+        else
+        {
+            return parent::forbidden();
+        }
+    }
+
+    public function getEdit($id)
+    {
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        {
+            return $this->form($id,true);
+        }
+        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
+        {
+            return Redirect::action('AccountsPayableController@getView',array('id'=>$id));
+        }
+        else
+        {
+            return parent::forbidden();
+        }
+    }
+
+    private function form($id,$edit=false)
+    {
+        $acp_id = Crypt::decrypt($id);
+        $acp = SwiftACPRequest::getById($id);
+
+        if($acp)
+        {
+            /*
+             * Set Read
+             */
+
+            if(!Flag::isRead($acp))
+            {
+                Flag::toggleRead($acp);
+            }
+
+            /*
+             * Enable Commenting
+             */
+            $this->enableComment($apr);
+
+            //Permission Check - Start
+
+            $hasAccess = false;
+            //Owner has access
+            if($acp->isOwner())
+            {
+                $hasAccess = true;
+            }
+            
+            //Accounting or Admin has access
+            if($this->isAccountingDept || $this->isAdmin)
+            {
+                $hasAccess = true;
+            }
+
+            $approvalUserIds = array();
+            $approvalUserIds = array_map(function($val){
+                                    if($val['type'] === \SwiftApproval::APC_HOD)
+                                    {
+                                        return $val['approval_user_id'];
+                                    }
+                               },$acp->approval->toArray());
+
+            //HoDs have access
+            if(in_array($this->currentUser->id,$approvalUserIds))
+            {
+                $hasAccess = true;
+            }
+
+            //Permission Check - End
+            if(!$hasAccess)
+            {
+                return parent::forbidden();
+            }
+
+            $this->data['current_activity'] = \WorkflowActivity::progress($acp,$this->context);
+            $this->data['activity'] = \Helper::getMergedRevision($acp->revisionRelations,$acp);
+            $this->pageTitle = $apr->getReadableName();
+            $this->data['form'] = $apr;
+            $this->data['cheque_status'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$status));
+            $this->data['payment_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$type));
+            $this->data['payment_term'] = json_encode(\Helper::jsonobject_encode(\SwiftACPInvoice::$paymentTerm));
+            $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
+            $this->data['flag_important'] = \Flag::isImportant($apr);
+            $this->data['flag_starred'] = \Flag::isStarred($apr);
+            $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
+            $this->data['owner'] = Helper::getUserName($acp->owner,$this->currentUser);
+            $this->data['edit'] = $edit;
+            $this->data['publishOwner'] = $this->data['publishAccounting'] = false;
+            
+            if($edit === true)
+            {
+                if($this->data['current_activity']['status'] == \SwiftWorkflowActivity::INPROGRESS)
+                {
+                    if(!array_key_exists('definition_obj',$this->data['current_activity']))
+                    {
+                        /*
+                         * Detect buggy workflows
+                         * Update on the spot
+                         */
+                        \WorkflowActivity::update($acp);
+                    }
+                    else
+                    {
+                        foreach($this->data['current_activity']['definition_obj'] as $d)
+                        {
+                            if($d->data != "")
+                            {
+                                if(isset($d->data->publishOwner) && ($this->data['isAdmin'] || $this->isAccountingDepartment || $acp->isOwner()))
+                                {
+                                    $this->data['publishOwner'] = true;
+                                    break;
+                                }
+
+                                if(isset($d->data->publishAccounting) && ($this->data['isAdmin'] || $this->isAccountingDepartment))
+                                {
+                                    $this->data['publishAccounting'] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            //Save recently viewed form
+            Helper::saveRecent($acp,$this->currentUser);
+
+            return $this->makeView("$this->context/edit");
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+
+    /*
+     * Help : AJAX
+     */
+
+    public function getHelp($id)
+    {
+        /*
+        * Check Permissions
+        */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return "You don't have access to this resource.";
+        }
+
+        $needPermission = true;
+
+        if($this->currentUser->hasAccess($this->adminPermission))
+        {
+            $needPermission = false;
+        }
+
+        $form = SwiftACPRequest::find(Crypt::decrypt($id));
+        if(count($form))
+        {
+            return WorkflowActivity::progressHelp($form,$needPermission);
+        }
+        else
+        {
+            return "We can't find the resource that you were looking for.";
         }
     }
 

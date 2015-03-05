@@ -1,4 +1,4 @@
-<fieldset data-name="erporder" class="fieldset-erporder multi @if(isset($dummy) && $dummy == true) dummy hide @endif ">
+<fieldset data-name="delivery" class="fieldset-delivery multi @if(isset($dummy) && $dummy == true) dummy hide @endif ">
     <div class="row">
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Status*</label>

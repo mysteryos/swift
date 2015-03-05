@@ -14,9 +14,11 @@ class SwiftACPRequest extends Eloquent
     protected $table = "swift_acp_request";
     
     protected $fillable = ['name','description','billable_company_code','owner_user_id','supplier_code'];
+
+    protected $appends = ['company_name','supplier_name'];
     
     public $dates = ['deleted_at'];
-    
+
     /* Elastic Search */
     
     //Indexing Enabled
@@ -27,7 +29,7 @@ class SwiftACPRequest extends Eloquent
     public $esMain = true;
     //Info Context
     public $esInfoContext = "acpayable";
-    public $esRemove = ['owner_user_id'];
+    public $esRemove = ['owner_user_id','supplier_name','company_name'];
     
     /* Revisionable */
     
@@ -49,7 +51,7 @@ class SwiftACPRequest extends Eloquent
     public $revisionClassName =  "Accounts Payable";
     public $revisionPrimaryIdentifier = "id";
 
-    public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','creditNote'];
+    public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','creditNote','approval','document'];
     
     /*
      * Event Observers
@@ -61,15 +63,39 @@ class SwiftACPRequest extends Eloquent
         static::bootElasticSearchEvent();
         
         static::bootRevisionable();
+
+        static::creating(function($model){
+            $model->owner_user_id = Sentry::getUser()->id;
+        });
     }    
     
     /*
      * Accessors
      */
-    
+
+    public function getSupplierName()
+    {
+        if($this->supplier)
+        {
+            return $this->supplier->Supplier_Name." (Code: ".$val.")";
+        }
+
+        return "";
+    }
+
+    public function getCompanyName()
+    {
+        if($this->company)
+        {
+            return $this->company->ALPH;
+        }
+
+        return "";
+    }
+
     public function getSupplierCodeRevisionableAttribute($val)
     {
-        $supplier = \JdeSupplierMaster::where('Supplier_Code','=',$val)->get();
+        $supplier = \JdeSupplierMaster::where('Supplier_Code','=',$val)->first();
         if($supplier)
         {
             return $supplier->Supplier_Name." (Code: ".$val.")";
@@ -80,7 +106,7 @@ class SwiftACPRequest extends Eloquent
     
     public function getBillableCompanyCodeRevisionableAttribute($val)
     {
-        $company = \JdeCustomer::where('AN8','=',$val)->get();
+        $company = \JdeCustomer::where('AN8','=',$val)->first();
         if($company)
         {
             return $company->ALPH;
@@ -113,7 +139,14 @@ class SwiftACPRequest extends Eloquent
     
     public function getReadableName()
     {
-        return $this->name." (Id:".$this->id.")";
+        if($this->name !== "")
+        {
+            return $this->company_name." | ".$this->supplier_name." - ".$this->name." (Id:".$this->id.")";
+        }
+        else
+        {
+            return $this->company_name." | ".$this->supplier_name." - (Id:".$this->id.")";
+        }
     }
     
     public function getIcon()
@@ -151,7 +184,7 @@ class SwiftACPRequest extends Eloquent
     
     public function invoice()
     {
-        return $this->hasOne('SwiftAPCInvoice','acp_id');
+        return $this->hasOne('SwiftACPInvoice','acp_id');
     }
     
     public function payment()
@@ -230,7 +263,7 @@ class SwiftACPRequest extends Eloquent
 
     public static function getById($id)
     {
-        return self::with('suppler','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote')
+        return self::with('suppler','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote','approval','document')
                     ->find($id);
     }
 
@@ -333,4 +366,16 @@ class SwiftACPRequest extends Eloquent
                                         });
                             })->remember(5)->get();
     }
+
+    public function isOwner($user_id=false)
+    {
+        if($user_id===false)
+        {
+            $user_id = \Sentry::getUser()->id;
+        }
+
+        return $this->owner_user_id === $user_id;
+    }
+     
+    
 }

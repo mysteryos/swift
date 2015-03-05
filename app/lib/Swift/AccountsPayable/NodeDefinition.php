@@ -7,12 +7,12 @@
 NameSpace Swift\AccountsPayable;
 
 Class NodeDefinition {
-    public function acpStart($nodeActivity)
+    public static function acpStart($nodeActivity)
     {
         return true;
     }
 
-    public function acpPreparation($nodeActivity,$returnReason=false)
+    public static function acpPreparation($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -59,10 +59,17 @@ Class NodeDefinition {
             /*
              * Approvals
              */
-            $approvals = $acp->approval()->get();
-            if(count($approvals) === 0)
+            $approvalHodCount = $acp->approval()->where('type','=',\SwiftApproval::APC_HOD)->count();
+            if($approvalHodCount === 0)
             {
-                $returnReasonList['hodapproval_absent'] = "Publish form and send to HOD for approval";
+                $returnReasonList['hodapproval_absent'] = "Enter HOD's details for approval";
+            }
+
+            //Requester didn't publish
+            $approvalRequesterCount = $acp->approval()->where('type','=',\SwiftApproval::APC_REQUESTER)->count();
+            if($approvalRequesterCount === 0)
+            {
+                $returnReasonList['hodapproval_absent'] = "Publish form";
             }
             
             if(count($returnReasonList) === 0 && !$returnReason)
@@ -75,7 +82,7 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpHodApproval($nodeActivity,$returnReason=false)
+    public static function acpHodApproval($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -107,7 +114,7 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpCreditnote($nodeActivity,$returnReason=false)
+    public static function acpCreditnote($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -132,7 +139,7 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpPaymentvoucher($nodeActivity,$returnReason=false)
+    public static function acpPaymentvoucher($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -157,7 +164,7 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpPaymentissue($nodeActivity,$returnReason=false)
+    public static function acpPaymentissue($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -205,7 +212,7 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpChequeSign($nodeActivity,$returnReason=false)
+    public static function acpChequeSign($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -235,7 +242,7 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpChequeReady($nodeActivity,$returnReason=false)
+    public static function acpChequeReady($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -265,12 +272,12 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpCheckpayment($nodeActivity,$returnReason=false)
+    public static function acpCheckpayment($nodeActivity,$returnReason=false)
     {
         return true;
     }
 
-    public function acpBanktransfer($nodeActivity,$returnReason=false)
+    public static function acpBanktransfer($nodeActivity,$returnReason=false)
     {
         if($returnReason)
         {
@@ -300,7 +307,7 @@ Class NodeDefinition {
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function acpEnd($nodeActivity)
+    public static function acpEnd($nodeActivity)
     {
         return true;
     }

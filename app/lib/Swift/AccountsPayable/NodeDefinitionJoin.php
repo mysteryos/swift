@@ -7,17 +7,17 @@
 NameSpace Swift\AccountsPayable;
 
 Class NodeDefinitionJoin {
-    public function startToPrep($nodeActivity)
+    public static function startToPrep($nodeActivity)
     {
         return true;
     }
 
-    public function prepToApproval($nodeActivity)
+    public static function prepToApproval($nodeActivity)
     {
         return true;
     }
 
-    public function approvalToCreditnote($nodeActivity)
+    public static function approvalToCreditnote($nodeActivity)
     {
         //Only if approval of HOD is rejected
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
@@ -39,7 +39,7 @@ Class NodeDefinitionJoin {
         return false;
     }
 
-    public function approvalToPaymentvoucher($nodeActivity)
+    public static function approvalToPaymentvoucher($nodeActivity)
     {
         //Only if approval of HOD is approved
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
@@ -61,7 +61,7 @@ Class NodeDefinitionJoin {
         return false;
     }
 
-    public function paymentvoucherToPaymentissue($nodeActivity)
+    public static function paymentvoucherToPaymentissue($nodeActivity)
     {
         //Create Approval for manual publishing of payment issue
         //Needed to block loop
@@ -77,7 +77,7 @@ Class NodeDefinitionJoin {
         return true;
     }
 
-    public function paymentissueToChequesign($nodeActivity)
+    public static function paymentissueToChequesign($nodeActivity)
     {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
@@ -95,7 +95,7 @@ Class NodeDefinitionJoin {
         return false;
     }
 
-    public function paymentissueToBanktransfer($nodeActivity)
+    public static function paymentissueToBanktransfer($nodeActivity)
     {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
@@ -113,22 +113,22 @@ Class NodeDefinitionJoin {
         return false;
     }
 
-    public function chequesignToChequeready($nodeActivity)
+    public static function chequesignToChequeready($nodeActivity)
     {
         return true;
     }
 
-    public function chequereadyToCheckpayment($nodeActivity)
+    public static function chequereadyToCheckpayment($nodeActivity)
     {
         return true;
     }
 
-    public function banktransferToCheckpayment($nodeActivity)
+    public static function banktransferToCheckpayment($nodeActivity)
     {
         return true;
     }
 
-    public function checkpaymentToPaymentissue($nodeActivity)
+    public static function checkpaymentToPaymentissue($nodeActivity)
     {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
@@ -147,7 +147,7 @@ Class NodeDefinitionJoin {
         return false;
     }
 
-    public function checkpaymentToEnd($nodeActivity)
+    public static function checkpaymentToEnd($nodeActivity)
     {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
@@ -165,6 +165,4 @@ Class NodeDefinitionJoin {
         }
         return false;
     }
-
-    
 }

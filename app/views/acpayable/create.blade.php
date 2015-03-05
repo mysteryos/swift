@@ -49,7 +49,7 @@
                     <div>
                         <!-- widget content -->
                         <div class="widget-body no-padding">
-                            <form action="/{{ $rootURL }}/create" method="POST" id="aprequest-create-form" enctype="multipart/form-data" class="form-horizontal" name="acprequest-create" novalidate="novalidate">
+                            <form action="/{{ $rootURL }}/create" method="POST" id="acprequest-create-form" enctype="multipart/form-data" class="form-horizontal" name="acprequest-create" novalidate="novalidate">
                                 <input type="hidden" name="id" value="" />
                                 <div class="panel-group smart-accordion-default" id="accordion">
                                     <div class="panel panel-default" id="generalInfo">

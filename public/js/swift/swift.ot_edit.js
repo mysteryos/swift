@@ -603,7 +603,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     //Drag & Drop File Fix
     
     var dragEle = document.getElementById( "content" );
-    new Dragster(dragEle);
+    var dragster = new Dragster(dragEle);
     dragEle.addEventListener( "dragster:enter", function (e) {
         for (n in e.detail.dataTransfer.types)
         {
@@ -617,6 +617,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     dragEle.addEventListener( "dragster:leave", function (e) {
         e.target.classList.remove( "dragged-over" );
     }, false );
+    
+    $('#content').on("drop", function (event) {
+        dragster.dragleave(event);
+    });
 
     //File View
     $('#ot-docs').on('click','a.file-view',function(e){

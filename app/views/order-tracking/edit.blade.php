@@ -124,54 +124,54 @@
 				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>General Info </h2>			
+                    <h2>General Info </h2>			
 				</header>
-                                <!-- widget div-->
+                <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
-                                            <form class="form-horizontal">
-                                                @include('order-tracking.edit_generalinfo',array('order'=>$order))
-                                            </form>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                        <!-- end widget -->
+                        <form class="form-horizontal">
+                            @include('order-tracking.edit_generalinfo',array('order'=>$order))
+                        </form>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget -->
                         
-                        <!-- Widget Purchase Order-->
+            <!-- Widget Purchase Order-->
 			<div class="jarviswidget" id="ot-purchaseOrder" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Purchase Order </h2>
-                                        @if($edit)
-                                            <div class="widget-toolbar" role="menu">
-                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
-                                            </div>
-                                        @endif
+                    <h2>Purchase Order </h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                        </div>
+                    @endif
 				</header>
-                                <!-- widget div-->
+                <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
-                                            <form class="form-horizontal">
-                                                    @if(count($order->purchaseOrder))
-                                                        @foreach($order->purchaseOrder as &$p)
-                                                            <?php $p->id = Crypt::encrypt($p->id); ?>
-                                                            @include('order-tracking.edit_purchaseorder',array('p'=>$p))
-                                                        @endforeach
-                                                    @else
-                                                        @include('order-tracking.edit_purchaseorder')
-                                                    @endif
-                                                    @include('order-tracking.edit_purchaseorder',array('dummy'=>true,'p'=>null))                                                
-                                            </form>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                        <!-- end widget -->
+                        <form class="form-horizontal">
+                            @if(count($order->purchaseOrder))
+                                @foreach($order->purchaseOrder as &$p)
+                                    <?php $p->id = Crypt::encrypt($p->id); ?>
+                                    @include('order-tracking.edit_purchaseorder',array('p'=>$p))
+                                @endforeach
+                            @else
+                                @include('order-tracking.edit_purchaseorder')
+                            @endif
+                            @include('order-tracking.edit_purchaseorder',array('dummy'=>true,'p'=>null))                                                
+                    </form>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget -->
                         
                         <!-- Widget Freight Start-->
 			<div class="jarviswidget" id="ot-freight" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">

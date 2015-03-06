@@ -73,21 +73,21 @@ class SwiftACPRequest extends Eloquent
      * Accessors
      */
 
-    public function getSupplierName()
+    public function getSupplierNameAttribute()
     {
         if($this->supplier)
         {
-            return $this->supplier->Supplier_Name." (Code: ".$val.")";
+            return $this->supplier->Supplier_Name." (Code: ".$this->supplier->Supplier_Code.")";
         }
 
         return "";
     }
 
-    public function getCompanyName()
+    public function getCompanyNameAttribute()
     {
         if($this->company)
         {
-            return $this->company->ALPH;
+            return $this->company->ALPH." (Code: ".$this->billable_company_code.")";;
         }
 
         return "";
@@ -109,7 +109,7 @@ class SwiftACPRequest extends Eloquent
         $company = \JdeCustomer::where('AN8','=',$val)->first();
         if($company)
         {
-            return $company->ALPH;
+            return $company->ALPH." (Code: ".$val.")";;
         }
         return "(N/A)";
     }
@@ -263,7 +263,7 @@ class SwiftACPRequest extends Eloquent
 
     public static function getById($id)
     {
-        return self::with('suppler','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote','approval','document')
+        return self::with(['supplier','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote','approval','document'])
                     ->find($id);
     }
 

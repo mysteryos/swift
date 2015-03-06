@@ -34,9 +34,9 @@ class Currency extends Eloquent
      * Query
      */
 
-    public function getAll()
+    public static function getAll()
     {
-        $all = self::select('id',DB::raw('CONCATENATE(code," - ",name) as currency'))
+        $all = self::select(DB::raw('id, CONCAT(code," - ",name) as currency'))
                 ->orderBy('code','ASC')
                 ->get();
 

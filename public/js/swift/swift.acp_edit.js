@@ -1,17 +1,9 @@
-/* 
- * Name: Ot Edit
- * Description: Order tracking form edit
- */
-
 function addMulti($dummy,pk)
 {
     $clone = $dummy.clone();
     $clone.removeClass('hide dummy');
     $clone.find('.editable').removeClass('dummy');
-    $clone.find('.editable').editable({
-        disabled: $clone.hasClass('editable-disabled'),
-        onblur:'submit'
-    }).on('save',function(e,params){
+    $clone.find('.editable').editable().on('save',function(e,params){
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
         {
@@ -68,7 +60,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     return true;
 }
 
-(window.ot_edit = function () {
+(window.acp_edit = function () {
     
     //Ribbon Buttons
     $('a.btn-ribbon-cancel').on('click',function(e){
@@ -197,15 +189,15 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
-
+    
     //General Info
     $('.editable:not(.dummy)').each(function(){
         var $this = $(this);
         if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="supplier_code" && this.getAttribute('data-context')=="generalinfo")
         {
             $this.editable({
-                onblur:'submit',
                 disabled: $this.hasClass('editable-disabled'),
+                onblur: 'submit',
                 placeholder: 'Select a supplier',
                 select2: {
                     allowClear: false,
@@ -251,11 +243,63 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 }                 
             });
         }
+        else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="billable_company_code" && this.getAttribute('data-context')=="generalinfo")
+        {
+            $this.editable({
+                disabled: $this.hasClass('editable-disabled'),
+                onblur: 'submit',
+                placeholder: "Select a billable company",
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },
+                    ajax: {
+                        url: "/ajaxsearch/customercode",
+                        dataType: "json",
+                        quietMillis: 500,
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 10,
+                                page: page
+                            };
+                        },
+                        results: function (data, page){
+                            var more = (page * 10) < data.total
+                            if(data.total > 0)
+                            {
+                                var found;
+                                found = $.map(data.customers, function (item) {
+                                    return {
+                                        id: item.AN8,
+                                        name: item.ALPH,
+                                        text: item.ALPH+" (Code:"+item.AN8+")",
+                                        category: item.AC09
+                                    }
+                                 });
+                                return {results: found, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        },
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
+                    }                    
+                }
+            });
+        }        
         else
         {
             $this.editable({
-               disabled: $this.hasClass('editable-disabled'),
-               onblur:'submit'
+               disabled: $this.hasClass('editable-disabled') 
             });
         }
         
@@ -272,37 +316,16 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 $(this).editable('option','pk',this.getAttribute('data-pk'));
                 presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id});
             }
+            if(this.getAttribute('data-name')=="type" && this.getAttribute('data-context')=="payment")
+            {
+                $(this).parents('fieldset.fieldset-payment').find('[class^="payment-"]').hide();
+                $(this).parents('fieldset.fieldset-payment').find('.payment-'+params.newValue).show();
+            }
             return true;
-        });        
+        });
     });
-
-    //Multi X-editable save
-    $('.customs-editable,.freight-editable,.shipment-editable,.purchaseorder-editable,.reception-editable,.storage-editable').on('save',function(e,params){
-        //First time save, set primary key
-        if(this.getAttribute('data-pk') == "0")
-        {
-            var response = $.parseJSON(params.response);
-            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
-            //Set new pk value
-            addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
-            //Trigger Channel Event
-            presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $(this).parents('fieldset').attr('data-name')});
-            //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
-        }
-        return true;
-    }).on('submit',function(){
-        if(this.getAttribute('data-pk') == "0")
-        {
-            $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
-        }        
-    }).on('error',function(){
-        if(this.getAttribute('data-pk') == "0")
-        {
-            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
-        }          
-    });
-
+    
+    
     /*
      * Add New
      */
@@ -628,7 +651,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     //File View
-    $('#acp-docs').on('click','a.file-view',function(e){
+    $('#ot-docs').on('click','a.file-view',function(e){
        e.preventDefault();
        vex.open({
            className: 'vex-theme-default vex-file-viewer',
@@ -643,4 +666,4 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     
     //Hide Loading Message
     messenger_hidenotiftop();
-})();
+})();    

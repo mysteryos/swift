@@ -184,7 +184,7 @@ class AccountsPayableController extends UserController {
     private function form($id,$edit=false)
     {
         $acp_id = Crypt::decrypt($id);
-        $acp = SwiftACPRequest::getById($id);
+        $acp = SwiftACPRequest::getById($acp_id);
 
         if($acp)
         {
@@ -200,7 +200,7 @@ class AccountsPayableController extends UserController {
             /*
              * Enable Commenting
              */
-            $this->enableComment($apr);
+            $this->enableComment($acp);
 
             //Permission Check - Start
 
@@ -239,16 +239,16 @@ class AccountsPayableController extends UserController {
 
             $this->data['current_activity'] = \WorkflowActivity::progress($acp,$this->context);
             $this->data['activity'] = \Helper::getMergedRevision($acp->revisionRelations,$acp);
-            $this->pageTitle = $apr->getReadableName();
-            $this->data['form'] = $apr;
+            $this->pageTitle = $acp->getReadableName();
+            $this->data['form'] = $acp;
             $this->data['cheque_status'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$status));
             $this->data['payment_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$type));
             $this->data['payment_term'] = json_encode(\Helper::jsonobject_encode(\SwiftACPInvoice::$paymentTerm));
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
-            $this->data['flag_important'] = \Flag::isImportant($apr);
-            $this->data['flag_starred'] = \Flag::isStarred($apr);
+            $this->data['flag_important'] = \Flag::isImportant($acp);
+            $this->data['flag_starred'] = \Flag::isStarred($acp);
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
-            $this->data['owner'] = Helper::getUserName($acp->owner,$this->currentUser);
+            $this->data['owner'] = Helper::getUserName($acp->owner_user_id,$this->currentUser);
             $this->data['edit'] = $edit;
             $this->data['publishOwner'] = $this->data['publishAccounting'] = false;
             

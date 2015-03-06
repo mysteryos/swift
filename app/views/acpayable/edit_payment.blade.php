@@ -1,15 +1,9 @@
 <fieldset data-name="payment" class="fieldset-payment multi @if(isset($dummy) && $dummy == true) dummy hide @endif ">
-    <div class="row">
+    <div class="row payment-1 payment-2">
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Type*</label>
             <div class="col-md-10">
                 <a href="#" @if(isset($p->id)) {{ "id=\"payment_type_".Crypt::decrypt($p->id)."\"" }} @endif class="payment_type editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="type" data-pk="{{ $p->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment" data-source='{{ $payment_type }}' data-value="{{ $p->type or "" }}"></a>
-            </div>
-        </div>
-        <div class="form-group col-lg-6 col-xs-12 payment-1" @if(!isset($p->type) || $p->type !== \SwiftACPPayment::TYPE_CHEQUE) style="display:none;" @endif>
-            <label class="col-md-2 control-label">Cheque Status*</label>
-            <div class="col-md-10">
-                <a href="#" @if(isset($p->id)) {{ "id=\"payment_journal_entry_number_".Crypt::decrypt($p->id)."\"" }} @endif class="editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="journal_entry_number" data-pk="{{ $p->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment" data-value="{{ $p->journal_entry_number or "" }}"></a>
             </div>
         </div>
     </div>
@@ -36,6 +30,12 @@
         </div>
     </div>
     <div class="row payment-1" @if(!isset($p->type) || $p->type !== \SwiftACPPayment::TYPE_CHEQUE) style="display:none;" @endif>
+        <div class="form-group col-lg-6 col-xs-12" @if(!isset($p->type) || $p->type !== \SwiftACPPayment::TYPE_CHEQUE) style="display:none;" @endif>
+            <label class="col-md-2 control-label">Cheque Status*</label>
+            <div class="col-md-10">
+                <a href="#" @if(isset($p->id)) {{ "id=\"payment_journal_entry_number_".Crypt::decrypt($p->id)."\"" }} @endif class="editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="journal_entry_number" data-pk="{{ $p->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment" data-value="{{ $p->journal_entry_number or "" }}"></a>
+            </div>
+        </div>
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Dispatch By*</label>
             <div class="col-md-10">

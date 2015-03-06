@@ -36,7 +36,7 @@ class SwiftACPPayment extends Eloquent
 
     public static $type = [
         self::TYPE_CHEQUE => 'Cheque',
-        self::TYPE_BANKTRASNFER => 'Bank Transfer'
+        self::TYPE_BANKTRANSFER => 'Bank Transfer'
     ];
 
     //Dispatch

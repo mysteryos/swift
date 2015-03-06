@@ -29,7 +29,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="@if($edit){{"apr_edit"}}@else{{"apr_view"}}@endif">
+<div id="content" data-js="@if($edit){{"acp_edit"}}@else{{"acp_view"}}@endif">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($form->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $form->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $form->channelName() }}" />
@@ -132,6 +132,37 @@
                 </div>
                 <!-- end widget -->
 
+                <div class="jarviswidget" id="acp-creditnote" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-file"></i> </span>
+                        <h2>Credit Note </h2>
+                        @if($edit && ($isAccountingDept || $isAdmin || $isOwner || $isHOD))
+                            <div class="widget-toolbar" role="menu">
+                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                            </div>
+                        @endif
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form class="form-horizontal">
+                                @if(count($form->creditNote))
+                                    @foreach($form->creditNote as &$c)
+                                        <?php $c->id = Crypt::encrypt($c->id); ?>
+                                        @include('acpayable.edit_creditnote',array('c'=>$c))
+                                    @endforeach
+                                @else
+                                    @include('acpayable.edit_creditnote')
+                                @endif
+                                @include('acpayable.edit_creditnote',array('dummy'=>true,'c'=>null))
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+
                 <div class="jarviswidget" id="acp-invoice" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-ticket"></i> </span>
@@ -145,12 +176,12 @@
                                     @if(count($form->invoice))
                                         @foreach($form->invoice as &$i)
                                             <?php $i->id = Crypt::encrypt($i->id); ?>
-                                            @include('aprequest.edit_invoice',array('i'=>$i))
+                                            @include('acpayable.edit_invoice',array('i'=>$i))
                                         @endforeach
                                     @else
-                                        @include('aprequest.edit_invoice')
+                                        @include('acpayable.edit_invoice')
                                     @endif
-                                    @include('aprequest.edit_invoice',array('dummy'=>true,'i'=>$i))
+                                    @include('acpayable.edit_invoice',array('dummy'=>true,'i'=>null))
                             </form>
                         </div>
                         <!-- end widget content -->
@@ -215,7 +246,7 @@
             <!-- NEW COL START -->
             <article class="col-lg-4 col-xs-12">
                 <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="apr-docs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                <div class="jarviswidget" id="acp-docs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file-o"></i> </span>
                         <h2>Docs </h2>
@@ -240,7 +271,7 @@
                 <!-- end widget -->
 
                 <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="apr-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                <div class="jarviswidget" id="acp-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-comment"></i> </span>
                         <h2>Chat </h2>
@@ -258,7 +289,7 @@
                 <!-- end widget -->
 
                 <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="apr-activity" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                <div class="jarviswidget" id="acp-activity" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-history"></i> </span>
                         <h2>Activity </h2>

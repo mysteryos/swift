@@ -11,7 +11,7 @@ class SwiftACPCreditNote extends Eloquent
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
     
-    protected $table = "";
+    protected $table = "swift_acp_credit_note";
     
     protected $fillable = ['number'];
     

@@ -1,8 +1,8 @@
 <fieldset data-name="general_info">
         <div class="form-group">
             <label class="col-md-2 control-label">Billable Company*</label>
-            <div class="col-md-10">
-                <a href="#" id="generalinfo_business_unit_{{ $form->id }}" class="editable" data-type="select2" data-name="billable_company_code" data-pk="{{ Crypt::encrypt($form->id) }}" data-context="generalinfo" data-url="/{{ $rootURL }}/generalinfo" data-value="{{ $form->billable_company_code }}" data-source='{{ $form->company_name }}'></a>
+            <div class="col-md-10 editable-select2">
+                <a href="#" id="generalinfo_business_unit_{{ $form->id }}" class="editable" data-type="select2" data-name="billable_company_code" data-pk="{{ Crypt::encrypt($form->id) }}" data-context="generalinfo" data-url="/{{ $rootURL }}/generalinfo" data-value="{{ $form->billable_company_code }}" data-placeholder="Select a billable company">{{ $form->company_name }}</a>
             </div>
         </div>
         <div class="form-group">

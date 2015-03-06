@@ -9,7 +9,9 @@
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Date Received*</label>
             <div class="col-md-10">
-                <a href="#" @if(isset($i->id)) {{ "id=\"invoice_date_".Crypt::decrypt($i->id)."\"" }} @endif class="editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="date" data-viewformat="dd/mm/yyyy" data-name="date" data-date="@if(isset($i->date)){{$i->date->format('d/m/Y')}}@endif" data-pk="{{ $i->id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice">@if(isset($i->date)){{$i->date->format('d/m/Y')}}@endif</a>
+                <div class="input-group">
+                    <a href="#" @if(isset($i->id)) {{ "id=\"invoice_date_".Crypt::decrypt($i->id)."\"" }} @endif class="editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="date" data-viewformat="dd/mm/yyyy" data-name="date" data-date="@if(isset($i->date)){{$i->date->format('d/m/Y')}}@endif" data-pk="{{ $i->id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice">@if(isset($i->date)){{$i->date->format('d/m/Y')}}@endif</a>
+                </div>
             </div>
         </div>
     </div>
@@ -23,7 +25,9 @@
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Date Due*</label>
             <div class="col-md-10">
-                <a href="#" @if(isset($i->id)) {{ "id=\"invoice_date_due_".Crypt::decrypt($i->id)."\"" }} @endif class="editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="date" data-viewformat="dd/mm/yyyy" data-date="@if(isset($i->due_date)){{$i->due_date->format('d/m/Y')}}@endif" data-pk="{{ $i->id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice">@if(isset($i->due_date)){{$i->due_date->format('d/m/Y')}}@endif</a>
+                <div class="input-group">
+                    <a href="#" @if(isset($i->id)) {{ "id=\"invoice_date_due_".Crypt::decrypt($i->id)."\"" }} @endif class="editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="date" data-name="date" data-viewformat="dd/mm/yyyy" data-date="@if(isset($i->due_date)){{$i->due_date->format('d/m/Y')}}@endif" data-pk="{{ $i->id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice">@if(isset($i->due_date)){{$i->due_date->format('d/m/Y')}}@endif</a>
+                </div>
             </div>
         </div>
     </div>
@@ -43,7 +47,7 @@
     </div>
     <div class="row">
         <div class="form-group col-lg-6 col-xs-12">
-            <label class="col-md-2 control-label">GL Code/label>
+            <label class="col-md-2 control-label">GL Code</label>
             <div class="col-md-10">
                 <a href="#" @if(isset($i->id)) {{ "id=\"invoice_gl_code_".Crypt::decrypt($i->id)."\"" }} @endif class="editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="gl_code"  data-pk="{{ $i->id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice" data-value="{{ $i->gl_code or "" }}"></a>
             </div>

@@ -18,6 +18,8 @@ function addMulti($dummy,pk)
         if(this.getAttribute('data-type')=="select2" && $(this).hasClass('product-editable'))
         {
             $(this).editable({
+                disabled: $(this).hasClass('editable-disabled'),
+                onblur: 'submit',                
                 placeholder: 'Select a product',
                 select2: {
                     allowClear: false,
@@ -92,7 +94,8 @@ function addMulti($dummy,pk)
         else
         {
             $(this).editable({
-                disabled: $(this).hasClass('editable-disabled')
+                disabled: $(this).hasClass('editable-disabled'),
+                onblur: 'submit'
             });
         }
         
@@ -144,7 +147,7 @@ function addMulti($dummy,pk)
             {
                 $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
             }             
-        });        
+        });
     });
     
     if(typeof pk !== "undefined")
@@ -294,6 +297,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             $this.editable({
                 disabled: $this.hasClass('editable-disabled'),
                 placeholder: 'Select a product',
+                onblur: 'submit',
                 select2: {
                     allowClear: false,
                     minimumInputLength: 3,
@@ -369,6 +373,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             $this.editable({
                 disabled: $this.hasClass('editable-disabled'),
                 placeholder: "Select a customer",
+                onblur: 'submit',
                 select2: {
                     allowClear: false,
                     minimumInputLength: 3,
@@ -419,7 +424,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         else
         {
             $this.editable({
-               disabled: $this.hasClass('editable-disabled') 
+               disabled: $this.hasClass('editable-disabled'),
+               onblur: 'submit'
             });
 
         }

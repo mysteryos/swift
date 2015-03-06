@@ -409,7 +409,126 @@ class OrderTrackingController extends UserController {
         
         return $this->makeView('order-tracking/summary');
     }
-    
+
+    public function getTransitCalendar($business_unit=false)
+    {
+        if($business_unit === false)
+        {
+            $business_unit = Session::get('order_tracking_overview_business_unit',function(){return false;});
+        }
+        else
+        {
+            if($business_unit != 0)
+            {
+                Session::put('order_tracking_overview_business_unit',$business_unit);
+            }
+            else
+            {
+                Session::forget('order_tracking_overview_business_unit');
+                $business_unit = false;
+            }
+        }
+
+        $freightToday = SwiftFreight::where('freight_eta','=',Carbon::now()->format('Y-m-d'),'and')
+                    ->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,SwiftFreight::TYPE_AIR])
+                    ->with(['order','order.workflow'])
+                    ->whereHas('order',function($q) use ($business_unit){
+                        $q->whereHas('workflow',function($q2){
+                            return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                        });
+                        if($business_unit !== false && array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                        {
+                            $q->where('business_unit','=',$business_unit);
+                        }
+                        return $q;
+                    })->get();
+                    
+        $freightTomorrow = SwiftFreight::where('freight_eta','=',Carbon::now()->addDay()->format('Y-m-d'),'and')
+                            ->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,SwiftFreight::TYPE_AIR])
+                            ->with(['order','order.workflow'])
+                            ->whereHas('order',function($q) use ($business_unit){
+                                $q->whereHas('workflow',function($q2){
+                                    return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                                });
+                                if($business_unit !== false && array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                                {
+                                    $q->where('business_unit','=',$business_unit);
+                                }
+                                return $q;
+                            })->get();
+        
+
+        $this->pageTitle = 'Transit Foreign Calendar';
+
+        $this->data['business_unit'] = $business_unit;
+        $this->data['rootURL'] = $this->rootURL;
+        $this->data['freightToday'] = $freightToday;
+        $this->data['freightTomorrow'] = $freightTomorrow;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
+        
+        return $this->makeView('order-tracking/transit_foreign');
+    }
+
+    public function getPickupCalendar($business_unit=false)
+    {
+        if($business_unit === false)
+        {
+            $business_unit = Session::get('order_tracking_overview_business_unit',function(){return false;});
+        }
+        else
+        {
+            if($business_unit != 0)
+            {
+                Session::put('order_tracking_overview_business_unit',$business_unit);
+            }
+            else
+            {
+                Session::forget('order_tracking_overview_business_unit');
+                $business_unit = false;
+            }
+        }
+
+        $freight= SwiftFreight::query();
+
+        $freightToday = $freight->where('freight_eta','=',Carbon::now()->format('Y-m-d'),'and')
+                    ->whereFreightType(SwiftFreight::TYPE_LAND)
+                    ->with(['order','order.workflow','company','order.shipment'])
+                    ->whereHas('order',function($q) use ($business_unit){
+                        $q->whereHas('workflow',function($q2){
+                            return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                        });
+                        if($business_unit !== false && array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                        {
+                            $q->where('business_unit','=',$business_unit);
+                        }
+                        return $q;
+                    })->get();
+
+        $freightTomorrow = $freight->where('freight_eta','=',Carbon::now()->addDay()->format('Y-m-d'),'and')
+                            ->whereFreightType(SwiftFreight::TYPE_LAND)
+                            ->with(['order','order.workflow','company','order.shipment'])
+                            ->whereHas('order',function($q) use ($business_unit){
+                                $q->whereHas('workflow',function($q2){
+                                    return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                                });
+                                if($business_unit !== false && array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                                {
+                                    $q->where('business_unit','=',$business_unit);
+                                }
+                                return $q;
+                            })->get();
+
+        $this->pageTitle = 'Pickup Calendar';
+
+        $this->data['business_unit'] = $business_unit;
+        $this->data['freightToday'] = $freightToday;
+        $this->data['freightTomorrow'] = $freightTomorrow;
+        $this->data['rootURL'] = $this->rootURL;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
+
+        return $this->makeView('order-tracking/transit_local');
+    }
+
     /*
      * Private Functions
      */
@@ -1959,7 +2078,7 @@ class OrderTrackingController extends UserController {
      * Transit Calendar data by AJAX
      */
     
-    public function postTransitcalendar($business_unit=false)
+    public function postTransitcalendarforeign($business_unit=false)
     {
         $startdate = gmdate("Y-m-d",Input::get('start'));
         $enddate = gmdate("Y-m-d",Input::get('end'));
@@ -1967,7 +2086,8 @@ class OrderTrackingController extends UserController {
         $freight = SwiftFreight::query();
         
         $freight->where('freight_eta','>=',$startdate,'and')
-                    ->where('freight_eta','<=',$enddate)
+                    ->where('freight_eta','<=',$enddate,'and')
+                    ->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,SwiftFreight::TYPE_AIR])
                     ->with(['order','order.workflow'])
                     ->whereHas('order',function($q) use ($business_unit){
                         $q->whereHas('workflow',function($q2){
@@ -2017,7 +2137,7 @@ class OrderTrackingController extends UserController {
                 }
                 
                 $freightresponse[] = array(
-                                        'title'=>$f->order->name." (ID: ".$f->order->id,
+                                        'title'=>$f->order->name." (ID: ".$f->order->id.")",
                                         'allDay'=>true,
                                         'start'=>strtotime($f->freight_eta),
                                         'url'=>'/order-tracking/view/'.Crypt::encrypt($f->order->id),
@@ -2028,6 +2148,83 @@ class OrderTrackingController extends UserController {
                                     );
             }
             
+            return Response::json($freightresponse);
+        }
+        else
+        {
+            return Response::make("");
+        }
+    }
+
+    public function postTransitcalendarlocal($business_unit=false)
+    {
+        $startdate = gmdate("Y-m-d",Input::get('start'));
+        $enddate = gmdate("Y-m-d",Input::get('end'));
+
+        $freight = SwiftFreight::query();
+
+        $freight->where('freight_eta','>=',$startdate,'and')
+                    ->where('freight_eta','<=',$enddate,'and')
+                    ->where('freight_type','=',\SwiftFreight::TYPE_LAND)
+                    ->with(['order','order.workflow','company'])
+                    ->whereHas('order',function($q) use ($business_unit){
+                        $q->whereHas('workflow',function($q2){
+                            return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                        });
+                        if($business_unit !== false && array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                        {
+                            $q->where('business_unit','=',$business_unit);
+                        }
+                        return $q;
+                    });
+
+        $freightResult = $freight->get()->all();
+
+        if(count($freightResult))
+        {
+            $freightresponse = array();
+            foreach($freightResult as $f)
+            {
+                switch($f->order->business_unit)
+                {
+                    case SwiftOrder::SCOTT_CONSUMER:
+                        $className = "bg-color-orange";
+                        break;
+                    case SwiftOrder::SCOTT_HEALTH;
+                        $className = "bg-color-green";
+                        break;
+                    case SwiftOrder::SEBNA:
+                        $className = "bg-color-blue";
+                        break;
+                }
+
+                switch($f->freight_type)
+                {
+                    case SwiftFreight::TYPE_AIR:
+                        $vesselIcon = '<i class="fa fa-lg fa-plane" title="air"></i>';
+                        break;
+                    case SwiftFreight::TYPE_LAND:
+                        $vesselIcon = '<i class="fa fa-lg fa-truck" title="land"></i>';
+                        break;
+                    case SwiftFreight::TYPE_SEA:
+                        $vesselIcon = '<i class="fa fa-lg fa-anchor" title="sea"></i>';
+                        break;
+                    default:
+                        $vesselIcon = '<i class="fa fa-lg fa-question" title="unknown"></i>';
+                        break;
+                }
+
+                $freightresponse[] = array(
+                                        'title'=>$f->order->name." (ID: ".$f->order->id.")",
+                                        'allDay'=>true,
+                                        'start'=>strtotime($f->freight_eta),
+                                        'url'=>'/order-tracking/view/'.Crypt::encrypt($f->order->id),
+                                        'className'=> $className." pjax",
+                                        'freightCompany' => $f->freight_company,
+                                        'vesselIcon' => $vesselIcon,
+                                    );
+            }
+
             return Response::json($freightresponse);
         }
         else

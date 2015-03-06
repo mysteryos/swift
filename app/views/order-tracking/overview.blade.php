@@ -40,27 +40,26 @@
 <!-- widget grid -->
     <section id="widget-grid">
 
-	<!-- START ROW -->
+        <!-- START ROW -->
 
-	<div class="row">
-
+        <div class="row">
                 <!-- NEW COL START -->
                 <article class="col-md-6 col-xs-12">
-                    <div class="jarviswidget" id="ot-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/order-tracking/stories/{{ $business_unit }}">
-                        <header>
+                        <div class="jarviswidget" id="ot-overview-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/order-tracking/stories/{{ $business_unit }}">
+                            <header>
                                 <span class="widget-icon"> <i class="fa fa-globe"></i> </span>
-                                <h2>Stories</h2>                               
-                        </header>                        
-                                <!-- widget div-->
-				<div>
-					<!-- widget content -->
-                                        <div class="widget-body" id="timeline-body">
-                                            <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
-                                        </div>
+                                <h2>Stories</h2>
+                            </header>
+                                    <!-- widget div-->
+                            <div>
+                            <!-- widget content -->
+                                <div class="widget-body" id="timeline-body">
+                                    <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
                                 </div>
-                    </div>
-                    <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="ot-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" @if($business_unit==0)data-widget-load="/order-tracking/pending-nodes/"@endif>
+                            </div>
+                        </div>
+                        <!-- Widget ID (each widget will need unique ID)-->
+                        <div class="jarviswidget" id="ot-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" @if($business_unit==0)data-widget-load="/order-tracking/pending-nodes/"@endif>
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-refresh"></i> </span>
                                     <h2>Pending Nodes (Refreshed every 30 mins)</h2>
@@ -74,100 +73,65 @@
                                         @endif
                                     </div>
                             </div>
-                    </div>
-                    
-                    <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget" id="ot-overview-latenodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" @if($business_unit==0)data-widget-load="/order-tracking/late-nodes/"@endif>
+                        </div>
+
+                        <!-- Widget ID (each widget will need unique ID)-->
+                        <div class="jarviswidget" id="ot-overview-latenodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" @if($business_unit==0)data-widget-load="/order-tracking/late-nodes/"@endif>
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-bell"></i> </span>
                                     <h2>Late Nodes (Refreshed every 30 mins)</h2>
                             </header>
                             <div class="no-padding">
-                                    <div class="widget-body widget-body-compressed">
-                                        @if($business_unit==0)
-                                            <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
-                                        @else
-                                            <p class="text-center h3"><i class="fa fa-lg fa-exclamation-triangle"></i> Data unavailable when filtered by business unit</p>
-                                        @endif
-                                    </div>
+                                <div class="widget-body widget-body-compressed">
+                                    @if($business_unit==0)
+                                        <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
+                                    @else
+                                        <p class="text-center h3"><i class="fa fa-lg fa-exclamation-triangle"></i> Data unavailable when filtered by business unit</p>
+                                    @endif
+                                </div>
                             </div>
-                    </div>                    
-                </article>
-                <!-- NEW COL END -->            
-            
-		<!-- NEW COL START -->
-		<article class="col-md-6 col-xs-12">
-			<!-- Widget ID (each widget will need unique ID)-->
-			<div class="jarviswidget" id="ot-overview-inprogress" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				<header>
-					<span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
-                                        <h2>Work Spot </h2>
-				</header>
-                                <!-- widget div-->
-				<div class="no-padding">
-					<!-- widget content -->
-					<div class="widget-body">
-                                                @include('order-tracking.overview_inprogress')
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>     
-                        
-			<!-- Widget ID (each widget will need unique ID)-->
-			<div class="jarviswidget" id="ot-overview-transit" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				<header>
-					<span class="widget-icon"> <i class="fa fa-plane"></i> </span>
-                                        <h2>Transit Calendar </h2>
-                                        <div class="widget-toolbar">
-                                                <!-- add: non-hidden - to disable auto hide -->
-                                                <div class="btn-group">
-                                                        <button class="btn dropdown-toggle btn-xs btn-default" data-toggle="dropdown">
-                                                                Showing <i class="fa fa-caret-down"></i>
-                                                        </button>
-                                                        <ul class="dropdown-menu js-status-update pull-right">
-                                                                <li>
-                                                                        <a href="javascript:void(0);" id="transit_calendar_mt">Month</a>
-                                                                </li>
-                                                                <li>
-                                                                        <a href="javascript:void(0);" id="transit_calendar_ag">Agenda</a>
-                                                                </li>
-                                                                <li>
-                                                                        <a href="javascript:void(0);" id="transit_calendar_td">Today</a>
-                                                                </li>
-                                                        </ul>
-                                                </div>
-                                        </div>                                        
-				</header>
-                                <!-- widget div-->
-				<div>
-					<!-- widget content -->
-					<div class="widget-body">
-                                                @include('order-tracking.overview_transit')
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
                         </div>
-                        
-			<!-- Widget ID (each widget will need unique ID)-->
-<!--			<div class="jarviswidget" id="ot-overview-storage" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				<header>
-					<span class="widget-icon"> <i class="fa fa-history"></i> </span>
-                                        <h2>Upcoming Storage (Cost) </h2>
-				</header>
-                                 widget div
-				<div>
-					 widget content 
-					<div class="widget-body">
-                                                @include('order-tracking.overview_storage')
-                                        </div>
-                                         end widget content 
-                                </div>
-                                 end widget div 
-                        </div>-->
                 </article>
                 <!-- NEW COL END -->
+
+            <!-- NEW COL START -->
+            <article class="col-md-6 col-xs-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="ot-overview-inprogress" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-clock-o"></i> </span>
+                        <h2>Work Spot </h2>
+                    </header>
+                                    <!-- widget div-->
+                    <div class="no-padding">
+                        <!-- widget content -->
+                        <div class="widget-body">
+                                @include('order-tracking.overview_inprogress')
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <!--
+                <div class="jarviswidget" id="ot-overview-storage" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-history"></i> </span>
+                                            <h2>Upcoming Storage (Cost) </h2>
+                    </header>
+                                     widget div
+                    <div>
+                         widget content
+                        <div class="widget-body">
+                                                    @include('order-tracking.overview_storage')
+                                            </div>
+                                             end widget content
+                                    </div>
+                                     end widget div
+                </div> -->
+            </article>
+            <!-- NEW COL END -->
         </div>
         <!-- END ROW -->
 

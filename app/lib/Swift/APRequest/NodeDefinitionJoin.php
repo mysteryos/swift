@@ -99,7 +99,7 @@ Class NodeDefinitionJoin {
      * All Customer Care Filters
      */
     
-    private static function ccarerouting($nodeActivity,$custommerCategory)
+    private static function ccarerouting($nodeActivity,$customerCategory)
     {
         $workflow = $nodeActivity->workflowActivity()->first();
         $apr = $workflow->workflowable()->first();
@@ -125,9 +125,23 @@ Class NodeDefinitionJoin {
             else
             {
                 $customer = $apr->customer()->first();
-                if(count($customer) && strtolower($customer->AC09) == strtolower($custommerCategory))
+                if(count($customer) && strtolower($customer->AC09) == strtolower($customerCategory))
                 {
                     return true;
+                }
+                /*
+                 * Send to Others if we don't have any more
+                 */
+                if(strtolower($customerCategory) === "others")
+                {
+                    //Check if definition node for customer category exists
+                    $nodeDefinitionCount = \SwiftNodeDefinition::where('workflow_type_id','=',2)
+                                            ->where('name','=','apr_customercare_'.strtolower($customer->AC09),'AND')
+                                            ->count();
+                    if($nodeDefinitionCount === 0)
+                    {
+                        return true;
+                    }
                 }
             }
         }

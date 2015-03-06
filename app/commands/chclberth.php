@@ -187,14 +187,14 @@ class chclberth extends ScheduledCommand {
             }
 	}
 
-        /*
-         * Add Schedule
-         */
-        public function schedule(Schedulable $scheduler)
-        {
-            //Every Day at 4a.m
-            return $scheduler->daily()->hours(4);
-        }
+    /*
+     * Add Schedule
+     */
+    public function schedule(Schedulable $scheduler)
+    {
+        //Every Day at 4a.m
+        return $scheduler->daily()->hours(4);
+    }
 
 	/**
 	 * Get the console command arguments.

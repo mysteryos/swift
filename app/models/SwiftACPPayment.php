@@ -10,7 +10,9 @@ class SwiftACPPayment extends Eloquent
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
-    
+
+    public $readableName = "Accounts Payable";
+
     protected $table = "swift_acp_payment";
     
     protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','journal_entry_number'];
@@ -173,6 +175,25 @@ class SwiftACPPayment extends Eloquent
     public function ac()
     {
         return $this->belongTo('SwiftACPRequest','acp_id');
+    }
+
+    /*
+     * Utility Functions
+     */
+
+    public function getClassName()
+    {
+        return $this->revisionClassName;
+    }
+
+    public function getReadableName()
+    {
+        return $this->name." (Id:".$this->id.")";
+    }
+
+    public function getIcon()
+    {
+        return "fa-moneyr";
     }
     
     /*

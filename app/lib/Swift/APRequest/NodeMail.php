@@ -31,7 +31,7 @@ class NodeMail {
                         try
                         {
                             //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
-                            \Mail::queueOn('sqs-mail','emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$u),function($message) use ($u,$aprequest){
+                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$u),function($message) use ($u,$aprequest){
                                 $message->from('swift@scott.mu','Scott Swift');
                                 $message->subject(\Config::get('website.name').' - Status update on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
                                 $message->to($u->email);

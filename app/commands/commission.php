@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Console\Command;
 use Indatus\Dispatcher\Scheduling\ScheduledCommand;
 use Indatus\Dispatcher\Scheduling\Schedulable;
 use Indatus\Dispatcher\Drivers\Cron\Scheduler;

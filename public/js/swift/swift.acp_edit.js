@@ -3,7 +3,10 @@ function addMulti($dummy,pk)
     $clone = $dummy.clone();
     $clone.removeClass('hide dummy');
     $clone.find('.editable').removeClass('dummy');
-    $clone.find('.editable').editable().on('save',function(e,params){
+    $clone.find('.editable').editable({
+        disabled: $(this).hasClass('editable-disabled'),
+        onblur: 'submit'
+    }).on('save',function(e,params){
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
         {
@@ -67,7 +70,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         e.preventDefault();            
         var $this = $(this);
         $.SmartMessageBox({
-                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to cancel this order process?</strong></span> ?",
+                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to cancel '"+document.getElementById('project-name').value+"' ?</strong></span> ?",
                 content : "The form will be locked from editing after cancellation",
                 buttons : '[No][Yes]'
 
@@ -299,7 +302,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         else
         {
             $this.editable({
-               disabled: $this.hasClass('editable-disabled') 
+                disabled: $this.hasClass('editable-disabled'),
+                onblur: 'submit'               
             });
         }
         
@@ -330,8 +334,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
      * Add New
      */
     $('.btn-add-new').on('click',function(){
-        $this = $(this);
-        $dummy = $this.parents('.jarviswidget').find('fieldset.dummy');
+        var $this = $(this);
+        var $dummy = $this.parents('.jarviswidget').find('fieldset.dummy');
         if($dummy.length)
         {
             addMulti($dummy);
@@ -344,6 +348,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
     $('.jarviswidget').on('click','fieldset.multi .btn-delete',function(){
         var $this = $(this);
+        var $parent = $this.parents('.widget-body');
+        console.log($this);
         if(confirm('Are you sure you wish to delete this record?'))
         {
             var $thisname = $this.parents('fieldset.multi').attr('data-name').ucfirst();
@@ -351,9 +357,20 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             if($thiseditable.attr('data-pk')=="0")
             {
                 $this.parents('fieldset.multi').slideUp('500',function(){
-                   $(this).remove();
+                    $(this).remove();
+                    messenger_notiftop($thisname+' entry has been deleted','success');
+                    window.setTimeout(function(){
+                        if($parent.find('fieldset.multi').not('.dummy').length == 0)
+                        {
+                            var $dummy = $parent.find('fieldset.dummy');
+                            if($dummy.length)
+                            {
+                                addMulti($dummy);
+                                messenger_notiftop($thisname+' dummy entry has been added','info');
+                            }
+                        }
+                    },0);
                 });
-                messenger_notiftop($thisname+' entry has been deleted','success');
             }
             else
             {
@@ -372,7 +389,18 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     {
                         presenceChannelCurrent.trigger('client-multi-delete',{user: presenceChannelCurrent.members.me , id: $thiseditable.attr('id'), context: $this.parents('fieldset.multi').attr('data-name')});
                         $this.parents('fieldset.multi').slideUp('500',function(){
-                           $(this).remove();
+                            $(this).remove();
+                            window.setTimeout(function(){
+                                if($parent.find('fieldset.multi').not('.dummy').length == 0)
+                                {
+                                    var $dummy = $parent.find('fieldset.dummy');
+                                    if($dummy.length)
+                                    {
+                                        addMulti($dummy);
+                                        messenger_notiftop($thisname+' dummy entry has been added','info');
+                                    }
+                                }
+                            },0);
                         });
                     },
                     error:function(xhr, status, error)

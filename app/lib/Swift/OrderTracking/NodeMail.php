@@ -27,7 +27,7 @@ class NodeMail {
                         try
                         {
                             //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$order,'user'=>$u))->render());
-                            \Mail::queueOn('sqs-mail','emails.order-tracking.pending',array('order'=>$mailData,'user'=>$u),function($message) use ($u,$order){
+                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.order-tracking.pending',array('order'=>$mailData,'user'=>$u),function($message) use ($u,$order){
                                 $message->from('swift@scott.mu','Scott Swift');
                                 $message->subject(\Config::get('website.name').' - Status update on Order Process "'.$order->name.'" ID: '.$order->id);
                                 $message->to($u->email);

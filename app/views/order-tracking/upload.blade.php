@@ -7,7 +7,7 @@
                         <span class="preview"><img data-dz-thumbnail=""></span>
                     </div>
                     <div class="col-xs-6">
-                        <span class="name" data-dz-name=""><a class="file-view" href="{{$d->getAttachedfiles()['document']->url()}}" rel="tooltip" data-original-title="Last update: {{$d->getAttachedfiles()['document']->updatedAt()}} &#013; Updated By: {{Helper::getUserName($d->user_id,Sentry::getUser())}}" data-placement="bottom">
+                        <span class="name" data-dz-name=""><a class="file-view" target="_blank" href="{{$d->getAttachedfiles()['document']->url()}}" rel="tooltip" data-original-title="Last update: {{$d->getAttachedfiles()['document']->updatedAt()}} &#013; Updated By: {{Helper::getUserName($d->user_id,Sentry::getUser())}}" data-placement="bottom">
                         <?php 
                         switch($d->getAttachedfiles()['document']->contentType())
                         {

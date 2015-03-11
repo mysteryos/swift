@@ -181,6 +181,39 @@ class AccountsPayableController extends UserController {
         }
     }
 
+    private function checkAccess($acp)
+    {
+        $hasAccess = false;
+        //Owner has access
+        if($acp->isOwner())
+        {
+            $hasAccess = true;
+        }
+
+        //Accounting or Admin has access
+        if($this->isAccountingDept || $this->isAdmin)
+        {
+            $hasAccess = true;
+        }
+
+        $approvalUserIds = array();
+        $approvalUserIds = array_map(function($val){
+                                if($val['type'] === \SwiftApproval::APC_HOD)
+                                {
+                                    return $val['approval_user_id'];
+                                }
+                           },$acp->approval->toArray());
+
+        //HoDs have access
+        if(in_array($this->currentUser->id,$approvalUserIds))
+        {
+            $hasAccess = true;
+        }
+
+        //Permission Check - End
+        return $hasAccess;
+    }
+
     private function form($id,$edit=false)
     {
         $acp_id = Crypt::decrypt($id);
@@ -202,37 +235,8 @@ class AccountsPayableController extends UserController {
              */
             $this->enableComment($acp);
 
-            //Permission Check - Start
-
-            $hasAccess = false;
-            //Owner has access
-            if($acp->isOwner())
-            {
-                $hasAccess = true;
-            }
-            
-            //Accounting or Admin has access
-            if($this->isAccountingDept || $this->isAdmin)
-            {
-                $hasAccess = true;
-            }
-
-            $approvalUserIds = array();
-            $approvalUserIds = array_map(function($val){
-                                    if($val['type'] === \SwiftApproval::APC_HOD)
-                                    {
-                                        return $val['approval_user_id'];
-                                    }
-                               },$acp->approval->toArray());
-
-            //HoDs have access
-            if(in_array($this->currentUser->id,$approvalUserIds))
-            {
-                $hasAccess = true;
-            }
-
-            //Permission Check - End
-            if(!$hasAccess)
+            //Permission Check
+            if(!$this->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -298,6 +302,411 @@ class AccountsPayableController extends UserController {
         }
     }
 
+    public function putGeneralInfo()
+    {
+        $acp_id = Crypt::decrypt(Input::get('pk'));
+        $acp = SwiftAPRequest::find($acp_id);
+
+        if(count($acp))
+        {
+
+            if(!$this->checkAccess($acp))
+            {
+                return parent::forbidden();
+            }
+
+            switch(Input::get('name'))
+            {
+                case "name":
+                    break;
+                case "description":
+                    break;
+                case "billable_customer_code":
+                    if(!is_numeric(trim(Input::get('value'))))
+                    {
+                        return Response::make("Company code should be numeric.",400);
+                    }
+                    break;
+                case "supplier_code":
+                    if(!is_numeric(trim(Input::get('value'))))
+                    {
+                        return Response::make("Supplier code should be numeric.",400);
+                    }
+                    break;
+                default:
+                    return Response::make("Unknown Field",400);
+            }
+
+            $acp->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+            if($acp->save())
+            {
+                return Response::make('Success', 200);
+            }
+            else
+            {
+                return Response::make('Failed to save. Please retry',400);
+            }
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+
+/*
+     * Purchase Order: REST
+     */
+    public function putPurchaseorder($acp_id)
+    {
+
+        $acp = SwiftACPRequest::find(Crypt::decrypt($acp_id));
+
+        /*
+         * Manual Validation
+         */
+        if(count($acp))
+        {
+
+            /*
+             * Check Permissions
+             */
+            if(!$this->checkAccess($acp))
+            {
+                return parent::forbidden();
+            }
+
+            return Helper::saveChildModel($acp,"\SwiftPurchaseOrder","purchaseOrder",$this->currentUser,true);
+        }
+        else
+        {
+            return Response::make('Accounts Payable process form not found',404);
+        }
+    }
+
+    public function deletePurchaseorder()
+    {
+        $po_id = Crypt::decrypt(Input::get('pk'));
+        $po = SwiftPurchaseOrder::find($po_id);
+        if(count($po))
+        {
+            $acp = $po->purchasable;
+            /*
+             * Check Permissions
+             */
+            if(!$this->checkAccess($acp))
+            {
+                return parent::forbidden();
+            }
+            
+            if($po->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return Response::make('Purchase order entry not found',404);
+        }
+    }
+
+    public function putCreditnote($acp_id)
+    {
+        $acp = SwiftACPRequest::find(Crypt::decrypt($acp_id));
+
+        /*
+         * Manual Validation
+         */
+        if(count($acp))
+        {
+
+            /*
+             * Check Permissions
+             */
+            if(!$this->checkAccess($acp))
+            {
+                return parent::forbidden();
+            }
+
+            /*
+             * New Credit Note
+             */
+            return Helper::saveChildModel($acp,"\SwiftACPCreditNote","creditNote",$this->currentUser,false);
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+
+    public function deleteCreditnote()
+    {
+        $credit_id = \Crypt::decrypt(Input::get('pk'));
+        $credit = \SwiftACPCreditNote::find($credit_id);
+        if(count($credit))
+        {
+            $acp = $credit->acp;
+            /*
+             * Check Permissions
+             */
+            if(!$this->checkAccess($acp))
+            {
+                return parent::forbidden();
+            }
+            
+            if($credit->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return Response::make('Credit note entry not found',404);
+        }
+    }
+
+    public function putInvoice($acp_id)
+    {
+        $acp = SwiftACPRequest::find(Crypt::decrypt($acp_id));
+
+        /*
+         * Manual Validation
+         */
+        if(count($acp))
+        {
+            /*
+             * Check Permissions
+             */
+            if(!$this->checkAccess($acp))
+            {
+                return parent::forbidden();
+            }
+            
+            
+            //Validation
+            switch(Input::get('name'))
+            {
+                case "number":
+                case "date":
+                case "due_date":
+                case "gl_code":
+                    break;
+                case "due_amount":
+                    if(Input::get('value') !== "" && !is_numeric(Input::get('value')))
+                    {
+                        return Response::make('Please enter a numeric value.',400);
+                    }
+                    if(is_numeric(Input::get('value')) && Input::get('value') <= 0)
+                    {
+                        return Response::make('Please enter a valid amount',400);
+                    }
+                    break;
+                case "payment_term":
+                    if(!array_key_exists(Input::get('value'),\SwiftACPInvoice::$paymentTerm))
+                    {
+                        return Response::make('Please enter a valid payment Term');
+                    }
+                    break;
+                case "currency":
+                    if(Input::get('value') !== "" && !is_numeric(Input::get('value')))
+                    {
+                        return Response::make('Please select a valid currency.',400);
+                    }
+                    break;
+                default:
+                    return Response::make('Unknown Field',400);
+                    break;
+            }
+
+            /*
+             * New Invoice
+             */
+            return Helper::saveChildModel($acp,"\SwiftACPInvoice","invoice",$this->currentUser,false);
+        }
+        else
+        {
+            return Response::make('Accounts Payable process form not found',404);
+        }
+    }
+
+    public function deleteInvoice()
+    {
+        $id = Crypt::decrypt(Input::get('pk'));
+        $invoice = SwiftACPInvoice::find($id);
+        if($invoice)
+        {
+            $acp = $invoice->acp;
+            /*
+             * Check Permissions
+             */
+            if(!$this->checkAccess($acp))
+            {
+                return parent::forbidden();
+            }
+            
+            if($invoice->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return Response::make('Invoice entry not found',404);
+        }
+    }
+
+    public function putPayment($acp_id)
+    {
+        $acp = SwiftACPRequest::find(Crypt::decrypt($acp_id));
+
+        if(count($acp))
+        {
+            /*
+             * Check Permissions
+             */
+            if(!$this->isAccountingDept && !$this->isAdmin)
+            {
+                return parent::forbidden();
+            }
+
+            //Validation
+            switch(Input::get('name'))
+            {
+                case "type":
+                    if(!array_key_exists(Input::get('value'),\SwiftACPPayment::$type))
+                    {
+                        return Response::make('Please enter valid payment type',400);
+                    }
+                    break;
+                case "date":
+                case "cheque_dispatch_comment":
+                case "currency":
+                    break;
+                case "amount":
+                case "journal_entry_number":
+                    if(Input::get('value')!== "" && !is_numeric(Input::get('value')))
+                    {
+                        return Response::make('Please enter a numeric value',400);
+                    }
+                    break;
+                case "status":
+                    if(!array_key_exists(Input::get('value'),\SwiftACPPayment::$status))
+                    {
+                        return Response::make('Please enter a valid status',400);
+                    }
+                    break;
+                case "cheque_dispatch":
+                    if(!array_key_exists(Input::get('value'), \SwiftACPPayment::$dispatch))
+                    {
+                        return Response::make('Please enter a valid dispatch method.',400);
+                    }
+                    break;
+                case "currency":
+                    if(!is_numeric(Input::get('value')) || Input::get('value') === "")
+                    {
+                        return Response::make('Please select a valid currency code',400);
+                    }
+                    else
+                    {
+                        if(Input::get('value') <= 0)
+                        {
+                            return Response::make('Please select a valid currency code',400);
+                        }
+                    }
+                default:
+                    return Response::make('Unknown Field',400);
+                    break;
+            }
+
+            /*
+             * New Payment
+             */
+            return Helper::saveChildModel($acp,"\SwiftACPPayment","payment",$this->currentUser);
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+
+    public function deletePayment()
+    {
+        $id = Crypt::decrypt(Input::get('pk'));
+        $payment = SwiftACPPayment::find($id);
+        if($payment)
+        {
+            $acp = $payment->acp;
+            /*
+             * Check Permissions
+             */
+            if(!$this->isAccountingDept && !$this->isAdmin)
+            {
+                return parent::forbidden();
+            }
+
+            if($payment->delete())
+            {
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return Response::make('Payment entry not found',404);
+        }
+    }
+
+    public function putPaymentvoucher($acp_id)
+    {
+        $acp = SwiftACPRequest::find(Crypt::decrypt($acp_id));
+
+        if($acp)
+        {
+            /*
+             * Check Permissions
+             */
+            if(!$this->isAccountingDept && !$this->isAdmin)
+            {
+                return parent::forbidden();
+            }
+
+            //Validation
+            switch(Input::get('name'))
+            {
+                case "number":
+                    if(Input::get('value') !== "" && !is_numeric(Input::get('value')))
+                    {
+                        return Response::make("Please input a numeric value.");
+                    }
+                    break;
+                default:
+                    return Response::make('Unknown Field',400);
+                    break;
+            }
+
+            return Helper::saveChildModel($acp,"\SwiftACPPaymentVoucher","paymentVoucher",$this->currentUser);
+
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+
     /*
      * Help : AJAX
      */
@@ -327,6 +736,41 @@ class AccountsPayableController extends UserController {
         else
         {
             return "We can't find the resource that you were looking for.";
+        }
+    }
+
+    /*
+     * Cancel Workflow
+     */
+
+    public function postCancel($id)
+    {
+
+        /*
+         * Check Permissions
+         */
+        if(!$this->isAdmin)
+        {
+            return parent::forbidden();
+        }
+
+        $acp = SwiftACPRequest::find(Crypt::decrypt($id));
+
+        if(count($acp))
+        {
+
+            if(WorkflowActivity::cancel($acp))
+            {
+                return Response::make('Workflow has been cancelled',200);
+            }
+            else
+            {
+                return Response::make('Unable to cancel workflow: Save failed',400);
+            }
+        }
+        else
+        {
+            return Response::make('Accounts payable form not found',404);
         }
     }
 

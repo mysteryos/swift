@@ -173,11 +173,9 @@
                         <!-- widget content -->
                         <div class="widget-body">
                             <form class="form-horizontal">
-                                    @if(count($form->invoice))
-                                        @foreach($form->invoice as &$i)
-                                            <?php $i->id = Crypt::encrypt($i->id); ?>
-                                            @include('acpayable.edit_invoice',array('i'=>$i))
-                                        @endforeach
+                                    @if($form->invoice)
+                                        <?php $form->invoice->id = Crypt::encrypt($form->invoice->id); ?>
+                                        @include('acpayable.edit_invoice',array('i'=>$form->invoice))
                                     @else
                                         @include('acpayable.edit_invoice')
                                     @endif
@@ -217,6 +215,11 @@
                     <header>
                         <span class="widget-icon"> <i class="fa fa-money"></i> </span>
                         <h2>Payment</h2>
+                        @if($edit && ($isAccountingDept || $isAdmin))
+                            <div class="widget-toolbar" role="menu">
+                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                            </div>
+                        @endif
                     </header>
                     <!-- widget div-->
                     <div>
@@ -226,12 +229,12 @@
                                     @if(count($form->payment))
                                         @foreach($form->payment as &$p)
                                             <?php $p->id = Crypt::encrypt($p->id); ?>
-                                            @include('acpayable.edit_payment',array('p'=>$p))
+                                            @include('acpayable.edit_payment',array('pay'=>$p))
                                         @endforeach
                                     @else
                                         @include('acpayable.edit_payment')
                                     @endif
-                                    @include('acpayable.edit_payment',array('dummy'=>true,'p'=>null))
+                                    @include('acpayable.edit_payment',array('dummy'=>true,'pay'=>null))
                             </form>
                         </div>
                         <!-- end widget content -->

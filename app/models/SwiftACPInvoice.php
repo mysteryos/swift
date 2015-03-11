@@ -18,6 +18,8 @@ class SwiftACPInvoice extends Eloquent
     
     protected $dates = ['deleted_at','date','due_date'];
 
+    protected $touches = array('acp');
+
     protected $attributes = [
         'currency' => '96'
     ];
@@ -37,7 +39,14 @@ class SwiftACPInvoice extends Eloquent
     
     protected $keepRevisionOf = array();
     
-    protected $revisionFormattedFieldNames = array();
+    protected $revisionFormattedFieldNames = array(
+        'date' => 'Date Received',
+        'due_date' => 'Date Due',
+        'due_amount' => 'Amount Due',
+        'payment_term' => 'Payment Term',
+        'currency' => 'Currency',
+        'gl_code' => 'GL Code'
+    );
     
     public $saveCreateRevision = true;
     public $softDelete = true;
@@ -56,7 +65,7 @@ class SwiftACPInvoice extends Eloquent
 
     public function esGetParent()
     {
-        return $this->ac;
+        return $this->acp;
     }
     
     /*
@@ -75,7 +84,7 @@ class SwiftACPInvoice extends Eloquent
      * Accessors
      */
 
-    public function getCurrencyRevisionableAttribute($val)
+    public function getCurrencyRevisionAttribute($val)
     {
         $currency = Currency::find($val);
         if($currency)
@@ -88,10 +97,10 @@ class SwiftACPInvoice extends Eloquent
 
     public function getCurrencyEsAttribute($val)
     {
-        return $this->getCurrencyRevisionableAttribute($val);
+        return $this->getCurrencyRevisionAttribute($val);
     }
 
-    public function getPaymentTermRevisionableAttribute($val)
+    public function getPaymentTermRevisionAttribute($val)
     {
         if(key_exists($val,self::$paymentTerm))
         {
@@ -105,7 +114,7 @@ class SwiftACPInvoice extends Eloquent
 
     public function getPaymentTermEsAttribute($val)
     {
-        return $this->getPaymentTermRevisionableAttribute($val);
+        return $this->getPaymentTermRevisionAttribute($val);
     }
     
     /*
@@ -116,11 +125,16 @@ class SwiftACPInvoice extends Eloquent
      * Relationships
      */
 
-    public function ac()
+    public function acp()
     {
-        return $this->belongsTo('SwiftACPRequest','ac_id');
+        return $this->belongsTo('SwiftACPRequest','acp_id');
     }
     
+    public function currency()
+    {
+        return $this->belongsTo('Currency','currency');
+    }
+
     /*
      * Query
      */

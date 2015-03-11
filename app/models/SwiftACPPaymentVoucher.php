@@ -17,6 +17,8 @@ class SwiftACPPaymentVoucher extends Eloquent
     protected $fillable = ['number'];
     
     protected $dates = ['deleted_at'];
+
+    protected $touches = array('acp');
     
     /* Revisionable */
     
@@ -40,12 +42,12 @@ class SwiftACPPaymentVoucher extends Eloquent
     //Context for Indexing
     public $esContext = "acpayable";
     //Info Context
-    public $esInfoContext = "paymentvoucher";
+    public $esInfoContext = "paymentVoucher";
     public $esRemove = ['acp_id'];
 
     public function esGetParent()
     {
-        return $this->ac;
+        return $this->acp;
     }
     
     /*
@@ -72,7 +74,7 @@ class SwiftACPPaymentVoucher extends Eloquent
      * Relationships
      */
 
-    public function ac()
+    public function acp()
     {
         return $this->belongsTo('SwiftACPRequest','acp_id');
     }

@@ -46,7 +46,7 @@ Class NodeDefinition {
                     $returnReasonList['invoice_due_amount'] = "Enter invoice due amount";
                 }
 
-                if($invoice->due_amount <= 0)
+                if($invoice->payment_term <= 0)
                 {
                     $returnReasonList['payment_term'] = "Enter invoice payment term";
                 }
@@ -69,7 +69,7 @@ Class NodeDefinition {
             $approvalRequesterCount = $acp->approval()->where('type','=',\SwiftApproval::APC_REQUESTER)->count();
             if($approvalRequesterCount === 0)
             {
-                $returnReasonList['hodapproval_absent'] = "Publish form";
+                $returnReasonList['requester_absent'] = "Publish form";
             }
             
             if(count($returnReasonList) === 0 && !$returnReason)

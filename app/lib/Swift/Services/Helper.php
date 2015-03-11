@@ -190,6 +190,9 @@ class Helper {
             case "SwiftAPRequest":
                 $url = "/aprequest/view/".Crypt::encrypt($obj->id);
                 break;
+            case "SwiftACPRequest":
+                $url = "/accounts-payable/view/".Crypt::encrypt($obj->id);
+                break;
             default:
                 $url ="javascript:void(0);";
         }
@@ -403,6 +406,53 @@ class Helper {
             else
             {
                 return "<span class='color-red' title='R.I.P'>ICU</span><span> | Overdue tasks: ".round(($lateCount/$totalCount)*100,2)."% out of $totalCount</span>";
+            }
+        }
+    }
+
+    public function saveChildModel($main,$model,$relationName,$current_user,$workflow_update=false)
+    {
+        if(is_numeric(\Input::get('pk')))
+        {
+            //All Validation Passed, let's save
+            $model_obj = new $model();
+            $model_obj->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
+            if($main->{$relationName}()->save($model_obj))
+            {
+                if($workflow_update)
+                {
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($main),'id'=>$main->id,'user_id'=>$current_user->id));
+                }
+                return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($model_obj->id),'id'=>$model_obj->id]));
+            }
+            else
+            {
+                return \Response::make('Failed to save. Please retry',400);
+            }
+
+        }
+        else
+        {
+            $model_obj = $model::find(\Crypt::decrypt(\Input::get('pk')));
+            if($model_obj)
+            {
+                $model_obj->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
+                if($model_obj->save())
+                {
+                    if($workflow_update)
+                    {
+                        \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($main),'id'=>$main->id,'user_id'=>$current_user->id));
+                    }
+                    return \Response::make('Success');
+                }
+                else
+                {
+                    return \Response::make('Failed to save. Please retry',400);
+                }
+            }
+            else
+            {
+                return \Response::make('Error saving: Invalid PK',400);
             }
         }
     }

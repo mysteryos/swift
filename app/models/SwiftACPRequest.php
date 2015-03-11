@@ -6,11 +6,12 @@
  */
 class SwiftACPRequest extends Eloquent 
 {
-
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
-    
+
+    public $readableName = "Accounts Payable";
+
     protected $table = "swift_acp_request";
     
     protected $fillable = ['name','description','billable_company_code','owner_user_id','supplier_code'];
@@ -36,7 +37,7 @@ class SwiftACPRequest extends Eloquent
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'name','description','business_unit'
+        'name','description','billable_company_code','supplier_code'
     );
     
     protected $revisionFormattedFieldNames = array(
@@ -93,7 +94,7 @@ class SwiftACPRequest extends Eloquent
         return "";
     }
 
-    public function getSupplierCodeRevisionableAttribute($val)
+    public function getSupplierCodeRevisionAttribute($val)
     {
         $supplier = \JdeSupplierMaster::where('Supplier_Code','=',$val)->first();
         if($supplier)
@@ -104,7 +105,7 @@ class SwiftACPRequest extends Eloquent
         return "(N/A)";
     }
     
-    public function getBillableCompanyCodeRevisionableAttribute($val)
+    public function getBillableCompanyCodeRevisionAttribute($val)
     {
         $company = \JdeCustomer::where('AN8','=',$val)->first();
         if($company)
@@ -116,12 +117,12 @@ class SwiftACPRequest extends Eloquent
 
     public function getBillableCompanyCodeEsAttribute($val)
     {
-        return $this->getBillableCompanyCodeRevisionableAttribute($val);
+        return $this->getBillableCompanyCodeRevisionAttribute($val);
     }
 
     public function getSupplierCodeEsAttribute($val)
     {
-        return $this->getSupplierCodeRevisionableAttribute($val);
+        return $this->getSupplierCodeRevisionAttribute($val);
     }
     
     /*

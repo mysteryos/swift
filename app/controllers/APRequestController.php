@@ -538,7 +538,7 @@ class APRequestController extends UserController {
              if(Input::get('name') == 'customer_code' && trim(Input::get('value')==""))
             {
                 return Response::make('Please enter a customer name',400);
-            }           
+            }
             
             /*
              * Save

@@ -70,16 +70,30 @@ class UserController extends Controller {
         
         public function forbidden()
         {
-            $this->pageTitle = "Forbidden";
-            $view = self::makeView('general.forbidden');
-            return Response::make($view,403);
+            if (!Request::ajax())
+            {
+                $this->pageTitle = "Forbidden";
+                $view = self::makeView('general.forbidden');
+                return Response::make($view,403);
+            }
+            else
+            {
+                return Response::make("You don't have access to this resource",403);
+            }
         }
         
         public function notfound()
         {
-            $this->pageTitle = "404 not found";
-            $view = self::makeView('general.notfound');
-            return Response::make($view,404);
+            if (!Request::ajax())
+            {
+                $this->pageTitle = "404 not found";
+                $view = self::makeView('general.notfound');
+                return Response::make($view,404);
+            }
+            else
+            {
+                return Response::make("We can't find the resource that you were looking for.",404);
+            }
         }
         
         public function enableComment($commentable)

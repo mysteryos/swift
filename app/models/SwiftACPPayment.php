@@ -19,6 +19,12 @@ class SwiftACPPayment extends Eloquent
     
     protected $dates = ['deleted_at','date'];
 
+    protected $touches = array('acp');
+
+    protected $attributes = [
+        'currency' => '96'
+    ];
+
     //Status
     const STATUS_INPROGRESS = 1;
     const STATUS_ISSUED = 2;
@@ -55,7 +61,7 @@ class SwiftACPPayment extends Eloquent
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','journal_entry_number');
+    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','journal_entry_number');
     
     protected $revisionFormattedFieldNames = array(
         'status' => 'Status',
@@ -84,7 +90,7 @@ class SwiftACPPayment extends Eloquent
 
     public function esGetParent()
     {
-        return $this->ac;
+        return $this->acp;
     }
 
     /*
@@ -103,7 +109,7 @@ class SwiftACPPayment extends Eloquent
      * Accessors
      */
 
-    public function getChequeDispatchRevisionableAttribute($val)
+    public function getChequeDispatchRevisionAttribute($val)
     {
         if(key_exists($val,self::$dispatch))
         {
@@ -115,7 +121,7 @@ class SwiftACPPayment extends Eloquent
         }
     }
 
-    public function getTypeRevisionableAttribute($val)
+    public function getTypeRevisionAttribute($val)
     {
         if(key_exists($val,self::$type))
         {
@@ -127,7 +133,7 @@ class SwiftACPPayment extends Eloquent
         }
     }
 
-    public function getStatusRevisionableAttribute($val)
+    public function getStatusRevisionAttribute($val)
     {
         if(key_exists($val,self::$status))
         {
@@ -141,17 +147,17 @@ class SwiftACPPayment extends Eloquent
 
     public function getChequeDispatchEsAttribute($val)
     {
-        return $this->getChequeDispatchRevisionableAttribute($val);
+        return $this->getChequeDispatchRevisionAttribute($val);
     }
 
     public function getTypeEsAttribute($val)
     {
-        return $this->getTypeRevisionableAttribute($val);
+        return $this->getTypeRevisionAttribute($val);
     }
 
     public function getStatusEsAttribute($val)
     {
-        return $this->getStatusRevisionableAttribute($val);
+        return $this->getStatusRevisionAttribute($val);
     }
     
     /*
@@ -172,9 +178,14 @@ class SwiftACPPayment extends Eloquent
      * Relationships
      */
 
-    public function ac()
+    public function acp()
     {
-        return $this->belongTo('SwiftACPRequest','acp_id');
+        return $this->belongsTo('SwiftACPRequest','acp_id');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo('Currency','currency');
     }
 
     /*
@@ -193,7 +204,7 @@ class SwiftACPPayment extends Eloquent
 
     public function getIcon()
     {
-        return "fa-moneyr";
+        return "fa-money";
     }
     
     /*

@@ -16,6 +16,8 @@ class SwiftACPCreditNote extends Eloquent
     protected $fillable = ['number'];
     
     protected $dates = ['deleted_at'];
+
+    protected $touches = array('acp');
     
     /* Revisionable */
     
@@ -38,12 +40,12 @@ class SwiftACPCreditNote extends Eloquent
     //Context for Indexing
     public $esContext = "acpayable";
     //Info Context
-    public $esInfoContext = "creditnote";
-    public $esRemove = ['ac_id'];
+    public $esInfoContext = "creditNote";
+    public $esRemove = ['acp_id'];
 
     public function esGetParent()
     {
-        return $this->ac;
+        return $this->acp;
     }
     
     /*
@@ -70,9 +72,9 @@ class SwiftACPCreditNote extends Eloquent
      * Relationships
      */
 
-    public function ac()
+    public function acp()
     {
-        return $this->belongsTo('SwiftACPRequest','ac_id');
+        return $this->belongsTo('SwiftACPRequest','acp_id');
     }
     
     /*

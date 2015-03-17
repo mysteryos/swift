@@ -136,6 +136,14 @@ class SwiftNodeActivity extends Eloquent
     {
         return self::where('workflow_activity_id','=',$workflow_activity_id)->orderBy('created_at','desc')->get();
     }
+
+    public static function countByWorkflowAndDefinitionPending($workflow_activity_id,$node_definition_id)
+    {
+        return self::where('workflow_activity_id','=',$workflow_activity_id)
+                    ->where('node_definition_id','=',$node_definition_id,'AND')
+                    ->inprogress()
+                    ->count();
+    }
     
     public static function getLateNodes($workflowType,$limit=0,$offset=0)
     {

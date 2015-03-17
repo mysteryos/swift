@@ -14,10 +14,7 @@ Class NodeDefinition {
 
     public static function acpPreparation($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($acp))
@@ -31,12 +28,12 @@ Class NodeDefinition {
                 $invoice = $invoiceArray->first();
                 //Verify if invoice has all necessary information
 
-                if($invoice->date === "")
+                if($invoice->date === null)
                 {
                     $returnReasonList['date'] = "Enter invoice date issued";
                 }
 
-                if($invoice->due_date === "")
+                if($invoice->due_date === null)
                 {
                     $returnReasonList['invoice_due_date'] = "Enter invoice due date";
                 }
@@ -84,20 +81,17 @@ Class NodeDefinition {
 
     public static function acpHodApproval($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
-            $approvals = $acp->approval()->get();
+            $approvals = $acp->approvalHod()->get();
             if(count($approvals))
             {
                 foreach($approvals as $a)
                 {
-                    if(in_array($a->type,[\SwiftApproval::APPROVED,\SwiftApproval::REJECTED]))
+                    if(in_array($a->approved,[\SwiftApproval::APPROVED,\SwiftApproval::REJECTED]))
                     {
                         return true;
                     }
@@ -141,10 +135,7 @@ Class NodeDefinition {
 
     public static function acpPaymentvoucher($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($acp))
@@ -166,10 +157,7 @@ Class NodeDefinition {
 
     public static function acpPaymentissue($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($acp))
@@ -214,17 +202,14 @@ Class NodeDefinition {
 
     public static function acpChequeSign($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($acp))
         {
             $chequeNotSignedCount = $acp
                                     ->payment()
-                                    ->where('status','<',\SwiftACPRequest::STATUS_SIGNED)
+                                    ->where('status','<',\SwiftACPPayment::STATUS_SIGNED)
                                     ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE)
                                     ->count();
             
@@ -244,17 +229,14 @@ Class NodeDefinition {
 
     public static function acpChequeReady($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($acp))
         {
             $chequeNotReadyCount = $acp
                                     ->payment()
-                                    ->where('status','<',\SwiftACPRequest::STATUS_DISPATCHED)
+                                    ->where('status','<',\SwiftACPPayment::STATUS_DISPATCHED)
                                     ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE)
                                     ->count();
             if($chequeNotReadyCount > 0)
@@ -279,10 +261,7 @@ Class NodeDefinition {
 
     public static function acpBanktransfer($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($acp))

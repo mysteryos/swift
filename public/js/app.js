@@ -133,7 +133,7 @@ function pusher_global()
 
 function executePageScript()
 {
-    if(typeof document.getElementById('content').getAttribute('data-js') !== "undefined")
+    if(typeof document.getElementById('content').getAttribute('data-js') !== null)
     {
         var functionName = document.getElementById('content').getAttribute('data-js').toString();
         if(typeof main[functionName] === "function")

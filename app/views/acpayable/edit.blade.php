@@ -9,7 +9,7 @@
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalowner/{{ Crypt::encrypt($form->id) }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
-            @if($publishAccounting)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalaccounting/{{ Crypt::encrypt($form->id) }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
+            @if($publishAccounting && $current_activity['status'] === SwiftWorkflowActivity::INPROGRESS && ($isAccountingDept || $isAdmin))<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalaccounting/{{ Crypt::encrypt($form->id) }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($edit)<a class="btn btn-default btn-help" data-href="/{{ $rootURL }}/help/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/{{ $rootURL }}/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{ Crypt::encrypt($form->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
@@ -18,8 +18,8 @@
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalowner/{{ Crypt::encrypt($form->id) }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
-            @if($publishAccounting)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalaccounting/{{ Crypt::encrypt($form->id) }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
+            @if($publishOwner && $current_activity['status'] === SwiftWorkflowActivity::INPROGRESS)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalowner/{{ Crypt::encrypt($form->id) }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
+            @if($publishAccounting && $current_activity['status'] === SwiftWorkflowActivity::INPROGRESS && ($isAccountingDept || $isAdmin))<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalaccounting/{{ Crypt::encrypt($form->id) }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($edit)<a class="btn btn-default btn-help" data-href="/{{ $rootURL }}/help/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/{{ $rootURL }}/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif            
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{ Crypt::encrypt($form->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
@@ -132,6 +132,61 @@
                 </div>
                 <!-- end widget -->
 
+                <div class="jarviswidget" id="acp-invoice" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-ticket"></i> </span>
+                        <h2>Invoice</h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form class="form-horizontal">
+                                    @if($form->invoice)
+                                        <?php $form->invoice->id = Crypt::encrypt($form->invoice->id); ?>
+                                        @include('acpayable.edit_invoice',array('i'=>$form->invoice))
+                                    @else
+                                        @include('acpayable.edit_invoice')
+                                    @endif
+                                    @include('acpayable.edit_invoice',array('dummy'=>true,'i'=>null))
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+
+                <div class="jarviswidget" id="acp-hod-approval" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-check"></i> </span>
+                        <h2>Approval HOD</h2>
+                        @if($edit && $isAdmin)
+                            <div class="widget-toolbar" role="menu">
+                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                            </div>
+                        @endif
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form class="form-horizontal">
+                                    @if(count($form->approvalHod))
+                                        @foreach($form->approvalHod as &$approvalHod)
+                                            <?php $approvalHod->id = Crypt::encrypt($approvalHod->id); ?>
+                                            @include('acpayable.edit_approval_hod',array('approval'=>$approvalHod))
+                                        @endforeach
+                                    @else
+                                        @include('acpayable.edit_approval_hod')
+                                    @endif
+                                    @include('acpayable.edit_approval_hod',array('dummy'=>true,'approval'=>null))
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+
                 <div class="jarviswidget" id="acp-creditnote" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file"></i> </span>
@@ -163,29 +218,6 @@
                     <!-- end widget div -->
                 </div>
 
-                <div class="jarviswidget" id="acp-invoice" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-                    <header>
-                        <span class="widget-icon"> <i class="fa fa-ticket"></i> </span>
-                        <h2>Invoice</h2>
-                    </header>
-                    <!-- widget div-->
-                    <div>
-                        <!-- widget content -->
-                        <div class="widget-body">
-                            <form class="form-horizontal">
-                                    @if($form->invoice)
-                                        <?php $form->invoice->id = Crypt::encrypt($form->invoice->id); ?>
-                                        @include('acpayable.edit_invoice',array('i'=>$form->invoice))
-                                    @else
-                                        @include('acpayable.edit_invoice')
-                                    @endif
-                                    @include('acpayable.edit_invoice',array('dummy'=>true,'i'=>null))
-                            </form>
-                        </div>
-                        <!-- end widget content -->
-                    </div>
-                    <!-- end widget div -->
-                </div>
                 <div class="jarviswidget" id="acp-paymentvoucher" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file-archive-o"></i> </span>
@@ -211,6 +243,7 @@
                     </div>
                     <!-- end widget div -->
                 </div>
+
                 <div class="jarviswidget" id="acp-payment" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-money"></i> </span>

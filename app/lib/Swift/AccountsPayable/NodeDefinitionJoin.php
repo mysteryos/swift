@@ -21,12 +21,11 @@ Class NodeDefinitionJoin {
     {
         //Only if approval of HOD is rejected
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
-            $approval = $acp->approval()
+            $approval = $acp->approvalHod()
                         ->orderBy('created_at','DESC')
                         ->where('approved','!=',\SwiftApproval::PENDING)
-                        ->where('type','=',\SwiftApproval::APC_HOD)
                         ->first();
             if($approval)
             {
@@ -45,10 +44,9 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            $approval = $acp->approval()
+            $approval = $acp->approvalHod()
                         ->orderBy('created_at','DESC')
                         ->where('approved','!=',\SwiftApproval::PENDING)
-                        ->where('type','=',\SwiftApproval::APC_HOD)
                         ->first();
             if($approval)
             {
@@ -137,10 +135,15 @@ Class NodeDefinitionJoin {
             $amountPaid = \SwiftACPPayment::sumTotalAmountPaid($acp->id);
 
             /*
-             * Amount is due
+             * Amount is still due
              */
             if(round($amountPaid,0) < round($amountDue,0))
             {
+                //Create new pending approval for payment
+                $approval = new \SwiftApproval([
+                    'type' => \SwiftApproval::APC_PAYMENT
+                ]);
+                $acp->approval()->save($approval);
                 return true;
             }
         }

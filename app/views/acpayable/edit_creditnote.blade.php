@@ -8,5 +8,6 @@
         </div>
     </div>
     <legend class="top"></legend>
+    @if(!isset($dummy) && isset($c))<span class="float-id">ID: {{ Crypt::decrypt($c->id) }}</span> @endif
     @if($edit)<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/creditnote"><i class="fa fa-trash-o"></i></a>@endif
 </fieldset>

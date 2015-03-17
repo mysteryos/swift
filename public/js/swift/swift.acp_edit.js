@@ -5,7 +5,7 @@ function addMulti($dummy,pk)
     $clone.find('.editable').removeClass('dummy');
     $clone.find('.editable').editable({
         disabled: $(this).hasClass('editable-disabled'),
-        onblur: 'submit'
+        onblur: $(this).hasClass('editable-noblur') ? 'cancel' : 'submit'
     }).on('save',function(e,params){
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
@@ -19,6 +19,11 @@ function addMulti($dummy,pk)
             //Trigger Single Value Save as well
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
         }
+        if(this.getAttribute('data-name')=="type" && this.getAttribute('data-context')=="payment")
+        {
+            $(this).parents('fieldset.fieldset-payment').find('div[class^="payment-"]').hide();
+            $(this).parents('fieldset.fieldset-payment').find('div.payment-'+params.newValue).show();
+        }        
     }).on('shown',function(e){
         presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id})
     }).on('hidden',function(e,reason){
@@ -200,7 +205,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         {
             $this.editable({
                 disabled: $this.hasClass('editable-disabled'),
-                onblur: 'submit',
+                onblur: $this.hasClass('editable-noblur') ? 'cancel' : 'submit',
                 placeholder: 'Select a supplier',
                 select2: {
                     allowClear: false,
@@ -250,7 +255,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         {
             $this.editable({
                 disabled: $this.hasClass('editable-disabled'),
-                onblur: 'submit',
+                onblur: $this.hasClass('editable-noblur') ? 'cancel' : 'submit',
                 placeholder: "Select a billable company",
                 select2: {
                     allowClear: false,
@@ -298,12 +303,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     }                    
                 }
             });
-        }        
+        }
         else
         {
             $this.editable({
                 disabled: $this.hasClass('editable-disabled'),
-                onblur: 'submit'               
+                onblur: $this.hasClass('editable-noblur') ? 'cancel' : 'submit',
             });
         }
         
@@ -322,12 +327,41 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             }
             if(this.getAttribute('data-name')=="type" && this.getAttribute('data-context')=="payment")
             {
-                $(this).parents('fieldset.fieldset-payment').find('[class^="payment-"]').hide();
-                $(this).parents('fieldset.fieldset-payment').find('.payment-'+params.newValue).show();
+                $(this).parents('fieldset.fieldset-payment').find('div[class^="payment-"]').hide();
+                $(this).parents('fieldset.fieldset-payment').find('div.payment-'+params.newValue).show();
             }
             return true;
         });
     });
+    
+    //Multi
+    $('.creditnote-editable, .purchaseorder-editable, .invoice-editable, .paymentvoucher-editable, .payment-editable').on('save',function(e,params){
+        var $this = $(this);
+        //First time save, set primary key
+        if(this.getAttribute('data-pk') == "0")
+        {
+            //Remove Overlay
+            $this.parents('fieldset.multi').find('div.loading-overlay').remove();
+            var response = $.parseJSON(params.response);
+            //Set new pk value
+            addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
+            //Trigger Channel Event
+            presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $this.parents('fieldset').attr('data-name')});
+            //Trigger Single Value Save as well
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})
+        }
+        return true;
+    }).on('submit',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
+        }
+    }).on('error',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+        }        
+    });    
     
     
     /*
@@ -688,6 +722,47 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
        return false;
     });
+    
+    $('a.btn-publish').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $.SmartMessageBox({
+                title : "<span class='txt-color-greenDark'><i class='fa fa-share'></i> Publish Form?</span>",
+                content : "A notification will be sent to the responsible parties",
+                buttons : '[No][Yes]'
+
+        }, function(ButtonPressed) {
+            if (ButtonPressed == "Yes") {
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                    id: 'notif-top',
+                    errorMessage: 'Error: form not published',
+                    successMessage: 'Form has been published',
+                    progressMessage: 'Please Wait...',
+                    action: $.ajax,
+                },
+                {
+                    type:'POST',
+                    url: $this.attr('href'),
+                    success:function()
+                    {
+                        window.setTimeout(function(){
+                            $('a.btn-ribbon-refresh:first').click();
+                        },'2000');
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        return xhr.responseText;
+                    }
+                });                       
+            }
+            else
+            {
+                return false;
+            }
+
+        });        
+        return false;
+    });        
     
     //Enable Commenting
     enableComments();

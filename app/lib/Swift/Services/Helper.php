@@ -410,6 +410,15 @@ class Helper {
         }
     }
 
+    /*
+     * Save a Children relationship of a main model
+     * @param Object $main
+     * @param Class  $model
+     * @param String $relationName
+     * @param \Sentry\User $current_user
+     * @param Bool $workflow_update
+     * @return \Illuminate\Support\Facades\Response
+     */
     public function saveChildModel($main,$model,$relationName,$current_user,$workflow_update=false)
     {
         if(is_numeric(\Input::get('pk')))

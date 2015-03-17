@@ -256,6 +256,21 @@ class SwiftACPRequest extends Eloquent
     {
         return $this->morphMany('SwiftApproval','approvable');
     }
+
+    public function approvalHod()
+    {
+        return $this->morphMany('SwiftApproval','approvable')->where('type','=',\SwiftApproval::APC_HOD);
+    }
+
+    public function approvalRequester()
+    {
+        return $this->morphMany('SwiftApproval','approvable')->where('type','=',\SwiftApproval::APC_REQUESTER);
+    }
+
+    public function approvalPayment()
+    {
+        return $this->morphMany('SwiftApproval','approvable')->where('type','=',\SwiftApproval::APC_PAYMENT);
+    }
     
 
     /*
@@ -264,7 +279,7 @@ class SwiftACPRequest extends Eloquent
 
     public static function getById($id)
     {
-        return self::with(['supplier','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote','approval','document'])
+        return self::with(['supplier','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote','approvalHod','document'])
                     ->find($id);
     }
 

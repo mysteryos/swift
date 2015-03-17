@@ -6,7 +6,11 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <ol class="breadcrumb"><li>Home</li><li>Accounts Payable</li><li>Create</li></ol>
+            <ol class="breadcrumb">
+                <li>Home</li>
+                <li>Accounts Payable</li>
+                <li>Create</li>
+            </ol>
         </div>
 
 </div>
@@ -15,16 +19,16 @@
 <!-- MAIN CONTENT -->
 <div id="content" data-js="acp_create">
     <div class="row">
-	<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
-		<h1 class="page-title txt-color-blueDark">
-			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-gift"></i>
-				Accounts Payable
-			<span>&gt;
-				Create
-			</span>
-		</h1>
-	</div>
+        <div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+            <h1 class="page-title txt-color-blueDark">
+                <!-- PAGE HEADER -->
+                <i class="fa-fw fa fa-gift"></i>
+                    Accounts Payable
+                <span>&gt;
+                    Create
+                </span>
+            </h1>
+        </div>
     </div>
 
     <!-- widget grid -->
@@ -68,14 +72,14 @@
                                                     <div class="form-group">
                                                         <label class="col-md-2 control-label">Billable Company*</label>
                                                         <div class="col-md-10">
-                                                            <input type="hidden" class="full-width" id="ccode" name="billable_company_code" placeholder="Type in the company's name/code" />
+                                                            <input type="hidden" class="full-width" id="customercode" name="billable_company_code" placeholder="Type in the company's name/code" />
                                                         </div>
                                                     </div>
 
                                                     <div class="form-group">
                                                         <label class="col-md-2 control-label">Supplier*</label>
                                                         <div class="col-md-10">
-                                                            <input type="hidden" class="full-width" id="scode" name="supplier_code" placeholder="Type in the supplier's name/code" />
+                                                            <input type="hidden" class="full-width" id="suppliercode" name="supplier_code" placeholder="Type in the supplier's name/code" />
                                                         </div>
                                                     </div>
 

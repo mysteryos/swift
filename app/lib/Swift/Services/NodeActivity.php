@@ -80,9 +80,9 @@ class NodeActivity {
      */
     public function create($workflow_activity_id,SwiftNodeDefinition $node_definition)
     {
-        $nodeCheck = SwiftNodeActivity::getByWorkflowAndDefinition($workflow_activity_id,$node_definition->id);
-        //If node with same definition doesn't exists
-        if(!count($nodeCheck))
+        $nodeCheck = SwiftNodeActivity::countByWorkflowAndDefinitionPending($workflow_activity_id,$node_definition->id);
+        //If node with same definition doesn't exists and is pending
+        if($nodeCheck === 0)
         {
             $nodeActivity = new SwiftNodeActivity;
             $nodeActivity->node_definition_id = $node_definition->id;
@@ -145,7 +145,7 @@ class NodeActivity {
         
         switch($nodeActivity->definition->type)
         {
-            case SwiftNodeDefinition::$T_NODE_CONDITION:                
+            case SwiftNodeDefinition::$T_NODE_CONDITION:
             case SwiftNodeDefinition::$T_NODE_INPUT:
             case SwiftNodeDefinition::$T_NODE_ACTION:
                 $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));

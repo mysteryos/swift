@@ -75,7 +75,7 @@ class SwiftACPPayment extends Eloquent
     
     public $saveCreateRevision = true;
     public $softDelete = true;
-    public $revisionClassName =  "Accounts Payable Payment";
+    public $revisionClassName =  "Payment";
     public $revisionPrimaryIdentifier = "id";
     
     /* Elastic Search */
@@ -211,13 +211,12 @@ class SwiftACPPayment extends Eloquent
      * Query
      */
 
-    public function sumTotalAmountPaid($acp_id)
+    public static function sumTotalAmountPaid($acp_id)
     {
         return self::where('acp_id','=',$acp_id)
             ->groupBy('acp_id')
             ->whereNull('deleted_at')
-            ->sum('amount')
-            ->get();
+            ->sum('amount');
     }
     
 }

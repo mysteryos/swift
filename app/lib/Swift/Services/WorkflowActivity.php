@@ -311,7 +311,7 @@ class WorkflowActivity {
             default:
                 return "This workflow doesn't look good. Contact your administrator";
         }
-    }    
+    }
     
     public function cancel($relation_object)
     {

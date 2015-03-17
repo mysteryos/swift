@@ -162,20 +162,20 @@ Class NodeDefinition {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if(count($acp))
         {
-            $paymentCount = $acp->payment()->count();
-            if($paymentCount === 0)
+            $acp->load('payment');
+            if(count($acp->payment) === 0)
             {
                 $returnReasonList['payment_absent'] = "Input payment details";
             }
             else
             {
-                $payment = $acp->payment()->get();
                 //all payments should have an amount
-                foreach($payment as $p)
+                foreach($acp->payment as $p)
                 {
-                    if($p->amount === 0)
+                    if((float)$p->amount === 0 || $p->amount === null)
                     {
                         $returnReasonList['payment_amount_absent'] = "Input amount for payment ID: ".$p->id;
+                        break;
                     }
                 }
             }

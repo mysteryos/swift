@@ -21,7 +21,8 @@ class SwiftACPInvoice extends Eloquent
     protected $touches = array('acp');
 
     protected $attributes = [
-        'currency' => '96'
+        'currency' => '96',
+        'due_amount' => 0
     ];
 
     //Payment Term

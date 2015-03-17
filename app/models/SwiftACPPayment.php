@@ -22,7 +22,10 @@ class SwiftACPPayment extends Eloquent
     protected $touches = array('acp');
 
     protected $attributes = [
-        'currency' => '96'
+        'currency' => '96',
+        'amount' => 0,
+        'cheque_dispatch' => 0,
+        'journal_entry_number' => 0
     ];
 
     //Status

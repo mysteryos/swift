@@ -230,7 +230,7 @@ class AccountsPayableController extends UserController {
         if($acp)
         {
 
-            \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
+            //\Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
             /*
              * Set Read
              */
@@ -278,7 +278,7 @@ class AccountsPayableController extends UserController {
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
             $this->data['owner'] = Helper::getUserName($acp->owner_user_id,$this->currentUser);
             $this->data['edit'] = $edit;
-            $this->data['publishOwner'] = $this->data['publishAccounting'] = false;
+            $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = false;
             
             if($edit === true)
             {
@@ -307,6 +307,12 @@ class AccountsPayableController extends UserController {
                                 if(isset($d->data->publishAccounting) && ($this->data['isAdmin'] || $this->isAccountingDepartment))
                                 {
                                     $this->data['publishAccounting'] = true;
+                                    break;
+                                }
+
+                                if(isset($d->data->addCreditNote))
+                                {
+                                    $this->data['addCreditNote'] = true;
                                     break;
                                 }
                             }

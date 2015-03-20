@@ -518,6 +518,7 @@ class AccountsPayableController extends UserController {
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
             $this->data['flag_important'] = \Flag::isImportant($acp);
             $this->data['flag_starred'] = \Flag::isStarred($acp);
+            $this->data['po_type'] = json_encode(Helper::jsonobject_encode(\SwiftPurchaseOrder::$type));
             $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
             $this->data['owner'] = Helper::getUserName($acp->owner_user_id,$this->currentUser);

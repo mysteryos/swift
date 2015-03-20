@@ -13,22 +13,36 @@ class SwiftPurchaseOrder extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('reference');
+    protected $fillable = array('reference','type');
     
     public $timestamps = true;
     
     public $dates = ['deleted_at'];
+
+    protected $attributes = [
+        'type' => 'OF'
+    ];
+
+    //Types
+
+    public static $types = [
+        'OF' => 'OF',
+        'ON' => 'ON',
+        'OP' => 'OP',
+        'OT' => 'OT',
+    ];
     
     /* Revisionable Attributes */
     
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'reference','deleted_at'
+        'reference','type','deleted_at'
     );
     
     protected $revisionFormattedFieldNames = array(
         'reference' => 'Purchase Order No',
+        'type'  => 'Purchase Order Type'
     );
     
     public $keepCreateRevision = true;

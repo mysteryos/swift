@@ -163,8 +163,8 @@ class chclberth extends ScheduledCommand {
                                     $this->info('Match Score - '.$matchScore);
                                     $this->info('Match Order - '.$matchOrder->name);
 
-                                    //Match by at least 70% - We create story
-                                    if($matchScore >= 70)
+                                    //Match by at least 90% - We create story
+                                    if($matchScore >= 90)
                                     {
                                         Story::relate($savecargo,SwiftStory::ACTION_VESSEL,1,get_class($o),$o->id);
                                     }

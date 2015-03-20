@@ -17,14 +17,15 @@ class SwiftACPPayment extends Eloquent
     
     protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number'];
     
-    protected $dates = ['deleted_at','date'];
+    protected $dates = ['deleted_at','date','validated_on'];
 
     protected $touches = array('acp');
 
     protected $attributes = [
         'currency' => '96',
         'amount' => 0,
-        'cheque_dispatch' => 0
+        'cheque_dispatch' => 0,
+        'validated'=>0
     ];
 
     //Status

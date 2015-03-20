@@ -66,6 +66,9 @@ Route::group(array('before' => array('auth')), function()
 
     //Accounts Payable
     Route::controller('accounts-payable','AccountsPayableController');
+
+    //Jde Purchase Order
+    Route::controller('jde-purchase-order','JdePurchaseOrderController');
     
 });
 

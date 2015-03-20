@@ -45,11 +45,11 @@
                                 }
                             });
                         },
-                        error: function (data) {
+                        error: function (xhr, status, error) {
                             $('#save-draft').removeAttr('disabled').removeClass('disable');
                             savemsg.update({
                                 type: 'error',
-                                message: 'Save Failed! Please retry.',
+                                message: xhr.responseText,
                                 hideAfter: 5
                             });
                         }
@@ -71,10 +71,10 @@
     $('#customercode').select2({
         placeholder: 'Enter a billable company code/name',
         allowClear: true,
-        minimumInputLength: 2,
+        minimumInputLength: 0,
         positionDropdownAbsolute: false,
         ajax: {
-             url: "/ajaxsearch/customercode",
+             url: "/ajaxsearch/acp-customercode",
              dataType: "json",
              quietMillis: 500,
              data: function (term, page) {
@@ -122,10 +122,10 @@
     $('#suppliercode').select2({
         placeholder: 'Enter a supplier code/name',
         allowClear: true,
-        minimumInputLength: 2,
+        minimumInputLength: 0,
         positionDropdownAbsolute: false,
         ajax: {
-             url: "/ajaxsearch/searchsupplier",
+             url: "/ajaxsearch/acp-searchsupplier",
              dataType: "json",
              quietMillis: 500,
              data: function (term, page) {

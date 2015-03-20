@@ -84,17 +84,10 @@
                                                     </div>
 
                                                     <div class="form-group">
-                                                        <label class="col-md-2 control-label">Name</label>
+                                                        <label class="col-md-2 control-label">Invoice number</label>
                                                         <div class="col-md-10">
-                                                             <input type="text" class="form-control" name="name" placeholder="Type in a name" />
+                                                             <input type="text" autocomplete="off" class="form-control" name="invoice_number" placeholder="Type in an invoice number" />
                                                         </div>
-                                                    </div>
-
-                                                    <div class="form-group">
-                                                            <label class="col-md-2 control-label">Description</label>
-                                                            <div class="col-md-10">
-                                                                <textarea name="description" rows="2" class="form-control" placeholder="Type in a description"></textarea>
-                                                            </div>
                                                     </div>
                                                 </fieldset>
                                             </div>

@@ -8,10 +8,14 @@ class SearchController extends UserController {
         $this->searchPermissions = array(
                                         'order-tracking'=>array('ot-view','ot-admin'),
                                         'aprequest'=>array('apr-view','apr-admin'),
+                                        'acpayable'=>array('acp-admin','acp-edit'),
+                                        'supplier'=>array('acp-view')
                                    );
         $this->searchCategory = array(
                                     'order-tracking' => 'Order Process',
-                                    'aprequest' => 'A&P Request'
+                                    'aprequest' => 'A&P Request',
+                                    'acpayable' => 'Accounts Payable',
+                                    'supplier' => 'JDE Supplier'
                                 );
     }
     
@@ -41,23 +45,23 @@ class SearchController extends UserController {
 
                 switch($line['_type'])
                 {
-                    case 'order-tracking':
-                        $result[] = array('icon'=>'fa-map-marker',
-                                          'title'=>'Order Process',
+                    case "supplier":
+                        $result[] = array('icon'=>'fa-truck',
+                                          'title'=> 'JDE Supplier',
+                                          'id' => $line['_id'],
+                                          'value'=>$line['_source'][$line['_type']]['name']." (Code: ".$line['_id'].")",
+                                          'url'=>Helper::generateUrl(JdeSupplierMaster::whereSupplierCode($line['_id'])->get()),
+                                          'highlight'=>$highlight);
+                        break;
+                    default:
+                        //order-tracking, acpayable, aprequest
+                        $contextClass = \Config::get('context.'.$line['_type']);
+                        $result[] = array('icon'=>(new $contextClass)->getIcon(),
+                                          'title'=> (new $contextClass)->readableName,
                                           'id' => $line['_id'],
                                           'value'=>$line['_source'][$line['_type']]['name'],
-                                          'url'=>Helper::generateUrl(SwiftOrder::find($line['_id'])),
+                                          'url'=>Helper::generateUrl($contextClass::find($line['_id'])),
                                           'highlight'=>$highlight);
-                        break;
-                    case 'aprequest':
-                        $result[] = array('icon'=>'fa-gift',
-                                          'title'=>'A&P Request',
-                                          'id' => $line['_id'],
-                                          'value'=>$line['_source']['aprequest']['name'],
-                                          'url'=>Helper::generateUrl(SwiftAPRequest::find($line['_id'])),
-                                          'highlight'=>$highlight);
-                        break;
-                    case 'acpayable':
                         break;
                 }
 

@@ -23,7 +23,7 @@ function addMulti($dummy,pk)
         {
             $(this).parents('fieldset.fieldset-payment').find('div[class^="payment-"]').hide();
             $(this).parents('fieldset.fieldset-payment').find('div.payment-'+params.newValue).show();
-        }        
+        }
     }).on('shown',function(e){
         presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id})
     }).on('hidden',function(e,reason){
@@ -457,7 +457,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     previewNode.style.display = "none";
     var removeFileEvent;
     var theAwesomeDropZone= new Dropzone(document.getElementById('content'),{
-        url:'/order-tracking/upload/'+$('#id').val(),
+        url:'/acpayable/upload/'+$('#id').val(),
         clickable: '#btn-upload',
         previewsContainer: "#upload-preview",
         previewTemplate: previewTemplate,
@@ -509,7 +509,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                             {
                                 $.ajax({    
                                     type:'DELETE',
-                                    url: '/order-tracking/upload/'+$(file.previewElement).attr('data-id'),
+                                    url: '/acpayable/upload/'+$(file.previewElement).attr('data-id'),
                                     success:function()
                                     {
                                         deletemsg.update({
@@ -560,7 +560,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
                     $.ajax({
                         type:'DELETE',
-                        url: '/order-tracking/upload/'+$thisParent.attr('data-id'),
+                        url: '/acpayable/upload/'+$thisParent.attr('data-id'),
                         success:function()
                         {
                             deletemsg.update({

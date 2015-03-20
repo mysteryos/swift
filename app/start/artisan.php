@@ -13,8 +13,9 @@
 
 Artisan::add(new chclcrawler);
 Artisan::add(new elasticsearch);
-Artisan::add(new sctjdeProducts);
+Artisan::add(new elasticsearchdaily);
 Artisan::add(new elasticsearchmapping);
+Artisan::add(new sctjdeProducts);
 Artisan::add(new dbclean);
 Artisan::add(new workflow);
 Artisan::add(new commission);

@@ -85,6 +85,222 @@ class AccountsPayableController extends UserController {
         return $this->makeView('acpayable/overview');
     }
 
+    public function getForms($type=false,$page=1)
+    {
+        $limitPerPage = 15;
+
+        $this->pageTitle = 'Forms';
+
+        //Check user group
+        if($type===false)
+        {
+            if(!$this->isAdmin)
+            {
+                //Set defaults
+                if($this->isAccountingDepartment)
+                {
+                    $type='inprogress';
+                }
+                else if($this->currentUser->hasPermission($this->createPermission))
+                {
+                    $type='mine';
+                }
+            }
+            else
+            {
+                $type='all';
+            }
+        }
+        else
+        {
+            //Creators can have access to their own only.
+            if(!$this->isAdmin && $this->currentUser->hasPermission($this->createPermission) && !in_array($type,['mine','starred']))
+            {
+                $type='mine';
+            }
+        }
+
+        $acprequestquery = SwiftACPRequest::query();
+
+        if($type != 'inprogress')
+        {
+            //Get node definition list
+            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
+            $node_definition_list = array();
+            foreach($node_definition_result as $v)
+            {
+                $node_definition_list[$v->id] = $v->label;
+            }
+            $this->data['node_definition_list'] = $node_definition_list;
+        }
+
+        switch($type)
+        {
+            case 'inprogress':
+                $acprequestquery->whereHas('workflow',function($q){
+                    return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                });
+                break;
+            case 'rejected':
+                $acprequestquery->whereHas('workflow',function($q){
+                   return $q->where('status','=',SwiftWorkflowActivity::REJECTED);
+                });
+                break;
+            case 'completed':
+                $acprequestquery->whereHas('workflow',function($q){
+                   return $q->where('status','=',SwiftWorkflowActivity::COMPLETE);
+                });
+                break;
+            case 'starred':
+                $acprequestquery->whereHas('flag',function($q){
+                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                });
+                break;
+            case 'important':
+                $acprequestquery->whereHas('flag',function($q){
+                   return $q->where('type','=',SwiftFlag::IMPORTANT,'AND');
+                });
+                break;
+            case 'mine':
+                $acprequestquery->where('owner_user_id','=',$this->currentUser->id);
+                break;
+            case 'all':
+                $acprequestquery->orderBy('updated_at','desc');
+                break;
+        }
+
+        //Filters
+        if(Input::has('filter'))
+        {
+
+            if(Session::has('acp_form_filter'))
+            {
+                $filter = Session::get('acp_form_filter');
+            }
+            else
+            {
+                $filter = array();
+            }
+
+            $filter[Input::get('filter_name')] = Input::get('filter_value');
+
+            /*
+             * loop & Apply all filters
+             */
+            foreach($filter as $f_name => $f_val)
+            {
+                switch($f_name)
+                {
+                    case 'business_unit':
+                        $acprequestquery->where('business_unit','=',$f_val);
+                        break;
+                    case 'node_definition_id':
+                        $acprequestquery->whereHas('workflow',function($q) use($f_val){
+                           return $q->whereHas('nodes',function($q) use($f_val){
+                               return $q->where('node_definition_id','=',$f_val);
+                           });
+                        });
+                        break;
+                }
+            }
+
+            Session::flash('acp_form_filter',$filter);
+
+        }
+        else
+        {
+            Session::forget('acp_form_filter');
+        }
+
+        $formsCount = $acprequestquery->count();
+        if($type != 'inprogress')
+        {
+            /*
+             * If not in progress, we limit rows
+             */
+            $acprequestquery->take($limitPerPage);
+            if($page > 1)
+            {
+                $acprequestquery->offset(($page-1)*$limitPerPage);
+            }
+        }
+        $forms = $acprequestquery->get();
+
+        /*
+         * Fetch latest history;
+         */
+        foreach($forms as $k => &$f)
+        {
+
+            //Set Current Workflow Activity
+            $f->current_activity = WorkflowActivity::progress($f);
+
+            //If in progress, we filter
+            if($type == 'inprogress')
+            {
+                $hasAccess = false;
+                /*
+                 * Loop through node definition and check access
+                 */
+                if(isset($f->current_activity['definition']))
+                {
+                    foreach($f->current_activity['definition'] as $d)
+                    {
+                        if(NodeActivity::hasAccess($d,SwiftNodePermission::RESPONSIBLE))
+                        {
+                            $hasAccess = true;
+                            break;
+                        }
+                    }
+                }
+
+                /*
+                 * No Access : We Remove order from list
+                 */
+                if(!$hasAccess)
+                {
+                    unset($forms[$k]);
+                    $formsCount--;
+                    continue;
+                }
+            }
+            else
+            {
+                if(isset($filter) && isset($filter['node_definition_id']))
+                {
+                    if(!isset($f->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$f->current_activity['definition']))
+                    {
+                        unset($forms[$k]);
+                        $formsCount--;
+                        break;
+                    }
+                }
+            }
+
+            //Set Revision
+            $f->revision_latest = Helper::getMergedRevision($f->revisionRelations,$f);
+
+            //Set Starred/important
+            $f->flag_starred = Flag::isStarred($f);
+            $f->flag_important = Flag::isImportant($f);
+            $f->flag_read = Flag::isRead($f);
+        }
+
+        //The Data
+        $this->data['type'] = $type;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->createPermission,$this->adminPermission]);
+        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
+        $this->data['forms'] = $forms;
+        $this->data['count'] = isset($filter) ? $formsCount : SwiftAPRequest::count();
+        $this->data['page'] = $page;
+        $this->data['limit_per_page'] = $limitPerPage;
+        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
+        $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
+        $this->data['rootURL'] = $this->rootURL;
+
+        return $this->makeView("acpayable/forms");
+    }
+
     public function getCreate()
     {
         $this->pageTitle = 'Create';
@@ -112,42 +328,70 @@ class AccountsPayableController extends UserController {
 
         $validator = Validator::make(Input::all(),
                     array('billable_company_code'=>['required','numeric'],
-                          'supplier_code'=>['required','numeric'],
+                          'supplier_code'=>['required','numeric']
                         )
                 );
 
         if($validator->fails())
         {
-            return json_encode(['success'=>0,'errors'=>$validator->errors()]);
+            return Response::make($validator->errors(),400);
         }
         else
         {
-            $acp = new SwiftACPRequest();
-            $acp->fill(Input::all());
-            if($acp->save())
+            $inputData = Input::all();
+            $invoiceExist = new \Illuminate\Database\Eloquent\Collection();
+            if($inputData['invoice_number'] !== "")
             {
-                //Start the Workflow
-                if(\WorkflowActivity::update($acp,$this->context))
-                {
-                    //Story Relate
-                    Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
-                                                         'obj_id'=>$acp->id,
-                                                         'action'=>SwiftStory::ACTION_CREATE,
-                                                         'user_id'=>$this->currentUser->id,
-                                                         'context'=>get_class($acp)));
-                    $id = Crypt::encrypt($acp->id);
-                    //Success
-                    echo json_encode(['success'=>1,'url'=>"/{$this->rootURL}/edit/$id"]);
-                }
-                else
-                {
-                    return Response::make("Failed to save workflow",400);
-                }
+                //See if invoice number already exists
+                $invoiceExist = \SwiftACPRequest::where('billable_company_code','=',\Input::get('billable_company_code'))
+                                ->where('supplier_code','=',\Input::get('supplier_code'),'AND')
+                                ->whereHas('invoice',function($q) use ($inputData){
+                                    return $q->where('number','=',$inputData['invoice_number']);
+                                })->whereHas('workflow',function($q){
+                                    return $q->inprogress();
+                                })->get();
+            }
+            
+            if(count($invoiceExist))
+            {
+                return Response::make("Invoice already exists for supplier: <a href='".Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
             }
             else
             {
-                echo "";
-                return false;
+                $acp = new SwiftACPRequest();
+                $acp->fill($inputData);
+                if($acp->save())
+                {
+                    if($inputData['invoice_number'] !== "")
+                    {
+                        $invoice = new SwiftACPInvoice([
+                            'number' => $inputData['invoice_number']
+                        ]);
+                        $acp->invoice()->save($invoice);
+                    }
+                    //Start the Workflow
+                    if(\WorkflowActivity::update($acp,$this->context))
+                    {
+                        //Story Relate
+                        Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
+                                                             'obj_id'=>$acp->id,
+                                                             'action'=>SwiftStory::ACTION_CREATE,
+                                                             'user_id'=>$this->currentUser->id,
+                                                             'context'=>get_class($acp)));
+                        $id = Crypt::encrypt($acp->id);
+                        //Success
+                        echo json_encode(['success'=>1,'url'=>"/{$this->rootURL}/edit/$id"]);
+                    }
+                    else
+                    {
+                        return Response::make("Failed to save workflow",400);
+                    }
+                }
+                else
+                {
+                    echo "";
+                    return false;
+                }
             }
         }
     }
@@ -524,45 +768,64 @@ class AccountsPayableController extends UserController {
             switch(Input::get('name'))
             {
                 case "number":
+                    $invoiceExist = new \Illuminate\Database\Eloquent\Collection();
+                    if(Input::get('value') !== "")
+                    {
+                        //See if invoice number already exists
+                        $invoiceExist = \SwiftACPRequest::where('billable_company_code','=',$acp->billable_company_code)
+                                        ->where('supplier_code','=',$acp->supplier_code,'AND')
+                                        ->where('id','!=',$acp->id,'AND')
+                                        ->whereHas('invoice',function($q){
+                                            return $q->where('number','=',Input::get('value'));
+                                        })->whereHas('workflow',function($q){
+                                            return $q->inprogress();
+                                        })->get();
+                    }
+
+                    if(count($invoiceExist))
+                    {
+                        return \Response::make("Invoice already exists: <a href='".Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
+                    }
+                    break;
                 case "date":
                 case "due_date":
                 case "gl_code":
                     break;
                 case "due_amount":
-                    if(Input::get('value') !== "" && !is_numeric(Input::get('value')))
+                    if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')))
                     {
-                        return Response::make('Please enter a numeric value.',400);
+                        return \Response::make('Please enter a numeric value.',400);
                     }
-                    if(is_numeric(Input::get('value')) && Input::get('value') <= 0)
+                    if((is_numeric(\Input::get('value')) && (int)\Input::get('value') <= 0) || Input::get('value')==="")
                     {
-                        return Response::make('Please enter a valid amount',400);
+                        return \Response::make('Please enter a valid amount',400);
                     }
                     break;
                 case "payment_term":
-                    if(!array_key_exists(Input::get('value'),\SwiftACPInvoice::$paymentTerm))
+                    if(!array_key_exists(\Input::get('value'),\SwiftACPInvoice::$paymentTerm))
                     {
-                        return Response::make('Please enter a valid payment Term');
+                        return \Response::make('Please enter a valid payment Term');
                     }
                     break;
                 case "currency":
-                    if(Input::get('value') !== "" && !is_numeric(Input::get('value')))
+                    if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')))
                     {
-                        return Response::make('Please select a valid currency.',400);
+                        return \Response::make('Please select a valid currency.',400);
                     }
                     break;
                 default:
-                    return Response::make('Unknown Field',400);
+                    return \Response::make('Unknown Field',400);
                     break;
             }
 
             /*
              * New Invoice
              */
-            return Helper::saveChildModel($acp,"\SwiftACPInvoice","invoice",$this->currentUser,false);
+            return \Helper::saveChildModel($acp,"\SwiftACPInvoice","invoice",$this->currentUser,false);
         }
         else
         {
-            return Response::make('Accounts Payable process form not found',404);
+            return \Response::make('Accounts Payable process form not found',404);
         }
     }
 
@@ -624,7 +887,7 @@ class AccountsPayableController extends UserController {
                 case "currency":
                     break;
                 case "amount":
-                case "journal_entry_number":
+                case "payment_number":
                     if(Input::get('value')!== "" && !is_numeric(Input::get('value')))
                     {
                         return Response::make('Please enter a numeric value',400);
@@ -662,7 +925,53 @@ class AccountsPayableController extends UserController {
             /*
              * New Payment
              */
-            return \Helper::saveChildModel($acp,"\SwiftACPPayment","payment",$this->currentUser,true);
+            if(is_numeric(\Input::get('pk')))
+            {
+
+                if(\Input::get('name') !== "type")
+                {
+                    return \Response::make('Please select type of payment first',400);
+                }
+
+                //All Validation Passed, let's save
+                $model_obj = new \SwiftACPPayment();
+                $model_obj->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
+                if(\Input::get('value')===\SwiftACPPayment::TYPE_CHEQUE)
+                {
+                    $model_obj->status = \SwiftACPPayment::STATUS_ISSUED;
+                }
+                if($acp->payment()->save($model_obj))
+                {
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
+                    return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($model_obj->id),'id'=>$model_obj->id]));
+                }
+                else
+                {
+                    return \Response::make('Failed to save. Please retry',400);
+                }
+
+            }
+            else
+            {
+                $model_obj = SwiftACPPayment::find(\Crypt::decrypt(\Input::get('pk')));
+                if($model_obj)
+                {
+                    $model_obj->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
+                    if($model_obj->save())
+                    {
+                        \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
+                        return \Response::make('Success');
+                    }
+                    else
+                    {
+                        return \Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return \Response::make('Error saving: Invalid PK',400);
+                }
+            }
         }
         else
         {
@@ -1099,7 +1408,7 @@ class AccountsPayableController extends UserController {
             return parent::forbidden();
         }
 
-        $acp = SwiftACPequest::find(Crypt::decrypt($id));
+        $acp = SwiftACPRequest::find(Crypt::decrypt($id));
         /*
          * Manual Validation
          */
@@ -1107,7 +1416,7 @@ class AccountsPayableController extends UserController {
         {
             if(Input::file('file'))
             {
-                $doc = new SwiftAPDocument();
+                $doc = new SwiftACPDocument();
                 $doc->document = Input::file('file');
                 if($acp->document()->save($doc))
                 {
@@ -1130,6 +1439,50 @@ class AccountsPayableController extends UserController {
         else
         {
             return Response::make('Accounts Payable form not found',404);
+        }
+    }
+
+    public function postSupplierUpload($id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        $supplier = \JdeSupplierMaster::find($id);
+        /*
+        * Manual Validation
+         */
+        if($supplier)
+        {
+            if(Input::file('file'))
+            {
+                $doc = new SwiftSupplierDocument();
+                $doc->document = Input::file('file');
+                if($supplier->document()->save($doc))
+                {
+                    echo json_encode(['success'=>1,
+                                    'url'=>$doc->getAttachedFiles()['document']->url(),
+                                    'id'=>Crypt::encrypt($doc->id),
+                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(),
+                                    'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
+                }
+                else
+                {
+                    return Response::make('Upload failed.',400);
+                }
+            }
+            else
+            {
+                return Response::make('File not found.',400);
+            }
+        }
+        else
+        {
+            return Response::make('Supplier form not found',404);
         }
     }
 
@@ -1185,7 +1538,7 @@ class AccountsPayableController extends UserController {
 
         if(Input::get('pk') && !is_numeric(Input::get('pk')))
         {
-            $doc = SwiftAPDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
+            $doc = SwiftACPDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
             if($doc)
             {
                 //Lets check those tags
@@ -1363,6 +1716,137 @@ class AccountsPayableController extends UserController {
     {
         return Flag::set($type,'SwiftACPRequest',$this->adminPermission);
     }
+
+    /*
+     * Suppliers: Start
+     */
+
+    public function getSupplierList($filter=false,$page=1)
+    {
+        if(!$this->currentUser->hasAccess($this->viewPermission))
+        {
+            return parent::forbidden();
+        }
+
+        $limitPerPage = 30;
+
+        $this->pageTitle = 'Supplier List';
+
+        $alphabetSoup = $this->data['alphabetSoup'] = range('A','Z');
+        if($filter!==false && $filter!=="all" && $filter!=="active")
+        {
+            $filter = strtoupper($filter);
+            if(!in_array($filter,$alphabetSoup))
+            {
+                return parent::notfound();
+            }
+        }
+
+        if($filter === false)
+        {
+            $filter = "all";
+        }
+
+        $supplierQuery = \JdeSupplierMaster::query();
+
+        //We have a filter by alphabet
+        if(strlen($filter) == 1)
+        {
+            $supplierQuery->where('Supplier_Name','LIKE',$filter.'%');
+            $formsCount = $supplierQuery->count();
+        }
+        else
+        {
+            switch($filter)
+            {
+                case "active":
+                    $supplierQuery->has('invoice');
+                    $formsCount = $supplierQuery->count();
+                    break;
+            }
+        }
+
+        $supplierQuery->take($limitPerPage);
+        if($page > 1)
+        {
+            $supplierQuery->offset(($page-1)*$limitPerPage);
+        }
+        
+        $forms = $supplierQuery
+                 ->orderBy('Supplier_Name','ASC')
+                 ->with('invoice')
+                 ->get();
+
+        $this->data['filter'] = $filter;
+        $this->data['forms'] = $forms;
+        $this->data['count'] = $filter === "all" ? JdeSupplierMaster::count() : $formsCount;
+        $this->data['page'] = $page;
+        $this->data['limit_per_page'] = $limitPerPage;
+        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
+        $this->data['edit_access'] = $this->isHOD || $this->isAccountingDept;
+
+        return $this->makeView("acpayable/suppliers");
+    }
+
+    public function getSupplier($mode,$supplier_code=false)
+    {
+        if($supplier_code === false)
+        {
+            return parent::notfound();
+        }
+
+        $supplier = \JdeSupplierMaster::with(['acp'=>function($q) {
+                        return $q->orderBy('updated_at','DESC');
+                    },'document','credit'])
+                    ->find($supplier_code);
+
+        if($supplier)
+        {
+            //Check access to mode
+            if($mode=='edit')
+            {
+                if(!$this->isAccountingDept && !$this->isAdmin)
+                {
+                    $mode='view';
+                }
+            }
+            else
+            {
+                $mode = 'view';
+            }
+
+            /*
+             * Scott's Total Amount Due
+             */
+
+            foreach($supplier->acp as &$acp)
+            {
+                $acp->current_activity = \WorkflowActivity::progress($acp,$this->context);
+            }
+
+            /*
+             * Enable Commenting
+             */
+            $this->enableComment($supplier);
+            
+            $this->pageTitle = $supplier->getReadableName();
+            
+            $this->data['edit'] = $mode==='edit' ? true : false;
+            $this->data['form'] = $supplier;
+            $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$supplierTags));
+            $this->data['activity'] = Helper::getMergedRevision(['credit'],$supplier,true);
+            
+            return $this->makeView('acpayable/supplier_single');
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+
+    /*
+     * Suppliers: End
+     */
 
     /*
      * Overview : Ajax Widgets

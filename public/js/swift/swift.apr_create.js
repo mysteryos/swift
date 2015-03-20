@@ -1,5 +1,5 @@
 /* 
- * Name: Order Tracking: Create Form
+ * Name: A&P Request: Create Form
  */
 (window.apr_create = function() {
     $('#aprequest-create-form').validate({

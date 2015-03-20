@@ -269,7 +269,7 @@ Class NodeDefinition {
             $bankNoJournalEntryCount = $acp
                                         ->payment()
                                         ->where('type','=',\SwiftACPPayment::TYPE_BANKTRANSFER)
-                                        ->where('journal_entry_number','=',0)
+                                        ->where('payment_number','=',0)
                                         ->count();
 
             if($bankNoJournalEntryCount > 0)

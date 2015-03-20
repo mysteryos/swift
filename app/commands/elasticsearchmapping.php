@@ -51,6 +51,7 @@ class elasticsearchmapping extends Command {
                         case "order-tracking":
                         case "aprequest":
                         case "acpayable":
+                        case "supplier":
                             $params['type'] = $context;
                             $params['body'][$context] = Config::get('elasticsearchmapping.'.$context);
                             break;
@@ -71,6 +72,7 @@ class elasticsearchmapping extends Command {
                         case "order-tracking":
                         case "aprequest":
                         case "acpayable":
+                        case "supplier":
                             $params['type'] = $context;
                             break;
                         default:

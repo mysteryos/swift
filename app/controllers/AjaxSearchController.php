@@ -88,6 +88,104 @@ Class AjaxSearchController extends UserController {
             echo json_encode(array('total'=>0));
         }          
     }
+
+    /*
+     * URL: /accounts-payable/create
+     * Description: Fetches list of customers from SCT_JDE
+     */
+
+    public function getAcpCustomercode()
+    {
+        $limit = 10;
+        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
+
+        if(Input::get('term')==="")
+        {
+            //Get Most Popular customers
+            $searchresult = \SwiftACPRequest::groupBy('billable_company_code')
+                            ->select(\DB::Raw('COUNT(*) as count, jdecustomers.ALPH, jdecustomers.AN8, jdecustomers.AC09'))
+                            ->limit($limit)
+                            ->offset($offset)
+                            ->orderBy('count','DESC')
+                            ->join('SCT_JDE.jdecustomers','swift_acp_request.billable_company_code','=','jdecustomers.an8')
+                            ->remember(5)->get();
+
+            $total = \SwiftACPRequest::distinct('billable_company_code')
+                    ->join('SCT_JDE.jdecustomers','swift_acp_request.billable_company_code','=','jdecustomers.an8')
+                    ->remember(5)->count('billable_company_code');
+        }
+        else
+        {
+            if(is_numeric(Input::get('term')))
+            {
+                $searchresult = JdeCustomer::getByCode(Input::get('term'),$offset,$limit);
+                $total = JdeCustomer::countByCode(Input::get('term'));
+            }
+            else
+            {
+                $searchresult = JdeCustomer::getByName(Input::get('term'),$offset,$limit);
+                $total = JdeCustomer::countByName(Input::get('term'));
+            }
+        }
+        
+        if($searchresult !== false)
+        {
+            echo json_encode(array('customers'=>$searchresult,'total'=>$total));
+        }
+        else
+        {
+            echo json_encode(array('total'=>0));
+        }
+    }
+
+    /*
+     * URL: /accounts-payable/create
+     * Description: Fetch list of suppliers from SCT_JDE -> jdesuppliermaster
+     */
+    public function getAcpSearchsupplier()
+    {
+        $limit = 10;
+        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
+
+
+        if(Input::get('term')==="")
+        {
+            //Get Most Popular customers
+            $searchresult = \SwiftACPRequest::groupBy('supplier_code')
+                            ->select(array(\DB::Raw('COUNT(*) as count'), 'jdesuppliermaster.*'))
+                            ->limit($limit)
+                            ->offset($offset)
+                            ->orderBy('count','DESC')
+                            ->join('SCT_JDE.jdesuppliermaster','swift_acp_request.supplier_code','=','jdesuppliermaster.Supplier_Code')
+                            ->remember(5)->get();
+
+            $total = \SwiftACPRequest::join('SCT_JDE.jdesuppliermaster','swift_acp_request.supplier_code','=','jdesuppliermaster.Supplier_Code')
+                    ->select(array(\DB::raw('DISTINCT(swift_acp_request.supplier_code)')))
+                    ->remember(5)->count('swift_acp_request.supplier_code');
+        }
+        else
+        {
+            if(is_numeric(Input::get('term')))
+            {
+                $searchresult = JdeSupplierMaster::getByCode(Input::get('term'),$offset,$limit);
+                $total = JdeSupplierMaster::countByCode(Input::get('term'));
+            }
+            else
+            {
+                $searchresult = JdeSupplierMaster::getByName(Input::get('term'),$offset,$limit);
+                $total = JdeSupplierMaster::countByName(Input::get('term'));
+            }
+        }
+        
+        if($searchresult !== false)
+        {
+            echo json_encode(array('suppliers'=>$searchresult,'total'=>$total));
+        }
+        else
+        {
+            echo json_encode(array('total'=>0));
+        }
+    }
     
     /*
      * Name: Select2 X-editable function for getting JDE customers

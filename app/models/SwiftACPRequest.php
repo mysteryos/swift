@@ -12,11 +12,13 @@ class SwiftACPRequest extends Eloquent
 
     public $readableName = "Accounts Payable";
 
-    protected $table = "swift_acp_request";
+    protected $table = "scott_swift.swift_acp_request";
     
     protected $fillable = ['name','description','billable_company_code','owner_user_id','supplier_code'];
 
-    protected $appends = ['company_name','supplier_name'];
+    protected $appends = ['company_name','supplier_name','amount_due'];
+
+    protected $with = ['invoice','payment'];
     
     public $dates = ['deleted_at'];
 
@@ -30,7 +32,7 @@ class SwiftACPRequest extends Eloquent
     public $esMain = true;
     //Info Context
     public $esInfoContext = "acpayable";
-    public $esRemove = ['owner_user_id','supplier_name','company_name'];
+    public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due'];
     
     /* Revisionable */
     
@@ -68,7 +70,7 @@ class SwiftACPRequest extends Eloquent
         static::creating(function($model){
             $model->owner_user_id = Sentry::getUser()->id;
         });
-    }    
+    }
     
     /*
      * Accessors
@@ -123,6 +125,40 @@ class SwiftACPRequest extends Eloquent
     public function getSupplierCodeEsAttribute($val)
     {
         return $this->getSupplierCodeRevisionAttribute($val);
+    }
+
+    public function getAmountDueAttribute()
+    {
+        if($this->invoice)
+        {
+            if(count($this->payment))
+            {
+                $amountDue = \SwiftACPPayment::sumTotalAmountPaid($this->id);
+                if($this->invoice->due_amount <= 0)
+                {
+                    return 0;
+                }
+                else
+                {
+                    if($this->invoice->due_amount-$amountDue > 0)
+                    {
+                        return $this->invoice->due_amount-$amountDue;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                return $this->invoice->due_amount;
+            }
+        }
+        else
+        {
+            return 0;
+        }
     }
     
     /*
@@ -392,6 +428,5 @@ class SwiftACPRequest extends Eloquent
 
         return $this->owner_user_id === $user_id;
     }
-     
-    
+
 }

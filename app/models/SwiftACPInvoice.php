@@ -12,11 +12,11 @@ class SwiftACPInvoice extends Eloquent
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
     
-    protected $table = "swift_acp_invoice";
+    protected $table = "scott_swift.swift_acp_invoice";
     
-    protected $fillable = ['number','date','due_date','due_amount','payment_term','currency','gl_code'];
+    protected $fillable = ['number','date','date_received','due_date','due_amount','payment_term','currency','gl_code'];
     
-    protected $dates = ['deleted_at','date','due_date'];
+    protected $dates = ['deleted_at','date','due_date','date_received'];
 
     protected $touches = array('acp');
 
@@ -26,22 +26,24 @@ class SwiftACPInvoice extends Eloquent
     ];
 
     //Payment Term
-    const PAYMENT_CASH = 1;
+    const PAYMENT_DIRECTDEBIT = 1;
     const PAYMENT_CHEQUE = 2;
 
     public static $paymentTerm = [
-        self::PAYMENT_CASH => 'Cash',
-        self::PAYMENT_CHEQUE => 'Cheque'
+        self::PAYMENT_CHEQUE => 'Cheque',
+        self::PAYMENT_DIRECTDEBIT => 'Direct Debit',
     ];
 
     /* Revisionable */
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array();
+    protected $keepRevisionOf = array('date_received','date','due_date','due_amount','payment_term','currency','gl_code');
     
     protected $revisionFormattedFieldNames = array(
-        'date' => 'Date Received',
+        'id' => 'ID',
+        'date_received' => 'Date Received',
+        'date' => 'Invoice Date',
         'due_date' => 'Date Due',
         'due_amount' => 'Amount Due',
         'payment_term' => 'Payment Term',
@@ -51,7 +53,7 @@ class SwiftACPInvoice extends Eloquent
     
     public $saveCreateRevision = true;
     public $softDelete = true;
-    public $revisionClassName =  "Account Payable Invoice";
+    public $revisionClassName =  "Invoice";
     public $revisionPrimaryIdentifier = "id";
     
     /* Elastic Search */
@@ -79,6 +81,13 @@ class SwiftACPInvoice extends Eloquent
         static::bootElasticSearchEvent();
         
         static::bootRevisionable();
+
+        static::creating(function($model){
+            if($model->date_received === null)
+            {
+                $model->date_received = date('Y-m-d');
+            }
+        });
     }    
     
     /*

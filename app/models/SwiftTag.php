@@ -47,6 +47,8 @@ class SwiftTag extends eloquent {
     const AP_EVENTFLYER = 16;
     const ACP_INVOICE = 17;
     const ACP_CREDITNOTE = 18;
+
+    const SUPPLIER_BRN = 19;
         
     /*
      * Compilation of Order Tracking Tags
@@ -69,6 +71,8 @@ class SwiftTag extends eloquent {
     public static $acpayableTags = [self::ACP_INVOICE => "Invoice",
                                     self::ACP_CREDITNOTE => "Credit Note"
                                     ];
+
+    public static $supplierTags = [self::SUPPLIER_BRN => "BRN"];
     
     /*
      * Event Observers

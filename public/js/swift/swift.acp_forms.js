@@ -1,12 +1,11 @@
 /* 
- * Name: A&P Request Forms View
- * Description:
+ * Name: Accounts Payable Forms View
  */
 
 /*
 * Fixed table height
 */
-(window.apr_forms = function(){
+(window.acp_forms = function(){
     tableHeightSize();
 
     $(window).resize(function() {

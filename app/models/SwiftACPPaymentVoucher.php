@@ -12,7 +12,7 @@ class SwiftACPPaymentVoucher extends Eloquent
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
     
-    protected $table = "swift_acp_payment_voucher";
+    protected $table = "scott_swift.swift_acp_payment_voucher";
     
     protected $fillable = ['number'];
     

@@ -15,7 +15,7 @@ class SwiftACPPayment extends Eloquent
 
     protected $table = "swift_acp_payment";
     
-    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','journal_entry_number'];
+    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number'];
     
     protected $dates = ['deleted_at','date'];
 
@@ -24,8 +24,7 @@ class SwiftACPPayment extends Eloquent
     protected $attributes = [
         'currency' => '96',
         'amount' => 0,
-        'cheque_dispatch' => 0,
-        'journal_entry_number' => 0
+        'cheque_dispatch' => 0
     ];
 
     //Status
@@ -47,7 +46,7 @@ class SwiftACPPayment extends Eloquent
 
     public static $type = [
         self::TYPE_CHEQUE => 'Cheque',
-        self::TYPE_BANKTRANSFER => 'Bank Transfer'
+        self::TYPE_BANKTRANSFER => 'Bank Transfer',
     ];
 
     //Dispatch
@@ -64,7 +63,7 @@ class SwiftACPPayment extends Eloquent
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','journal_entry_number');
+    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','payment_number');
     
     protected $revisionFormattedFieldNames = array(
         'status' => 'Status',
@@ -73,12 +72,12 @@ class SwiftACPPayment extends Eloquent
         'amount' => 'Amount',
         'cheque_dispatch' => 'Cheque Dispatch',
         'cheque_dispatch_comment' => 'Cheque Comment',
-        'journal_entry_number' => 'Journal Entry Number'
+        'payment_number' => 'Payment Number'
     );
     
     public $saveCreateRevision = true;
     public $softDelete = true;
-    public $revisionClassName =  "Payment";
+    public $revisionClassName = "Payment";
     public $revisionPrimaryIdentifier = "id";
     
     /* Elastic Search */

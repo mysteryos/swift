@@ -31,6 +31,17 @@ class JdeCustomer extends Eloquent {
                 ->remember(self::$cache_expiry_time)
                 ->get();
     }
+
+    public function getIn(array $in,$offset,$limit)
+    {
+        return self::whereIn('an8',$in)
+                ->distinct()
+                ->limit($limit)
+                ->offset($offset)
+                ->select('ALPH','AN8','AC09')
+                ->remember(self::$cache_expiry_time)
+                ->get();
+    }
     
     public static function countByName($term)
     {

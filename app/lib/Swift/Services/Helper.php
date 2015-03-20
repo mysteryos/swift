@@ -117,10 +117,13 @@ class Helper {
         }
     }
     
-    public function getMergedRevision(array $arrayClass,&$obj)
+    public function getMergedRevision(array $arrayClass,&$obj,$only_relationships=false)
     {
         $revision = array();
-        $revision = array_merge($revision,$obj->revisionHistory()->get()->all());
+        if(!$only_relationships)
+        {
+            $revision = array_merge($revision,$obj->revisionHistory()->get()->all());
+        }
 
         $relstack = array();
         
@@ -192,6 +195,9 @@ class Helper {
                 break;
             case "SwiftACPRequest":
                 $url = "/accounts-payable/view/".Crypt::encrypt($obj->id);
+                break;
+            case "JdeSupplierMaster":
+                $url = "/accounts-payable/supplier/view/".trim($obj->Supplier_Code);
                 break;
             default:
                 $url ="javascript:void(0);";

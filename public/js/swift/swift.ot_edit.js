@@ -17,6 +17,13 @@ function addMulti($dummy,pk)
         {
             var response = $.parseJSON(params.response);
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+            
+            if(this.getAttribute('data-context')=="purchaseorder")
+            {
+                var $poLink = $(this).parents('fieldset').find('a.purchase-order-view');
+                $poLink.attr('href',$poLink.attr('href')+response.id);
+            }
+            
             //Set new pk value
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
             //Trigger Channel Event
@@ -193,7 +200,41 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
     //Bind pusher channel
     pusherSubscribeCurrentPresenceChannel(true,true);
-
+    
+    //ColorBox
+    
+    $('a.colorbox-ajax').colorbox({
+        maxHeight:"100%",
+        maxWidth:"100%",
+        initialWidth:"64px",
+        initialHeight:"84px",
+        closeButton:false
+    });
+    
+    /*
+     * Google Doc Viewer
+     */
+    $('a.file-view').on('click',function(e){
+        e.preventDefault();
+        $.colorbox({
+           href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+           maxHeight:"100%",
+           maxWidth:"90%",
+           innerWidth:"100%",
+           innerHeight:"100%",
+           initialWidth:"64px",
+           initialHeight:"84px",
+           closeButton:true,
+           iframe: true,
+        });
+    });
+    
+    $.document_.bind('cbox_complete', function () {
+        $('html').css({ overflow: 'hidden' });
+    }).bind('cbox_closed', function () {
+        $('html').css({ overflow: 'auto' });
+    }); 
+    
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
@@ -283,6 +324,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         {
             var response = $.parseJSON(params.response);
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+            if(this.getAttribute('data-context')=="purchaseorder")
+            {
+                var $poLink = $(this).parents('fieldset').find('a.purchase-order-view');
+                $poLink.attr('href',$poLink.attr('href')+response.id);
+                $poLink.show();
+            }            
             //Set new pk value
             addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
             //Trigger Channel Event
@@ -627,17 +674,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         dragster.dragleave(event);
     });
 
-    //File View
-    $('#acp-docs').on('click','a.file-view',function(e){
-       e.preventDefault();
-       vex.open({
-           className: 'vex-theme-default vex-file-viewer',
-           content:'<div class="row"><div class="col-xs-12 text-align-center">'+$(this).html()+'</div></div><iframe src="http://docs.google.com/viewer?url='+encodeURIComponent(this.getAttribute('href'))+'&embedded=true" class="file-viewer"></iframe>',
-       }).height($(window).height()).width($(window).width()*0.9);
-
-       return false;
-    });
-    
     //Enable Commenting
     enableComments();
     

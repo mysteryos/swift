@@ -487,6 +487,13 @@ fieldset.multi span.float-id{
     top: 2px;
 }
 
+.rotate-controls {
+    display:none;
+    position:absolute;
+    top:10px;
+    left:10px;
+}
+
 /*
 * Loading overlay
 */
@@ -499,7 +506,7 @@ div.loading-overlay {
     height:     100%;
     width:      100%;
     background: rgba(255,255,255, .7) 
-                url('/img/ajax-loader.gif') 
+                url('/img/loader.gif') 
                 50% 50% 
                 no-repeat;
 }

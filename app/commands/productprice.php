@@ -70,7 +70,7 @@ class productprice extends ScheduledCommand {
         public function schedule(Schedulable $scheduler)
         {
             //Every Day at 4a.m
-            return $scheduler->daily()->hours(4)->minutes(10);
+            return $scheduler->daily()->hours(4)->minutes(30);
         }
         
 	/**

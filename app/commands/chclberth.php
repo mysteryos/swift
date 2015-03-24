@@ -42,7 +42,7 @@ class chclberth extends ScheduledCommand {
     }
 
     public function isEnabled() {
-        return true;
+        return false;
     }
 
 	/**

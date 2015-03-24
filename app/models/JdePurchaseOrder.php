@@ -1,8 +1,15 @@
 <?php
-class JdePurchaseOrder extends Eloquent {
+class JdePurchaseOrder extends Eloquent
+{
     protected $connection = 'sct_jde';
 
     protected $table = 'sct_jde.jdepoheader';
+
+    protected $appends = ['name'];
+
+    protected $with = ['supplier','shipto'];
+
+    public $dates = ['Order_Date','Delivery_Date'];
 
     private static $cache_expiry_time = 240;
 
@@ -14,13 +21,23 @@ class JdePurchaseOrder extends Eloquent {
                 ->first();
     }
 
+    public function getNameAttribute()
+    {
+        return $this->Order_Number." ".$this->Order_Type;
+    }
+
     public function item()
     {
-        $this->item = \JdePurchaseOrderItem::where('Order_Number','=',$this->Order_Number)
-                        ->where('Order Type','=',$this->Order_Type)
-                        ->remember(self::$cache_expiry_time)
-                        ->get();
+        return $this->hasMany('JdePurchaseOrderItem','order_id')->orderBy('Line_Number');
+    }
 
-        return $this->item;
+    public function supplier()
+    {
+        return $this->hasOne('JdeSupplierMaster','Supplier_Code','Supplier_Number');
+    }
+
+    public function shipto()
+    {
+       return $this->hasOne('JdeSupplierMaster','Supplier_Code','Ship_To');
     }
 }

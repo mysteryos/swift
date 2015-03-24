@@ -4,15 +4,17 @@ class JdePurchaseOrderItem extends Eloquent {
 
     protected $table = 'sct_jde.jdepodetail';
 
+    protected $with = ['product'];
+
     private static $cache_expiry_time = 240;
 
     public function order()
     {
-        $this->order = \JdePurchaseOrder::where('Order Number','=',$this->Order_Number)
-                        ->where('Order Type','=',$this->Order_Type)
-                        ->remember(self::$cache_expiry_time)
-                        ->get();
-        
-        return $this->order;
+        return $this->hasOne('JdePurchaseOrder','order_id');
+    }
+
+    public function product()
+    {
+        return $this->hasOne('JdeProduct','ITM','ITM');
     }
 }

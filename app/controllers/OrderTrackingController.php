@@ -5,7 +5,7 @@ class OrderTrackingController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "Order Process";
-        $this->rootURL = $this->context = $this->data['context'] = "order-tracking";
+        $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "order-tracking";
         $this->adminPermission = \Config::get("permission.{$this->context}.admin");
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
@@ -567,6 +567,8 @@ class OrderTrackingController extends UserController {
             $this->data['business_unit'] = json_encode(Helper::jsonobject_encode(SwiftOrder::$business_unit));
             $this->data['customs_status'] = json_encode(Helper::jsonobject_encode(SwiftCustomsDeclaration::$status));
             $this->data['shipment_type'] = json_encode(Helper::jsonobject_encode(SwiftShipment::$type));
+            $this->data['po_validation'] = json_encode(Helper::jsonobject_encode(SwiftPurchaseOrder::$validation));
+            $this->data['po_type'] = json_encode(Helper::jsonobject_encode(SwiftPurchaseOrder::$types));
             $this->data['order'] = $order;
             $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
             $this->data['current_activity'] = WorkflowActivity::progress($order,$this->context);
@@ -1634,20 +1636,43 @@ class OrderTrackingController extends UserController {
             return parent::forbidden();
         }        
         
-        $order = SwiftOrder::find(Crypt::decrypt($order_id));
+        $order = \SwiftOrder::find(Crypt::decrypt($order_id));
         /*
          * Manual Validation
          */
-        if(count($order))
+        if($order)
         {
+
+            switch(\Input::get('name'))
+            {
+                case "type":
+                    if(!array_key_exists(Input::get('value'),\SwiftPurchaseOrder::$types))
+                    {
+                        return \Response::make("Please enter a valid type",500);
+                    }
+                    break;
+                case "validated":
+                    if(!$this->currentUser->isSuperUser())
+                    {
+                        return \Response::make("You don't have permission for this action",500);
+                    }
+                    break;
+                case "reference":
+                    if(\Input::get('value') !== "" && !is_numeric(Input::get('value')))
+                    {
+                        return \Response::make("Please enter a numeric value",500);
+                    }
+                    break;
+            }
+
             /*
              * New Purchase Order
              */
-            if(is_numeric(Input::get('pk')))
+            if(is_numeric(\Input::get('pk')))
             {
                 //All Validation Passed, let's save
-                $po = new SwiftPurchaseOrder();
-                $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                $po = new \SwiftPurchaseOrder();
+                $po->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
                 if($order->purchaseOrder()->save($po))
                 {
                     $order->touch();
@@ -1656,36 +1681,36 @@ class OrderTrackingController extends UserController {
                 }
                 else
                 {
-                    return Response::make('Failed to save. Please retry',400);
+                    return \Response::make('Failed to save. Please retry',400);
                 }
                 
             }
             else
             {
-                $po = SwiftPurchaseOrder::find(Crypt::decrypt(Input::get('pk')));
+                $po = \SwiftPurchaseOrder::find(Crypt::decrypt(Input::get('pk')));
                 if($po)
                 {
-                    $po->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    $po->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
                     if($po->save())
                     {
                         $order->touch();
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
-                        return Response::make('Success');
+                        \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($order),'id'=>$order->id,'user_id'=>$this->currentUser->id));
+                        return \Response::make('Success');
                     }
                     else
                     {
-                        return Response::make('Failed to save. Please retry',400);
+                        return \Response::make('Failed to save. Please retry',400);
                     }
                 }
                 else
                 {
-                    return Response::make('Error saving purchase order: Invalid PK',400);
+                    return \Response::make('Error saving purchase order: Invalid PK',400);
                 }
             }            
         }
         else
         {
-            return Response::make('Order process form not found',404);
+            return \Response::make('Order process form not found',404);
         }        
     }
     

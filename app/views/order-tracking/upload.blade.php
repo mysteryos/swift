@@ -104,3 +104,7 @@
     </div>
 </div>
 @endif
+<div class="rotate-controls btn-group" data-degree="0">
+    <button class="btn btn-rotate-anticlockwise" title="Rotate Anti-Clockwise"><i class="fa fa-lg fa-rotate-left"></i></button>
+    <button class="btn btn-rotate-clockwise" title="Rotate Clockwise"><i class="fa fa-lg fa-rotate-right"></i></button>
+</div>

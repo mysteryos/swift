@@ -46,7 +46,7 @@
             </div>                                                                                        
         </div>
         <div class="form-group col-lg-6 col-xs-12">
-            <label class="col-md-2 control-label">Reason Comment*</label>
+            <label class="col-md-2 control-label">Reason Comment</label>
             <div class="col-md-10">
                 <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_reasoncomment_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$canModifyProduct) editable-disabled @endif" data-type="textarea" data-context="product" data-name="reason_others" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->reason_others or "" }}"></a>
             </div>                                                                                        

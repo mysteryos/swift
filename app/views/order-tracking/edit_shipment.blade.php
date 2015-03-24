@@ -28,5 +28,6 @@
         </div>            
     </div>
     <legend class="top"></legend>
+    @if(!isset($dummy) && isset($s))<span class="float-id">ID: {{ Crypt::decrypt($s->id) }}</span> @endif
     @if($edit)<a class="btn btn-default btn-xs top-right btn-delete" href="/order-tracking/shipment"><i class="fa fa-trash-o"></i></a>@endif
 </fieldset>

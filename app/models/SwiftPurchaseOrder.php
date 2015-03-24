@@ -4,7 +4,8 @@
  * Description:
  */
 
-class SwiftPurchaseOrder extends Eloquent {
+class SwiftPurchaseOrder extends Eloquent
+{
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
@@ -14,13 +15,16 @@ class SwiftPurchaseOrder extends Eloquent {
     protected $guarded = array('id');
     
     protected $fillable = array('reference','type');
+
+    protected $hidden = array('validated','validated_on','order_id');
     
     public $timestamps = true;
     
-    public $dates = ['deleted_at'];
+    public $dates = ['deleted_at','validated_on'];
 
     protected $attributes = [
-        'type' => 'OF'
+        'type' => 'OF',
+        'validated' => 0
     ];
 
     //Types
@@ -31,6 +35,18 @@ class SwiftPurchaseOrder extends Eloquent {
         'OP' => 'OP',
         'OT' => 'OT',
     ];
+
+    public static $validation = [
+        self::VALIDATION_NOTFOUND_PERMANENT => "Not Found Permanent",
+        self::VALIDATION_NOTFOUND => "Not Found",
+        self::VALIDATION_PENDING => "Pending",
+        self::VALIDATION_FOUND => "Found",
+    ];
+
+    const VALIDATION_NOTFOUND = -1;
+    const VALIDATION_FOUND = 1;
+    const VALIDATION_PENDING = 0;
+    const VALIDATION_NOTFOUND_PERMANENT = -2;
     
     /* Revisionable Attributes */
     
@@ -84,6 +100,28 @@ class SwiftPurchaseOrder extends Eloquent {
         static::bootElasticSearchEvent();
         
         static::bootRevisionable();
+
+        static::saving(function($model){
+            foreach($model->getDirty() as $attribute => $value)
+            {
+                if(in_array($attribute,['reference','type']))
+                {
+                    if($model->reference !== null && $model->type !== null)
+                    {
+                        $model->validated = self::VALIDATION_PENDING;
+                        \Queue::push('Helper@validatePendingPurchaseOrder');
+                        break;
+                    }
+                }
+            }
+        });
+
+        static::saved(function($model){
+            if($model->validated === self::VALIDATION_PENDING && $model->reference !== null && $model->type !== null)
+            {
+                \Queue::push('Helper@validatePendingPurchaseOrder');
+            }
+        });
     }
     
     /*

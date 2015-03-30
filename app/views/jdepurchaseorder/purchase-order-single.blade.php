@@ -10,22 +10,22 @@
                 <tr>
                     <td>Business Unit</td>
                     <td>:</td>
-                    <td>{{ $form->Business_Unit }}</td>
+                    <td>{{ $form->business_unit }}</td>
                 </tr>
                 <tr>
                     <td>Incoterm</td>
                     <td>:</td>
-                    <td>{{ $form->Incoterm }}</td>
+                    <td>{{ $form->incoterm }}</td>
                 </tr>
                 <tr>
                     <td>Term of Payment</td>
                     <td>:</td>
-                    <td>{{ $form->Term_of_Payment }}</td>
+                    <td>{{ $form->terms_of_payment }}</td>
                 </tr>
                 <tr>
                     <td>Delivery Date</td>
                     <td>:</td>
-                    <td>{{ $form->Delivery_Date->format('Y/m/d') }}</td>
+                    <td>{{ $form->delivery_date->format('Y/m/d') }}</td>
                 </tr>
             </table>
         </div>
@@ -39,17 +39,22 @@
                 <tr>
                     <td>Order Date</td>
                     <td>:</td>
-                    <td>{{ $form->Order_Date->format('Y/m/d') }}</td>
+                    <td>{{ $form->order_date->format('Y/m/d') }}</td>
                 </tr>
                 <tr>
                     <td>Currency</td>
                     <td>:</td>
-                    <td>{{ $form->Currency_Code }}</td>
+                    <td>{{ $form->currency_code }}</td>
+                </tr>
+                <tr>
+                    <td>Currency Rate</td>
+                    <td>:</td>
+                    <td>{{ number_format($form->currency_rate,2) }}</td>
                 </tr>
                 <tr>
                     <td>Order Taken By</td>
                     <td>:</td>
-                    <td>{{ $form->Order_Taken_By }}</td>
+                    <td>{{ $form->order_taken_by }}</td>
                 </tr>
             </table>
         </div>
@@ -85,17 +90,17 @@
                         <tr>
                             <td>{{$i->product->LITM}}</td>
                             <td>{{$i->product->DSC1}}</td>
-                            <td>{{$i->Quantity_Ordered}}</td>
-                            <td>{{$i->Weight}}</td>
-                            <td>{{$i->Volume}}</td>
+                            <td>{{$i->quantity_ordered}}</td>
+                            <td>{{$i->weight}}</td>
+                            <td>{{$i->volume}}</td>
                             <td>{{$i->UOM}}</td>
-                            <td>@if($form->Order_Type == "OF"){{number_format($i->Unit_Cost_Foreign,2)}}@else{{number_format($i->Unit_Cost_Local,2)}}@endif</td>
-                            <td>@if($form->Order_Type == "OF"){{number_format($i->Unit_Cost_Foreign*$i->Quantity_Ordered,2)}}@else{{number_format($i->Unit_Cost_Local*$i->Quantity_Ordered,2)}}@endif</td>
+                            <td>@if($form->order_type == "OF"){{number_format($i->unit_cost_foreign,2)}}@else{{number_format($i->unit_cost_local,2)}}@endif</td>
+                            <td>@if($form->order_type == "OF"){{number_format($i->unit_cost_foreign*$i->quantity_ordered,2)}}@else{{number_format($i->unit_cost_local*$i->quantity_ordered,2)}}@endif</td>
                         </tr>
                         <?php
-                            $total_weight += $i->Weight;
-                            $total_volume += $i->Volume;
-                            $sub_total += (($form->Order_Type = "OF") ? ($i->Unit_Cost_Foreign*$i->Quantity_Ordered) : ($i->Unit_Cost_Local*$i->Quantity_Ordered));
+                            $total_weight += $i->weight;
+                            $total_volume += $i->volume;
+                            $sub_total += (($form->order_type = "OF") ? ($i->unit_cost_foreign*$i->quantity_ordered) : ($i->unit_cost_local*$i->quantity_ordered));
                         ?>
                     @endforeach
                 @else
@@ -130,7 +135,7 @@
             <table class="table table-borderless">
                 <tr>
                     <td>Sub Total</td>
-                    <td>{{ number_format($sub_total) }}</td>
+                    <td>{{ $form->currency_code }} {{ number_format($sub_total) }}</td>
                 </tr>
             </table>
         </div>

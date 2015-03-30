@@ -216,6 +216,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
      */
     $('a.file-view').on('click',function(e){
         e.preventDefault();
+        var $this = $(this);
         $.colorbox({
            href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
            maxHeight:"100%",

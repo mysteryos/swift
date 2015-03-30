@@ -37,14 +37,14 @@ class commission extends Command {
                 }
 	}
         
-        public function getName()
-        {
-            return $this->name;
-        }
-        
-        public function isEnabled() {
-            return true;
-        }
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function isEnabled() {
+        return true;
+    }
 
 	/**
 	 * Execute the console command.

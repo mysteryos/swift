@@ -20,6 +20,80 @@ Class NodeDefinition {
         if(count($acp))
         {
             /*
+             * Approvals
+             */
+            $approvalHodCount = $acp->approval()->where('type','=',\SwiftApproval::APC_HOD)->count();
+            if($approvalHodCount === 0)
+            {
+                $returnReasonList['hodapproval_absent'] = "Enter HOD's details for approval";
+            }
+
+            /*
+             * Document
+             */
+            if($acp->document()->count() === 0)
+            {
+                $returnReasonList['document_absent'] = "Upload the invoice scanned document";
+            }
+
+            //Requester didn't publish
+            $approvalRequesterCount = $acp->approval()->where('type','=',\SwiftApproval::APC_REQUESTER)->count();
+            if($approvalRequesterCount === 0)
+            {
+                $returnReasonList['requester_absent'] = "Publish form";
+            }
+            
+            if(count($returnReasonList) === 0 && !$returnReason)
+            {
+                return true;
+            }
+
+        }
+
+        return $returnReason ? $returnReasonList : false;
+    }
+
+    public static function acpHodApproval($nodeActivity,$returnReason=false)
+    {
+        $returnReasonList = array();
+
+        $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+        if($acp)
+        {
+            $pendingApprovals = $acp->approvalHod()->where('approved','=',\SwiftApproval::PENDING)->get();
+            if(count($pendingApprovals) > 0)
+            {
+                //Still have pending approvals
+                $returnReasonList['approval_pending'] = "Awaiting approval from ".implode(", ",array_map(function($v){
+                                                            return $v['approval_user_name'];
+                                                        },$pendingApprovals->toArray()));
+            }
+            else
+            {
+                //No Pending
+                return true;
+            }
+            
+            if(count($returnReasonList) === 0 && !$returnReason)
+            {
+                return true;
+            }
+        }
+
+        return $returnReason ? $returnReasonList : false;
+    }
+
+    public static function acpCreditnote($nodeActivity,$returnReason=false)
+    {
+        if($returnReason)
+        {
+            $returnReasonList = array();
+        }
+
+        $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+        if(count($acp))
+        {
+            /*
              * invoice check
              */
             $invoiceArray = $acp->invoice()->get();
@@ -54,70 +128,8 @@ Class NodeDefinition {
             }
 
             /*
-             * Approvals
+             * Credit Note Check
              */
-            $approvalHodCount = $acp->approval()->where('type','=',\SwiftApproval::APC_HOD)->count();
-            if($approvalHodCount === 0)
-            {
-                $returnReasonList['hodapproval_absent'] = "Enter HOD's details for approval";
-            }
-
-            //Requester didn't publish
-            $approvalRequesterCount = $acp->approval()->where('type','=',\SwiftApproval::APC_REQUESTER)->count();
-            if($approvalRequesterCount === 0)
-            {
-                $returnReasonList['requester_absent'] = "Publish form";
-            }
-            
-            if(count($returnReasonList) === 0 && !$returnReason)
-            {
-                return true;
-            }
-
-        }
-
-        return $returnReason ? $returnReasonList : false;
-    }
-
-    public static function acpHodApproval($nodeActivity,$returnReason=false)
-    {
-        $returnReasonList = array();
-
-        $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if($acp)
-        {
-            $approvals = $acp->approvalHod()->get();
-            if(count($approvals))
-            {
-                foreach($approvals as $a)
-                {
-                    if(in_array($a->approved,[\SwiftApproval::APPROVED,\SwiftApproval::REJECTED]))
-                    {
-                        return true;
-                    }
-                }
-            }
-            $returnReasonList['approval_absent'] = "Awaiting approval of HOD";
-
-            if(count($returnReasonList) === 0 && !$returnReason)
-            {
-                return true;
-            }
-        }
-
-        return $returnReason ? $returnReasonList : false;
-    }
-
-    public static function acpCreditnote($nodeActivity,$returnReason=false)
-    {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
-
-        $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
-        {
             $creditNoteCount = $acp->creditNote()->count();
             if($creditNoteCount === 0)
             {

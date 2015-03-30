@@ -11,7 +11,7 @@
 		<!-- END MAIN PANEL -->
                 
                 <!-- STICKY FOOTER START -->
-                <footer class="sticky-footer">
+                <footer class="sticky-footer hide">
                 </footer>
                 
                 <!-- STICKY FOOTER END -->

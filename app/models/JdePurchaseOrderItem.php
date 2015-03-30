@@ -2,7 +2,7 @@
 class JdePurchaseOrderItem extends Eloquent {
     protected $connection = 'sct_jde';
 
-    protected $table = 'sct_jde.jdepodetail';
+    protected $table = 'sct_jde.jdepodetailmaster';
 
     protected $with = ['product'];
 

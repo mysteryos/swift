@@ -855,6 +855,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
      */
     $('a.file-view').on('click',function(e){
         e.preventDefault();
+        var $this = $(this);
         $.colorbox({
            href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
            maxHeight:"100%",
@@ -868,6 +869,11 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         });
     });
     
+    $.document_.bind('cbox_complete', function () {
+        $('html').css({ overflow: 'hidden' });
+    }).bind('cbox_closed', function () {
+        $('html').css({ overflow: 'auto' });
+    });    
     
     //Publish button
     $('a.btn-publish').on('click',function(e){

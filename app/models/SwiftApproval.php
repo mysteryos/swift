@@ -15,6 +15,10 @@ class SwiftApproval extends Eloquent {
     protected $fillable = array('type','approved','approval_user_id');
     
     protected $dates = ['deleted_at'];
+
+    protected $appends = ['approval_user_name'];
+
+    protected $with = ['approver'];
     
     public $timestamps = true;
     
@@ -62,7 +66,21 @@ class SwiftApproval extends Eloquent {
                                 self::APPROVED => 'Approved',
                                 self::REJECTED => 'Rejected'
                                 );
-    
+
+    /*
+     * Accessors
+     */
+
+    public function getApprovalUserNameAttribute()
+    {
+        if($this->approver)
+        {
+            return $this->approver->first_name." ".$this->approver->last_name;
+        }
+        
+        return "";
+    }
+
     /*
      * Revision Accessors
      */
@@ -86,6 +104,11 @@ class SwiftApproval extends Eloquent {
     public function approvable()
     {
         return $this->morphTo();
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo('User','approval_user_id');
     }
  
     public function comment()

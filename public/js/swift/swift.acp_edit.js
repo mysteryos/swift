@@ -457,7 +457,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     previewNode.style.display = "none";
     var removeFileEvent;
     var theAwesomeDropZone= new Dropzone(document.getElementById('content'),{
-        url:'/acpayable/upload/'+$('#id').val(),
+        url:'/accounts-payable/upload/'+$('#id').val(),
         clickable: '#btn-upload',
         previewsContainer: "#upload-preview",
         previewTemplate: previewTemplate,
@@ -509,7 +509,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                             {
                                 $.ajax({    
                                     type:'DELETE',
-                                    url: '/acpayable/upload/'+$(file.previewElement).attr('data-id'),
+                                    url: '/accounts-payable/upload/'+$(file.previewElement).attr('data-id'),
                                     success:function()
                                     {
                                         deletemsg.update({
@@ -560,7 +560,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
                     $.ajax({
                         type:'DELETE',
-                        url: '/acpayable/upload/'+$thisParent.attr('data-id'),
+                        url: '/accounts-payable/upload/'+$thisParent.attr('data-id'),
                         success:function()
                         {
                             deletemsg.update({
@@ -717,6 +717,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
      */
     $('a.file-view').on('click',function(e){
         e.preventDefault();
+        var $this = $(this);
         $.colorbox({
            href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
            maxHeight:"100%",
@@ -729,6 +730,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
            iframe: true,
         });
     });
+    
+    $.document_.bind('cbox_complete', function () {
+        $('html').css({ overflow: 'hidden' });
+    }).bind('cbox_closed', function () {
+        $('html').css({ overflow: 'auto' });
+    });    
     
     $('a.btn-publish').on('click',function(e){
         e.preventDefault();

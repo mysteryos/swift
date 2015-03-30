@@ -270,7 +270,7 @@ class SwiftACPRequest extends Eloquent
 
     public function document()
     {
-        return $this->morphMany('SwiftDocument','document');
+        return $this->morphMany('SwiftACPDocument','document');
     }
 
     public function flag()

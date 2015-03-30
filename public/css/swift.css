@@ -383,6 +383,16 @@ div.FixedHeader_Cloned td {
 * Extend SmartAdmin Production
 */
 
+.table.table-borderless > thead > tr > th,
+.table.table-borderless > tbody > tr > th,
+.table.table-borderless > tfoot > tr > th,
+.table.table-borderless > thead > tr > td,
+.table.table-borderless > tbody > tr > td,
+.table.table-borderless > tfoot > tr > td {
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
 .undraggable {
     /* For Opera and <= IE9, we need to add unselectable="on" attribute onto each element */
     /* Check this site for more details: http://help.dottoro.com/lhwdpnva.php */
@@ -408,6 +418,14 @@ div.FixedHeader_Cloned td {
 .widget-body-compressed {
     max-height: 400px;
     overflow-y: scroll;
+}
+
+.border-left {
+    border-left: 1px solid #aaaaaa;
+}
+
+.border-right {
+    border-right: 1px solid #aaaaaa;
 }
 
 .full-width{
@@ -830,6 +848,73 @@ p.totalprice.loading:after, a.loading:after {
     -moz-animation:spin 2s infinite linear;
     -o-animation:spin 2s infinite linear;
     animation:spin 2s infinite linear;    
+}
+
+/*
+*  Accounts Payable - Payment Voucher Process
+*/
+
+#pv-process-container {
+  position: absolute;
+  top: 47px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+#pv-process-container #pv-process-info {
+    position: fixed;
+    top: 91px;
+    left: 45px;    
+    bottom: 0;
+    width: calc(25% - 45px);
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    background: #f7f7f7;
+    overflow-x: hidden;
+}
+
+#pv-process-container #pv-process-doc {
+    position: fixed;
+    top: 91px;
+    right: 0;
+    left: auto;
+    bottom: 0;
+    width: 75%;
+    
+}
+#pv-process-container #pv-process-doc iframe {
+    height:100%;
+    width:100%;
+    z-index:1;
+}
+#pv-process-container #pv-process-doc #no-doc {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:100%;
+    z-index:2;
+    background: #f7f7f7;
+}
+#pv-process-container #pv-process-doc #no-doc .fa {
+    font-size:48px;
+}
+#pv-process-container #pv-process-doc #no-doc > div:first-child {
+    margin-top:15%;
+}
+
+#pv-process-container .pv-row.pv-selected {
+    background: lightyellow;
+}
+#pv-process-container .pv-row.pv-success .panel-heading {
+    background: lightgreen;
+}
+#pv-process-info input.saving {
+    background: url('/img/loader.gif') center right no-repeat;
+    background-size: 24px;
 }
 
 /*

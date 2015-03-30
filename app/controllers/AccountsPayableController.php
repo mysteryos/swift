@@ -301,6 +301,72 @@ class AccountsPayableController extends UserController {
         return $this->makeView("acpayable/forms");
     }
 
+    public function getPaymentVoucherProcess()
+    {
+        if(!$this->isAccountingDept && !$this->isAdmin)
+        {
+            return parent::forbidden();
+        }
+
+        /*
+         * Get forms
+         */
+        $query = SwiftACPRequest::query();
+
+        //With
+        $query->with(['supplier','company','document','purchaseOrder','paymentVoucher']);
+
+        //Filter by workflow, at payment voucher
+
+        $query->whereHas('workflow',function($q){
+            return $q->inprogress()->whereHas('nodes',function($q){
+                return $q->whereHas('definition',function($q){
+                   return $q->where('name','=','acp_paymentvoucher');
+                });
+            });
+        });
+
+        //order By
+        $query->orderBy('created_at','ASC');
+
+        //Filters
+        
+        if(Input::has('billable_company'))
+        {
+            $query->where('billable_company','=',Input::get('billable_company'));
+        }
+
+        if(Input::has('supplier_code'))
+        {
+            $query->where('supplier_code','=',\Input::get('supplier_code'));
+        }
+
+        if(\Input::has('date'))
+        {
+            $query->where('created_at','>=',\Carbon::createFromFormat('Y-m-d',\Input::get('date')));
+        }
+        
+        $forms = $query->get();
+        $form_count = count($forms);
+
+        if($form_count > 0)
+        {
+            foreach($forms as &$f)
+            {
+                if(count($f->paymentVoucher))
+                {
+                    $f->pv_numbers = $f->paymentVoucher->toJson();
+                }
+            }
+        }
+
+        $this->data['forms'] = $forms;
+        $this->data['form_count'] = $form_count;
+        $this->data['pageTitle'] = "Payment Voucher Process";
+        
+        return $this->makeView('acpayable/payment-voucher-process');
+    }
+
     public function getCreate()
     {
         $this->pageTitle = 'Create';
@@ -518,12 +584,13 @@ class AccountsPayableController extends UserController {
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
             $this->data['flag_important'] = \Flag::isImportant($acp);
             $this->data['flag_starred'] = \Flag::isStarred($acp);
-            $this->data['po_type'] = json_encode(Helper::jsonobject_encode(\SwiftPurchaseOrder::$type));
+            $this->data['po_type'] = json_encode(Helper::jsonobject_encode(\SwiftPurchaseOrder::$types));
             $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
             $this->data['owner'] = Helper::getUserName($acp->owner_user_id,$this->currentUser);
             $this->data['edit'] = $edit;
             $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = false;
+            $this->data['isCreator'] = $acp->owner_user_id == $this->currentUser->id;
             
             if($edit === true)
             {
@@ -1219,35 +1286,6 @@ class AccountsPayableController extends UserController {
                             else
                             {
                                 $returnReasonList = array();
-                                /*
-                                 * invoice check
-                                 */
-                                if($acp->invoice)
-                                {
-                                    if($acp->invoice->date === null)
-                                    {
-                                        $returnReasonList['date'] = "Enter invoice date issued";
-                                    }
-
-                                    if($acp->invoice->due_date === null)
-                                    {
-                                        $returnReasonList['invoice_due_date'] = "Enter invoice due date";
-                                    }
-
-                                    if($acp->invoice->due_amount <= 0)
-                                    {
-                                        $returnReasonList['invoice_due_amount'] = "Enter invoice due amount";
-                                    }
-
-                                    if($acp->invoice->payment_term <= 0)
-                                    {
-                                        $returnReasonList['payment_term'] = "Enter invoice payment term";
-                                    }
-                                }
-                                else
-                                {
-                                     $returnReasonList['invoice_absent'] = "Enter invoice details";
-                                }
 
                                 /*
                                  * Approvals
@@ -1255,6 +1293,15 @@ class AccountsPayableController extends UserController {
                                 if(count($acp->approvalHod) === 0)
                                 {
                                     $returnReasonList['hodapproval_absent'] = "Enter HOD's details for approval";
+                                }
+
+                                /*
+                                 * Documents
+                                 */
+
+                                if(count($acp->document) === 0)
+                                {
+                                    $returnReasonList['document_absent'] = "Upload invoice document";
                                 }
 
                                 if(count($returnReasonList) !== 0)
@@ -1848,6 +1895,53 @@ class AccountsPayableController extends UserController {
     /*
      * Suppliers: End
      */
+
+    /*
+     * Custom Quick Saves
+     */
+
+    public function postSavePv()
+    {
+        if(Input::has('id') || Input::has('pv-id'))
+        {
+            if(Input::get('pv-number',"") === "")
+            {
+                return Response::make('Please input a PV number',400);
+            }
+
+            //Save PV directly
+            if(Input::has('pv-id'))
+            {
+                $pv = \SwiftACPPaymentVoucher::find(\Crypt::decrypt(Input::get('pv-id')));
+                if($pv)
+                {
+                    $pv->number = Input::get('pv-number');
+                    $pv->save();
+                    return Response::json(['id'=>Crypt::encrypt($pv->id)]);
+                }
+            }
+            
+            //Create new / Old one was deleted
+            $acp = \SwiftACPRequest::find(\Crypt::decrypt(\Input::get('id')));
+            if($acp)
+            {
+                $pv = new \SwiftACPPaymentVoucher([
+                   'number' => Input::get('pv-number')
+                ]);
+                $acp->paymentVoucher()->save($pv);
+
+                return Response::json(['id'=>Crypt::encrypt($pv->id)]);
+            }
+            else
+            {
+                return \Response::make('Accounts Payable form with ID:'.\Crypt::decrypt(\Input::get('id')).' not found',400);
+            }
+        }
+        else
+        {
+            return \Response::make('Invalid request',500);
+        }
+    }
 
     /*
      * Overview : Ajax Widgets

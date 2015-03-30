@@ -1,6 +1,15 @@
 <table id="inbox-table" class="table table-striped table-hover">
 	<tbody>
         @if(count($forms) != 0)
+            <tr>
+                <th colspan="3">&nbsp;</th>
+                <th>Last Modified By</th>
+                <th>Billable Company</th>
+                <th>Supplier</th>
+                <th>Current Step</th>
+                <th>&nbsp;</th>
+                <th>Last Modified On</th>
+            </tr>
             @foreach($forms as $f)
                 <tr class="orderform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}" data-view="/{{ $rootURL }}/@if($edit_access){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($f->id) }}">
                         <td class="inbox-table-icon">
@@ -74,10 +83,15 @@
                                                 break;
 
                                         }
-                                    ?>"></i></span> <i title="ID">{{ $f->id }}.</i></span> <span>@if($f->id !== ""){{ $f->company_name." | ".$f->supplier_name." - ".$f->name }}@else {{ $f->company_name." | ".$f->supplier_name }}@endif </span> - <span class="{{ $f->current_activity['status_class'] }}">{{ $f->current_activity['label'] }}</span>
+                                    ?>"></i></span> <i title="ID">{{ $f->id }}.</i></span> <span>{{$f->company_name}}</span>
                                 </div>
                         </td>
-
+                        <td class="inbox-data-message">
+                            <span>{{$f->supplier_name}}</span>
+                        </td>
+                        <td class="inbox-data-message">
+                            <span class="{{ $f->current_activity['status_class'] }}">{{ $f->current_activity['label'] }}</span>
+                        </td>
                         <td class="inbox-data-attachment hidden-xs">
                                 @if($f->document()->count() != 0)
                                     <div>

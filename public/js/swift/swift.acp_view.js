@@ -8,14 +8,20 @@
     });
 
     //File View
-    $('#acp-docs').on('click','a.file-view',function(e){
-       e.preventDefault();
-       vex.open({
-           className: 'vex-theme-default vex-file-viewer',
-           content:'<div class="row"><div class="col-xs-12 text-align-center">'+$(this).html()+'</div></div><iframe src="http://docs.google.com/viewer?url='+encodeURIComponent($(this).attr('href'))+'&embedded=true" class="file-viewer"></iframe>',
-       }).height($(window).height()).width($(window).width()*0.9);
-
-       return false;
+    $('a.file-view').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $.colorbox({
+           href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+           maxHeight:"100%",
+           maxWidth:"90%",
+           innerWidth:"100%",
+           innerHeight:"100%",
+           initialWidth:"64px",
+           initialHeight:"84px",
+           closeButton:true,
+           iframe: true,
+        });
     });
 
     $('#upload-preview #template').hide();

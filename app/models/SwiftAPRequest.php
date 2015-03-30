@@ -152,7 +152,7 @@ class SwiftAPRequest extends Eloquent {
     
     public function document()
     {
-        return $this->morphMany('SwiftDocument','document');
+        return $this->morphMany('SwiftAPDocument','document');
     }
     
     public function flag()

@@ -23,16 +23,18 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            $approval = $acp->approvalHod()
-                        ->orderBy('created_at','DESC')
-                        ->where('approved','!=',\SwiftApproval::PENDING)
-                        ->first();
-            if($approval)
+            $approvalCount = $acp->approvalHod()
+                            ->where('approved','!=',\SwiftApproval::PENDING)
+                            ->count();
+
+            $approvalRejectedCount = $acp->approvalHod()
+                                ->where('approved','=',\SwiftApproval::REJECTED)
+                                ->count();
+            
+            if($approvalCount === $approvalRejectedCount)
             {
-                if($approval->approved === \SwiftApproval::REJECTED)
-                {
-                    return true;
-                }
+                //Everybody rejected the invoice
+                return true;
             }
         }
         return false;
@@ -44,16 +46,14 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            $approval = $acp->approvalHod()
+            $approvalApproved = $acp->approvalHod()
                         ->orderBy('created_at','DESC')
-                        ->where('approved','!=',\SwiftApproval::PENDING)
-                        ->first();
-            if($approval)
+                        ->where('approved','=',\SwiftApproval::APPROVED)
+                        ->count();
+            
+            if($approvalApproved >= 1)
             {
-                if($approval->approved === \SwiftApproval::APPROVED)
-                {
-                    return true;
-                }
+                return true;
             }
         }
         return false;

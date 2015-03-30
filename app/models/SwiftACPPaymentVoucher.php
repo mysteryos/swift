@@ -19,7 +19,16 @@ class SwiftACPPaymentVoucher extends Eloquent
     protected $dates = ['deleted_at'];
 
     protected $touches = array('acp');
-    
+
+    protected $attributes = [
+        'validated' => self::VALIDATION_PENDING
+    ];
+
+    //Validation
+    const VALIDATION_PENDING = 0;
+    const VALIDATION_COMPLETE = 1;
+    const VALIDATION_ERROR = -1;
+
     /* Revisionable */
     
     protected $revisionEnabled = true;
@@ -43,7 +52,7 @@ class SwiftACPPaymentVoucher extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "paymentVoucher";
-    public $esRemove = ['acp_id'];
+    public $esRemove = ['acp_id','validated','validated_msg'];
 
     public function esGetParent()
     {
@@ -60,6 +69,10 @@ class SwiftACPPaymentVoucher extends Eloquent
         static::bootElasticSearchEvent();
         
         static::bootRevisionable();
+
+        static::created(function($model){
+            //Push job to validate PV in JDE table
+        });
     }    
     
     /*

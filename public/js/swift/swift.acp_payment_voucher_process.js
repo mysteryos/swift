@@ -5,6 +5,7 @@
     var $pvProcessInfo = $('#pv-process-info');
     var $iframe = $('<iframe/>');
     var $noDoc = $('#no-doc');
+    var $docBrowser = $('#doc-browser');
     
     //var search
     $('#search-pv').keyup(function(e){
@@ -32,6 +33,27 @@
        return false;
     });
     
+    $docBrowser.on('click','li',function(e){
+        var $this = $(this);
+        if(!$this.hasClass('doc-selected'))
+        {
+            $this.parents('ul').find('li').removeClass('doc-selected');
+            $this.addClass('doc-selected');
+            
+            var $url = $this.attr('data-href');
+            if($pvProcessDoc.find('iframe').length)
+            {
+                if($pvProcessDoc.find('iframe').attr('src') !== $url)
+                {
+                    $pvProcessDoc.find('iframe').attr('src',$url);
+                }
+                return;
+            }
+
+            $pvProcessDoc.append($iframe.attr('src',$url));
+        }
+    });
+    
     //Load doc on focus
     $pvProcessInfo.on('focus','.payment-voucher-val',function(e){
         //Highlight selected
@@ -40,9 +62,16 @@
         $row.addClass('pv-selected');
         
         //Load Up document
-        if($row.find('.pv-doc').length)
+        if($row.find('.doc-list').length)
         {
-            var $url = $row.find('.pv-doc').val();
+            if($docBrowser.find('ul.doc-list')[0].id !== $row.find('.doc-list')[0].id)
+            {
+                $docBrowser.html('');
+                //Move doc list into view
+                $row.find('.doc-list').clone(true).removeClass('hide').appendTo($docBrowser);
+            }
+            
+            var $url = $row.find('.doc-list li:first').attr('data-href');
             $noDoc.hide();
             if($pvProcessDoc.find('iframe').length)
             {
@@ -125,7 +154,7 @@
                             $this.removeClass('saving');
                        }
                            
-                   })
+                   });
                }
            }
        }

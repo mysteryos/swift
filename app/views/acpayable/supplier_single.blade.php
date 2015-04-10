@@ -42,11 +42,13 @@
                 </span>
             </h1>
         </div>
+        @if(count($activity) > 0)
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">
             <h1 class="page-title">
                 <span>Last update was by <?php echo Helper::getUserName($activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($activity[0]->created_at))}}" data-livestamp="{{strtotime($activity[0]->created_at)}}"></abbr></span>
             </h>
         </div>
+        @endif
     </div>
 
         <!-- widget grid -->
@@ -60,10 +62,10 @@
             <article class="col-lg-8 col-xs-12">
 
                 <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="apc-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                <div class="jarviswidget" id="supplier-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-edit"></i></span>
-                        <h2>General Info </h2>
+                        <h2>General Info</h2>
                     </header>
                     <!-- widget div-->
                     <div>
@@ -78,11 +80,36 @@
                     <!-- end widget div -->
                 </div>
                 <!-- end widget -->
-
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="supplier-payment-term" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-money"></i></span>
+                        <h2>Payment Terms</h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form class="form-horizontal">
+                                @if($form->paymentTerm)
+                                    <?php $form->paymentTerm->id = Crypt::encrypt($form->paymentTerm->id); ?>
+                                    @include('acpayable.supplier_paymentterm',array('pt'=>$form->paymentTerm))
+                                @else
+                                    @include('acpayable.supplier_paymentterm')
+                                @endif
+                                @include('acpayable.supplier_paymentterm',array('dummy'=>true,'pt'=>null))
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+                <!-- end widget -->
+            </article>
             <!-- NEW COL START -->
             <article class="col-lg-4 col-xs-12">
                 <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="acp-docs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                <div class="jarviswidget" id="supplier-docs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file-o"></i> </span>
                         <h2>Docs </h2>
@@ -107,7 +134,7 @@
                 <!-- end widget -->
 
                 <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="acp-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                <div class="jarviswidget" id="supplier-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-comment"></i> </span>
                         <h2>Chat </h2>

@@ -184,6 +184,11 @@ class SwiftAPRequest extends Eloquent {
     {
         return $this->morphMany('SwiftStory','storyfiable');
     }
+
+    public function subscription()
+    {
+        return $this->morphMany('SwiftSubscription','subscriptionable');
+    }
     
     /*
      * Helper Function

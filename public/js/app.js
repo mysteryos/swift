@@ -1605,6 +1605,40 @@ $('body').on('click', function(e) {
 	});
 });
 
+$.maindiv.on('click','.btn-togglesubscribe',function(e){
+    e.preventDefault();
+    var $this = $(this);
+    $this.attr('disabled','disabled');
+    $this.addClass('loading-animation');
+    
+    $.ajax({
+        url: $this.attr('data-href'),
+        type: 'PUT',
+        dataType: 'json',
+        success:function(resultJson)
+        {
+            $.smallBox({
+                    title : "Subscription",
+                    content : (resultJson.result === 1 ? "You have been subscribed successfully" : "You have been unsubscribed successfully"),
+                    color : "#5384AF",
+                    icon : "fa "+(resultJson.result === 1 ? "fa-heart" : "fa-heart-o"),
+                    timeout : 3000
+            });
+            
+            $this.find('i.fa').toggle();
+            
+            $this.removeAttr('disabled');
+            $this.removeClass('loading-animation');                
+        },
+        error:function(xhr, status, error)
+        {
+            $this.removeAttr('disabled');
+            $this.removeClass('loading-animation');
+            return xhr.responseText;
+        }
+    });    
+});
+
 /*
  * Custom Script Loaders
  */
@@ -1739,6 +1773,17 @@ var main = {
         {
             pageSetUp();
             salesman_budget();
+        }
+    },
+    acp_payment_cheque_issue: function() {
+        if(typeof window['acp_payment_cheque_issue'] === "undefined")
+        {
+            jsLoader(["/js/plugin/context/context.js","/js/swift/swift.acp_payment_cheque_issue.js"]);
+        }
+        else
+        {
+            pageSetUp();
+            acp_payment_cheque_issue();
         }        
     }
 }

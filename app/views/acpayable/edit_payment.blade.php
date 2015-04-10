@@ -7,23 +7,31 @@
             </div>
         </div>
         <div class="form-group col-md-6">
-            <label class="col-md-4 control-label">Payment Number*</label>
+            <label class="col-md-4 control-label">Batch Number</label>
             <div class="col-md-8">
-                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_payment_number_".Crypt::decrypt($pay->id)."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="payment_number" data-pk="{{ $pay->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ Crypt::encrypt($form->id) }}" data-value="{{ $pay->payment_number or "" }}"></a>
+                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_batch_number_".Crypt::decrypt($pay->id)."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="batch_number" data-pk="{{ $pay->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ Crypt::encrypt($form->id) }}" data-value="{{ $pay->batch_number or "" }}"></a>
             </div>
         </div>
     </div>
     <div class="row payment-1 payment-2" @if(!isset($pay->type) || (int)$pay->type ===0) style="display:none;" @endif>
         <div class="form-group col-md-6">
-            <label class="col-md-4 control-label">Invoice Date</label>
+            <label class="col-md-4 control-label">Payment Number*</label>
+            <div class="col-md-8">
+                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_payment_number_".Crypt::decrypt($pay->id)."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="payment_number" data-pk="{{ $pay->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ Crypt::encrypt($form->id) }}" data-value="{{ $pay->payment_number or "" }}"></a>
+            </div>
+        </div>
+        <div class="form-group col-md-6">
+            <label class="col-md-4 control-label">Payment Date</label>
             <div class="col-md-8">
                 <div class="input-group">
                     <a href="#" @if(isset($pay->id)) {{ "id=\"payment_date_".Crypt::decrypt($pay->id)."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="date" data-viewformat="dd/mm/yyyy" data-name="date" data-date="@if(isset($pay->date)){{$pay->date->format('d/m/Y')}}@endif" data-pk="{{ $pay->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ Crypt::encrypt($form->id) }}">@if(isset($pay->date)){{$pay->date->format('d/m/Y')}}@endif</a>
                 </div>
             </div>
         </div>
+    </div>
+    <div class="row payment-1 payment-2" @if(!isset($pay->type) || (int)$pay->type ===0) style="display:none;" @endif>
         <div class="form-group col-lg-6 col-md-6">
-            <label class="col-md-4 control-label">Amount*</label>
+            <label class="col-md-4 control-label">Amount</label>
             <div class="col-md-8">
                 <a href="#" @if(isset($pay->id)) {{ "id=\"payment_amount_".Crypt::decrypt($pay->id)."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="text" data-name="amount" data-pk="{{ $pay->id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ Crypt::encrypt($form->id) }}" data-value="{{ $pay->amount or "" }}"></a>
             </div>

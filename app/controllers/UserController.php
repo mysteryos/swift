@@ -18,7 +18,24 @@ class UserController extends Controller {
             //Register Base JS/CSS files
             if (!Request::header('X-PJAX')) {
                 $this->data['js'] = Config::get('assets.js');
-                $this->data['css'] = Config::get('assets.css');                
+                $this->data['css'] = Config::get('assets.css');
+
+                /*
+                 * Cache Buster
+                 */
+                array_walk($this->data['js'],function(&$v){
+                    if(strpos($v,'/js/') === 0)
+                    {
+                        $v = Bust::url($v);
+                    }
+                });
+
+                array_walk($this->data['css'],function(&$v){
+                    if(strpos($v,'/css/') === 0)
+                    {
+                        $v = Bust::url($v);
+                    }
+                });
             }
             else
             {
@@ -100,6 +117,12 @@ class UserController extends Controller {
         {
             $this->data['commentKey'] = Comment::makeKey($commentable);
             $this->data['comments'] = $commentable->comments()->orderBy('created_at','DESC')->get();
+        }
+
+        public function enableSubscription($subscriptionable)
+        {
+            $this->data['subscriptionUrl'] = "/subscription/toggle-subscribe/".array_search(get_class($subscriptionable),\Config::get('context'))."/".$subscriptionable->getKey();
+            $this->data['isSubscribed'] = \Subscription::has($subscriptionable);
         }
 
 }

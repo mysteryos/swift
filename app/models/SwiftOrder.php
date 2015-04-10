@@ -23,6 +23,8 @@ class SwiftOrder extends Eloquent {
     public $timestamps = true;
     
     public $dates = ['deleted_at'];
+
+    public $subscriptionable = true;
     
     public static $business_unit = array(self::SCOTT_CONSUMER=>'Scott Consumer',self::SCOTT_HEALTH=>'Scott Health',self::SEBNA=>'Sebna');
     
@@ -205,6 +207,11 @@ class SwiftOrder extends Eloquent {
     public function event()
     {
         return $this->morphMany('SwiftEvent','eventable');
+    }
+
+    public function subscription()
+    {
+        return $this->morphMany('SwiftSubscription','subscriptionable');
     }
     
     

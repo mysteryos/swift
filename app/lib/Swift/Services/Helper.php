@@ -382,6 +382,34 @@ class Helper {
         
         return $date;        
     }
+
+    public function dueInDays(\Carbon\Carbon $date)
+    {
+        $diff = Carbon::now()->diffInDays($date,false);
+        if($diff < -1)
+        {
+            return abs($diff)." days ago";
+        }
+        if($diff === -1)
+        {
+            return "yesterday";
+        }
+
+        if($diff === 0)
+        {
+            return "today";
+        }
+        if($diff === 1)
+        {
+            return "tomorrow";
+        }
+        if($diff > 1)
+        {
+            return $diff. " days from now";
+        }
+        return "(Unknown)";
+
+    }
     
     public function systemHealth($lateCount,$totalCount)
     {

@@ -50,15 +50,25 @@ class JdeSupplierMaster extends Eloquent {
         return $this->hasManyThrough('SwiftACPInvoice','SwiftACPRequest','Supplier_Code','acp_id');
     }
 
-    //Accounts Payable
-    public function acp()
+    public function comments()
     {
-        return $this->hasMany('SwiftACPRequest','supplier_code','Supplier_Code');
+        return $this->morphMany('SwiftComment', 'commentable');
+    }
+
+    public function paymentTerm()
+    {
+        return $this->hasOne('SupplierPaymentTerm','supplier_code','Supplier_Code');
     }
 
     public function document()
     {
         return $this->morphMany('SwiftDocument','document');
+    }
+    
+    //Accounts Payable
+    public function acp()
+    {
+        return $this->hasMany('SwiftACPRequest','supplier_code','Supplier_Code');
     }
 
     /*

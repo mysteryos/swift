@@ -8,7 +8,7 @@ function addMulti($dummy,pk)
         onblur: $(this).hasClass('editable-noblur') ? 'cancel' : 'submit'
     }).on('save',function(e,params){
         //First time save, set primary key
-        if(this.getAttribute('data-pk') == "0")
+        if(this.getAttribute('data-pk') === "0")
         {
             var response = $.parseJSON(params.response);
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
@@ -19,7 +19,7 @@ function addMulti($dummy,pk)
             //Trigger Single Value Save as well
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
         }
-        if(this.getAttribute('data-name')=="type" && this.getAttribute('data-context')=="payment")
+        if(this.getAttribute('data-name')==="type" && this.getAttribute('data-context')==="payment")
         {
             $(this).parents('fieldset.fieldset-payment').find('div[class^="payment-"]').hide();
             $(this).parents('fieldset.fieldset-payment').find('div.payment-'+params.newValue).show();
@@ -34,12 +34,12 @@ function addMulti($dummy,pk)
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id})
         }
     }).on('submit',function(){
-        if(this.getAttribute('data-pk') == "0")
+        if(this.getAttribute('data-pk') === "0")
         {
             $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
         }        
     }).on('error',function(){
-        if(this.getAttribute('data-pk') == "0")
+        if(this.getAttribute('data-pk') === "0")
         {
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
         }          
@@ -81,7 +81,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         var $this = $(this);
         $this.editable({
             disabled: $this.hasClass('editable-disabled'),
-            onblur: $this.hasClass('editable-noblur') ? 'cancel' : 'submit',
+            onblur: $this.hasClass('editable-noblur') ? 'cancel' : 'submit'
         });
         
         $this.on('shown',function(e){
@@ -97,7 +97,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 $(this).editable('option','pk',this.getAttribute('data-pk'));
                 presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), newValue: params.newValue, id: this.id});
             }
-            if(this.getAttribute('data-name')=="type" && this.getAttribute('data-context')=="payment")
+            if(this.getAttribute('data-name')==="type" && this.getAttribute('data-context')==="payment")
             {
                 $(this).parents('fieldset.fieldset-payment').find('div[class^="payment-"]').hide();
                 $(this).parents('fieldset.fieldset-payment').find('div.payment-'+params.newValue).show();
@@ -105,6 +105,35 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             return true;
         });
     });
+    
+    //Multi
+    $('.payment-term-editable').on('save',function(e,params){
+        var $this = $(this);
+        //First time save, set primary key
+        if(this.getAttribute('data-pk') == "0")
+        {
+            //Remove Overlay
+            $this.parents('fieldset.multi').find('div.loading-overlay').remove();
+            var response = $.parseJSON(params.response);
+            //Set new pk value
+            addEditablePk($(this).parents('fieldset'),response.encrypted_id,response.id);
+            //Trigger Channel Event
+            presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $this.parents('fieldset').attr('data-name')});
+            //Trigger Single Value Save as well
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})
+        }
+        return true;
+    }).on('submit',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
+        }
+    }).on('error',function(){
+        if(this.getAttribute('data-pk') == "0")
+        {
+            $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
+        }        
+    });    
     
     /*
      * Dropzone
@@ -312,7 +341,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         return file;
     });
 
-    theAwesomeDropZone.on("cancelled",function(){
+    theAwesomeDropZone.on("cancelled",function(file){
        if(typeof uploadmsg !== null)
        {
            uploadmsg.hide();
@@ -382,4 +411,9 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
        return false;
     });    
     
-}
+    //Enable Commenting
+    enableComments();
+    
+    //Hide Loading Message
+    messenger_hidenotiftop();    
+})();

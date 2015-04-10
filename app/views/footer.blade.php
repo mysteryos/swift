@@ -3,7 +3,14 @@
                 {
                     foreach($before_js as $js)
                     {
-                        echo "<script type=\"text/javascript\" src=\"{$js}\"></script>";
+                        if(strpos($v,'/js/') === 0 || strpost($v,'/css/') ===0)
+                        {
+                            echo "<script type=\"text/javascript\" src=\"".Bust::url($js)."\"></script>";
+                        }
+                        else
+                        {
+                            echo "<script type=\"text/javascript\" src=\"".$js."\"></script>";
+                        }
                     }
                 }
                 ?>

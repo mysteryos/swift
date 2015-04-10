@@ -16,8 +16,8 @@
 		<!-- GOOGLE FONT -->
 		<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,300,400,700">
                 
-                <!-- Main CSS -->
-                <link rel="stylesheet" type="text/css" href="/css/all.css"/>
+        <!-- Main CSS -->
+        <link rel="stylesheet" type="text/css" href="{{ Bust::url('/css/all.css') }}"/>
                 
 	</head>
         <body class="fixed-header fixed-ribbon smart-style-3 minified" style="overflow:hidden;position:relative;">

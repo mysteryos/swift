@@ -14,19 +14,19 @@
                     switch($a->action)
                     {
                         case \Venturecraft\Revisionable\Revision::CREATE:
-                            echo " <span class=\"activity-add\">created</span> <i>".(is_callable($a->className()) ? $a->className() : "Unknown")."</i> (ID: {$a->revisionable_id})</b>";
+                            echo " <span class=\"activity-add\">created</span> <i>".$a->className()."</i> (ID: {$a->revisionable_id})</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::INSERT:
-                            echo " <span class=\"activity-add\">added</span> <i>".(is_callable($a->fieldName()) ? ucfirst($a->fieldName()) : "Unknown")."</i> as <b>".(is_callable($a->newValue()) ? $a->newValue() : "Unknown")."</b>";
+                            echo " <span class=\"activity-add\">added</span> <i>".$a->fieldName()."</i> as <b>".$a->newValue()."</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::UPDATE:
-                            echo " <span class=\"activity-change\">changed</span> <i>".(is_callable($a->fieldName()) ? ucfirst($a->fieldName()) : "Unknown")."</i> from <b>".(is_callable($a->oldValue()) ? $a->oldValue() : "Unknown")."</b> to <b>".(is_callable($a->newValue()) ? $a->newValue() : "Unknown")."</b>";
+                            echo " <span class=\"activity-change\">changed</span> <i>".$a->fieldName()."</i> from <b>".$a->oldValue()."</b> to <b>".$a->newValue()."</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::DELETE:
-                            echo " <span class=\"activity-delete\">deleted</span> <i>".(is_callable($a->fieldName()) ? ucfirst($a->fieldName()) : "Unknown")."</i>, previously being <b>".(is_callable($a->oldValue()) ? $a->oldValue() : "Unknown")."</b>";
+                            echo " <span class=\"activity-delete\">deleted</span> <i>".$a->fieldName()."</i>, previously being <b>".$a->oldValue()."</b>";
                             break;
                         case \Venturecraft\Revisionable\Revision::REMOVE:
-                            echo " <span class=\"activity-delete\">removed</span> <i>".(is_callable($a->className()) ? $a->className() : "Unknown")."</i> (".(is_callable($a->primaryIdentifierName()) ? $a->primaryIdentifierName() : "Unknown").": ".(is_callable($a->primaryIdentifierValue()) ? $a->primaryIdentifierValue() : "Unknown").")</b>";
+                            echo " <span class=\"activity-delete\">removed</span> <i>".$a->className()."</i> (".$a->primaryIdentifierName().": ".$a->primaryIdentifierValue().")</b>";
                             break;
                         default:
                             echo " (error - unknown activity)";

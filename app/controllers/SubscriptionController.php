@@ -6,60 +6,83 @@ class SubscriptionController extends UserController {
         $this->pageName = "My Subscriptions";
     }
     
-    public function putSubscribe($context_type,$context_id)
+    public function putToggleSubscribe($context_type,$context_id)
     {
         if(array_key_exists($context_type,\Config::get('context')))
         {
             $class = \Config::get('context')[$context_type];
-            $id = Crypt::decrypt($context_id);
-            //Check if object exists
-            if(!count($class::find($id)))
+
+            //check permission
+            $viewPerm = \Config::get("permission.$context_type.view");
+            $adminPerm = \Config::get("permission.$context_type.admin");
+            $editPerm = \Config::get("permission.$context_type.edit");
+
+            if(!$this->currentUser->hasAnyAccess([$viewPerm,$adminPerm,$editPerm]))
             {
-                return Response::make("Subscription failed: No Context Object",500);
+                return \Response::make("Subscription failed: You don't have permission for this action");
             }
             
-            //Check if exists
-            $subscription = SwiftSubscription::getByClassAndUser($class,$id,$this->currentUser->id);
-            if(count($subscription))
+            //Check if object exists
+            $obj = $class::find($context_id);
+            if(!$obj)
             {
-                $subscription->status = SwiftSubscription::ACTIVE;
-                if($subscription->save())
-                {
-                    return Response::make("success");
-                }
-                else 
-                {
-                    return Response::make("Subscription failed to update",500);
-                }
+                return \Response::make("Subscription failed: No Context",500);
+            }
+
+            $subscriptionResult = \Subscription::toggleSubscribe($obj);
+            if($subscriptionResult !== false)
+            {
+                return \Response::json(['result'=>$subscriptionResult]);
             }
             else
             {
-                $subscription = (new SwiftSubscription([
-                                    'user_id' => $this->currentUser->id,
-                                    'subscriptionable_type' => $class,
-                                    'subscriptionable_id' => $id,
-                                    'status' => SwiftSubscription::ACTIVE
-                                ]))->save();
-                
-                if($subscription)
-                {
-                    return Response::make("success");
-                }
-                else 
-                {
-                    return Response::make("Subscription failed to save",500);
-                }
+                return \Response::make("Subscription failed: Please try again",500);
             }
             
         }
         else
         {
-            return Response::make('Context is unknown',500);
+            return \Response::make('Subscription failed: Unknown Context',500);
         }
     }
     
-    public function deleteSubscribe($context_type,$context_id)
-    {
-        
-    }    
+//    public function deleteSubscribe($context_type,$context_id)
+//    {
+//        if(array_key_exists($context_type,\Config::get('context')))
+//        {
+//            $class = \Config::get('context')[$context_type];
+//            $id = \Crypt::decrypt($context_id);
+//
+//            //check permission
+//            $viewPerm = \Config::get("permission.$context_type.view");
+//            $adminPerm = \Config::get("permission.$context_type.admin");
+//            $editPerm = \Config::get("permission.$context_type.edit");
+//
+//            if(!$this->currentUser->hasAnyAccess([$viewPerm,$adminPerm,$editPerm]))
+//            {
+//                return \Response::make("Subscription failed: You don't have permission for this action");
+//            }
+//
+//            //Check if object exists
+//            $obj = $class::find($id);
+//            if(!$obj)
+//            {
+//                return \Response::make("Subscription failed: No Context",500);
+//            }
+//
+//            if(\Subscription::unsubscribe($obj))
+//            {
+//                return \Response::make("Subscription Successful");
+//            }
+//            else
+//            {
+//                return \Response::make("Subscription failed: Please try again",500);
+//            }
+//
+//        }
+//        else
+//        {
+//            return \Response::make('Subscription failed: Unknown Context',500);
+//        }
+//    }
 }

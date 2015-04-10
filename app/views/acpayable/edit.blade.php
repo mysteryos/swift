@@ -68,7 +68,55 @@
             </h>
         </div>
     </div>
-    
+
+    @if(isset($message) && $message !== false)
+        <div class="row">
+            <article class="col-xs-12">
+                @foreach($message as $m)
+                    <?php
+                        switch($m['type'])
+                        {
+                            case 'warning':
+                                echo '<div class="alert alert-warning fade in">
+                                    <button data-dismiss="alert" class="close">
+                                            ×
+                                    </button>
+                                    <i class="fa-fw fa fa-warning"></i>
+                                    <strong>Warning</strong> ';
+                                break;
+                            case 'success':
+                                echo '<div class="alert alert-success fade in">
+                                    <button data-dismiss="alert" class="close">
+                                            ×
+                                    </button>
+                                    <i class="fa-fw fa fa-check"></i>
+                                    <strong>Success</strong> ';
+                                break;
+                            case 'danger':
+                                echo '<div class="alert alert-danger fade in">
+                                    <button data-dismiss="alert" class="close">
+                                            ×
+                                    </button>
+                                    <i class="fa-fw fa fa-times"></i>
+                                    <strong>Error!</strong> ';
+                                break;
+                            default:
+                            case 'info':
+                                echo '<div class="alert alert-info fade in">
+                                    <button data-dismiss="alert" class="close">
+                                            ×
+                                    </button>
+                                    <i class="fa-fw fa fa-info"></i>
+                                    <strong>Info!</strong> ';
+                                break;
+                        }
+                        echo $m['msg']."</div>";
+                    ?>
+                @endforeach
+            </article>
+        </div>
+    @endif
+
     <!-- widget grid -->
     <section id="widget-grid">
 

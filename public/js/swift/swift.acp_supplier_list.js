@@ -19,14 +19,10 @@
 
     //Gets tooltips activated
     $("#inbox-table [rel=tooltip]").tooltip();
-
-    $("#inbox-table input[type='checkbox']").change(function() {
-           $(this).closest('tr').toggleClass("highlight", this.checked);
-    });
-
-    $("#inbox-table .inbox-data-message,#inbox-table .inbox-data-from").on('click',function() {
+    
+    $("#inbox-table .supplierform td").on('click',function() {
        $.pjax({
-          url: $(this).closest('.orderform').attr('data-view'),
+          url: $(this).closest('.supplierform').attr('data-view'),
           container: '#main'
        });
     });

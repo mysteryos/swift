@@ -24,6 +24,12 @@ class SwiftACPPaymentVoucher extends Eloquent
         'validated' => self::VALIDATION_PENDING
     ];
 
+    public static $validationArray = [
+        self::VALIDATION_PENDING => 'Pending',
+        self::VALIDATION_COMPLETE => 'Complete',
+        self::VALIDATION_ERROR => 'Error'
+    ];
+
     //Validation
     const VALIDATION_PENDING = 0;
     const VALIDATION_COMPLETE = 1;
@@ -90,6 +96,11 @@ class SwiftACPPaymentVoucher extends Eloquent
     public function acp()
     {
         return $this->belongsTo('SwiftACPRequest','acp_id');
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne('SwiftACPInvoice','payment_voucher_id');
     }
     
     /*

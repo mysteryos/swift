@@ -40,57 +40,49 @@ class elasticsearchmapping extends Command {
             $client = new Elasticsearch\Client();
             $params = array();
             $params['index'] = \App::environment();
+            $context = $this->ask('What is the context?');
+            if(!\Config::has('elasticsearchmapping.'.$context))
+            {
+                $this->error("We don't support this context!");
+                return;
+            }
             
-            $action = $this->ask("Create or Delete?");
+            $action = $this->ask("Create or Delete or Recreate?");
             switch(strtolower($action))
             {
                 case "create":
-                    $context = $this->ask('What is the context?');
-                    switch($context)
-                    {
-                        case "order-tracking":
-                        case "aprequest":
-                        case "acpayable":
-                        case "supplier":
-                            $params['type'] = $context;
-                            $params['body'][$context] = Config::get('elasticsearchmapping.'.$context);
-                            break;
-                        default:
-                            $this->error("We don't support this context!");
-                            return;
-                    }
+                    $params['type'] = $context;
+                    $params['body'][$context] = Config::get('elasticsearchmapping.'.$context);
                     if($client->indices()->putMapping($params))
                     {
                         $this->info("Your mapping has been created for '$context'");
                     }
-                    return;
                     break;
                 case "delete":
-                    $context = $this->ask('What is the context?');
-                    switch($context)
-                    {
-                        case "order-tracking":
-                        case "aprequest":
-                        case "acpayable":
-                        case "supplier":
-                            $params['type'] = $context;
-                            break;
-                        default:
-                            $this->error("We don't support this context!");
-                            return;
-                    }
-                    
+                    $params['type'] = $context;
                     if($client->indices()->deleteMapping($params))
                     {
                         $this->info("Your mapping has been deleted for '$context'");
                     }
-                    return;
+                    break;
+                case "recreate":
+                    $delparams['type'] = $context;
+                    $createparams['type'] = $context;
+                    $createparams['body'][$context] = Config::get('elasticsearchmapping.'.$context);
+                    if($client->indices()->deleteMapping($delparams))
+                    {
+                        $this->info("Your mapping has been deleted for '$context'");
+                    }
+                    if($client->indices()->putMapping($createparams))
+                    {
+                        $this->info("Your mapping has been created for '$context'");
+                    }
                     break;
                 default:
                     $this->error("This action is not supported.");
                     break;
             }
-        }    
+        }
             
 	/**
 	 * Get the console command arguments.

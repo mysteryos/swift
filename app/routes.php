@@ -90,3 +90,13 @@ Route::controller('login','LoginController');
 Route::get('404','UserController@notfound');
 
 Route::controller('test','testController');
+
+/*
+ * Cache Busting
+ * @url: https://github.com/TheMonkeys/laravel-cachebuster
+ */
+
+Route::get('{path}', function($filename) {
+  return Bust::css($filename);
+})->where('path', '.*\.css$');
+App::make('cachebuster.StripSessionCookiesFilter')->addPattern('|\.css$|');

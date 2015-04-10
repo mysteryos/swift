@@ -24,6 +24,77 @@ div.FixedHeader_Cloned td {
 	background-color: white !important;
 }
 
+/**
+ * ContextJS Styles
+ * For use with Twitters Bootstrap CSS
+ */
+
+.dropdown-context .nav-header{
+	cursor:default;
+	}
+.dropdown-context:before, .dropdown-context-up:before {
+	position: absolute;
+	top: -7px;
+	left: 9px;
+	display: inline-block;
+	border-right: 7px solid transparent;
+	border-bottom: 7px solid #ccc;
+	border-left: 7px solid transparent;
+	border-bottom-color: rgba(0, 0, 0, 0.2);
+	content: '';
+	}
+.dropdown-context:after, .dropdown-context-up:after{
+	position: absolute;
+	top: -6px;
+	left: 10px;
+	display: inline-block;
+	border-right: 6px solid transparent;
+	border-bottom: 6px solid #ffffff;
+	border-left: 6px solid transparent;
+	content: '';
+	}
+.dropdown-context-up:before, .dropdown-context-up:after{
+	top:auto;
+	bottom:-7px;
+	z-index:9999;
+	}
+.dropdown-context-up:before{
+	border-right: 7px solid transparent;
+	border-top: 7px solid #ccc;
+	border-bottom:none;
+	border-left: 7px solid transparent;
+	}
+.dropdown-context-up:after{
+	border-right: 6px solid transparent;
+	border-top: 6px solid #ffffff;
+	border-left: 6px solid transparent;
+	border-bottom:none;
+	}
+
+.dropdown-context-sub:before, .dropdown-context-sub:after{
+	display:none;
+	}
+.dropdown-context .dropdown-submenu:hover .dropdown-menu {
+	display: none;
+	}
+
+.dropdown-context .dropdown-submenu:hover > .dropdown-menu {
+ 	display: block;
+	}
+	
+
+.compressed-context a{
+	padding-left: 14px;
+	padding-top: 0;
+	padding-bottom: 0;
+	font-size: 13px;
+	}
+.compressed-context .divider{
+	margin: 5px 1px;
+	}
+.compressed-context .nav-header{
+	padding:1px 13px;
+}
 
 /*
 * Swift Avatar
@@ -466,12 +537,18 @@ div.FixedHeader_Cloned td {
     margin: 0;
 }
 
-.ribbon-button-alignment .btn {
+.ribbon-button-alignment > .btn {
     padding: 6px 32px;
     margin-right: 16px;
 }
+.ribbon-button-alignment > .btn-group {
+    margin-right: 16px;
+}
+.ribbon-button-alignment > .btn-group .btn {
+    padding: 6px 32px;
+}
 
-.ribbon-button-alignment-xs .btn {
+.ribbon-button-alignment-xs > .btn {
     padding: 6px 16px;
     margin-right: 8px;
 }
@@ -881,10 +958,9 @@ p.totalprice.loading:after, a.loading:after {
     left: auto;
     bottom: 0;
     width: 75%;
-    
 }
 #pv-process-container #pv-process-doc iframe {
-    height:100%;
+    height:calc(100% - 80px);
     width:100%;
     z-index:1;
 }
@@ -915,6 +991,56 @@ p.totalprice.loading:after, a.loading:after {
 #pv-process-info input.saving {
     background: url('/img/loader.gif') center right no-repeat;
     background-size: 24px;
+}
+
+#pv-process-doc #doc-browser {
+    background-color:#121212;
+    opacity:0.7;
+    color: #fff;
+    position:absolute;
+    height: 80px;
+    width:100%;
+    left:0;
+    bottom:0;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+#pv-process-doc #doc-browser ul {
+    list-style: none;
+    height:100%;
+    margin: 0;
+}
+
+#pv-process-doc #doc-browser ul li {
+    float:left;
+    margin:5px 10px 5px 0;
+    height:calc(100% - 10px);
+    width:84px;
+    color: white;
+}
+#pv-process-doc #doc-browser ul li:hover{
+    cursor:pointer;
+    background: white;
+    color: black;
+}
+#pv-process-doc #doc-browser ul li.doc-selected {
+    background: #ccc;
+    color: black;
+}
+
+#pv-process-doc #doc-browser ul li div.doc-icon{
+    height: calc(70% - 8px);
+    font-size: 36px;
+    margin: 4px 0;
+    text-align:center;
+}
+
+#pv-process-doc #doc-browser ul li div.doc-name{
+    height:30%;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    overflow:hidden;
+    text-align:center;
 }
 
 /*

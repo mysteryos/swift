@@ -1,4 +1,5 @@
 <?php
+
 class AccountsPayableController extends UserController {
     
     public function __construct(){
@@ -17,6 +18,11 @@ class AccountsPayableController extends UserController {
         $this->isAccountingDept = $this->data['isAccountingDept'] = $this->currentUser->hasAnyAccess([$this->accountingPaymentVoucherPermission,
                                                                     $this->accountingPaymentIssuePermission]);
         $this->isHOD = $this->data['isHOD'] = $this->currentUser->hasAccess($this->hodPermission);
+    }
+
+    public function getIndex()
+    {
+        return Redirect::to('/'.$this->context.'/overview');
     }
     
     /*
@@ -291,7 +297,7 @@ class AccountsPayableController extends UserController {
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->createPermission,$this->adminPermission]);
         $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
         $this->data['forms'] = $forms;
-        $this->data['count'] = isset($filter) ? $formsCount : SwiftAPRequest::count();
+        $this->data['count'] = isset($filter) ? $formsCount : SwiftACPRequest::count();
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
@@ -314,7 +320,9 @@ class AccountsPayableController extends UserController {
         $query = SwiftACPRequest::query();
 
         //With
-        $query->with(['supplier','company','document','purchaseOrder','paymentVoucher']);
+        $query->with(['supplier','company','document','purchaseOrder','paymentVoucher','approvalHod','comments'=>function($q){
+                        return $q->orderBy('created_at','DESC');
+                    }]);
 
         //Filter by workflow, at payment voucher
 
@@ -365,6 +373,256 @@ class AccountsPayableController extends UserController {
         $this->data['pageTitle'] = "Payment Voucher Process";
         
         return $this->makeView('acpayable/payment-voucher-process');
+    }
+
+    public function getChequeIssue($type='all',$page=1)
+    {
+        if(!$this->isAccountingDept && !$this->isAdmin)
+        {
+            return parent::forbidden();
+        }
+
+        $limitPerPage = 30;
+
+        /*
+         * Get forms
+         */
+        $query = SwiftACPRequest::query();
+
+        //With
+        $query->with(['supplier','company','paymentVoucher','paymentVoucher.invoice'])
+                ->whereHas('workflow',function($q){
+                    return $q->inprogress()->whereHas('pendingNodes',function($q){
+                        return $q->whereHas('definition',function($q){
+                           return $q->where('name','=','acp_paymentissue');
+                        });
+                    });
+                })
+                ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
+                ->orderBy('swift_acp_invoice.due_date','ASC');
+
+        switch($type)
+        {
+            case 'all':
+                $query->whereHas('paymentVoucher',function($q){
+                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                              ->whereHas('invoice',function($q){
+                                  return $q->whereNotNull('due_date');
+                            });
+                });
+                $this->data['activeSuppliers'] = SwiftACPRequest::distinct('supplier_code')
+                                                ->with(['supplier'])->get();
+                break;
+            case 'overdue':
+                $query->whereHas('paymentVoucher',function($q){
+                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                              ->whereHas('invoice',function($q){
+                                  return $q->whereNotNull('due_date')
+                                        ->where('due_date','<',Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                                });
+                });
+                
+                $this->data['activeSuppliers'] = \SwiftACPRequest::distinct('supplier_code')
+                                                ->with(['supplier'])
+                                                ->whereHas('workflow',function($q){
+                                                    return $q->inprogress()->whereHas('nodes',function($q){
+                                                        return $q->whereHas('definition',function($q){
+                                                           return $q->where('name','=','acp_paymentissue');
+                                                        });
+                                                    });
+                                                })
+                                                ->whereHas('paymentVoucher',function($q){
+                                                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                              ->whereHas('invoice',function($q){
+                                                                  return $q->whereNotNull('due_date')
+                                                                        ->where('due_date','<',Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                                                                });
+                                                })->get();
+                break;
+            case 'today':
+                $query->whereHas('paymentVoucher',function($q){
+                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                              ->whereHas('invoice',function($q){
+                                  return $q->whereNotNull('due_date')
+                                        ->where('due_date','=',Carbon::now()->format('Y-m-d'),'AND');
+                                });
+                })
+                ->orderBy('swift_acp_request.supplier_code','ASC');
+
+                $this->data['activeSuppliers'] = \SwiftACPRequest::distinct('supplier_code')
+                                                ->with(['supplier'])
+                                                ->whereHas('workflow',function($q){
+                                                    return $q->inprogress()->whereHas('nodes',function($q){
+                                                        return $q->whereHas('definition',function($q){
+                                                           return $q->where('name','=','acp_paymentissue');
+                                                        });
+                                                    });
+                                                })
+                                                ->whereHas('paymentVoucher',function($q){
+                                                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                              ->whereHas('invoice',function($q){
+                                                                  return $q->whereNotNull('due_date')
+                                                                        ->where('due_date','=',Carbon::now()->format('Y-m-d'),'AND');
+                                                                });
+                                                })
+                                                ->get();
+                
+                break;
+            case 'tomorrow':
+                $query->whereHas('paymentVoucher',function($q){
+                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                              ->whereHas('invoice',function($q){
+                                  return $q->whereNotNull('due_date')
+                                        ->where('due_date','=',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                                });
+                })
+                ->orderBy('swift_acp_request.supplier_code','ASC');
+
+                $this->data['activeSuppliers'] = \SwiftACPRequest::distinct('supplier_code')
+                                                ->with(['supplier'])
+                                                ->whereHas('workflow',function($q){
+                                                    return $q->inprogress()->whereHas('nodes',function($q){
+                                                        return $q->whereHas('definition',function($q){
+                                                           return $q->where('name','=','acp_paymentissue');
+                                                        });
+                                                    });
+                                                })
+                                                ->whereHas('paymentVoucher',function($q){
+                                                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                              ->whereHas('invoice',function($q){
+                                                                  return $q->whereNotNull('due_date')
+                                                                        ->where('due_date','=',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                                                                });
+                                                })
+                                                ->get();
+                break;
+            case 'future':
+                $query->whereHas('paymentVoucher',function($q){
+                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                              ->whereHas('invoice',function($q){
+                                  return $q->whereNotNull('due_date')
+                                        ->where('due_date','>',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'));
+                                });
+                });
+
+                $this->data['activeSuppliers'] = \SwiftACPRequest::distinct('supplier_code')
+                                                ->with(['supplier'])
+                                                ->whereHas('workflow',function($q){
+                                                    return $q->inprogress()->whereHas('nodes',function($q){
+                                                        return $q->whereHas('definition',function($q){
+                                                           return $q->where('name','=','acp_paymentissue');
+                                                        });
+                                                    });
+                                                })
+                                                ->whereHas('paymentVoucher',function($q){
+                                                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                              ->whereHas('invoice',function($q){
+                                                                  return $q->whereNotNull('due_date')
+                                                                        ->where('due_date','>',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'));
+                                                                });
+                                                })
+                                                ->get();
+                break;
+        }
+
+        /*
+         * Counts
+         */
+
+        //Overdue
+
+        $this->data['overdue_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('nodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_paymentissue');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('paymentVoucher',function($q){
+                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                      ->whereHas('invoice',function($q){
+                                                          return $q->whereNotNull('due_date')
+                                                                ->where('due_date','<',Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
+                                                        });
+                                        })->count();
+
+        //Today
+
+        $this->data['today_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('nodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_paymentissue');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('paymentVoucher',function($q){
+                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                      ->whereHas('invoice',function($q){
+                                                          return $q->whereNotNull('due_date')
+                                                                ->where('due_date','=',Carbon::now()->format('Y-m-d'),'AND');
+                                                        });
+                                        })->count();
+
+        //Tomorrow
+
+        $this->data['tomorrow_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('nodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_paymentissue');
+                                                });
+                                            });
+                                        })->whereHas('paymentVoucher',function($q){
+                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                      ->whereHas('invoice',function($q){
+                                                          return $q->whereNotNull('due_date')
+                                                                ->where('due_date','=',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                                                        });
+                                        })->count();
+
+        //Future
+
+        $this->data['future_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('nodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_paymentissue');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('paymentVoucher',function($q){
+                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                                      ->whereHas('invoice',function($q){
+                                                          return $q->whereNotNull('due_date')
+                                                                ->where('due_date','>',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'));
+                                                        });
+                                        })->count();
+
+        //Form for Display and Count
+
+        $form_count = $query->count();
+
+        $query->take($limitPerPage);
+        if($page > 1)
+        {
+            $query->offset(($page-1)*$limitPerPage);
+        }
+        $forms = $query->get();
+
+//        $this->data['overdue'] = $overdue;
+//        $this->data['dueToday'] = $dueToday;
+//        $this->data['dueTomorrow'] = $dueTomorrow;
+//        $this->data['dueFuture'] = $dueFuture;
+//        $this->data['tomorrowDate'] = $this->data['futureStartDate'] = $tomorrowDate;
+//        $this->data['futureEndDate'] = $futureEndDate;
+        
+        $this->data['forms'] = $forms;
+        $this->data['count'] = $form_count;
+        $this->data['type'] = $type;
+        $this->data['page'] = $page;
+        $this->data['limit_per_page'] = $limitPerPage;
+        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
+        $this->data['pageTitle'] = "Cheque Issue - ".ucfirst($type);
+        return $this->makeView('acpayable/payment-cheque-issue');
+        
     }
 
     public function getCreate()
@@ -580,6 +838,7 @@ class AccountsPayableController extends UserController {
             $this->data['payment_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$type));
             $this->data['cheque_dispatch'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$dispatch));
             $this->data['payment_term'] = json_encode(\Helper::jsonobject_encode(\SwiftACPInvoice::$paymentTerm));
+            $this->data['pv_validation'] = json_encode(\Helper::jsonobject_encode(SwiftACPPaymentVoucher::$validationArray));
             $this->data['approval_hod'] = json_encode(\Helper::jsonobject_encode($this->data['approval_hod']));
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
             $this->data['flag_important'] = \Flag::isImportant($acp);
@@ -631,6 +890,17 @@ class AccountsPayableController extends UserController {
                         }
                     }
                 }
+
+                //Check if form has supplier payment terms
+                if($this->isAccountingDept || $this->isAdmin)
+                {
+                    if(!$acp->supplier->paymentTerm)
+                    {
+                        $this->data['message'][] = [ 'type' => 'warning',
+                                                     'msg' => "This supplier doesn't have any payment terms. <a href=\"".Helper::generateURL($acp->supplier)."\" class=\"pjax\">Please provide one.</a>"
+                                                    ];
+                    }
+                }
             }
             
             //Save recently viewed form
@@ -647,9 +917,9 @@ class AccountsPayableController extends UserController {
     public function putGeneralInfo()
     {
         $acp_id = Crypt::decrypt(Input::get('pk'));
-        $acp = SwiftAPRequest::find($acp_id);
+        $acp = SwiftACPRequest::find($acp_id);
 
-        if(count($acp))
+        if($acp)
         {
 
             if(!$this->checkAccess($acp))
@@ -956,6 +1226,7 @@ class AccountsPayableController extends UserController {
                     break;
                 case "amount":
                 case "payment_number":
+                case "batch_number":
                     if(Input::get('value')!== "" && !is_numeric(Input::get('value')))
                     {
                         return Response::make('Please enter a numeric value',400);
@@ -1098,6 +1369,23 @@ class AccountsPayableController extends UserController {
                     if(Input::get('value') !== "" && !is_numeric(Input::get('value')))
                     {
                         return Response::make("Please input a numeric value.");
+                    }
+                    break;
+                case "validated":
+                    if(!$this->currentUser->isSuperUser())
+                    {
+                        return \Response::make("You don't have access to this feature.");
+                    }
+                    
+                    if(Input::get('value') !== "" && !in_array((int)Input::get('value'),\SwiftACPPaymentVoucher::$validationArray))
+                    {
+                        return Response::make("Please enter a valid value.");
+                    }
+                    break;
+                case "validated_msg":
+                    if(!$this->currentUser->isSuperUser())
+                    {
+                        return \Response::make("You don't have access to this feature.");
                     }
                     break;
                 default:
@@ -1557,16 +1845,58 @@ class AccountsPayableController extends UserController {
         {
             if($doc->delete())
             {
-                echo json_encode(['success'=>1,'url'=>$doc->getAttachedFiles()['document']->url(),'id'=>Crypt::encrypt($doc->id)]);
+                echo json_encode(['success'=>1,'url'=>$doc->getAttachedFiles()['document']->url(),'id'=>\Crypt::encrypt($doc->id)]);
             }
             else
             {
-                return Response::make('Delete failed.',400);
+                return \Response::make('Delete failed.',400);
             }
         }
         else
         {
-            return Response::make('Document not found',404);
+            return \Response::make('Document not found',404);
+        }
+    }
+
+    public function putSupplierPaymentTerm($supplier_code)
+    {
+        $id = \Crypt::decrypt($supplier_code);
+        $supplier = \JdeSupplierMaster::find($id);
+        if($supplier)
+        {
+            /*
+             * Check Permissions
+             */
+            if(!$this->isAccountingDept && !$this->isAdmin)
+            {
+                return parent::forbidden();
+            }
+
+            //Validation
+            switch(Input::get('name'))
+            {
+                case "type":
+                    if(!array_key_exists(\Input::get('value'),\SupplierPaymentTerm::$typeList))
+                    {
+                        return \Response::make("Please input a valid value",400);
+                    }
+                    break;
+                case "term_id":
+                    if(!\PaymentTerm::find(\Input::get('value')))
+                    {
+                        return \Response::make("Please input a valid value",400);
+                    }
+                    break;
+                default:
+                    return Response::make('Unknown Field',400);
+                    break;
+            }
+
+            return Helper::saveChildModel($supplier,"\SupplierPaymentTerm","paymentTerm",$this->currentUser,false);
+        }
+        else
+        {
+            return \Response::make('Supplier not found',500);
         }
     }
 
@@ -1860,7 +2190,10 @@ class AccountsPayableController extends UserController {
             }
             else
             {
-                $mode = 'view';
+                if($this->isAccountingDept || $this->isAdmin)
+                {
+                    $mode='edit';
+                }
             }
 
             /*
@@ -1882,8 +2215,9 @@ class AccountsPayableController extends UserController {
             $this->data['edit'] = $mode==='edit' ? true : false;
             $this->data['form'] = $supplier;
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$supplierTags));
+            $this->data['payment_term_type'] = json_encode(\Helper::jsonobject_encode(\SupplierPaymentTerm::$typeList));
+            $this->data['payment_term_term'] = json_encode(\Helper::jsonobject_encode(\PaymentTerm::getAll()));
             $this->data['activity'] = Helper::getMergedRevision(['credit'],$supplier,true);
-            
             return $this->makeView('acpayable/supplier_single');
         }
         else

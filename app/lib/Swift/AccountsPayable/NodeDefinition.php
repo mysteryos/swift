@@ -268,7 +268,41 @@ Class NodeDefinition {
 
     public static function acpCheckpayment($nodeActivity,$returnReason=false)
     {
-        return true;
+        $returnReasonList = array();
+
+        $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+
+        if($acp)
+        {
+            //Verify Pending Payment Vouchers
+            $paymentVoucherPending = $acp->paymentVoucher()->where('validated','=',\SwiftACPPaymentVoucher::VALIDATION_PENDING)->count();
+            if($paymentVoucherPending > 0)
+            {
+                $returnReasonList['pv_pending'] = "Payment voucher validation by system is pending";
+            }
+
+            //Verify Payment Voucher Errors
+            $paymentVoucherError = $acp->paymentVoucher()->where('validated','=',\SwiftACPPaymentVoucher::VALIDATION_ERROR)->count();
+            if($paymentVoucherError)
+            {
+                $returnReasonList['pv_error'] = "Payment voucher errors have been found. See Payment voucher section";
+            }
+
+            //Verify Pending Payment Numbers
+            $paymentPending = $acp->payment()->where('validated','=',\SwiftACPPayment::VALIDATION_PENDING)->count();
+            if($paymentPending > 0)
+            {
+                $returnReasonList['payment_pending'] = "Payment validation by system is pending";
+            }
+
+            $paymentError = $acp->payment()->where('validated','=',\SwiftACPPayment::VALIDATION_ERROR)->count();
+            if($paymentError > 0)
+            {
+                $returnReasonList['payment_error'] = "Payment errors have been found. See payment section";
+            }
+            
+        }
+        return $returnReason ? $returnReasonList : false;
     }
 
     public static function acpBanktransfer($nodeActivity,$returnReason=false)

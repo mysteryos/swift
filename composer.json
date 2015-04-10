@@ -30,7 +30,8 @@
                 "doctrine/dbal": "2.4",
                 "xethron/migrations-generator": "dev-master",
                 "kmd/logviewer": "1.2.*",
-                "barryvdh/laravel-debugbar": "1.*"
+                "barryvdh/laravel-debugbar": "1.*",
+		"themonkeys/cachebuster": "dev-master"
 	},
         "repositories": [
             {

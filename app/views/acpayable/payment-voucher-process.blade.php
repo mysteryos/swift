@@ -60,6 +60,46 @@
                 <h2 class="text-center">No Documents Found.</h2>
             </div>
             @endif
+            <div id="doc-browser">
+                @if($form_count > 0 && count($forms->first()->document) > 0)
+                    <ul class="doc-list" id="doc-list-{{$forms->first()->id}}">
+                    @foreach($forms->first()->document as $k => $doc)
+                        <li data-href="/pdfviewer/viewer.html?file={{$doc->getAttachedfiles()['document']->url()}}" @if($k===0)class="doc-selected"@endif>
+                            <div class="doc-icon">
+                                    <?php
+                                    switch($doc->getAttachedfiles()['document']->contentType())
+                                    {
+                                        case "image/jpeg":
+                                        case "image/png":
+                                        case "image/bmp":
+                                        case "image/jpg":
+                                            echo '<i class="fa fa-file-image-o"></i>';
+                                            break;
+                                        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                                        case "application/vnd.ms-excel":
+                                            echo '<i class="fa fa-file-excel-o"></i>';
+                                            break;
+                                        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                                        case "application/msword":
+                                            echo '<i class="fa fa-file-word-o"></i>';
+                                            break;
+                                        case "application/pdf":
+                                            echo '<i class="fa fa-file-pdf-o"></i>';
+                                            break;
+                                        default:
+                                            echo '<i class="fa fa-file-o"></i>';
+                                            break;
+                                    }
+                                    ?>
+                            </div>
+                            <div class="doc-name">
+                                {{$doc->getAttachedfiles()['document']->originalFilename()}}
+                            </div>
+                        </li>
+                    @endforeach
+                    </ul>
+                @endif
+            </div>
         </div>
     </div>
     <!-- END Payment Voucher -->

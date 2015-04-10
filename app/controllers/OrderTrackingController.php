@@ -556,6 +556,12 @@ class OrderTrackingController extends UserController {
              * Enable Commenting
              */
             $this->enableComment($order);
+
+            /*
+             * Enable Subscriptions
+             */
+
+            $this->enableSubscription($order);
             
             /*
              * Data

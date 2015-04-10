@@ -15,7 +15,7 @@ class SwiftACPPayment extends Eloquent
 
     protected $table = "swift_acp_payment";
     
-    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number'];
+    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number'];
     
     protected $dates = ['deleted_at','date','validated_on'];
 
@@ -50,6 +50,11 @@ class SwiftACPPayment extends Eloquent
         self::TYPE_BANKTRANSFER => 'Bank Transfer',
     ];
 
+    //Validation
+    const VALIDATION_PENDING = 0;
+    const VALIDATION_COMPLETE = 1;
+    const VALIDATION_ERROR = -1;
+
     //Dispatch
 
     const DISPATCH_PICKUP = 1;
@@ -64,7 +69,7 @@ class SwiftACPPayment extends Eloquent
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','payment_number');
+    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number');
     
     protected $revisionFormattedFieldNames = array(
         'status' => 'Status',
@@ -73,7 +78,8 @@ class SwiftACPPayment extends Eloquent
         'amount' => 'Amount',
         'cheque_dispatch' => 'Cheque Dispatch',
         'cheque_dispatch_comment' => 'Cheque Comment',
-        'payment_number' => 'Payment Number'
+        'payment_number' => 'Payment Number',
+        'batch_number' => 'Batch Number'
     );
     
     public $saveCreateRevision = true;
@@ -89,7 +95,7 @@ class SwiftACPPayment extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "payment";
-    public $esRemove = ['cheque_dispatch_comment','acp_id'];
+    public $esRemove = ['cheque_dispatch_comment','acp_id','validated','validated_msg'];
 
     public function esGetParent()
     {

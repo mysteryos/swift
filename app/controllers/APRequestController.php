@@ -95,6 +95,12 @@ class APRequestController extends UserController {
              * Enable Commenting
              */
             $this->enableComment($apr);
+
+            /*
+             * Enable Subscription
+             */
+
+            $this->enableSubscription($apr);
             
             /*
              * Data

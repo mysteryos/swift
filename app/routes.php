@@ -96,7 +96,7 @@ Route::controller('test','testController');
  * @url: https://github.com/TheMonkeys/laravel-cachebuster
  */
 
-Route::get('{path}', function($filename) {
-  return Bust::css($filename);
-})->where('path', '.*\.css$');
-App::make('cachebuster.StripSessionCookiesFilter')->addPattern('|\.css$|');
+//Route::get('{path}', function($filename) {
+//  return Bust::css($filename);
+//})->where('path', '.*\.css$');
+//App::make('cachebuster.StripSessionCookiesFilter')->addPattern('|\.css$|');

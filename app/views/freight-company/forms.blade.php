@@ -16,7 +16,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="fc_forms">
+<div id="content" data-js="fc_forms" data-urljs="{{Bust::url('/js/swift/swift.fc_forms.js')}}">
     <div class="row">
         <div class="col-xs-12">
             <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-building"></i> Freight Company &nbsp;</h1>            

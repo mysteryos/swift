@@ -145,7 +145,16 @@ function executePageScript()
             //Try some magic
             if(typeof window[functionName] === "undefined")
             {
-                jsLoader(["/js/swift/swift."+functionName+".js"]);
+                var jsUrl = document.getElementById('content').getAttribute('data-urljs').toString();
+                if(typeof jsUrl !== "undefined")
+                {
+                    jsLoader([$.trim(jsUrl)]);
+                }
+                else
+                {
+                    console.log('Js Url not set');
+                    jsLoader(["/js/swift/swift."+functionName+".js"]);
+                }
             }
             else
             {
@@ -1745,7 +1754,7 @@ var main = {
     ot_summary: function() {
         if(typeof window['ot_summary'] === "undefined")
         {
-            jsLoader(["/js/plugin/datatables/jquery.dataTables-all.min.js","/js/swift/swift.ot_summary.js"]);
+            jsLoader(["/js/plugin/datatables/jquery.dataTables-all.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {
@@ -1756,7 +1765,7 @@ var main = {
     apr_statistics: function() {
         if(typeof window['apr_statistics'] === "undefined")
         {
-            jsLoader(["/js/plugin/morris/raphael.2.1.0.min.js","/js/plugin/morris/morris.min.js","/js/swift/swift.apr_statistics.js"]);
+            jsLoader(["/js/plugin/morris/raphael.2.1.0.min.js","/js/plugin/morris/morris.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {
@@ -1767,7 +1776,7 @@ var main = {
     salesman_budget: function() {
         if(typeof window['salesman_budget'] === "undefined")
         {
-            jsLoader(["/js/plugin/morris/raphael.2.1.0.min.js","/js/plugin/morris/morris.min.js","/js/swift/swift.salesman_budget.js"]);
+            jsLoader(["/js/plugin/morris/raphael.2.1.0.min.js","/js/plugin/morris/morris.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {
@@ -1778,7 +1787,7 @@ var main = {
     acp_payment_cheque_issue: function() {
         if(typeof window['acp_payment_cheque_issue'] === "undefined")
         {
-            jsLoader(["/js/plugin/context/context.js","/js/swift/swift.acp_payment_cheque_issue.js"]);
+            jsLoader(["/js/plugin/context/context.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {

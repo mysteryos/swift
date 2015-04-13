@@ -13,7 +13,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="dashboard">
+<div id="content" data-js="dashboard" data-urljs="{{Bust::url('/js/swift/swift.dashboard.js')}}">
 
         <div class="row">
                 <div class="col-xs-12">

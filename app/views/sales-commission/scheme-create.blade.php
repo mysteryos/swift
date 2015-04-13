@@ -13,7 +13,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="salescommission_createscheme">
+<div id="content" data-js="salescommission_createscheme" data-jsurl="{{Bust::url('/js/swift/swift.salescommission_createscheme.js')}}">
     <div class="row">
 	<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
 		<h1 class="page-title txt-color-blueDark">

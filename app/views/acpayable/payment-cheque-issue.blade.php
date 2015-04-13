@@ -16,7 +16,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="acp_payment_cheque_issue">
+<div id="content" data-js="acp_payment_cheque_issue" data-urljs="{{Bust::url('/js/swift/swift.acp_payment_cheque_issue.js')}}">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
             <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-print"></i> Cheque Issue &nbsp;</h1>

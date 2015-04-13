@@ -37,7 +37,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="@if($edit){{"ot_edit"}}@else{{"ot_view"}}@endif">
+<div id="content" data-js="@if($edit){{"ot_edit"}}@else{{"ot_view"}}@endif" data-urljs="@if($edit){{Bust::url('/js/swift/swift.ot_edit.js')}}@else{{Bust::url('/js/swift/swift.ot_view.js')}}@endif">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($order->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $order->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $order->channelName() }}" />

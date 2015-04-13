@@ -7,21 +7,14 @@
 		<title> {{ Config::get('website.name') }} - Login </title>
 		<meta name="description" content=""/>
 		<meta name="author" content="Pudaruth Keshav"/>
-
-		<!-- Use the correct meta names below for your web application
-			 Ref: http://davidbcalhoun.com/2010/viewport-metatag 
-			 
-		<meta name="HandheldFriendly" content="True">
-		<meta name="MobileOptimized" content="320">-->
-		
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 
 		<!-- Basic Styles -->
-                {{ HTML::style('/css/bootstrap.min.css')}}
-                {{ HTML::style('/css/font-awesome.min.css') }}
+        <link rel="stylesheet" href="{{Bust::url('/css/bootstrap.min.css')}}" />
+        <link rel="stylesheet" href="{{Bust::url('/css/font-awesome.min.css')}}" />
 
 		<!-- SmartAdmin Styles -->
-                {{ HTML::style('/css/smartadmin-production.css') }}
+        <link rel="stylesheet" href="{{Bust::url('/css/smartadmin-production.css')}}" />
 
 		<!-- FAVICONS -->
 		<link rel="shortcut icon" href="/img/favicon/favicon.ico" type="image/x-icon">
@@ -36,12 +29,9 @@
 		<header id="header">
 			<div id="logo-group">
 				<span id="logo">
-                                    <img src="/img/logo.png" alt="Scott Swift"/>
-                                </span>
-
-				<!-- END AJAX-DROPDOWN -->
+                    <img src="/img/logo.png" alt="Scott Swift"/>
+                </span>
 			</div>
-<!--			<span id="login-header-space"> <span class="hidden-mobile"></span></span>-->
 		</header>
                 
 		<div id="main" role="main">
@@ -105,21 +95,21 @@
 					</div>
 					<div class="col-xs-12 col-sm-12 col-md-5 col-lg-4">
 						<div class="well no-padding">
-                                                    <div class="smart-form client-form">
-                                                        <header>
-                                                            Sign In Using
-                                                        </header>
-                                                        <fieldset>
-                                                            <ul class="list-inline text-center">
-                                                                <li>
-                                                                    <a href="{{ $googleAuthUrl }}" class="btn btn-primary btn-circle btn-lg" title="Google"><i class="fa fa-google-plus"></i></a>
-                                                                </li>
-                                                            </ul>
-                                                        </fieldset>
-                                                        <footer>
-                                                            By signing in, you agree to our terms & conditions.
-                                                        </footer>
-                                                    </div>
+                            <div class="smart-form client-form">
+                                <header>
+                                    Sign In Using
+                                </header>
+                                <fieldset>
+                                    <ul class="list-inline text-center">
+                                        <li>
+                                            <a href="{{ $googleAuthUrl }}" class="btn btn-primary btn-circle btn-lg" title="Google"><i class="fa fa-google-plus"></i></a>
+                                        </li>
+                                    </ul>
+                                </fieldset>
+                                <footer>
+                                    By signing in, you agree to our terms & conditions.
+                                </footer>
+                            </div>
 						</div>
 					</div>
 				</div>

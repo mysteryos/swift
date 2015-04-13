@@ -20,7 +20,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="ot_transit_local">
+<div id="content" data-js="ot_transit_local" data-urljs="{{Bust::url('/js/swift/swift.ot_transit_local.js')}}">
     <div class="row">
         <div class="col-xs-12">
             <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-truck"></i> Pickup &nbsp;</h1>

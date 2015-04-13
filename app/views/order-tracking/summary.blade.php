@@ -20,7 +20,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="ot_summary">
+<div id="content" data-js="ot_summary" data-urljs="{{Bust::url('/js/swift/swift.ot_summary.js')}}">
     <div class="row">
         <div class="col-xs-12">
             <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-table"></i> Summary &nbsp;</h1>

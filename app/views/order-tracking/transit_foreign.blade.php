@@ -20,7 +20,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="ot_transit_foreign">
+<div id="content" data-js="ot_transit_foreign" data-urljs="{{Bust::url('/js/swift/swift.ot_transit_foreign.js')}}">
     <div class="row">
         <div class="col-xs-12">
             <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-plane"></i> Transit Foreign &nbsp;</h1>

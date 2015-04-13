@@ -19,7 +19,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="acp_payment_voucher_process">
+<div id="content" data-js="acp_payment_voucher_process" data-urljs="{{Bust::url('/js/swift/swift.acp_payment_voucher_process.js')}}">
     <input type="hidden" name="channel_name" id="channel_name" value="acp_payment_voucher_process" />
     <!--Payment Vouchers -->
     <div id="pv-process-container">

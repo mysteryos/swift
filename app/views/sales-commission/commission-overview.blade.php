@@ -17,7 +17,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="salescommission_commissionoverview">
+<div id="content" data-js="salescommission_commissionoverview" data-urljs="{{Bust::url('/js/swift/swift.salescommission_commissionoverview.js')}}">
     <div class="row">
         <div class="col-xs-12">
             <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i>Commission - Overview &nbsp;</h1>

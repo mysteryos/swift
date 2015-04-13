@@ -14,7 +14,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="salesman_budget">
+<div id="content" data-js="salesman_budget" dataurljs="{{Bust::url('/js/swift/swift.salesman_budget.js')}}">
     <div class="row">
         <div class="col-xs-12">
             <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i>Budget - Period of {{ $datePeriodStart }} - {{ $datePeriodEnd }} &nbsp;</h1>

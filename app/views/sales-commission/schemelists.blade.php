@@ -12,7 +12,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="salescommission_schemelists">
+<div id="content" data-js="salescommission_schemelists" data-jsurl="{{Bust::url('/js/swift/swift.salescommission_schemelists.js')}}">
     <div class="row">
         <div class="col-md-2 col-xs-12">
             <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Scheme &nbsp;</h1>            

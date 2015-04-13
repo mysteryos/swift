@@ -19,7 +19,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="fc_edit">
+<div id="content" data-js="fc_edit" data-urljs="{{Bust::url('/js/swift/swift.fc_edit.js')}}">
     <div id="draghover" class="text-align-center">
         <div class="circle bg-color-blue">
             <i class="fa fa-cloud-upload fa-4x"></i><br>

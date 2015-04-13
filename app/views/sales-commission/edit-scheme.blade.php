@@ -21,7 +21,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="@if($edit){{"salescommission_editscheme"}}@else{{"salescommission_viewscheme"}}@endif">
+<div id="content" data-js="@if($edit){{"salescommission_editscheme"}}@else{{"salescommission_viewscheme"}}@endif" data-urljs="@if($edit){{Bust::url('/js/swift/swift.salescommission_editscheme.js')}}@else{{Bust::url('/js/swift/swift.salescommission_viewscheme.js')}}@endif">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($form->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $form->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $form->channelName() }}" />

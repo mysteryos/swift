@@ -12,7 +12,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="salesman_lists">
+<div id="content" data-js="salesman_lists" data-urljs="{{Bust::url('/js/swift/swift.salesman_lists.js')}}">
     <div class="row">
         <div class="col-md-2 col-xs-12">
             <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Salesman Administration &nbsp;</h1>            

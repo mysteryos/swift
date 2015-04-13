@@ -21,7 +21,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="@if($edit){{"salesman_edit"}}@else{{"salesman_view"}}@endif">
+<div id="content" data-js="@if($edit){{"salesman_edit"}}@else{{"salesman_view"}}@endif" dataurljs="@if($edit){{Bust::url('/js/swift/swift.salesman_edit.js')}}@else{{Bust::url('/js/swift/swift.salesman_view.js')}}@endif">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($form->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $form->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $form->channelName() }}" />
@@ -29,16 +29,16 @@
     <input type="hidden" id="project-name" value='<i class="fa-fw fa {{ $form->getIcon() }}"></i> {{ $form->name }} (ID: {{ $form->id }})'/>
     <input type="hidden" id="project-id" value='{{ $form->channelName() }}' />
     <div class="row">
-	<div class="col-xs-12 col-sm-6 col-md-4 col-lg-8">
-		<h1 class="page-title txt-color-blueDark">
-			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-map-marker"></i> 
-				Salesman
-			<span>&gt;  
-				{{ $form->getReadableName() }}
-			</span>
-		</h1>
-	</div>
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-8">
+            <h1 class="page-title txt-color-blueDark">
+                <!-- PAGE HEADER -->
+                <i class="fa-fw fa fa-map-marker"></i>
+                    Salesman
+                <span>&gt;
+                    {{ $form->getReadableName() }}
+                </span>
+            </h1>
+        </div>
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">
             <h1 class="page-title">
                 <span>Last update was by <?php echo Helper::getUserName($activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($activity[0]->created_at))}}" data-livestamp="{{strtotime($activity[0]->created_at)}}"></abbr></span>

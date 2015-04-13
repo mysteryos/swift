@@ -19,7 +19,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="salescommission_commissionview">
+<div id="content" data-js="salescommission_commissionview" data-urljs="{{Bust::url('/js/swift/swift.salescommission_commissionview.js')}}">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($commissions->first()->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $commissions->first()->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $commissions->first()->getChannelName() }}" />

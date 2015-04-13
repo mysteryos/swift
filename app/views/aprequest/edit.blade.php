@@ -37,7 +37,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="@if($edit){{"apr_edit"}}@else{{"apr_view"}}@endif">
+<div id="content" data-js="@if($edit){{"apr_edit"}}@else{{"apr_view"}}@endif" data-urljs="@if($edit){{Bust::url('/js/swift/swift.apr_edit.js')}}@else{{Bust::url('/js/swift/swift.apr_view.js')}}@endif">
     <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($form->id) }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $form->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="apr_{{ $form->id }}" />

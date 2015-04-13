@@ -16,7 +16,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="apr_forms">
+<div id="content" data-js="apr_forms" data-urljs="{{Bust::url('/js/swift/swift.apr_forms.js')}}">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
             <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>            

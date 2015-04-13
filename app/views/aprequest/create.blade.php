@@ -13,7 +13,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="apr_create">
+<div id="content" data-js="apr_create" data-urljs="{{ Bust::url('/js/swift/swift.apr_create.js')}}">
     <div class="row">
 	<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
 		<h1 class="page-title txt-color-blueDark">

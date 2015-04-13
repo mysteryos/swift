@@ -16,7 +16,8 @@ class UserController extends Controller {
         public function __construct()
         {
             //Register Base JS/CSS files
-            if (!Request::header('X-PJAX')) {
+            if (!Request::header('X-PJAX'))
+            {
                 $this->data['js'] = Config::get('assets.js');
                 $this->data['css'] = Config::get('assets.css');
 

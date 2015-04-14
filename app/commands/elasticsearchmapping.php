@@ -66,6 +66,7 @@ class elasticsearchmapping extends Command {
                     }
                     break;
                 case "recreate":
+                    $delparams['index'] = $createparams['index'] = \App::environment();
                     $delparams['type'] = $context;
                     $createparams['type'] = $context;
                     $createparams['body'][$context] = Config::get('elasticsearchmapping.'.$context);

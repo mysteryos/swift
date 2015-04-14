@@ -19,7 +19,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="@if($edit){{"acp_supplier_edit"}}@else{{"acp_supplier_view"}}@endif" data-url="@if($edit){{Bust::url('/js/swift/swift.acp_supplier_edit.js')}}@else{{Bust::url('/js/swift/swift.acp_supplier_view.js')}}@endif">
+<div id="content" data-js="@if($edit){{"acp_supplier_edit"}}@else{{"acp_supplier_view"}}@endif" data-urljs="@if($edit){{Bust::url('/js/swift/swift.acp_supplier_edit.js')}}@else{{Bust::url('/js/swift/swift.acp_supplier_view.js')}}@endif">
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $form->channelName() }}" />
     <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
     <input type="hidden" id="project-name" value='<i class="fa-fw fa {{ $form->getIcon() }}"></i> {{ $form->getReadableName() }}'/>

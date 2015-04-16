@@ -31,11 +31,11 @@ class JdeProduct extends Eloquent {
     
     public static function getByCode($term,$offset,$limit)
     {
-        return self::where('ITM','LIKE',"%$term%")
+        return self::where('AITM','LIKE',"%$term%")
                 ->limit($limit)
                 ->distinct()
                 ->offset($offset)
-                ->orderBy('ITM','ASC')
+                ->orderBy('AITM','ASC')
                 ->remember(self::$cache_expiry_time)->get();        
     }
     
@@ -47,7 +47,7 @@ class JdeProduct extends Eloquent {
     
     public static function countByCode($term)
     {
-        return self::where('ITM','LIKE',"%$term%")
+        return self::where('AITM','LIKE',"%$term%")
                 ->distinct()
                 ->remember(self::$cache_expiry_time)->count();        
     }      

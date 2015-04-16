@@ -213,6 +213,11 @@ class SwiftOrder extends Eloquent {
     {
         return $this->morphMany('SwiftSubscription','subscriptionable');
     }
+
+    public function payable()
+    {
+        return $this->morphMany('SwiftACPRequest','payable');
+    }
     
     
     /*

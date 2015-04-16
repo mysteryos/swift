@@ -32,7 +32,7 @@ class SwiftACPRequest extends Eloquent
     public $esMain = true;
     //Info Context
     public $esInfoContext = "acpayable";
-    public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due'];
+    public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due','payable_id','payable_type'];
     
     /* Revisionable */
     
@@ -306,6 +306,11 @@ class SwiftACPRequest extends Eloquent
     public function approvalPayment()
     {
         return $this->morphMany('SwiftApproval','approvable')->where('type','=',\SwiftApproval::APC_PAYMENT);
+    }
+
+    public function payable()
+    {
+        return $this->morphTo();
     }
     
 

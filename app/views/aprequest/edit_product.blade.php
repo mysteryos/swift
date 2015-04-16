@@ -26,7 +26,7 @@
         <div class="form-group col-lg-6 col-xs-12">
             <label class="col-md-2 control-label">Quantity*</label>
             <div class="col-md-10">
-                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_quantity_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$canModifyProduct) editable-disabled @endif" data-type="text" data-context="product" data-name="quantity" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->quantity or 0 }}"></a>
+                <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_quantity_".Crypt::decrypt($p->id)."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$canModifyProduct) editable-disabled @endif" data-type="text" data-context="product" data-name="quantity" data-pk="{{ $p->id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->quantity or "" }}"></a>
             </div>
         </div>        
         <div class="form-group col-lg-6 col-xs-12">

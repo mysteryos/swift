@@ -26,7 +26,7 @@
                 <div class="btn-group">
                     <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
                 </div>
-            </div>            
+            </div>
         </div>
     </div>
     <div class="row">

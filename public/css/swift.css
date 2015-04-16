@@ -1044,6 +1044,15 @@ p.totalprice.loading:after, a.loading:after {
 }
 
 /*
+*  Accounts Payable - Cheque Issue
+*/
+
+#filter-btn .popover {
+    width:350px;
+    max-width:none;
+}
+
+/*
 * 404 Not found
 */
 

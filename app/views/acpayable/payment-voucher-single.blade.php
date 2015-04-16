@@ -31,6 +31,10 @@
                     @endforeach</td>
                     </tr>
                     <tr>
+                        <td><label>Invoice Number</label></td>
+                        <td class="searchable">{{ $f->invoice->number or ""}}</td>
+                    </tr>
+                    <tr>
                         <td>Approval</td>
                         <td>
                             <?php

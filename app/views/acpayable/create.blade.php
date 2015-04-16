@@ -17,7 +17,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="acp_create">
+<div id="content" data-js="acp_create" data-urljs="{{Bust::url('/js/swift/swift.acp_create.js')}}">
     <div class="row">
         <div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
             <h1 class="page-title txt-color-blueDark">
@@ -68,7 +68,7 @@
                                         </div>
                                         <div id="accordion-1" class="panel-collapse collapse in">
                                             <div class="panel-body">
-                                                <fieldset>
+                                                <fieldset class="col-lg-6 col-lg-offset-3 col-md-9 col-xs-12">
                                                     <div class="form-group">
                                                         <label class="col-md-2 control-label">Billable Company*</label>
                                                         <div class="col-md-10">
@@ -87,6 +87,20 @@
                                                         <label class="col-md-2 control-label">Invoice number</label>
                                                         <div class="col-md-10">
                                                              <input type="text" autocomplete="off" class="form-control" name="invoice_number" placeholder="Type in an invoice number" />
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label class="col-xs-2 control-label">Purchase Order number</label>
+                                                        <div class="col-xs-8">
+                                                                <input type="text" autocomplete="off" class="form-control" name="po_number" placeholder="Type in a purchase order number" />
+                                                        </div>
+                                                        <div class="col-xs-2">
+                                                            <select name="po_type" class="form-control">
+                                                                @foreach(\SwiftPurchaseOrder::$types as $k => $v)
+                                                                    <option value="{{$k}}" @if($v==="ON")selected @endif>{{$v}}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                     </div>
                                                 </fieldset>

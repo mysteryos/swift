@@ -61,11 +61,11 @@
         }        
     });
     
-        $("input.datepicker").datepicker({
-            dateFormat : "yy/mm/dd",
-            prevText : '<i class="fa fa-chevron-left"></i>',
-            nextText : '<i class="fa fa-chevron-right"></i>',
-        });    
+    $("input.datepicker").datepicker({
+        dateFormat : "yy/mm/dd",
+        prevText : '<i class="fa fa-chevron-left"></i>',
+        nextText : '<i class="fa fa-chevron-right"></i>',
+    });    
     
     $('#productPieChartForm,#customerPieChartForm,#requesterPieChartForm').on('submit',function(e){
         e.preventDefault();        

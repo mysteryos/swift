@@ -4,14 +4,9 @@
 
 <!-- RIBBON -->
 <div id="ribbon">
-
         <div class="ribbon-button-alignment">
-            <!--<a class="btn btn-default" href="javascript:void(0);"><i class="fa fa-gear"></i> Icon Left</a>-->
-<!--            <span id="search" class="btn btn-ribbon hidden-xs" data-title="search"><i class="fa fa-grid"></i> Change Grid</span>
-            <span id="add" class="btn btn-ribbon hidden-xs" data-title="add"><i class="fa fa-plus"></i> Add</span>
-            <span id="search" class="btn btn-ribbon" data-title="search"><i class="fa fa-search"></i> <span class="hidden-mobile">Search</span></span>-->
+            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
-
 </div>
 <!-- END RIBBON -->
 
@@ -43,7 +38,52 @@
                         </li>
                     </ul>
                 </div>
-                <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                <div class="btn-group">
+                    <button class="btn btn-default popover-trigger" id="filter-btn" data-original-title="Filter" data-placement="bottom" rel="tooltip">
+                        <i class="fa fa-filter"></i>
+                    </button>
+                    <div id="filter-popover" class="hide">
+                        <form method="GET" action="" name="filter_cheque">
+                            <input type="hidden" name="filter" value="1" />
+                            <div class="form-group">
+                                <label>Supplier</label>
+                                <select name="filter_supplier" class="form-control">
+                                    <option disabled selected>Please select a supplier</option>
+                                    @foreach($activeSuppliers as $s)
+                                        <option value="{{$s->supplier_code}}">{{$s->supplier->getReadableName()}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @if($type==="all" || $type === "future")
+                                <div class="form-group">
+                                    <div class="row">
+                                        @if($type==="all")
+                                        <div class="col-xs-5 text-center">
+                                            <input type="text" class="datepicker form-control" name="filter_start_date" value="" placeholder="Start Date" date-format="dd/mm/yy"/>
+                                        </div>
+                                        <div class="col-xs-2 text-center">
+                                            -
+                                        </div>
+                                        @endif
+                                        <div class="col-xs-5 text-center">
+                                            <input type="text" class="datepicker form-control" name="filter_end_date" value="" placeholder="End Date" date-format="dd/mm/yy"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <button type="submit" class="btn btn-primary btn-sm">Filter Now</button>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <button class="btn btn-default" id="filter-btn-close">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 <div class="btn-group toggle-oncheck"style="display:none;">
                     <button class="btn btn-default" data-original-title="Set Payment Voucher Number" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-file-text-o"></i>
@@ -79,15 +119,27 @@
                     </ul>
                 </div>
             </div>
-
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="row">
-                <div class="col-xs-12">
+                <div class="col-xs-8">
+                    @if($filter_on)
+                        <div class="hidden-tablet pull-left">
+                            <span><i>Filtered By: </i></span>
+                            @foreach($filter as $name => $f)
+                                @if($f['enabled'])
+                                    <a href="{{"/".$rootURL."/cheque-issue/".$type."/0".Helper::filterQueryParam(Url::full(),$name)}}" class="btn btn-sm btn-default pjax">{{$f['name'].": ".$f['value']}} <i class="fa fa-times"></i></a>
+                                @endif
+                            @endforeach
+                            <a href="{{"/".$rootURL."/cheque-issue/".$type."/0"}}" class="btn btn-sm btn-default pjax">Clear All <i class="fa fa-times"></i></a>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-xs-4">
                     @if($count)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/cheque-issue/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/cheque-issue/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/cheque-issue/".$type."/".($page-1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/cheque-issue/".$type."/".($page+1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">

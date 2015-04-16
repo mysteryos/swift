@@ -567,5 +567,27 @@ class Helper {
             }
         }
     }
+
+    public function filterQueryParam($url,$query_param)
+    {
+        $parseUrl = parse_url($url);
+        if($parseUrl !== false)
+        {
+            parse_str($parseUrl['query'],$params);
+            if($params !== false)
+            {
+                if(array_key_exists($query_param,$params))
+                {
+                    unset($params[$query_param]);
+                    if(count($params) > 0)
+                    {
+                        return "?".http_build_query($params);
+                    }
+                }
+
+            }
+        }
+        return "";
+    }
     
 }

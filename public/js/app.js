@@ -1187,6 +1187,24 @@ function loadURL(url, container) {
 $.document_.pjax('a.pjax', '#main');
 
 /*
+ * Color box AJAX Universal
+ */
+
+$.maindiv.on('click','a.colorbox-ajax',function(){
+     $.colorbox({
+        href:$(this).attr('href'),
+        open:true,
+        maxHeight:"100%",
+        maxWidth:"100%",
+        initialWidth:"64px",
+        initialHeight:"84px",
+        closeButton:false,
+        transition:"fade"
+    });
+    return false; 
+});
+
+/*
  * After HTML Replace
  */
 $.document_.on('pjax:success, pjax:end',function(){

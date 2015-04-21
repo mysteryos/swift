@@ -67,7 +67,7 @@
 	</div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
             <h1 class="page-title txt-color-blueDark">
-                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span>
+                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span> <a href="/workflow/by-form/{{get_class($form)}}/{{Crypt::encrypt($form->id)}}" class="colorbox-ajax" rel="tooltip" data-placement="bottom" data-original-title="Workflow History"><i class="fa fa-history"></i></a>
             </h1>
         </div>
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">

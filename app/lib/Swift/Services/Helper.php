@@ -504,8 +504,9 @@ class Helper {
      * Reconciliate Swift Purchase Order with JDE Po Header
      */
 
-    public function validatePendingPurchaseOrder()
+    public function validatePendingPurchaseOrder($poArray=false)
     {
+        
         $orphanPending = \SwiftPurchaseOrder::whereNotNull('reference')
                         ->whereNotNull('type')
                         ->where('validated','=',\SwiftPurchaseOrder::VALIDATION_PENDING)

@@ -69,6 +69,9 @@ Route::group(array('before' => array('auth')), function()
 
     //Jde Purchase Order
     Route::controller('jde-purchase-order','JdePurchaseOrderController');
+
+    //Workflow
+    Route::controller('workflow','WorkflowController');
     
 });
 

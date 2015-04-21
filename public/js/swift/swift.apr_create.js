@@ -68,10 +68,10 @@
     $('#ccode').select2({
         placeholder: 'Enter a customer code/name',
         allowClear: true,
-        minimumInputLength: 2,
+        minimumInputLength: 0,
         positionDropdownAbsolute: false,
         ajax: {
-             url: "/ajaxsearch/customercode",
+             url: "/ajaxsearch/customercode/aprequest",
              dataType: "json",
              quietMillis: 500,
              data: function (term, page) {

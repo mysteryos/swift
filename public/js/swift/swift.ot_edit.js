@@ -21,7 +21,7 @@ function addMulti($dummy,pk)
             if(this.getAttribute('data-context')=="purchaseorder")
             {
                 var $poLink = $(this).parents('fieldset').find('a.purchase-order-view');
-                $poLink.attr('href',$poLink.attr('href')+response.id);
+                $poLink.attr('href',$poLink.attr('href')+response.encrypted_id);
             }
             
             //Set new pk value
@@ -201,16 +201,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     //Bind pusher channel
     pusherSubscribeCurrentPresenceChannel(true,true);
     
-    //ColorBox
-    
-    $('a.colorbox-ajax').colorbox({
-        maxHeight:"100%",
-        maxWidth:"100%",
-        initialWidth:"64px",
-        initialHeight:"84px",
-        closeButton:false
-    });
-    
     /*
      * Google Doc Viewer
      */
@@ -234,7 +224,173 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         $('html').css({ overflow: 'hidden' });
     }).bind('cbox_closed', function () {
         $('html').css({ overflow: 'auto' });
-    }); 
+    });
+    
+    /*
+     * Accounts Payable Modal
+     */
+    
+    var $payableForm = $('#payableForm').validate({
+        ignore: '',
+        rules : {
+            pv_number: {
+                required: true,
+                number:true
+            },
+            supplier_code: {
+                required: true
+            },
+            po_number: {
+                number: true
+            }
+        },
+        messages: {
+            pv_number: {
+                required: 'Please enter a payment voucher number'
+            },
+            supplier_code: {
+                required: 'Please select a supplier'
+            },
+        },
+        
+        // Ajax form submition
+        submitHandler : function(form) {
+                var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
+                                message: 'Saving Accounts Payable form',
+                                type: 'info',
+                                id: 'notif-top'
+                              });
+                $('#btn-savePayableForm').attr('disabled','disabled').addClass('disable');
+                $(form).ajaxSubmit({
+                        dataType: 'json',
+                        success : function(data) {
+                            savemsg.update({
+                                type: 'success',
+                                message: 'Save Accounts Payable Success!'
+                            });
+                            $('#payableFormModal').modal('hide');
+                        },
+                        error: function (xhr, status, error) {
+                            $('#btn-savePayableForm').removeAttr('disabled').removeClass('disable');
+                            savemsg.update({
+                                type: 'error',
+                                message: xhr.responseText,
+                                hideAfter: 5
+                            });
+                        }
+                });
+
+                return false;
+        }        
+    });    
+    
+    $('#payableFormModal').on('shown.bs.modal', function(){
+        $payableForm.resetForm();
+        $('#suppliercode').select2('data', null);
+        $('#companycode').select2('data',null);
+    });
+    
+    $('#suppliercode').select2({
+        placeholder: 'Enter a supplier code/name',
+        allowClear: true,
+        minimumInputLength: 0,
+        positionDropdownAbsolute: false,
+        ajax: {
+             url: "/ajaxsearch/searchsupplier",
+             dataType: "json",
+             quietMillis: 500,
+             data: function (term, page) {
+                 return {
+                     term: term,
+                     limit: 10,
+                     page: page
+                 };
+             },
+             results: function (data, page){
+                 var more = (page * 10) < data.total;
+                 if(data.total > 0)
+                 {
+                     var found;
+                     found = $.map(data.suppliers, function (item) {
+                         return {
+                             id: item.Supplier_Code,
+                             name: $.trim(item.Supplier_Name),
+                             text: $.trim(item.Supplier_Name)+" (Code:"+item.Supplier_Code+")"
+                         };
+                      });
+                     return {results: found, more:more};
+                 }
+                 else
+                 {
+                     return {results: ''};
+                 }
+             }
+        }
+    }).on('select2-open',function(){
+            $('#select2-drop-mask')
+            .height($(window).height())
+            .width($(window).width())
+            .css({
+                'opacity' : '.1',
+                'position': 'fixed',
+                'top': '0',
+                'left': '0'
+            });
+    }).on('change',function(){
+        $(this).valid();        
+    });
+    
+    $('#customercode').select2({
+        placeholder: 'Enter a billable company code/name',
+        allowClear: true,
+        minimumInputLength: 0,
+        positionDropdownAbsolute: false,
+        ajax: {
+             url: "/ajaxsearch/customercode",
+             dataType: "json",
+             quietMillis: 500,
+             data: function (term, page) {
+                 return {
+                     term: term,
+                     limit: 10,
+                     page: page
+                 };
+             },
+             results: function (data, page){
+                 var more = (page * 10) < data.total;
+                 if(data.total > 0)
+                 {
+                     var found;
+                     found = $.map(data.customers, function (item) {
+                                return {
+                                    id: item.AN8,
+                                    name: item.ALPH,
+                                    text: item.ALPH+" (Code:"+item.AN8+")",
+                                    category: item.AC09
+                                };
+                      });
+                     return {results: found, more:more};
+                 }
+                 else
+                 {
+                     return {results: ''};
+                 }
+             }
+        }
+    }).on('select2-open',function(){
+            $('#select2-drop-mask')
+            .height($(window).height())
+            .width($(window).width())
+            .css({
+                'opacity' : '.1',
+                'position': 'fixed',
+                'top': '0',
+                'left': '0'
+            });
+    }).on('change',function(){
+        $(this).valid();        
+    });    
+    
     
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
@@ -328,7 +484,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             if(this.getAttribute('data-context')=="purchaseorder")
             {
                 var $poLink = $(this).parents('fieldset').find('a.purchase-order-view');
-                $poLink.attr('href',$poLink.attr('href')+response.id);
+                $poLink.attr('href',$poLink.attr('href')+response.encrypted_id);
                 $poLink.show();
             }            
             //Set new pk value

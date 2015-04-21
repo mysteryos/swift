@@ -2364,4 +2364,54 @@ class AccountsPayableController extends UserController {
 
         echo View::make('story/chapter',$this->data)->render();
     }
+
+    /*
+     * @action: POST
+     * @url: save-by-form
+     */
+
+    public function postSaveByForm()
+    {
+        /*
+         * TBD: Missing Billable Company Code
+         */
+        $type = Input::get('payable_type');
+        $id = Input::get('payable_id');
+
+        $acp = new \SwiftACPRequest ([
+            'payable_type' => $type,
+            'payable_id' => $id,
+            'owner_user_id' => $this->currentUser->id
+        ]);
+
+        if((int)Input::get('suppliercode') > 0)
+        {
+            $acp->supplier_code = Input::get('suppliercode');
+        }
+
+        $form = $type::with('purchaseOrder')->find($id);
+        if($form)
+        {
+            if(count($form->purchaseOrder))
+            {
+                $validPo = false;
+                foreach($form->purchaseOrder as $po)
+                {
+                    if($po->validated === \SwiftPurchaseOrder::VALIDATION_FOUND)
+                    {
+                        $po->load('jdepo');
+                        if($po->jdepo)
+                        {
+                            $acp->billable_company_code = $po->jdepo->order_company;
+                        }
+                    }
+                }
+            }
+
+        }
+        else
+        {
+            return Response::make("Form not found.",500);
+        }
+    }
 }

@@ -132,4 +132,9 @@ class SwiftPurchaseOrder extends Eloquent
     {
         return $this->morphTo();
     }
+
+    public function jdepo()
+    {
+        return $this->belongsTo('JdePurchaseOrder','order_id');
+    }
 }

@@ -255,7 +255,7 @@ class SwiftOrder extends Eloquent {
     
     public static function getById($id)
     {
-        return self::with('purchaseOrder','reception','freight','shipment','customsDeclaration','storage','document')->find($id);
+        return self::with('purchaseOrder','reception','freight','shipment','customsDeclaration','storage','document','payable')->find($id);
     }
     
     /*

@@ -64,21 +64,59 @@ Class AjaxSearchController extends UserController {
      * Description: Fetches list of customers from SCT_JDE
      */
     
-    public function getCustomercode()
+    public function getCustomercode($context="")
     {
         $limit = 10;
-        $offset = (Input::get('page') == "1" ? "0" : (Input::get('page')-1)*$limit);
+        $offset = (\Input::get('page') == "1" ? "0" : (\Input::get('page')-1)*$limit);
 
-        if(is_numeric(Input::get('term')))
+        if(\Input::get('term') === "")
         {
-            $searchresult = JdeCustomer::getByCode(Input::get('term'),$offset,$limit);
-            $total = JdeCustomer::countByCode(Input::get('term'));
+            switch($context)
+            {
+                case "aprequest":
+                    $class = \Config::get("context.$context");
+                    
+                    //Get most popular customers by user
+                    $customers = $class::groupBy('customer_code')
+                                ->select(DB::raw("COUNT(*) as  count"),"customer_code")
+                                ->where('requester_user_id','=',$this->currentUser->id)
+                                ->orderBy('count')
+                                ->lists("customer_code");
+                    
+                    if(count($customers))
+                    {
+                        $searchresult = \JdeCustomer::getIn($customers,$offset,$limit);
+                        $total = count($customers);
+                    }
+                    else
+                    {
+                        //Get most popular customers on system
+                        $customers = $class::groupBy('customer_code')
+                                    ->select(DB::raw("COUNT(*) as  count"),"customer_code")
+                                    ->orderBy('count')
+                                    ->lists("customer_code");
+
+                        $searchresult = \JdeCustomer::getIn($customers,$offset,$limit);
+                        $total = count($customers);
+                    }
+                    break;
+            }
         }
         else
         {
-            $searchresult = JdeCustomer::getByName(Input::get('term'),$offset,$limit);
-            $total = JdeCustomer::countByName(Input::get('term'));
+            if(is_numeric(\Input::get('term')))
+            {
+                $searchresult = \JdeCustomer::getByCode(Input::get('term'),$offset,$limit);
+                $total = \JdeCustomer::countByCode(Input::get('term'));
+            }
         }
+
+        if(!isset($searchresult))
+        {
+            $searchresult = \JdeCustomer::getByName(Input::get('term'),$offset,$limit);
+            $total = \JdeCustomer::countByName(Input::get('term'));
+        }
+
         if($searchresult !== false)
         {
             echo json_encode(array('customers'=>$searchresult,'total'=>$total));

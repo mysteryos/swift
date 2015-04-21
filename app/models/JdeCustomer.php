@@ -32,7 +32,7 @@ class JdeCustomer extends Eloquent {
                 ->get();
     }
 
-    public function getIn(array $in,$offset,$limit)
+    public static function getIn(array $in,$offset,$limit)
     {
         return self::whereIn('an8',$in)
                 ->distinct()

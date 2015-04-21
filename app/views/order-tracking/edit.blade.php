@@ -64,7 +64,7 @@
 	</div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
             <h1 class="page-title txt-color-blueDark">
-                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span>
+                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span> <a href="/workflow/by-form/{{get_class($order)}}/{{Crypt::encrypt($order->id)}}" class="colorbox-ajax" rel="tooltip" data-placement="bottom" data-original-title="Workflow History"><i class="fa fa-history"></i></a>
             </h1>
         </div>
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">
@@ -177,7 +177,7 @@
                                 @include('order-tracking.edit_purchaseorder')
                             @endif
                             @include('order-tracking.edit_purchaseorder',array('dummy'=>true,'p'=>null))                                                
-                    </form>
+                        </form>
                     </div>
                     <!-- end widget content -->
                 </div>
@@ -185,248 +185,260 @@
             </div>
             <!-- end widget -->
                         
-                        <!-- Widget Freight Start-->
+            <!-- Widget Freight Start-->
 			<div class="jarviswidget" id="ot-freight" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Freight </h2>
-                                        @if($edit)
-                                            <div class="widget-toolbar" role="menu">
-                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
-                                            </div>
-                                        @endif
+                    <h2>Freight </h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                        </div>
+                    @endif
 				</header>
-                                <!-- widget div-->
+                <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
-                                            <form class="form-horizontal">
-                                                    @if(count($order->freight))
-                                                        @foreach($order->freight as &$f)
-                                                            <?php $f->id = Crypt::encrypt($f->id); ?>
-                                                            @include('order-tracking.edit_freight',array('f'=>$f))
-                                                        @endforeach
-                                                    @else
-                                                        @include('order-tracking.edit_freight')
-                                                    @endif
-                                                    @include('order-tracking.edit_freight',array('dummy'=>true,'f'=>null))
-                                            </form>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                        <!-- end widget freight -->                        
+                        <form class="form-horizontal">
+                                @if(count($order->freight))
+                                    @foreach($order->freight as &$f)
+                                        <?php $f->id = Crypt::encrypt($f->id); ?>
+                                        @include('order-tracking.edit_freight',array('f'=>$f))
+                                    @endforeach
+                                @else
+                                    @include('order-tracking.edit_freight')
+                                @endif
+                                @include('order-tracking.edit_freight',array('dummy'=>true,'f'=>null))
+                        </form>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget freight -->                        
                         
-                        <!-- Widget Shipment Start-->
+            <!-- Widget Shipment Start-->
 			<div class="jarviswidget" id="ot-shipment" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Shipment </h2>
-                                        @if($edit)
-                                            <div class="widget-toolbar" role="menu">
-                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
-                                            </div>
-                                        @endif
+                    <h2>Shipment </h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                        </div>
+                    @endif
 				</header>
                                 <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
-                                            <form class="form-horizontal">
-                                                    @if(count($order->shipment))
-                                                        @foreach($order->shipment as &$s)
-                                                            <?php $s->id = Crypt::encrypt($s->id); ?>
-                                                            @include('order-tracking.edit_shipment',array('s'=>$s))
-                                                        @endforeach
-                                                    @else
-                                                        @include('order-tracking.edit_shipment')
-                                                    @endif
-                                                    @include('order-tracking.edit_shipment',array('dummy'=>true,'s'=>null))
-                                            </form>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                        <!-- end widget shipment -->
+                        <form class="form-horizontal">
+                            @if(count($order->shipment))
+                                @foreach($order->shipment as &$s)
+                                    <?php $s->id = Crypt::encrypt($s->id); ?>
+                                    @include('order-tracking.edit_shipment',array('s'=>$s))
+                                @endforeach
+                            @else
+                                @include('order-tracking.edit_shipment')
+                            @endif
+                            @include('order-tracking.edit_shipment',array('dummy'=>true,'s'=>null))
+                        </form>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget shipment -->
                         
-                        <!-- Widget Storage Start -->
+            <!-- Widget Storage Start -->
 			<div class="jarviswidget" id="ot-storage" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Storage & Demurrage </h2>
-                                        @if($edit)
-                                            <div class="widget-toolbar" role="menu">
-                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
-                                            </div>
-                                        @endif
+                    <h2>Storage & Demurrage </h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                        </div>
+                    @endif
 				</header>
                                 <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
-                                            <form class="form-horizontal">
-                                                    @if(count($order->storage))
-                                                        @foreach($order->storage as &$sto)
-                                                            <?php $sto->id = Crypt::encrypt($sto->id); ?>
-                                                            @include('order-tracking.edit_storage',array('sto'=>$sto))
-                                                        @endforeach
-                                                    @else
-                                                        @include('order-tracking.edit_storage')
-                                                    @endif
-                                                    @include('order-tracking.edit_storage',array('dummy'=>true,'s'=>null))
-                                            </form>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>                        
-                        <!-- end widget Storage -->
+                        <form class="form-horizontal">
+                                @if(count($order->storage))
+                                    @foreach($order->storage as &$sto)
+                                        <?php $sto->id = Crypt::encrypt($sto->id); ?>
+                                        @include('order-tracking.edit_storage',array('sto'=>$sto))
+                                    @endforeach
+                                @else
+                                    @include('order-tracking.edit_storage')
+                                @endif
+                                @include('order-tracking.edit_storage',array('dummy'=>true,'s'=>null))
+                        </form>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget Storage -->
                         
-                        <!-- Widget Customs START-->
+            <!-- Widget Customs START-->
 			<div class="jarviswidget" id="ot-customs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Customs </h2>
-                                        @if($edit)
-                                            <div class="widget-toolbar" role="menu">
-                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
-                                            </div>
-                                        @endif
+                    <h2>Customs </h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                        </div>
+                    @endif
 				</header>
-                                <!-- widget div-->
+                <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
-                                                <form class="form-horizontal">
-                                                    @if(count($order->customsDeclaration))
-                                                        @foreach($order->customsDeclaration as &$c)
-                                                            <?php $c->id = Crypt::encrypt($c->id); ?>
-                                                            @include('order-tracking.edit_customs',array('c'=>$c))
-                                                        @endforeach
-                                                    @else
-                                                        @include('order-tracking.edit_customs')
-                                                    @endif
-                                                    @include('order-tracking.edit_customs',array('dummy'=>true,'c'=>null))
-                                                </form>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                        <!-- end widget customs -->                        
+                        <form class="form-horizontal">
+                            @if(count($order->customsDeclaration))
+                                @foreach($order->customsDeclaration as &$c)
+                                    <?php $c->id = Crypt::encrypt($c->id); ?>
+                                    @include('order-tracking.edit_customs',array('c'=>$c))
+                                @endforeach
+                            @else
+                                @include('order-tracking.edit_customs')
+                            @endif
+                            @include('order-tracking.edit_customs',array('dummy'=>true,'c'=>null))
+                        </form>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget customs -->                        
                         
-                        <!-- Widget Reception start-->
+            <!-- Widget Reception start-->
 			<div class="jarviswidget" id="ot-reception" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Reception </h2>
-                                        @if($edit)
-                                            <div class="widget-toolbar" role="menu">
-                                                <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
-                                            </div>
-                                        @endif
+                    <h2>Reception </h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
+                        </div>
+                    @endif
 				</header>
-                                <!-- widget div-->
+                <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
-                                            <form class="form-horizontal">
-                                                    @if(count($order->reception))
-                                                        @foreach($order->reception as &$r)
-                                                            <?php $r->id = Crypt::encrypt($r->id); ?>
-                                                            @include('order-tracking.edit_reception',array('r'=>$r))
-                                                        @endforeach
-                                                    @else
-                                                        @include('order-tracking.edit_reception')
-                                                    @endif
-                                                    @include('order-tracking.edit_reception',array('dummy'=>true,'r'=>null))                                                
-                                            </form>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                        <!-- end widget reception -->                         
-                </article>
-                <!-- NEW COL END -->
-                
-                <!-- NEW COL START -->
-                <article class="col-lg-4 col-xs-12">
-                        <!-- Widget ID (each widget will need unique ID)-->
+                        <form class="form-horizontal">
+                                @if(count($order->reception))
+                                    @foreach($order->reception as &$r)
+                                        <?php $r->id = Crypt::encrypt($r->id); ?>
+                                        @include('order-tracking.edit_reception',array('r'=>$r))
+                                    @endforeach
+                                @else
+                                    @include('order-tracking.edit_reception')
+                                @endif
+                                @include('order-tracking.edit_reception',array('dummy'=>true,'r'=>null))
+                        </form>
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget reception -->                         
+        </article>
+        <!-- NEW COL END -->
+
+        <!-- NEW COL START -->
+        <article class="col-lg-4 col-xs-12">
+            <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="ot-docs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-file-o"></i> </span>
-                                        <h2>Docs </h2>
-                                        @if($edit)
-                                            <div class="widget-toolbar" role="menu">
-                                                <a class="btn btn-primary" id="btn-upload" href="javascript:void(0);"><i class="fa fa-plus"></i> Upload</a>
-                                            </div>
-                                        @endif
-				</header>
-                                <!-- widget div-->
-				<div>
-                                    
-                                        <!-- widget content -->
-					<div class="widget-body">
-                                            <div id="upload-preview">
-                                                @include('order-tracking.upload',array('doc'=>$order->document,'tags'=>$tags,'dummy'=>true))
-                                            </div>                                                
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
+                    <h2>Docs </h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary" id="btn-upload" href="javascript:void(0);"><i class="fa fa-plus"></i> Upload</a>
                         </div>
-                        <!-- end widget -->
+                    @endif
+				</header>
+                <!-- widget div-->
+				<div>
+                    <!-- widget content -->
+					<div class="widget-body">
+                        <div id="upload-preview">
+                            @include('order-tracking.upload',array('doc'=>$order->document,'tags'=>$tags,'dummy'=>true))
+                        </div>                                                
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget -->
                         
-                         <!-- Widget ID (each widget will need unique ID)-->
+            <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="ot-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
 				<header>
 					<span class="widget-icon"> <i class="fa fa-comment"></i> </span>
-                                        <h2>Chat </h2>			
+                    <h2>Chat </h2>			
 				</header>
-                                <!-- widget div-->
+                <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body widget-hide-overflow no-padding">
-                                            @include('comments', array('commentable' => $order, 'comments' => $comments))
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
-                        </div>
-                        <!-- end widget -->                          
-                        
-                        <!-- Widget ID (each widget will need unique ID)-->
-			<div class="jarviswidget" id="ot-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+                        @include('comments', array('commentable' => $order, 'comments' => $comments))
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget -->
+            <!-- Widget ID (each widget will need unique ID)-->
+            <div class="jarviswidget" id="ot-payable" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
-					<span class="widget-icon"> <i class="fa fa-history"></i> </span>
-                                        <h2>Activity </h2>			
+					<span class="widget-icon"> <i class="fa fa-money"></i> </span>
+                    <h2>Accounts Payable</h2>
+                    @if($edit)
+                        <div class="widget-toolbar" role="menu">
+                            <a class="btn btn-primary" id="btn-add-payable" href="javascript:void(0);" data-target="#payableFormModal" data-toggle="modal"><i class="fa fa-plus"></i> Add</a>
+                        </div>
+                    @endif
 				</header>
-                                <!-- widget div-->
+                <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body nopadding">
-                                            <div class="activity-container">
-                                                @include('order-tracking.edit_activity',array('activity'=>$activity))
-                                            </div>
-                                        </div>
-                                        <!-- end widget content -->
-                                </div>
-                                <!-- end widget div -->
+                        @include('order-tracking.edit_payable',array('acp'=>$order->payable))
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget -->
+            <!-- Widget ID (each widget will need unique ID)-->
+			<div class="jarviswidget" id="ot-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+				<header>
+					<span class="widget-icon"> <i class="fa fa-history"></i> </span>
+                    <h2>Activity </h2>			
+				</header>
+                <!-- widget div-->
+				<div>
+					<!-- widget content -->
+					<div class="widget-body nopadding">
+                        <div class="activity-container">
+                            @include('order-tracking.edit_activity',array('activity'=>$activity))
                         </div>
-                        <!-- end widget -->                        
-                </article>
-                <!-- NEW COL END -->
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+            </div>
+            <!-- end widget -->                        
+        </article>
+        <!-- NEW COL END -->
         </div>
         <!-- END ROW -->
 

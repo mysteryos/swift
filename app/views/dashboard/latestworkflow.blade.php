@@ -2,7 +2,7 @@
     @foreach($latestWorkflows as $row)
         <tr data-url="{{ \Helper::generateUrl($row->workflowable) }}" class="post">
             <td>
-                <abbr title="{{date("Y/m/d H:i",strtotime($row->activity[0]->created_at))}}" data-livestamp="{{strtotime($row->activity[0]->created_at)}}"></abbr></abbr>
+                <abbr title="{{date("Y/m/d H:i",strtotime($row->activity[0]->created_at))}}" data-livestamp="{{strtotime($row->activity[0]->created_at)}}"></abbr>
             </td>
             <td>
                 {{ \Swift\Avatar::getHTML($row->activity[0]->user_id,false,"medium") }} {{ \Helper::getUserName($row->activity[0]->user_id,Sentry::getUser()) }}                   
@@ -11,7 +11,7 @@
                 {{ "<i class=\"fa ".$row->workflowable->getIcon()."\"></i> ".$row->workflowable->getReadableName() }}
             </td>
             <td>
-                <span class="{{ $row->current_activity['status_class'] }}">{{ $row->current_activity['label'] }}</span>                    
+                <span class="{{ $row->current_activity['status_class'] }}">{{ $row->current_activity['label'] }}</span>
             </td>
         </tr>
     @endforeach

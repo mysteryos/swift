@@ -41,17 +41,17 @@
     
     // calendar month
     $('#transit_calendar_mt').on('click',function() {
-            $('#transit_calendar').fullCalendar('changeView', 'month');
+        $('#transit_calendar_foreign').fullCalendar('changeView', 'month');
     });
 
     // calendar agenda week
     $('#transit_calendar_ag').on('click',function() {
-            $('#transit_calendar').fullCalendar('changeView', 'agendaWeek');
+        $('#transit_calendar_foreign').fullCalendar('changeView', 'agendaWeek');
     });
 
     // calendar agenda day
     $('#transit_calendar_td').on('click',function() {
-            $('#transit_calendar').fullCalendar('changeView', 'agendaDay');
+        $('#transit_calendar_foreign').fullCalendar('changeView', 'agendaDay');
     });    
     
     //Hide Loading Message

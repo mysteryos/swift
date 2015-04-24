@@ -1,4 +1,4 @@
-(window.ot_transit_local = function () {
+(window.ot_storage_demurrage = function () {
     
     $('#content').on('click','tr[data-url] td',function(){
         $.pjax({
@@ -7,8 +7,8 @@
        });
     });    
     
-    $('#transit_calendar_local').html('');
-    $('#transit_calendar_local').fullCalendar({
+    $('#storage_demurrage_calendar').html('');
+    $('#storage_demurrage_calendar').fullCalendar({
         editable : false,
         draggable : false,
         selectable : true,
@@ -16,21 +16,21 @@
         unselectAuto : true,
         disableResizing : false,
         eventSources: [{
-            url: document.getElementById('transit_calendar_local').getAttribute('data-url'),
+            url: document.getElementById('storage_demurrage_calendar').getAttribute('data-url'),
             type: 'POST',
         }],
         loading: function(isLoading,view) {
             if(isLoading)
             {
-                $('#transit_calendar_local').closest('.jarviswidget').children('header').append('<span class="jarviswidget-loader"><i class="fa fa-refresh fa-spin"></i></span>');
+                $('#storage_demurrage_calendar').closest('.jarviswidget').children('header').append('<span class="jarviswidget-loader"><i class="fa fa-refresh fa-spin"></i></span>');
             }
             else
             {
-                $('#transit_calendar_local').closest('.jarviswidget').children('header').find('span.jarviswidget-loader').remove();
+                $('#storage_demurrage_calendar').closest('.jarviswidget').children('header').find('span.jarviswidget-loader').remove();
             }
         },
         eventRender: function(e, view) {
-            view.popover({content:e.vesselIcon + " - " + e.freightCompany,
+            view.popover({content:e.progress,
                             animation: true,
                             html: true,
                             placement: "auto",
@@ -41,17 +41,17 @@
     
     // calendar month
     $('#transit_calendar_mt').on('click',function() {
-        $('#transit_calendar_local').fullCalendar('changeView', 'month');
+        $('#storage_demurrage_calendar').fullCalendar('changeView', 'month');
     });
 
     // calendar agenda week
     $('#transit_calendar_ag').on('click',function() {
-        $('#transit_calendar_local').fullCalendar('changeView', 'agendaWeek');
+        $('#storage_demurrage_calendar').fullCalendar('changeView', 'agendaWeek');
     });
 
     // calendar agenda day
     $('#transit_calendar_td').on('click',function() {
-        $('#transit_calendar_local').fullCalendar('changeView', 'agendaDay');
+        $('#storage_demurrage_calendar').fullCalendar('changeView', 'agendaDay');
     });    
     
     //Hide Loading Message

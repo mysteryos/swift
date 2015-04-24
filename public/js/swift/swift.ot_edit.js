@@ -242,6 +242,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             },
             po_number: {
                 number: true
+            },
+            company_code: {
+                required: true
+            },
+            type: {
+                required: true
             }
         },
         messages: {
@@ -251,6 +257,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             supplier_code: {
                 required: 'Please select a supplier'
             },
+            company_code: {
+                required: 'Please select a billable company'
+            },
+            type: {
+                required: 'Please select a type'
+            }
         },
         
         // Ajax form submition
@@ -264,9 +276,15 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 $(form).ajaxSubmit({
                         dataType: 'json',
                         success : function(data) {
+                            $('<div/>',{
+                                'class':'loading-overlay'
+                            }).appendTo('#acp-list');
+                            $('#acp-list').load(document.getElementById('acp-list').getAttribute('data-load'),null,function(){
+                                $(this).find('div.loading-overlay').remove();
+                            });                            
                             savemsg.update({
                                 type: 'success',
-                                message: 'Save Accounts Payable Success!'
+                                message: data.msg
                             });
                             $('#payableFormModal').modal('hide');
                         },
@@ -340,7 +358,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         $(this).valid();        
     });
     
-    $('#customercode').select2({
+    $('#companycode').select2({
         placeholder: 'Enter a billable company code/name',
         allowClear: true,
         minimumInputLength: 0,
@@ -389,7 +407,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             });
     }).on('change',function(){
         $(this).valid();        
-    });    
+    });
+    
+    $('#acp-list').on('click','tr[data-url] td',function(){
+        $.pjax({
+            url: $(this).parent('tr').attr('data-url'),
+            container: '#main'
+       });
+    });
     
     
     //Turn on inline Mode

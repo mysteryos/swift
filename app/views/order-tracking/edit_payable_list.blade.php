@@ -1,12 +1,12 @@
 @if(!empty($acp))
-    <table>
+    <table class="table table-hover">
     @foreach($acp as $a)
         <tr data-url="{{ \Helper::generateUrl($a) }}" class="post">
             <td>
-                {{$a->supplierName}}
+                #{{$a->id}}
             </td>
             <td>
-                {{$a->type_text}}
+                {{$a->supplierName}}
             </td>
             <td>
                 {{$a->amountDue}}

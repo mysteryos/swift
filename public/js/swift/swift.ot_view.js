@@ -27,6 +27,13 @@
     $('#upload-preview #template').hide();
     $('#upload-preview').find('button.btn.delete').hide();
     
+    $('#acp-list').on('click','tr[data-url] td',function(){
+        $.pjax({
+            url: $(this).parent('tr').attr('data-url'),
+            container: '#main'
+       });
+    });    
+    
     //Enable Commenting
     enableComments();
     

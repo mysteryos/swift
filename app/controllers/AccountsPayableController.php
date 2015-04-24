@@ -883,6 +883,17 @@ class AccountsPayableController extends UserController {
                 }
             }
 
+            //Is Related
+            if($acp->payable)
+            {
+                $relatedAcps = $acp->payable->payable()->where('id','!=',$acp->id)->get();
+                foreach($relatedAcps as &$r)
+                {
+                    \WorkflowActivity::progress($r,$this->context);
+                }
+            }
+
+            $this->data['related_forms'] = $relatedAcps;
             $this->data['current_activity'] = \WorkflowActivity::progress($acp,$this->context);
             $this->data['activity'] = \Helper::getMergedRevision($acp->revisionRelations,$acp);
             $this->pageTitle = $acp->getReadableName();
@@ -896,6 +907,7 @@ class AccountsPayableController extends UserController {
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
             $this->data['flag_important'] = \Flag::isImportant($acp);
             $this->data['flag_starred'] = \Flag::isStarred($acp);
+            $this->data['type_order'] = json_encode(\Helper::jsonobject_encode(\SwiftACPRequest::$order));
             $this->data['po_type'] = json_encode(Helper::jsonobject_encode(\SwiftPurchaseOrder::$types));
             $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
@@ -985,6 +997,12 @@ class AccountsPayableController extends UserController {
                 case "name":
                     break;
                 case "description":
+                    break;
+                case "type":
+                    if(!array_key_exists(Input::get('value'),\SwiftACPRequest::$order))
+                    {
+                        return Response::make("Please select a valid type",500);
+                    }
                     break;
                 case "billable_customer_code":
                     if(!is_numeric(trim(Input::get('value'))))
@@ -2376,42 +2394,74 @@ class AccountsPayableController extends UserController {
          * TBD: Missing Billable Company Code
          */
         $type = Input::get('payable_type');
-        $id = Input::get('payable_id');
+        $id = Crypt::decrypt(Input::get('payable_id'));
+
+        /*
+         * @todo
+         * Insert check for duplicate PVs - On Top
+         */
 
         $acp = new \SwiftACPRequest ([
             'payable_type' => $type,
             'payable_id' => $id,
-            'owner_user_id' => $this->currentUser->id
+            'owner_user_id' => $this->currentUser->id,
+            'billable_company_code' => Input::get('company_code'),
+            'supplier_code' => Input::get('supplier_code')
         ]);
 
-        if((int)Input::get('suppliercode') > 0)
-        {
-            $acp->supplier_code = Input::get('suppliercode');
-        }
+        $acp->save();
 
-        $form = $type::with('purchaseOrder')->find($id);
-        if($form)
-        {
-            if(count($form->purchaseOrder))
-            {
-                $validPo = false;
-                foreach($form->purchaseOrder as $po)
-                {
-                    if($po->validated === \SwiftPurchaseOrder::VALIDATION_FOUND)
-                    {
-                        $po->load('jdepo');
-                        if($po->jdepo)
-                        {
-                            $acp->billable_company_code = $po->jdepo->order_company;
-                        }
-                    }
-                }
-            }
+        $paymentVoucher = new \SwiftACPPaymentVoucher([
+           'number' => Input::get('pv_number')
+        ]);
+        $acp->paymentVoucher()->save($paymentVoucher);
 
+        $invoice = new \SwiftACPInvoice([
+           'number' => Input::get('invoice_number')
+        ]);
+        $acp->invoice()->save($invoice);
+
+        if(\WorkflowActivity::update($acp,$this->context))
+        {
+            //Story Relate
+            Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
+                                                 'obj_id'=>$acp->id,
+                                                 'action'=>SwiftStory::ACTION_CREATE,
+                                                 'user_id'=>$this->currentUser->id,
+                                                 'context'=>get_class($acp)));
+
+            return Response::json(['msg'=>"Form saved successfully, <a class='pjax' href='".Helper::generateUrl($acp)."'>click here to view</a>"]);
         }
         else
         {
-            return Response::make("Form not found.",500);
+            return Response::json(['msg'=>"A critical error occured. Contact your administrator. Id: {$acp->getKey()}"],500);
+        }
+        
+    }
+
+    public function getListByForm($class,$id)
+    {
+        if(in_array($class,\Config::get("context")))
+        {
+            $form = $class::with('payable')->find(Crypt::decrypt($id));
+
+            if($form)
+            {
+                foreach($form->payable as &$acp)
+                {
+                    $acp->current_activity = WorkflowActivity::progress($acp,'acpayable');
+                }
+
+                return View::make("$type.edit_payable-list",['acp'=>$form->payable])->render();
+            }
+            else
+            {
+                return Response::make("Unable to find form",500);
+            }
+        }
+        else
+        {
+            return \Response::make("Cannot find form: context undefined",500);
         }
     }
 }

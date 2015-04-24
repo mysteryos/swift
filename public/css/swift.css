@@ -704,6 +704,7 @@ div.loading-overlay {
                 url('/img/loader.gif') 
                 50% 50% 
                 no-repeat;
+    background-size: 64px 64px;
 }
 
 .unread td {

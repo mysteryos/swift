@@ -76,7 +76,7 @@
                                                     <td>{{$as->order->getReadableName()}}</td>
                                                     <td>{{$as->order->activity['label']}}</td>
                                                     <td>{{$as->numberOfDays}}</td>
-                                                    <td>@if(is_numeric($as->cost)){{number_format($as->cost)}}@else{{$as->cost}}@endif</td>
+                                                    <td>@if(is_numeric($as->cost)){{$as->cost}}@else{{$as->cost}}@endif</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -131,7 +131,7 @@
                                                 <td>{{$ad->order->getReadableName()}}</td>
                                                 <td>{{$ad->order->activity['label']}}</td>
                                                 <td>{{$ad->numberOfDays}}</td>
-                                                <td>@if(is_numeric($ad->cost)){{number_format($ad->cost)}}@else{{$ad->cost}}@endif</td>
+                                                <td>@if(is_numeric($ad->cost)){{$ad->cost}}@else{{$ad->cost}}@endif</td>
                                             </tr>
                                         @endforeach
                                     </tbody>

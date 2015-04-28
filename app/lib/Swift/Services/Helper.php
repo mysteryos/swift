@@ -377,7 +377,7 @@ class Helper {
                         if($numberOfDays > 14)
                         {
                             $demurrageCost += $fourtyCharges['oneToFourteen']*14;
-                            $remainderDays = $numberOfdays - 14;
+                            $remainderDays = $numberOfDays - 14;
                             if($numberOfDays > 21)
                             {
                                 //from 15th to 21st days = 7 days

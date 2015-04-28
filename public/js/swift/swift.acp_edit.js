@@ -446,6 +446,13 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
         return false;
     });
+    
+    $('#acp-list').on('click','tr[data-url] td',function(){
+        $.pjax({
+            url: $(this).parent('tr').attr('data-url'),
+            container: '#main'
+       });
+    });    
 
     /*
      * Dropzone

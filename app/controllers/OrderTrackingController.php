@@ -414,17 +414,17 @@ class OrderTrackingController extends UserController {
     {
         if($business_unit === false)
         {
-            $business_unit = Session::get('order_tracking_overview_business_unit',function(){return false;});
+            $business_unit = Session::get('order_tracking_transit_calendar_business_unit',function(){return false;});
         }
         else
         {
             if($business_unit != 0)
             {
-                Session::put('order_tracking_overview_business_unit',$business_unit);
+                Session::put('order_tracking_transit_calendar_business_unit',$business_unit);
             }
             else
             {
-                Session::forget('order_tracking_overview_business_unit');
+                Session::forget('order_tracking_transit_calendar_business_unit');
                 $business_unit = false;
             }
         }
@@ -473,17 +473,17 @@ class OrderTrackingController extends UserController {
     {
         if($business_unit === false)
         {
-            $business_unit = Session::get('order_tracking_overview_business_unit',function(){return false;});
+            $business_unit = Session::get('order_tracking_pickup_calendar_business_unit',function(){return false;});
         }
         else
         {
             if($business_unit != 0)
             {
-                Session::put('order_tracking_overview_business_unit',$business_unit);
+                Session::put('order_tracking_pickup_calendar_business_unit',$business_unit);
             }
             else
             {
-                Session::forget('order_tracking_overview_business_unit');
+                Session::forget('order_tracking_pickup_calendar_business_unit');
                 $business_unit = false;
             }
         }
@@ -529,6 +529,224 @@ class OrderTrackingController extends UserController {
         return $this->makeView('order-tracking/transit_local');
     }
 
+    public function getStorageDemurrageCalendar($business_unit=false)
+    {
+        if($business_unit === false)
+        {
+            $business_unit = \Session::get('order_tracking_storage_demurrage_calendar_business_unit',function(){return \SwiftOrder::SCOTT_CONSUMER;});
+        }
+        else
+        {
+            if($business_unit != 0)
+            {
+                \Session::put('order_tracking_storage_demurrage_calendar_business_unit',$business_unit);
+            }
+            else
+            {
+                \Session::forget('order_tracking_storage_demurrage_calendar_business_unit');
+                $business_unit = \SwiftOrder::SCOTT_CONSUMER;
+            }
+        }
+
+        $storageToday = SwiftStorage::where('storage_start','=',Carbon::now()->format('Y-m-d'),'and')
+                        ->with(['order','order.workflow','order.freight'=>function($q){
+                            return $q->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,\SwiftFreight::TYPE_AIR]);
+                        }])
+                        ->whereHas('order',function($q) use ($business_unit){
+                            $q->whereHas('workflow',function($q2){
+                                return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                            });
+                            if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                            {
+                                $q->where('business_unit','=',$business_unit);
+                            }
+                            return $q;
+                        })
+                        ->get();
+
+        $storageTomorrow = SwiftStorage::where('storage_start','=',Carbon::now()->addDay()->format('Y-m-d'),'and')
+                            ->with(['order','order.workflow','order.freight'=>function($q){
+                                return $q->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,\SwiftFreight::TYPE_AIR]);
+                            }])
+                            ->whereHas('order',function($q) use ($business_unit){
+                                $q->whereHas('workflow',function($q2){
+                                    return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                                });
+                                if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                                {
+                                    $q->where('business_unit','=',$business_unit);
+                                }
+                                return $q;
+                            })
+                            ->get();
+
+        $demurrageToday = SwiftStorage::where('demurrage_start','=',Carbon::now()->format('Y-m-d'),'and')
+                            ->with(['order','order.workflow','order.freight'=>function($q){
+                                return $q->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,\SwiftFreight::TYPE_AIR]);
+                            }])
+                            ->whereHas('order',function($q) use ($business_unit){
+                                $q->whereHas('workflow',function($q2){
+                                    return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                                });
+                                if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                                {
+                                    $q->where('business_unit','=',$business_unit);
+                                }
+                                return $q;
+                            })
+                            ->get();
+
+        $demurrageTomorrow = SwiftStorage::where('demurrage_start','=',Carbon::now()->addDay()->format('Y-m-d'),'and')
+                            ->with(['order','order.workflow','order.freight'=>function($q){
+                                return $q->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,\SwiftFreight::TYPE_AIR]);
+                            }])
+                            ->whereHas('order',function($q) use ($business_unit){
+                                $q->whereHas('workflow',function($q2){
+                                    return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                                });
+                                if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                                {
+                                    $q->where('business_unit','=',$business_unit);
+                                }
+                                return $q;
+                            })
+                            ->get();
+
+        foreach([$storageToday,$storageTomorrow,$demurrageToday,$demurrageTomorrow] as $collection)
+        {
+            foreach($collection as &$row)
+            {
+                $row->order->activity = WorkflowActivity::progress($row->order,$this->context);
+            }
+        }
+
+
+        $this->pageTitle = 'Storage/Demurrage Calendar';
+
+        $this->data['business_unit'] = $business_unit;
+        $this->data['rootURL'] = $this->rootURL;
+        $this->data['storageToday'] = $storageToday;
+        $this->data['storageTomorrow'] = $storageTomorrow;
+        $this->data['demurrageToday'] = $demurrageToday;
+        $this->data['demurrageTomorrow'] = $demurrageTomorrow;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
+
+        return $this->makeView('order-tracking/storage_demurrage');
+    }
+
+    public function getActiveCharges($business_unit=false)
+    {
+        if($business_unit === false)
+        {
+            $business_unit = \Session::get('order_tracking_active_charges_business_unit',function(){return \SwiftOrder::SCOTT_CONSUMER;});
+        }
+        else
+        {
+            if($business_unit != 0)
+            {
+                \Session::put('order_tracking_active_charges_business_unit',$business_unit);
+            }
+            else
+            {
+                \Session::forget('order_tracking_active_charges_business_unit');
+                $business_unit = \SwiftOrder::SCOTT_CONSUMER;
+            }
+        }
+
+        $activeDemurrage = SwiftStorage::whereNotNull('demurrage_start')
+                            ->with(['order','order.workflow','order.shipment','order.freight'=>function($q){
+                                return $q->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,\SwiftFreight::TYPE_AIR]);
+                            }])
+                            ->whereHas('order',function($q) use ($business_unit){
+                                $q->whereHas('workflow',function($q2){
+                                    return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                                });
+                                if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                                {
+                                    $q->where('business_unit','=',$business_unit);
+                                }
+                                return $q;
+                            })
+                            ->get();
+
+        $activeStorage = SwiftStorage::whereNotNull('storage_start')
+                            ->with(['order','order.workflow','order.shipment','order.freight'=>function($q){
+                                return $q->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,\SwiftFreight::TYPE_AIR]);
+                            }])
+                            ->whereHas('order',function($q) use ($business_unit){
+                                $q->whereHas('workflow',function($q2){
+                                    return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                                });
+                                if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                                {
+                                    $q->where('business_unit','=',$business_unit);
+                                }
+                                return $q;
+                            })
+                            ->get();
+
+        foreach(['demurrage'=>$activeDemurrage,'storage'=>$activeStorage] as $type => $list)
+        {
+            foreach($list as &$row)
+            {
+                $row->order->activity = \WorkflowActivity::progress($row->order,$this->context);
+                switch($type)
+                {
+                    case 'storage':
+                        $row->numberOfDays = \Helper::calculateStorageNumberOfDays($row->storage_start);
+                        if(count($row->order->shipment))
+                        {
+                            $row->cost = \Helper::calculateStorageCost($row->storage_start,$row->order->shipment);
+                        }
+                        else
+                        {
+                            $row->cost = "No containers listed";
+                        }
+                        break;
+                    case 'demurrage':
+                        $row->numberOfDays = \Helper::calculateDemurrageNumberOfDays($row->demurrage_start);
+                        if(count($row->order->shipment))
+                        {
+                            $row->cost = \Helper::calculateDemurrageCost($row->demurrage_start,$row->order->shipment);
+                        }
+                        else
+                        {
+                            $row->cost = "No containers listed";
+                        }
+                        break;
+                }
+            }
+        }
+
+        //Sort By highest cost first
+
+        $activeDemurrage->sort(function($a,$b){
+            if(!is_numeric($b->cost) || !is_numeric($a->cost))
+            {
+                return 0;
+            }
+            return $a->cost < $b->cost ? 1 : -1;
+        });
+
+        $activeStorage->sort(function($a,$b){
+            if(!is_numeric($b->cost) || !is_numeric($a->cost))
+            {
+                return 0;
+            }
+            return $a->cost < $b->cost ? 1 : -1;
+        });
+
+        $this->data['pageTitle'] = "Active Charges";
+
+        $this->data['activeStorage'] = $activeStorage;
+        $this->data['activeDemurrage'] = $activeDemurrage;
+        $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
+        $this->data['business_unit'] = $business_unit;
+        $this->data['rootURL'] = $this->rootURL;
+
+        return $this->makeView('order-tracking/active_charges');
+    }
+
     /*
      * Private Functions
      */
@@ -562,6 +780,18 @@ class OrderTrackingController extends UserController {
              */
 
             $this->enableSubscription($order);
+
+            /*
+             * Accounts Payable
+             */
+
+            if(count($order->payable))
+            {
+                foreach($order->payable as &$acp)
+                {
+                    $acp->current_activity = WorkflowActivity::progress($acp,'acpayable');
+                }
+            }
             
             /*
              * Data
@@ -575,6 +805,7 @@ class OrderTrackingController extends UserController {
             $this->data['shipment_type'] = json_encode(Helper::jsonobject_encode(SwiftShipment::$type));
             $this->data['po_validation'] = json_encode(Helper::jsonobject_encode(SwiftPurchaseOrder::$validation));
             $this->data['po_type'] = json_encode(Helper::jsonobject_encode(SwiftPurchaseOrder::$types));
+            $this->data['payable_charges'] = \SwiftACPRequest::$order;
             $this->data['order'] = $order;
             $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$orderTrackingTags));
             $this->data['current_activity'] = WorkflowActivity::progress($order,$this->context);
@@ -2257,6 +2488,117 @@ class OrderTrackingController extends UserController {
             }
 
             return Response::json($freightresponse);
+        }
+        else
+        {
+            return Response::make("");
+        }
+    }
+
+    public function postStorageDemurrage($business_unit=false)
+    {
+        $startdate = gmdate("Y-m-d",Input::get('start'));
+        $enddate = gmdate("Y-m-d",Input::get('end'));
+
+        $storage = SwiftStorage::query();
+        $demurrage = SwiftStorage::query();
+
+        $storage->where('storage_start','>=',$startdate,'AND')
+                ->where('storage_start','<=',$enddate,'AND')
+                ->with(['order','order.workflow','order.shipment'=>function($q){
+                    return $q->whereIn('type',array_keys(\SwiftShipment::$type));
+                }])
+                ->whereHas('order',function($q) use ($business_unit){
+                    $q->whereHas('workflow',function($q2){
+                        return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                    });
+
+                    if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                    {
+                        $q->where('business_unit','=',$business_unit);
+                    }
+                    return $q;
+                });
+
+        $storageResult = $storage->get()->all();
+
+        $demurrage->where('demurrage_start','>=',$startdate,'AND')
+                ->where('demurrage_start','<=',$enddate,'AND')
+                ->with(['order','order.workflow','order.shipment'=>function($q){
+                    return $q->whereIn('type',array_keys(\SwiftShipment::$type));
+                }])
+                ->whereHas('order',function($q) use ($business_unit){
+                    $q->whereHas('workflow',function($q2){
+                        return $q2->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                    });
+
+                    if(array_key_exists($business_unit,\SwiftOrder::$business_unit))
+                    {
+                        $q->where('business_unit','=',$business_unit);
+                    }
+                    return $q;
+                });
+
+        $demurrageResult = $demurrage->get()->all();
+
+        if(count($storageResult) || count($demurrageResult))
+        {
+            $response = array();
+            foreach(['storage'=>$storageResult,'demurrage'=>$demurrageResult] as $context=>$v)
+            {
+                foreach($v as $row)
+                {
+
+                    switch($context)
+                    {
+                        case 'storage':
+                            $bgColor = "bg-color-blue";
+                            break;
+                        case 'demurrage':
+                            $bgColor = "bg-color-red";
+                            break;
+                    }
+
+                    $shipment = "";
+                    $shipArray = [];
+                    foreach($row->order->shipment as $ship)
+                    {
+                        if(!isset($shipArray[$ship->getTypeRevisionAttribute($ship->type)]))
+                        {
+                            $shipArray[$ship->getTypeRevisionAttribute($ship->type)] = 1;
+                        }
+                        else
+                        {
+                            $shipArray[$ship->getTypeRevisionAttribute($ship->type)] += 1;
+                        }
+                    }
+
+                    arsort($shipArray);
+
+                    foreach($shipArray as $k => $v)
+                    {
+                        if($shipment === "")
+                        {
+                            $shipment = "{$v} x $k";
+                        }
+                        else
+                        {
+                            $shipment .= ", {$v} x $k";
+                        }
+                    }
+
+                    $response[] = [
+                        'title' => $row->order->name." (ID: ".$row->order->id.")".($shipment !== "" ? "\n $shipment" : ""),
+                        'allDay' => true,
+                        'start' => strtotime($context === "storage" ? $row->storage_start : $row->demurrage_start),
+                        'url' => Helper::generateURL($row->order),
+                        'className' => "$bgColor pjax",
+                        'progress' => \WorkflowActivity::progress($row->order,$this->context)['label']
+                    ];
+                }
+            }
+
+            return Response::json($response);
         }
         else
         {

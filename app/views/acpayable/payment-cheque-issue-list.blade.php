@@ -50,7 +50,7 @@
                         <span>{{number_format($f->due_amount,2)}}</span>
                     </td>
                     <td>
-                        <input type="text" class="form-control input-block-level input-pvnumber" name="payment_number" value="" />
+                        <input type="text" class="form-control input-block-level input-paymentnumber" name="payment_number" value="" />
                     </td>
                     <td>
                         <input type="text" class="form-control input-block-level input-batchnumber" name="batch_number" value="" />

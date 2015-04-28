@@ -47,14 +47,18 @@
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
             <h1 class="page-title txt-color-blueDark">
                 <!-- PAGE HEADER -->
-                <i class="fa-fw fa fa-map-marker"></i>
+                <i class="fa-fw fa {{$form->getIcon()}}"></i>
                     Accounts Payable
                 <span>&gt;
-                    {{ $form->getReadableName() }}
+                    Id: {{ $form->getKey() }}
                 </span>
                 <span>
                     &nbsp;By {{ $owner }}
                 </span>
+                @if($form->payable)
+                <br/>
+                <span> Related To: <a href="{{Helper::generateURL($form->payable)}}" class="pjax"><i class="fa {{$form->payable->getIcon()}}"></i> {{$form->payable->getReadableName()}}</a></span>
+                @endif
             </h1>
         </div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
@@ -353,7 +357,25 @@
                     <!-- end widget div -->
                 </div>
                 <!-- end widget -->
-
+                @if($form->payable)
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="acp-associate" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-plus-circle"></i> </span>
+                        <h2>Related </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            @include('acpayable.edit_associate')
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+                <!-- end widget -->
+                @endif
                 <!-- Widget ID (each widget will need unique ID)-->
                 <div class="jarviswidget" id="acp-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>

@@ -31,7 +31,8 @@
                 "xethron/migrations-generator": "dev-master",
                 "kmd/logviewer": "1.2.*",
                 "barryvdh/laravel-debugbar": "1.*",
-		"themonkeys/cachebuster": "dev-master"
+		"themonkeys/cachebuster": "dev-master",
+                "phpoffice/phpexcel": "1.8.0"                
 	},
         "repositories": [
             {

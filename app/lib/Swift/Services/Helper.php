@@ -221,8 +221,39 @@ class Helper {
             return Session::has($session_variable) && isset(Session::get($session_variable)[$filter_name]);
         }
     }
-    
-    public function calculateStorageCost($storagestart,$numberOfContainers)
+
+    public function calculateStorageNumberOfDays(\Carbon\Carbon $storagestart)
+    {
+        $holidays = \Holidays::getAllDates();
+        $nextSunday = Carbon::parse('next sunday');
+        $numberOfDays = Carbon::now()->diffInDaysFiltered(function(Carbon $date) use ($holidays,$nextSunday) {
+            //Is first sunday, we omit
+            if($date->dayOfWeek === Carbon::SUNDAY && $date->diffInDays($nextSunday,false) === 0)
+            {
+                return false;
+            }
+
+            //Is a holiday, we omit
+            if(in_array($date->format('Y-m-d'),$holidays))
+            {
+                return false;
+            }
+
+            return true;
+        }, $storagestart);
+
+        return $numberOfDays;
+    }
+
+    public function calculateDemurrageNumberOfDays(\Carbon\Carbon $demurrageStart)
+    {
+        return Carbon::now()->diffInDays($demurrageStart);
+    }
+
+    /*
+     * Calculate storage cost of containers in USD
+     */
+    public function calculateStorageCost(\Carbon\Carbon $storagestart, $containers)
     {
         if($storagestart->diffInDays(Carbon::now(),false) <=0)
         {
@@ -230,9 +261,8 @@ class Helper {
         }
         else
         {
-            $numberOfDays = Carbon::now()->diffInDaysFiltered(function(Carbon $date) {
-                return $date->dayOfWeek != Carbon::SUNDAY;
-            }, $storagestart);
+            $numberOfContainers = count($containers);
+            $numberOfDays = \Helper::calculateStorageNumberOfDays($storagestart);
             
             if($numberOfContainers > 1)
             {
@@ -248,24 +278,30 @@ class Helper {
             }
             
             $storageCost = 0;
-            if($numberOfDays >= 4)
+            if($numberOfDays > 4)
             {
+                //From 1st to 4th day period
                 $storageCost += (4 * $oneToFour);
+                $remainderDays = $numberOfDays - 4;
                 if($numberOfDays <= 9)
                 {
-                    //More than 4, less than 9
-                    $remainderDays = $numberOfDays - 9;
+                    //From 5th to 9th day period
                     $storageCost += ($remainderDays * $fiveToNine);
                 }
                 else
                 {
-                    //More than 9
-                    $storageCost += (5 *$fiveToNine); 
-                    $remainderDays = $numberOfDays - 9;
                     if($numberOfDays >=10)
                     {
+                        //From 5 to 8
+                        $remainderDays -= 5;
+                        $storageCost += (5 *$fiveToNine);
                         //More than ten
                         $storageCost += ($remainderDays*$ten);
+                    }
+                    else
+                    {
+                        //Less than 10
+                        $storageCost += ($remainderDays *$fiveToNine);
                     }
                 }
             }
@@ -274,7 +310,99 @@ class Helper {
                 //Less than 4
                 $storageCost += $numberOfDays*$oneToFour;
             }
-            return $storageCost;
+            return $storageCost*$numberOfContainers;
+        }
+    }
+
+    /*
+     * Calculate demurrage cost of container in USD
+     */
+    public function calculateDemurrageCost(\Carbon\Carbon $demurrageStart, $containers)
+    {
+        $demurrageCost = 0;
+        if($demurrageStart->diffInDays(Carbon::now(),false) <=0)
+        {
+            return 0;
+        }
+        else
+        {
+            /*
+             * Cost Declaration
+             */
+
+            $twentyCharges = ['oneToFourteen'=>15,'FifteenToTwentyOne'=>25,'TwentyTwoAndUpwards'=>40];
+            $fourtyCharges = ['oneToFourteen'=>30,'FifteenToTwentyOne'=>50,'TwentyTwoAndUpwards'=>80];
+
+
+            foreach($containers as $c)
+            {
+                if(array_key_exists($c->type,\SwiftShipment::$type))
+                {
+                    $numberOfDays = \Helper::calculateDemurrageNumberOfDays($demurrageStart);
+                    /*
+                     * 20" container
+                     */
+                    if($c->type === \SwiftShipment::FCL_20)
+                    {
+                        if($numberOfDays > 14)
+                        {
+                            $demurrageCost += $twentyCharges['oneToFourteen']*14;
+                            $remainderDays = $numberOfDays - 14;
+                            if($numberOfDays > 21)
+                            {
+                                //from 15th to 21st days = 7 days
+                                $remainderDays -= 7;
+                                $demurrageCost += $twentyCharges['FifteenToTwentyOne']*7;
+                                
+                                //22 and upwards
+                                $demurrageCost += $twentyCharges['TwentyTwoAndUpwards'] * $remainderDays;
+                            }
+                            else
+                            {
+                                //between 14 and 21
+                                $demurrageCost += $twentyCharges['FifteenToTwentyOne']*$remainderDays;
+                            }
+                        }
+                        else
+                        {
+                            //14 days or less
+                            $demurrageCost += $twentyCharges['oneToFourteen']*$numberOfDays;
+                        }
+                    }
+                    /*
+                     * 40" Container
+                     */
+                    if($c->type === \SwiftShipment::FCL_40)
+                    {
+                        if($numberOfDays > 14)
+                        {
+                            $demurrageCost += $fourtyCharges['oneToFourteen']*14;
+                            $remainderDays = $numberOfdays - 14;
+                            if($numberOfDays > 21)
+                            {
+                                //from 15th to 21st days = 7 days
+                                $remainderDays -= 7;
+                                $demurrageCost += $fourtyCharges['FifteenToTwentyOne']*7;
+
+                                //22 and upwards
+                                $demurrageCost += $fourtyCharges['TwentyTwoAndUpwards'] * $remainderDays;
+                            }
+                            else
+                            {
+                                //between 14 and 21
+                                $demurrageCost += $fourtyCharges['FifteenToTwentyOne']*$remainderDays;
+                            }
+                        }
+                        else
+                        {
+                            //14 days or less
+                            $demurrageCost += $fourtyCharges['oneToFourteen']*$numberOfDays;
+                        }
+                    }
+                }
+            }
+
+            return $demurrageCost*count($containers);
         }
     }
     
@@ -537,7 +665,7 @@ class Helper {
      */
     public function validateNotFoundPurchaseOrder()
     {
-        $orphanNotFound = SwiftPurchaseOrder::whereNotNull('reference')
+        $orphanNotFound = \SwiftPurchaseOrder::whereNotNull('reference')
                         ->whereNotNull('type')
                         ->where('validated','=',\SwiftPurchaseOrder::VALIDATION_NOTFOUND)
                         ->get();

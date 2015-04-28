@@ -18,12 +18,6 @@ class JdePurchaseOrderController extends UserController
 
     public function getView($id)
     {
-
-        if(!$this->currentUser->hasAccess($this->viewPermission))
-        {
-            return parent::forbidden();
-        }
-
         $po = \JdePurchaseOrder::with('item')->find($id);
         if($po)
         {
@@ -54,11 +48,6 @@ class JdePurchaseOrderController extends UserController
 
     public function getViewByForm($id)
     {
-        if(!$this->currentUser->hasAccess($this->viewPermission))
-        {
-            return parent::forbidden();
-        }
-
         $swiftPo = \SwiftPurchaseOrder::find(Crypt::decrypt($id));
         if($swiftPo)
         {

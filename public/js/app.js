@@ -1780,6 +1780,17 @@ var main = {
             ot_summary();
         }        
     },
+    ot_active_charges: function() {
+        if(typeof window['ot_active_charges'] === "undefined")
+        {
+            jsLoader(["/js/plugin/datatables/jquery.dataTables-all.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+        }
+        else
+        {
+            pageSetUp();
+            ot_active_charges();
+        }          
+    },
     apr_statistics: function() {
         if(typeof window['apr_statistics'] === "undefined")
         {

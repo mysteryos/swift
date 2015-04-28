@@ -56,9 +56,9 @@
     });
     
     $content.on('click','.btn-tick-nobatchnumber',function(){
-        $content.find('tr.pvform').removeClass('highglight')
+        $content.find('tr.pvform').removeClass('highlight')
                 .find('input[type="checkbox"]').prop("checked",false);
-        var $pvlist = $content.find('.input-pvnumber').filter(function(){
+        var $pvlist = $content.find('.input-batchnumber').filter(function(){
             return this.value === "";
         });
         $pvlist.parents('tr.pvform').addClass('highlight')
@@ -67,9 +67,9 @@
     });
     
     $content.on('click','.btn-tick-nopvnumber',function(){
-        $content.find('tr.pvform').removeClass('highglight')
+        $content.find('tr.pvform').removeClass('highlight')
                 .find('input[type="checkbox"]').prop("checked",false);
-        var $pvlist = $content.find('.input-pvnumber').filter(function(){
+        var $pvlist = $content.find('.input-paymentnumber').filter(function(){
             return this.value === "";
         });
         $pvlist.parents('tr.pvform').addClass('highlight')
@@ -144,14 +144,16 @@
         text: 'Set Payment Number',
         action: function(e,obj)
         {
-            
+            $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
+            setpaymentnum();
         }
     },
     {
         text: 'Set Batch Number',
         action: function(e,obj)
         {
-            
+            $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');            
+            setbatchnum();
         }
     }
     ]);
@@ -164,6 +166,47 @@
             toggleHighlightBar();
         }
     });
+    
+    $('#btn-setpayment').on('click',function(){
+        setpaymentnum();
+        return false;
+    });
+    
+    $('#btn-setbatch').on('click',function(){
+        setbatchnum();
+        return false;
+    });
+    
+    function setpaymentnum()
+    {
+        var paymentnum = prompt('Set payment number for '+$('.pvform.highlight').length+' forms');
+        if($.isNumeric(paymentnum))
+        {
+            $('tr.pvform.highlight').find('input.input-paymentnumber').val(paymentnum);
+        }
+        else
+        {
+            if(paymentnum !== null)
+            {
+                messenger_notiftop("Payment number should be numeric.","error");
+            }
+        }        
+    }
+    function setbatchnum()
+    {
+        var batchnum = prompt('Set batch number for '+$('.pvform.highlight').length+' forms');
+        if($.isNumeric(batchnum))
+        {
+            $('tr.pvform.highlight').find('input.input-batchnumber').val(batchnum);
+        }
+        else
+        {
+            if(batchnum !== null)
+            {
+                messenger_notiftop("Batch number should be numeric.","error");
+            }
+        }        
+    }
 
     //Hide Loading Message
     messenger_hidenotiftop();

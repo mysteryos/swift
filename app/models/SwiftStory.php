@@ -32,6 +32,7 @@ class SwiftStory extends Eloquent {
     const WORKFLOW_ACTIVITY = "SwiftWorkflowActivity";
     const ORDER_TRACKING = "SwiftOrder";
     const APREQUEST = "SwiftAPRequest";
+    const ACPAYABLE = "SwiftACPRequest";
     const COMMENT = "SwiftComment";
     const VESSELLIVE = "CHCLLive";
     
@@ -114,6 +115,7 @@ class SwiftStory extends Eloquent {
                 break;
             case self::ORDER_TRACKING:
             case self::APREQUEST:
+            case self::ACPAYABLE:
                 $context = "<a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->getIcon()}\"></i> {$this->storyfiable->getReadableName()}</a>";
                 break;
             case self::COMMENT:

@@ -6,6 +6,9 @@ class APRequestController extends UserController {
         parent::__construct();
         $this->pageName = "A&P Request";
         $this->rootURL = $this->context = $this->data['context'] = "aprequest";
+        /*
+         * Permissions
+         */
         $this->adminPermission = \Config::get("permission.{$this->context}.admin");
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
@@ -16,6 +19,7 @@ class APRequestController extends UserController {
     
     public function getIndex()
     {
+        //Send back to overview
         return Redirect::to('/'.$this->context.'/overview');
     }    
     
@@ -29,6 +33,10 @@ class APRequestController extends UserController {
         $this->data['inprogress_limit'] = 15;
         $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
         $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta($this->context);
+
+        /*
+         * Fetch all data for 'Workspot' box
+         */
         
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
         
@@ -40,7 +48,10 @@ class APRequestController extends UserController {
         
         $aprequest_inprogress = $aprequest_inprogress->diff($aprequest_inprogress_responsible);
         $aprequest_inprogress_important = $aprequest_inprogress_important->diff($aprequest_inprogress_important_responsible);
-        
+
+        /*
+         * Check if we have in progress data
+         */
         if(count($aprequest_inprogress) == 0 || count($aprequest_inprogress_important) == 0 || count($aprequest_inprogress_responsible) == 0 || count($aprequest_inprogress_important_responsible) == 0)
         {
             $this->data['in_progress_present'] = true;
@@ -49,7 +60,10 @@ class APRequestController extends UserController {
         {
             $this->data['in_progress_present'] = false;
         }
-        
+
+        /*
+         * Add workflowactivity and audit to each record.
+         */
         foreach(array($aprequest_inprogress,$aprequest_inprogress_responsible,$aprequest_inprogress_important,$aprequest_inprogress_important_responsible) as $aprequestarray)
         {
             foreach($aprequestarray as &$apr)
@@ -108,20 +122,31 @@ class APRequestController extends UserController {
             $owner = $apr->revisionHistory()->orderBy('created_at','asc')->first();
             $this->data['isCreator'] = ($this->currentUser->id == $owner->user_id ? true : false);
             $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
+            //Workflow Activity
             $this->data['current_activity'] = WorkflowActivity::progress($apr,$this->context);
+            //Audit data
             $this->data['activity'] = Helper::getMergedRevision(array('product','document','delivery','order','product.approvalexec','product.approvalcatman'),$apr);
             $this->pageTitle = "{$apr->name} (ID: $apr->id)";
             $this->data['form'] = $apr;
+            /*
+             * List data
+             */
             $this->data['product_reason_code'] = json_encode(Helper::jsonobject_encode(SwiftAPProduct::$reason));
             $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
             $this->data['erporder_type'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$type));
             $this->data['erporder_status'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$status));
             $this->data['delivery_status'] = json_encode(Helper::jsonobject_encode(SwiftDelivery::$status));
+            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$aprequestTags));
+            /*
+             * Flags
+             */
             $this->data['flag_important'] = Flag::isImportant($apr);
             $this->data['flag_starred'] = Flag::isStarred($apr);
-            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$aprequestTags));
             $this->data['rootURL'] = $this->rootURL;
-            
+
+            /*
+             * Edit Access
+             */
             $this->data['isCcare'] = $this->currentUser->hasAccess($this->ccarePermission);
             $this->data['isStore'] = $this->currentUser->hasAccess($this->storePermission);
             $this->data['canPublish'] = $this->data['canModifyProduct'] = $this->data['canAddProduct'] = false;
@@ -152,6 +177,9 @@ class APRequestController extends UserController {
                         {
                             if($d->data != "")
                             {
+                                /*
+                                 * Check permissions based on current nodes in workflow
+                                 */
                                 if(isset($d->data->addproduct))
                                 {
                                     $this->data['canAddProduct'] = true;
@@ -172,12 +200,18 @@ class APRequestController extends UserController {
                     }
                 }
             }
-            
+
+            /*
+             * If there are products
+             */
             if(count($apr->product))
             {
                 $total = 0;
                 foreach($apr->product as &$p)
                 {
+                    /*
+                     * Check if approved
+                     */
                     $p->approvalstatus = SwiftApproval::PENDING;
                     if(count($p->approvalcatman) && $p->approvalcatman->approved != SwiftApproval::PENDING)
                     {
@@ -188,6 +222,10 @@ class APRequestController extends UserController {
                     {
                         $p->approvalstatus = $p->approvalexec->approved;
                     }
+
+                    /*
+                     * Calculate total
+                     */
                     if((int)$p->quantity > 0 && (float)$p->price > 0)
                     {
                         $total += ($p->quantity * $p->price);
@@ -212,7 +250,7 @@ class APRequestController extends UserController {
      */
     public function getCreate()
     {
-        //Check Permission
+        //Check Permission for creating form
         if(NodeActivity::hasStartAccess($this->context))
         {
             $this->pageTitle = 'Create';
@@ -223,14 +261,20 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
     }
-    
+
+    /*
+     * Display Form
+     */
     public function getView($id,$override=false)
     {
         if($override === true)
         {
             return $this->form($id,false);
         }
-        
+
+        /*
+         * If user has edit access, we redirect
+         */
         if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return Redirect::action('APRequestController@getEdit',array('id'=>$id));
@@ -241,10 +285,14 @@ class APRequestController extends UserController {
         }
         else
         {
+            //No permission - Forbidden
             return parent::forbidden();
         }
     }
-    
+
+    /*
+     * Edit Form
+     */
     public function getEdit($id)
     {
         if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
@@ -253,10 +301,14 @@ class APRequestController extends UserController {
         }
         elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
         {
+            /*
+             * Check if has view access
+             */
             return Redirect::action('APRequestController@getView',array('id'=>$id));
         }
         else
         {
+            //No permission - Forbidden
             return parent::forbidden();
         }
     }
@@ -280,7 +332,10 @@ class APRequestController extends UserController {
         }        
         
         $aprequestquery = SwiftAPRequest::query();
-        
+
+        /*
+         * Get filter for node definition if not inprogress
+         */
         if($type != 'inprogress')
         {
             //Get node definition list
@@ -292,7 +347,10 @@ class APRequestController extends UserController {
             }
             $this->data['node_definition_list'] = $node_definition_list;            
         }        
-        
+
+        /*
+         * Category Filter
+         */
         switch($type)
         {
             case 'inprogress':
@@ -328,10 +386,10 @@ class APRequestController extends UserController {
                 break;
         }
         
-        //Filters
+        //Set filters
         if(Input::has('filter'))
         {
-            
+            //Retrieve from session if possible
             if(Session::has('apr_form_filter'))
             {
                 $filter = Session::get('apr_form_filter');

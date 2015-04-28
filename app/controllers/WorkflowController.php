@@ -27,18 +27,27 @@ class WorkflowController extends UserController {
                     $permissionsArray[] = $v['permission_name'];
                 });
 
-                $users = \Sentry::findAllUsersWithAccess($permissionsArray);
-                foreach($users as $i => $u)
+                if(!in_array($n->definition->label,["Start","Preparation"]))
                 {
-                   if($u->isSuperUser() || !$u->activated)
-                   {
-                       unset($users[$i]);
-                   }
-                }
+                    $users = \Sentry::findAllUsersWithAccess($permissionsArray);
+                    foreach($users as $i => $u)
+                    {
+                       if($u->isSuperUser() || !$u->activated)
+                       {
+                           unset($users[$i]);
+                       }
+                    }
 
-                if(!empty($users))
-                {
-                    $n->users = $users;
+                    if(!empty($users))
+                    {
+                        $userArray = [];
+                        foreach($users as $u)
+                        {
+                            $userArray[] = $u->first_name." ".$u->last_name;
+                        }
+
+                        $n->users = implode(",",$userArray);
+                    }
                 }
             }
         }

@@ -59,14 +59,14 @@
                                          <td height="14">&nbsp;</td>
                                       </tr>
                                       <tr>
-                                         <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user->first_name)." ".ucfirst($user->last_name) }},</td>
+                                         <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user['first_name'])." ".ucfirst($user['last_name']) }},</td>
                                       </tr>
                                       <tr>
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <b>{{ $comment_user->first_name." ".$comment_user->last_name }} </b><span> has just mentioned you in a comment, saying:</span><br/><br/>
-                                                <span>"{{ $comment->comment }}"</span><br/><br/>
-                                                <span>in {{ $obj->getClassName() }} - {{ $obj->name or "" }} (ID: {{ $obj->id }} )</span> 
+                                                <b>{{ $comment_user['first_name']." ".$comment_user['last_name'] }} </b><span> has just mentioned you in a comment, saying:</span><br/><br/>
+                                                <span>"{{ $comment['comment'] }}"</span><br/><br/>
+                                                <span>in {{ $obj_name }} - {{ $obj['name'] or "" }} (ID: {{ $obj['id'] }} )</span>
                                              </p>
                                              <br/>
                                              <br/>
@@ -75,7 +75,7 @@
                                       <tr>
                                           <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ Helper::generateUrl($obj,true)."#C".$comment->id }}" target="_blank">Click here to view this comment</a>                                                 
+                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ $obj_url."#C".$comment['id'] }}" target="_blank">Click here to view this comment</a>
                                              </p>
                                           </td>
                                       </tr>
@@ -115,7 +115,7 @@
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;" valign="bottom">
                                              Site Access: <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Homepage</a>
                                              <span style="color:#999999;">|</span> <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}/order-tracking/" target="_blank">Order Process</a><br>
-                                             This email was sent to {{ $user->email }} <br>You are receiving this email because you are a registered member of <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Scott Swift</a> <br>
+                                             This email was sent to {{ $user['email'] }} <br>You are receiving this email because you are a registered member of <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Scott Swift</a> <br>
                                              Scott & Co Ltd, Industrial Park 1, Riche-Terre, Mauritius.
                                          </td>
                                       </tr>

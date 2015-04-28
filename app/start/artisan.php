@@ -21,3 +21,4 @@ Artisan::add(new workflow);
 Artisan::add(new commission);
 Artisan::add(new chclberth);
 Artisan::add(new jdetablefix);
+Artisan::add(new jdeporeconcialiation);

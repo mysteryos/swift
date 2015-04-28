@@ -85,10 +85,10 @@
                     </div>
                 </div>
                 <div class="btn-group toggle-oncheck"style="display:none;">
-                    <button class="btn btn-default" data-original-title="Set Payment Voucher Number" data-placement="bottom" rel="tooltip">
+                    <button class="btn btn-default" id="btn-setpayment" data-original-title="Set Payment Number" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-file-text-o"></i>
                     </button>
-                    <button class="btn btn-default" data-original-title="Set Batch Number" data-placement="bottom" rel="tooltip">
+                    <button class="btn btn-default" id="btn-setbatch" data-original-title="Set Batch Number" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-list"></i>
                     </button>
                 </div>

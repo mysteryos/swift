@@ -275,7 +275,7 @@
                                 @else
                                     @include('order-tracking.edit_storage')
                                 @endif
-                                @include('order-tracking.edit_storage',array('dummy'=>true,'s'=>null))
+                                @include('order-tracking.edit_storage',array('dummy'=>true,'sto'=>null))
                         </form>
                     </div>
                     <!-- end widget content -->
@@ -403,7 +403,7 @@
                     <h2>Accounts Payable</h2>
                     @if($edit)
                         <div class="widget-toolbar" role="menu">
-                            <a class="btn btn-primary" id="btn-add-payable" href="javascript:void(0);" data-target="#payableFormModal" data-toggle="modal"><i class="fa fa-plus"></i> Add</a>
+                            <!-- <a class="btn btn-primary" id="btn-add-payable" href="javascript:void(0);" data-target="#payableFormModal" data-toggle="modal"><i class="fa fa-plus"></i> Add</a> -->
                         </div>
                     @endif
 				</header>

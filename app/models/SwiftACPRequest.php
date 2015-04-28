@@ -14,13 +14,45 @@ class SwiftACPRequest extends Eloquent
 
     protected $table = "scott_swift.swift_acp_request";
     
-    protected $fillable = ['name','description','billable_company_code','owner_user_id','supplier_code'];
+    protected $fillable = ['name','description','billable_company_code','owner_user_id','supplier_code','payable_id','payable_type','type'];
 
     protected $appends = ['company_name','supplier_name','amount_due'];
 
     protected $with = ['invoice','payment'];
     
     public $dates = ['deleted_at'];
+
+    /*
+     * Contants
+     */
+
+    const ORDER_PO = 11;
+    const ORDER_FREIGHT = 1;
+    const ORDER_PERMIT = 2;
+    const ORDER_STORAGE = 3;
+    const ORDER_DEMURRAGE = 4;
+    const ORDER_FINE = 5;
+    const ORDER_DUTY = 6;
+    const ORDER_VAT = 7;
+    const ORDER_TAX = 8;
+    const ORDER_WAREHOUSING = 9;
+    const ORDER_INSURANCE = 10;
+    const ORDER_STOCK = 11;
+
+    public static $order = [
+        self::ORDER_DUTY => "Customs/Excise Duty",
+        self::ORDER_DEMURRAGE => "Demurrage",
+        self::ORDER_FINE => "Fine",
+        self::ORDER_FREIGHT => "Freight",
+        self::ORDER_INSURANCE => "Insurance",
+        self::ORDER_PERMIT => "Permit",
+        self::ORDER_PO => "Purchase Order",
+        self::ORDER_STORAGE => "Storage",
+        self::ORDER_STOCK => "Stock",
+        self::ORDER_TAX => "Tax",
+        self::ORDER_VAT => "VAT",
+        self::ORDER_WAREHOUSING => "Warehousing",
+    ];
 
     /* Elastic Search */
     
@@ -32,21 +64,22 @@ class SwiftACPRequest extends Eloquent
     public $esMain = true;
     //Info Context
     public $esInfoContext = "acpayable";
-    public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due','payable_id','payable_type'];
+    public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due','payable_id','payable_type','type'];
     
     /* Revisionable */
     
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'name','description','billable_company_code','supplier_code'
+        'name','description','billable_company_code','supplier_code','type'
     );
     
     protected $revisionFormattedFieldNames = array(
         'name' => 'Name',
         'description' => 'Description',
         'billable_company_code' => 'Billable Company',
-        'supplier_code' =>  'Supplier'
+        'supplier_code' =>  'Supplier',
+        'type' => 'Type'
     );
     
     public $saveCreateRevision = true;
@@ -320,7 +353,7 @@ class SwiftACPRequest extends Eloquent
 
     public static function getById($id)
     {
-        return self::with(['supplier','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote','approvalHod','document'])
+        return self::with(['supplier','company','owner','invoice','payment','purchaseOrder','paymentVoucher','creditNote','approvalHod','document','payable'])
                     ->find($id);
     }
 

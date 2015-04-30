@@ -111,10 +111,13 @@ Class LoginController extends Controller
     
     public function getLogout()
     {
-        //Forget Avatar of User
-        Swift\Avatar::forget();
-        //Remove Session
-        Sentry::logout();
+        if(Sentry::check())
+        {
+            //Forget Avatar of User
+            Swift\Avatar::forget();
+            //Remove Session
+            Sentry::logout();
+        }
         //To the login page, matey
         return Redirect::to('/login');
     }

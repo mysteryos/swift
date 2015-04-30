@@ -667,6 +667,7 @@ class OrderTrackingController extends UserController {
                                 }
                                 return $q;
                             })
+                            ->remember(60)
                             ->get();
 
         $activeStorage = SwiftStorage::whereNotNull('storage_start')
@@ -683,7 +684,10 @@ class OrderTrackingController extends UserController {
                                 }
                                 return $q;
                             })
+                            ->remember(60)
                             ->get();
+
+        $totalStorage = $totalDemurrage = 0;
 
         foreach(['demurrage'=>$activeDemurrage,'storage'=>$activeStorage] as $type => $list)
         {
@@ -697,6 +701,7 @@ class OrderTrackingController extends UserController {
                         if(count($row->order->shipment))
                         {
                             $row->cost = \Helper::calculateStorageCost($row->storage_start,$row->order->shipment);
+                            $totalStorage += $row->cost;
                         }
                         else
                         {
@@ -708,6 +713,7 @@ class OrderTrackingController extends UserController {
                         if(count($row->order->shipment))
                         {
                             $row->cost = \Helper::calculateDemurrageCost($row->demurrage_start,$row->order->shipment);
+                            $totalDemurrage += $row->cost;
                         }
                         else
                         {
@@ -717,6 +723,9 @@ class OrderTrackingController extends UserController {
                 }
             }
         }
+
+        //Get latest storage rates
+        $this->data['rate'] = \CHCLStorage::getLatestRate();
 
         //Sort By highest cost first
 
@@ -737,7 +746,8 @@ class OrderTrackingController extends UserController {
         });
 
         $this->data['pageTitle'] = "Active Charges";
-
+        $this->data['totalStorage'] = $totalStorage;
+        $this->data['totalDemurrage'] = $totalDemurrage;
         $this->data['activeStorage'] = $activeStorage;
         $this->data['activeDemurrage'] = $activeDemurrage;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));

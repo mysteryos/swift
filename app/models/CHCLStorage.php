@@ -26,5 +26,10 @@ class CHCLStorage extends Eloquent {
     {
         return $this->morphMany('SwiftStory','storyfiable');
     }
+
+    public static function getLatestRate()
+    {
+        return self::orderBy('created_at','DESC')->first();
+    }
 }
 

@@ -181,7 +181,7 @@ class chclcrawler extends Command {
         public function schedule(Schedulable $scheduler)
         {
             //Every Day at 4a.m
-            //return $scheduler->daily()->hours(4);
+            return $scheduler->daily()->hours(12);
         }        
         
 	/**

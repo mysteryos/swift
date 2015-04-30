@@ -16,7 +16,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content" data-js="elastic_search" data-jsurl="{{Bust::url('/js/swift/swift.elastic_search.js')}}">
+<div id="content" data-js="elastic_search" data-urljs="{{Bust::url('/js/swift/swift.elastic_search.js')}}">
 
     <!-- row -->
 

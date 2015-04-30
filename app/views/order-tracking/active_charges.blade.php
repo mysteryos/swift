@@ -23,7 +23,8 @@
 <div id="content" data-js="ot_active_charges" data-urljs="{{Bust::url('/js/swift/swift.ot_active_charges.js')}}">
     <div class="row">
         <div class="col-xs-12">
-            <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-bomb"></i> Active Charges &nbsp;</h1>
+            <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-bomb"></i> Active Charges (Refresh Every Hour)</h1>
+            <h3 class="pull-right" rel="tooltip" data-original-title="Updated On: {{$rate->updated_at->format('Y-m-d')}}" data-placement="bottom">CHCL Exchange Rate: {{$rate->storage_rate}}</h3>
         </div>
     </div>
     <ul class="nav nav-tabs row-space-4">
@@ -36,6 +37,18 @@
 
     <!-- START ROW -->
     <div class="container">
+        <div class="row">
+            <div class="col-xs-6 text-center">
+                <h3>
+                    Total Storage Charge: ${{$totalStorage}} / Rs.{{round($totalStorage*$rate->storage_rate)}}
+                </h3>
+            </div>
+            <div class="col-xs-6 text-center">
+                <h3>
+                    Total Demurrage Charge: ${{$totalDemurrage}} / Rs.{{round($totalDemurrage*$rate->storage_rate)}}
+                </h3>
+            </div>
+        </div>
         <div class="row">
             <div class="col-xs-12">
                 <div class="jarviswidget" id="ot-storage-charges" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false">
@@ -62,10 +75,16 @@
                                                     Current Step
                                                 </th>
                                                 <th>
+                                                    Date Start
+                                                </th>
+                                                <th>
                                                     Number of Days
                                                 </th>
                                                 <th>
                                                     Active Charges (USD)
+                                                </th>
+                                                <th>
+                                                    Active Charges (Rs)
                                                 </th>
                                             </tr>
                                         </thead>
@@ -75,8 +94,10 @@
                                                     <td><a href="{{\Helper::generateURL($as->order)}}" class="pjax">#{{$as->order->id}}</a></td>
                                                     <td>{{$as->order->getReadableName()}}</td>
                                                     <td>{{$as->order->activity['label']}}</td>
+                                                    <td>{{$as->storage_start->format('Y-m-d')}}</td>
                                                     <td>{{$as->numberOfDays}}</td>
                                                     <td>@if(is_numeric($as->cost)){{$as->cost}}@else{{$as->cost}}@endif</td>
+                                                    <td>@if(is_numeric($as->cost)){{round($as->cost*$rate->storage_rate)}}@else{{$as->cost}}@endif</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -104,7 +125,7 @@
                         <div class="widget-body no-padding">
                             <div class="widget-body-toolbar"></div>
                             @if(count($activeDemurrage))
-                                <table class="table table-hover" id="storage_table">
+                                <table class="table table-hover" id="demurrage_table">
                                     <thead>
                                         <tr>
                                             <th>
@@ -117,10 +138,16 @@
                                                 Current Step
                                             </th>
                                             <th>
+                                                Date Start
+                                            </th>
+                                            <th>
                                                 Number of Days
                                             </th>
                                             <th>
                                                 Active Charges (USD)
+                                            </th>
+                                            <th>
+                                                Active Charges (Rs)
                                             </th>
                                         </tr>
                                     </thead>
@@ -130,8 +157,10 @@
                                                 <td><a href="{{\Helper::generateURL($ad->order)}}" class="pjax">#{{$ad->order->id}}</a></td>
                                                 <td>{{$ad->order->getReadableName()}}</td>
                                                 <td>{{$ad->order->activity['label']}}</td>
+                                                <td>{{$ad->demurrage_start->format('Y-m-d')}}</td>
                                                 <td>{{$ad->numberOfDays}}</td>
                                                 <td>@if(is_numeric($ad->cost)){{$ad->cost}}@else{{$ad->cost}}@endif</td>
+                                                <td>@if(is_numeric($ad->cost)){{round($ad->cost*$rate->storage_rate)}}@else{{$ad->cost}}@endif</td>
                                             </tr>
                                         @endforeach
                                     </tbody>

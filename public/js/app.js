@@ -1237,7 +1237,7 @@ var allBloodhound = new Bloodhound({
         ajax: {
             error: function(xhr,text,error)
             {
-                messenger_notiftop("Search service encountered an error. Please contact your administrator.","error",5);
+                messenger_notiftop(xhr.responseText,"error",5);
             }
         }      
   },

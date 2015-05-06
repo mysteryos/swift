@@ -50,7 +50,7 @@
                 <i class="fa-fw fa {{$form->getIcon()}}"></i>
                     Accounts Payable
                 <span>&gt;
-                    Id: {{ $form->getKey() }}
+                    Id: #{{ $form->getKey() }}
                 </span>
                 <span>
                     &nbsp;By {{ $owner }}

@@ -58,7 +58,7 @@
 			<i class="fa-fw fa fa-map-marker"></i> 
 				Order Process
 			<span>&gt;  
-				Form ID: {{ $order->id }}
+				Form ID: #{{ $order->id }}
 			</span>
 		</h1>
 	</div>

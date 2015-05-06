@@ -83,7 +83,7 @@
                                                 break;
 
                                         }
-                                    ?>"></i></span> <i title="ID">{{ $f->id }}.</i></span> <span>{{$f->company_name}}</span>
+                                    ?>"></i></span> <i title="ID">#{{ $f->id }}.</i></span> <span>{{$f->company_name}}</span>
                                 </div>
                         </td>
                         <td class="inbox-data-message">

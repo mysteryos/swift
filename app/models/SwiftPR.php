@@ -13,10 +13,12 @@ class SwiftPR extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $appends = array('customer_name');
+    protected $appends = array('customer_name','owner','company_name');
     
-    protected $fillable = array('name','description','customer_code','return_user_id');
-    
+    protected $fillable = array('description','customer_code','company_code','driver_id','owner_user_id','paper_number');
+
+    public static $company = ['269'=>'Scott & Co Ltd'];
+
     protected $dates = ['deleted_at'];
     
     /* Revisionable */
@@ -24,17 +26,19 @@ class SwiftPR extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'name','description','customer_code'
+        'description','customer_code','company_code','driver_id','paper_number'
     );
     
     protected $revisionFormattedFieldNames = array(
         'customer_code' => 'Customer Code',
-        'name' => 'Name',
         'description' => 'Description',
+        'company_code' => 'Company Code',
+        'driver_id' => 'Driver',
+        'paper_number' => 'RFRF Paper number'
     );
     
-    public $revisionClassName = "Produt Returns";
-    public $revisionPrimaryIdentifier = "name";
+    public $revisionClassName = "Product Returns";
+    public $revisionPrimaryIdentifier = "id";
     public $keepCreateRevision = true;
     public $softDelete = true;
     
@@ -50,6 +54,7 @@ class SwiftPR extends Eloquent {
     public $esinfoContext = "pr";
     //Main Document
     public $esMain = true;
+    public $esRemove = ['owner_user_id','driver_id'];
     
     
     /*
@@ -73,9 +78,43 @@ class SwiftPR extends Eloquent {
         static::bootRevisionable();
         
         static::creating(function($model){
-            $this->return_user_id = Sentry::getUser()->id;
+            $this->owner_user_id = \Sentry::getUser()->id;
         });
-    }  
+    }
+
+    /*
+     * Accessors
+     */
+
+    public function getOwnerAttribute()
+    {
+        if($user = \Sentry::findUserById($this->owner_user_id))
+        {
+            return $user->first_name." ".$user->last_name;
+        }
+
+        return "";
+    }
+
+    public function getCustomerNameAttribute()
+    {
+        if($this->customer_code !== "" && count($this->customer) !== 0)
+        {
+            return trim($this->customer->ALPH);
+        }
+
+        return "";
+    }
+
+    public function getCompanyNameAttribute()
+    {
+        if($this->company_code !== "" && count($this->company) !== 0)
+        {
+            return trim($this->company->ALPH);
+        }
+
+        return "";
+    }
     
     /*
      * Utility
@@ -88,7 +127,7 @@ class SwiftPR extends Eloquent {
     
     public function getReadableName($html = false)
     {
-        return $this->name." (Id:".$this->id.")";
+        return $this->customer_name." (Id:".$this->id.")";
     }
     
     public function getIcon()
@@ -116,9 +155,9 @@ class SwiftPR extends Eloquent {
         return $this->hasMany('SwiftPRProduct','pr_id');
     }
     
-    public function requester()
+    public function owner()
     {
-        return $this->belongsTo('users','return_user_id');
+        return $this->belongsTo('users','owner_user_id');
     }
     
     /*

@@ -95,18 +95,43 @@ class SearchController extends UserController {
         
         try
         {
-            $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
-            $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
-            $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
-            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
-            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
-            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
-            $params['body']['query']['bool']['minimum_should_match'] = 1;
-
-            $params['body']['highlight']['fields']['*'] = new \stdClass();
-            $params['body']['highlight']['pre_tags'] = array('<b>');
-            $params['body']['highlight']['post_tags'] = array('</b>');
-            $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
+            if(substr($search,0,1)==='#')
+            {
+                $searchstring = str_replace('#','',$search);
+                if(strlen($searchstring) === 0)
+                {
+                    return \Response::make("");
+                }
+                else
+                {
+                    if(!is_numeric($searchstring))
+                    {
+                        return \Response::make("Id should be numeric",500);
+                    }
+                }
+                //Build Id Query String
+                foreach($params['type'] as $k => $v)
+                {
+                    $params['body']['query']['bool']['should'][$k]['match']["$v.$v.id"] = $searchstring;
+                }
+            }
+            else
+            {
+                //Exact match is favored instead of fuzzy ones
+                $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
+                $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
+                $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
+                $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
+                $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
+                $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
+                $params['body']['query']['bool']['minimum_should_match'] = 1;
+                //Highlight matches
+                $params['body']['highlight']['fields']['*'] = new \stdClass();
+                $params['body']['highlight']['pre_tags'] = array('<b>');
+                $params['body']['highlight']['post_tags'] = array('</b>');
+                $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
+            }
+            //Limit to 5 items
             $params['body']['from'] = 0;
             $params['body']['size'] = 5;
             $queryResponse = Es::search($params);
@@ -123,13 +148,14 @@ class SearchController extends UserController {
     public function getAllPrefetch()
     {
         try
-        {        
+        {
             $params = array();
             $params['index'] = App::environment();
             $params['body']['from'] = 0;
             $params['body']['size'] = 25;
             $queryResponse = Es::search($params);
-        } catch (Exception $e)
+        }
+        catch (Exception $e)
         {
             \Log::error($e->getMessage());
             return Response::make("An error occured with the search server.",500);
@@ -212,21 +238,39 @@ class SearchController extends UserController {
         try
         {
             $this->data['selected_category_text'] = $this->data['selected_category'] == "everything" ? "Everything" : ucfirst($this->searchCategory[$this->data['selected_category']]) ;
+            if(substr($search,0,1)==='#')
+            {
+                $searchstring = str_replace('#','',$search);
+                if(strlen($searchstring) !== 0)
+                {
+                    if(!is_numeric($searchstring))
+                    {
+                        return \Response::make("Id should be numeric",500);
+                    }
+                }
+                //Build Id Query String
+                foreach($params['type'] as $k => $v)
+                {
+                    $params['body']['query']['bool']['should'][$k]['match']["$v.$v.id"] = $searchstring;
+                }
+            }
+            else
+            {
+                $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
+                $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
+                $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
+                $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
+                $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
+                $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
+                $params['body']['query']['bool']['minimum_should_match'] = 1;
 
-            $params['body']['query']['bool']['should'][0]['match']['name']['query'] = $search;
-            $params['body']['query']['bool']['should'][0]['match']['name']['operator'] = "and";
-            $params['body']['query']['bool']['should'][0]['match']['name']['boost'] = 2;
-            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['like_text'] = $search;
-            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['fuzziness'] = 0.5;
-            $params['body']['query']['bool']['should'][1]['fuzzy_like_this']['prefix_length'] = 2;
-            $params['body']['query']['bool']['minimum_should_match'] = 1;
-
-            $params['body']['highlight']['fields']['*'] = new \stdClass();
-            $params['body']['highlight']['pre_tags'] = array('<b>');
-            $params['body']['highlight']['post_tags'] = array('</b>');
-            $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
-            $params['body']['from'] = $page_number == 1 ? 0 : (($page_number-1)*$perpage)+1;
-            $params['body']['size'] = 15;
+                $params['body']['highlight']['fields']['*'] = new \stdClass();
+                $params['body']['highlight']['pre_tags'] = array('<b>');
+                $params['body']['highlight']['post_tags'] = array('</b>');
+                $params['body']['_source']['exclude'] = array( "*.created_at","*.updated_at","*.deleted_at");
+                $params['body']['from'] = $page_number == 1 ? 0 : (($page_number-1)*$perpage)+1;
+                $params['body']['size'] = 15;
+            }
             $queryResponse = Es::search($params);
         } catch (Exception $e) {
             \Log::error($e->getMessage());

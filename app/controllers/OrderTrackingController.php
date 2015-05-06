@@ -932,7 +932,7 @@ class OrderTrackingController extends UserController {
         if($type != 'inprogress')
         {
             //Get node definition list
-            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
+            $node_definition_result = \SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
             $node_definition_list = array();
             foreach($node_definition_result as $v)
             {

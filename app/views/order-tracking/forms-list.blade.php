@@ -85,7 +85,7 @@
                                                         echo " txt-color-blue";
                                                         break;
                                                 }
-                                            ?>"></i></span> <i title="ID">{{ $o->id }}.</i></span> <span>{{ $o->name }}</span> - <span class="{{ $o->current_activity['status_class'] }}">{{ $o->current_activity['label'] }}</span>
+                                            ?>"></i></span> <i title="ID">#{{ $o->id }}.</i></span> <span>{{ $o->name }}</span> - <span class="{{ $o->current_activity['status_class'] }}">{{ $o->current_activity['label'] }}</span>
                                         </div>
                                 </td>
  

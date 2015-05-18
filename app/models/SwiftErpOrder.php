@@ -93,17 +93,9 @@ class SwiftErpOrder extends Eloquent {
     public $esEnabled = true;
     public $esInfoContext = "order";
     public $esRemove = ['status','orderable_type','orderable_id'];
-    
-    public function esGetContext()
-    {
-        switch($this->orderable_type)
-        {
-            case "SwiftAPRequest":
-                return "aprequest";
-                break;
-            default:
-                return false;
-        }
+
+    public function esGetContext() {
+        return array_search($this->orderable_type,Config::get('context'));
     }
     
     public function getTypeEsAttribute($val)

@@ -12,15 +12,15 @@ class SwiftPRProduct extends Eloquent {
     protected $table = "swift_pr_product";
     
     protected $fillable = array("pr_id","jde_itm","qty_client","qty_pickup","qty_store",
-                                "qty_triage_picking","qty_triage_disposal","invoice_id","invoice_recognition","price","reason_code","reason_others","pickup");
+                                "qty_triage_picking","qty_triage_disposal","invoice_id","invoice_recognition","price","reason_id","reason_others","pickup");
     
     protected $attributes = array('pickup'=>self::PICKUP);
     
     protected $guarded = array('id');
     
-    protected $appends = array('name','reasontext');
-    
-    public $timestamps = true;
+    protected $appends = array('name','reason_text');
+
+    protected $with = ['reason'];
     
     protected $dates = ['deleted_at'];
     
@@ -29,53 +29,39 @@ class SwiftPRProduct extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'jde_itm','quantity','reason_code','reason_others'
-    );
+                                    'jde_itm',
+                                    'reason_id',
+                                    'reason_others',
+                                    'qty_client',
+                                    'qty_pickup',
+                                    'qty_store',
+                                    'qty_triage_picking',
+                                    'qty_triage_disposal',
+                                    'invoice_id',
+                                    'pickup'
+                                );
     
     protected $revisionFormattedFieldNames = array(
-        'jde_itm' => 'JDE Id',
-        'qty_client' => 'Quantity Client',
-        'qty_pickup' => 'Quantity Pickup',
-        'qty_store' => 'Quantity Store',
-        'qty_triage_picking' => 'Quantity Picking',
-        'qty_triage_disposal' => 'Quantity Disposal',
-        'invoice_id' => 'Invoice Number',
-        'price' => 'Price',
-        'reason_code' => 'Reason Code',
-        'reason_others' => 'Reason(specify)',
-        'pickup' => "Pickup",
-    );    
+                                                'jde_itm' => 'JDE Id',
+                                                'qty_client' => 'Quantity Client',
+                                                'qty_pickup' => 'Quantity Pickup',
+                                                'qty_store' => 'Quantity Store',
+                                                'qty_triage_picking' => 'Quantity Picking',
+                                                'qty_triage_disposal' => 'Quantity Disposal',
+                                                'invoice_id' => 'Invoice Number',
+                                                'price' => 'Price',
+                                                'reason_id' => 'Reason',
+                                                'reason_others' => 'Reason(specify)',
+                                                'pickup' => "Pickup",
+                                            );
     
-    public static $revisionName = "PR Product";
+    public static $revisionName = "Product";
     
-    public $revisionClassName = "PR Product";
+    public $revisionClassName = "Product";
     public $revisionPrimaryIdentifier = "name";
     public $keepCreateRevision = true;
     public $softDelete = true;
     public $revisionDisplayId = true;
-    
-    /*
-     * Constants : Reason Codes
-     */
-    
-    const RC_CLIENT_BROKEN = 1;
-    const RC_CLIENT_CANCELLED = 2;
-    const RC_CLIENT_CONSIGNMENT = 3;
-    const RC_CLIENT_DAMAGED = 4;
-    const RC_CLIENT_DELISTED = 5;
-    const RC_CLIENT_EXPIRED = 6;
-    const RC_CLIENT_INCORRECTORDER = 7;
-    const RC_CLIENT_MISSING = 8;
-    const RC_CLIENT_SPOILED = 9;
-    const RC_SCOTT_BROKEN = 10;
-    const RC_SCOTT_BROKENMERCHANDISER = 11;
-    const RC_SCOTT_CODEBAR = 12;
-    const RC_SCOTT_DAMAGED = 13;
-    const RC_SCOTT_DISCOUNTINCORRECT = 14;
-    const RC_SCOTT_PRICEINCORRECT = 15;
-    const RC_SCOTT_PICKING = 16;
-    const RC_SCOTT_SPOILED = 17;
-    const RC_SCOTT_VALIDATION = 18;
     
     /*
      * Constants: Pickup
@@ -83,85 +69,66 @@ class SwiftPRProduct extends Eloquent {
     
     const PICKUP = 1;
     const NO_PICKUP = 0;
-    
-    //Reason Codes
-    
-    public static $reason_client = array(self::RC_CLIENT_BROKEN => 'Broken',
-                                        self::RC_CLIENT_CANCELLED => 'Cancelled Order',
-                                        self::RC_CLIENT_CONSIGNMENT => 'Consignment',
-                                        self::RC_CLIENT_DAMAGED => 'Damaged',
-                                        self::RC_CLIENT_DELISTED => 'Delisted',
-                                        self::RC_CLIENT_EXPIRED => 'Expired',
-                                        self::RC_CLIENT_INCORRECTORDER => 'Incorrect Order',
-                                        self::RC_CLIENT_MISSING => 'Missing in Sealed Cartons',
-                                        self::RC_CLIENT_SPOILED => 'Spoiled');
-        
-    public static $reason_scott = array(self::RC_SCOTT_BROKEN => 'Broken',
-                                        self::RC_SCOTT_BROKENMERCHANDISER => 'Broken By Merchandiser',
-                                        self::RC_SCOTT_CODEBAR => 'Code Bar',
-                                        self::RC_SCOTT_DAMAGED => 'Damaged',
-                                        self::RC_SCOTT_DISCOUNTINCORRECT => 'Discount Incorrect',
-                                        self::RC_SCOTT_PRICEINCORRECT => 'Price Incorrect',
-                                        self::RC_SCOTT_PICKING => 'Picking Error',
-                                        self::RC_SCOTT_SPOILED => 'Spoiled',
-                                        self::RC_SCOTT_VALIDATION => 'Validation error');
-                                  
+
+    /*
+     * Constants: Invoice Recognition
+     */
+
+    const INVOICE_AUTO = 1;
+    const INVOICE_MANUAL = 2;
+
+    /*
+     * Elastic Search Indexing
+     */
+
+    //Indexing Enabled
+    public $esEnabled = true;
+    //Context for Indexing
+    public $esContext = "product-returns";
+    public $esInfoContext = "product";
+    public $esRemove = ['pr_id','pickup','reason_id','invoice_recognition','price'];
+
+    /*
+     * ElasticSearch Utility Id
+     */
+
+    public function esGetId()
+    {
+        return $this->pr_id;
+    }
+
+    public function esGetParent()
+    {
+        return $this->pr;
+    }
+
+    /*
+     * Event Observers
+     */
+
+    public static function boot() {
+        parent:: boot();
+
+        static::bootElasticSearchEvent();
+
+        static::bootRevisionable();
+
+    }
     
     /*
      * Revisionable Accessors
      */
-    
-    public function getReasonCodeRevisionAttribute($val)
+
+    public function getReasonIdRevisionAttribute($val)
     {
-        if(key_exists($val,self::$reason_client))
+        if($val > 0)
         {
-            return self::$reason[$val]. "(At Client)";
+            return \SwiftPRReason::find($val)->text;
         }
-        if(key_exists($val,self::$reason_scott))
-        {
-               return self::$reason[$val]. "(At Scott)"; 
-        }
-        
-        return "";        
+
+        return "";
     }
-    
-    /*
-     * Elastic Search Indexing
-     */
-    
-    //Indexing Enabled
-    public $esEnabled = true;
-    //Context for Indexing
-    public $esContext = "aprequest";
-    public $esInfoContext = "product";
-    
-    /*
-     * ElasticSearch Utility Id
-     */
-    
-    public function esGetId()
-    {
-        return $this->aprequest_id;
-    }
-    
-    public function getReasonCodeEsAttribute($val)
-    {
-        return $this->getReasonCodeRevisionAttribute($val);         
-    }
-    
-    /*
-     * Event Observers
-     */
-    
-    public static function boot() {
-        parent:: boot();
-        
-        static::bootElasticSearchEvent();
-        
-        static::bootRevisionable();
-        
-    }
-    
+
     /*
      * Accessor
      */
@@ -175,26 +142,22 @@ class SwiftPRProduct extends Eloquent {
         return "";
     }
     
-    public function getReasontextAttribute()
+    public function getReasonTextAttribute()
     {
-        if(key_exists($val,self::$reason_client))
+        if((int)$this->reason_id > 0)
         {
-            return $this->$reason_client[$val]. "(At Client)";
+            return $this->reason->text;
         }
-        if(key_exists($val,self::$reason_scott))
-        {
-               return self::$reason_scott[$val]. "(At Scott)"; 
-        }
-        
-        return "";         
+
+        return "";
     }    
     
     /*
      * Relationships
      */
-    public function aprequest()
+    public function pr()
     {
-        return $this->belongsTo('SwiftAPRequest','aprequest_id');
+        return $this->belongsTo('SwiftPR','pr_id');
     }
     
     public function approval()
@@ -211,20 +174,20 @@ class SwiftPRProduct extends Eloquent {
     {
         return $this->morphOne('SwiftApproval','approvable')->with('comment')->where('type','=',SwiftApproval::PR_RETAILMAN);
     }
-    
+
+    public function discrepancy()
+    {
+        return $this->hasMany('SwiftPRDiscrepancy','product_id');
+    }
+
+    public function reason()
+    {
+        return $this->belongsTo('SwiftPRReason','reason_id');
+    }
     
     /*
      * Utility
      */
     
-    public function reasonScott()
-    {
-        return $this->reason_scott;
-    }
-    
-    public function reasonClient()
-    {
-        return $this->reason_client;
-    }
     
 }

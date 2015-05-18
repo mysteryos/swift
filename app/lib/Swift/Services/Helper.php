@@ -20,8 +20,6 @@ class Helper {
     
     public function loginSysUser()
     {
-        \DB::reconnect();
-        
         $sysuser = Sentry::findUserByLogin(Config::get('website.system_mail'));
         if($sysuser)
         {
@@ -195,6 +193,9 @@ class Helper {
                 break;
             case "SwiftACPRequest":
                 $url = "/accounts-payable/view/".Crypt::encrypt($obj->id);
+                break;
+            case "SwiftPR":
+                $url = "/product-returns/view/".Crypt::encrypt($obj->id);
                 break;
             case "JdeSupplierMaster":
                 $url = "/accounts-payable/supplier/view/".trim($obj->Supplier_Code);
@@ -717,6 +718,87 @@ class Helper {
             }
         }
         return "";
+    }
+
+    public function saveInvoiceCancelled($job,$data)
+    {
+        $lines = \JdeSales::getProducts((int)$data['invoice_id']);
+
+        $invoiceCancelledId = \SwiftPRReason::getInvoiceCancelledScottId();
+        //No products
+        if(!count($lines))
+        {
+            \Log::error("No products found for invoice id: ".$data['invoice_id']);
+            $job->delete();
+            return false;
+        }
+        
+        //Create Form
+        $pr = new \SwiftPR([
+                'customer_code' => $lines->first()->AN8,
+                'owner_user_id' => $data['user_id'],
+                'type' => \SwiftPR::INVOICE_CANCELLED
+                ]);
+        $pr->save();
+
+        $pr->approval()->save(new \SwiftApproval([
+            'approved' => \SwiftApproval::APPROVED,
+            'type' => \SwiftApproval::PR_REQUESTER,
+            'approval_user_id' => $data['user_id']
+        ]));
+
+        $sysuser = \Sentry::findUserByLogin(\Config::get('website.system_mail'));
+
+        $approval = new \SwiftApproval([
+            'approved' => \SwiftApproval::APPROVED,
+            'type' => \SwiftApproval::PR_RETAILMAN,
+            'approval_user_id' => $sysuser->id
+        ]);
+
+        //Add Products
+
+        foreach($lines as $l)
+        {
+            $product = new \SwiftPRProduct([
+                'pr_id' => $pr->id,
+                'jde_itm' => $l->ITM,
+                'qty_client' => $l->SOQS,
+                'qty_pickup' => $l->SOQS,
+                'qty_triage_picking' => $l->SOQS,
+                'qty_triage_disposal' => 0,
+                'invoice_id' => $l->DOC,
+                'invoice_recognition' => \SwiftPRProduct::INVOICE_AUTO,
+                'price' => $l->AEXP,
+                'reason_id' => $invoiceCancelledId,
+                'pickup' => \SwiftPRProduct::NO_PICKUP
+            ]);
+
+            $product->save();
+
+            /*
+             * Add Approval by System
+             */
+
+            $product->approval()->save($approval);
+        }
+
+        if(\WorkflowActivity::update($pr,$data['context']))
+        {
+            //Story Relate
+            \Queue::push('Story@relateTask',array('obj_class'=>get_class($pr),
+                                                 'obj_id'=>$pr->id,
+                                                 'action'=>\SwiftStory::ACTION_CREATE,
+                                                 'user_id'=>$data['user_id'],
+                                                 'context'=>get_class($pr)));
+            //Notification
+            \Notification::send(\SwiftNotification::TYPE_INFO,$pr);
+        }
+        else
+        {
+            \Log::error("Failed to save workflow for PR id: ".$pr->id);
+        }
+        
+        $job->delete();
     }
     
 }

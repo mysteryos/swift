@@ -206,7 +206,7 @@ class NodeActivity {
                         $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));                    
                         if(is_callable($function))
                         {
-                            call_user_func_array($function,array($nodeActivity));
+                            call_user_func_array($function,array($nodeActivity,false));
                         }
                         
                         self::save($nodeActivity,$flow);
@@ -246,7 +246,7 @@ class NodeActivity {
                     $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));                    
                     if(is_callable($function))
                     {
-                        call_user_func_array($function,array($nodeActivity));
+                        call_user_func_array($function,array($nodeActivity,false));
                     }                
                 
                     //Save Current
@@ -262,7 +262,7 @@ class NodeActivity {
                     /*
                      * If function returns true
                      */
-                    if(call_user_func_array($function,array($nodeActivity)))
+                    if(call_user_func_array($function,array($nodeActivity,false)))
                     {
                         /*
                          * Check if node activity has been processed
@@ -359,7 +359,7 @@ class NodeActivity {
                          */
                         if(is_callable($function))
                         {
-                            if(call_user_func_array($function,array($currentNodeActivity)))
+                            if(call_user_func_array($function,array($currentNodeActivity,false)))
                             {
                                 //Fetch children
                                 $nextNodeDefinition = $nextNodeDefinitionJoins->first()->childNode;
@@ -435,7 +435,7 @@ class NodeActivity {
                     $function = $nextNodeDefinitionJoins->first()->php_function."::".lcfirst(studly_case($nextNodeDefinitionJoins->first()->name));
                     if(is_callable($function))
                     {
-                        if(call_user_func_array($function,array($currentNodeActivity)))
+                        if(call_user_func_array($function,array($currentNodeActivity,false)))
                         {
                             //Check if other nodes have met their conditions
                             $andJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
@@ -467,7 +467,7 @@ class NodeActivity {
                                     $func = $n->php_function."::".lcfirst(studly_case($n->name));
                                     if(is_callable($func))
                                     {
-                                        if(!call_user_func_array($func,array($parentNodeActivity)))
+                                        if(!call_user_func_array($func,array($parentNodeActivity,false)))
                                         {
                                             $conditionAnd = false;
                                             break;
@@ -525,7 +525,7 @@ class NodeActivity {
                     $function = $nextNodeDefinitionJoins->first()->php_function."::".lcfirst(studly_case($nextNodeDefinitionJoins->first()->name));
                     if(is_callable($function))
                     {
-                        if(call_user_func_array($function,array($currentNodeActivity)))
+                        if(call_user_func_array($function,array($currentNodeActivity,false)))
                         {
                             //Check if other nodes have met their conditions
                             $andJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
@@ -553,7 +553,7 @@ class NodeActivity {
                                     $func = $n->php_function."::".lcfirst(studly_case($n->name));
                                     if(is_callable($func))
                                     {
-                                        if(!call_user_func_array($func,array($parentNodeActivity)))
+                                        if(!call_user_func_array($func,array($parentNodeActivity,false)))
                                         {
                                             $conditionAnd = false;
                                             break;
@@ -603,7 +603,7 @@ class NodeActivity {
                     $function = $nextNodeDefinitionJoins->first()->php_function."::".studly_case($nextNodeDefinitionJoins->first()->name);
                     if(is_callable($function))
                     {
-                        if(!call_user_func_array($function,array($currentNodeActivity)))
+                        if(!call_user_func_array($function,array($currentNodeActivity,false)))
                         {
                             //Check if other nodes have met their conditions
                             $orJoinNodeId = $nextNodeDefinitionJoins->first()->children_id;
@@ -632,7 +632,7 @@ class NodeActivity {
                                     $func = $n->php_function."::".lcfirst(studly_case($n->name));
                                     if(is_callable($func))
                                     {
-                                        if(call_user_func_array($func,array($parentNodeActivity)))
+                                        if(call_user_func_array($func,array($parentNodeActivity,false)))
                                         {
                                             $conditionOr = true;
                                             break;
@@ -694,7 +694,7 @@ class NodeActivity {
                                 /*
                                  * Check if we are allowed to create the next node
                                  */
-                                if(call_user_func_array($function,array($currentNodeActivity)))
+                                if(call_user_func_array($function,array($currentNodeActivity,false)))
                                 {
                                     $newNodeActivity = self::create($currentNodeActivity->workflow_activity_id,$n->childNode);
                                     if($newNodeActivity)

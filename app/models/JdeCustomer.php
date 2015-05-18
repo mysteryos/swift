@@ -8,6 +8,8 @@ class JdeCustomer extends Eloquent {
     protected $connection = 'sct_jde';
     
     protected $table = 'sct_jde.jdecustomers';
+
+    protected $primaryKey = 'AN8';
     
     private static $cache_expiry_time = 240;
     
@@ -55,5 +57,19 @@ class JdeCustomer extends Eloquent {
         return self::where('an8','LIKE',"%$term%")
                 ->remember(self::$cache_expiry_time)
                 ->count();
+    }
+
+    public function getReadableName()
+    {
+        return $this->ALPH." (Code: ".$this->AN8.")";
+    }
+
+    /*
+     * Relationships
+     */
+
+    public function pr()
+    {
+        return $this->hasMany('SwiftPR','customer_code');
     }
 }

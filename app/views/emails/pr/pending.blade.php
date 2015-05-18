@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Scott - A&P Request Status</title>
+        <title>Scott - Product Returns Status</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     <body style="margin: 0; padding: 0;">
@@ -23,8 +23,9 @@
                                  </a>
                              </td>
                              <td style="COLOR:#ccc;" class="ecxglobal-nav" height="51" valign="bottom" width="548" align="right">
-                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="http://swift.scottltd.net/order-tracking/" target="_blank">Order Process</a> | 
-                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="http://swift.scottltd.net/aprequest/" target="_blank">A&P Request</a>
+                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="{{ Config::get('app.url') }}/order-tracking/" target="_blank">Order Process</a> |
+                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="{{ Config::get('app.url') }}/aprequest/" target="_blank">A&P Request</a> |
+                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="{{ Config::get('app.url') }}/product-returns/" target="_blank">Product Returns</a>
                              </td>
                           </tr>
                           <tr height="11">
@@ -65,8 +66,8 @@
                                       <tr>
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <b>{{ $aprequest['name'] }} (ID: {{ $aprequest['id'] }})</b> <span style="color:<?php
-                                                switch($aprequest['current_activity']['status'])
+                                                <b>{{ $pr['customer_name'] }} (ID: {{ $pr['id'] }})</b> <span style="color:<?php
+                                                switch($pr['current_activity']['status'])
                                                 {
                                                     case SwiftWorkflowActivity::INPROGRESS:
                                                         echo "#c79121;";
@@ -82,10 +83,10 @@
                                                    
                                                 }                                                
                                                 ?>"><?php 
-                                                switch($aprequest['current_activity']['status'])
+                                                switch($pr['current_activity']['status'])
                                                 {
                                                     case SwiftWorkflowActivity::INPROGRESS:
-                                                        echo "is currently pending for <u>".$aprequest['current_activity']['label'];
+                                                        echo "is currently pending for <u>".$pr['current_activity']['label'];
                                                         break;
                                                     case SwiftWorkflowActivity::COMPLETE:
                                                         echo "is complete";
@@ -106,7 +107,7 @@
                                       <tr>
                                           <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
                                              <p>
-                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ $aprequest['url'] }}" target="_blank">Click here to view this A&P Request form</a>                                                 
+                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ $pr['url'] }}" target="_blank">Click here to view this A&P Request form</a>
                                              </p>
                                           </td>
                                       </tr>
@@ -145,7 +146,7 @@
                                       <tr>
                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;" valign="bottom">
                                              Site Access: <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Homepage</a>
-                                             <span style="color:#999999;">|</span> <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}/aprequest/" target="_blank">A&P Request</a><br>
+                                             <span style="color:#999999;">|</span> <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}/product-returns/" target="_blank">Product Returns</a><br>
                                              This email was sent to {{ $user['email'] }} <br>You are receiving this email because you are a registered member of <a style="FONT-FAMILY:arial;COLOR:#999;FONT-SIZE:11px;TEXT-DECORATION:underline;" href="{{ Config::get('app.url') }}" target="_blank">Scott Swift</a> <br>
                                              Scott & Co Ltd, Industrial Park 1, Riche-Terre, Mauritius.
                                          </td>

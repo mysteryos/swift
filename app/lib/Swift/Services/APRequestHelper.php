@@ -42,10 +42,10 @@ class APRequestHelper{
                     if((int)$p->quantity > 0 && (int)$p->price === 0)
                     {
                         $comment = new SwiftComment([
-				'comment' => "Unable to auto approve form - Price is missing for certain products",
-				'user_id' => \Sentry::getUser()->id,                            
+                            'comment' => "Unable to auto approve form - Price is missing for certain products",
+                            'user_id' => \Sentry::getUser()->id,
                         ]);
-			$form->comments()->save($comment);
+                        $form->comments()->save($comment);
                         $job->delete();
                         return;
                     }

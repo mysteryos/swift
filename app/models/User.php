@@ -80,4 +80,22 @@ class User extends Eloquent implements UserInterface, RemindableInterface {
 		return $this->email;
 	}
 
+    /*
+     * Accessors
+     */
+
+    public function getFullName()
+    {
+        return $this->first_name." ".$this->last_name;
+    }
+
+    /*
+     * Relationships
+     */
+
+    public function pr()
+    {
+        return $this->hasMany('SwiftPR','owner_user_id');
+    }
+
 }

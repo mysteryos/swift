@@ -72,6 +72,9 @@ Route::group(array('before' => array('auth')), function()
 
     //Workflow
     Route::controller('workflow','WorkflowController');
+
+    //Product Returns
+    Route::controller('product-returns','ProductReturnsController');
     
 });
 

@@ -3,9 +3,6 @@
  * Description:
  */
 
-/*
-* Fixed table height
-*/
 (window.acp_payment_cheque_issue = function(){
     var $content = $('#content');
     tableHeightSize();
@@ -192,6 +189,7 @@
             }
         }        
     }
+    
     function setbatchnum()
     {
         var batchnum = prompt('Set batch number for '+$('.pvform.highlight').length+' forms');

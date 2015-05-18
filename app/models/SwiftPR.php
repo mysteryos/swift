@@ -9,31 +9,47 @@ class SwiftPR extends Eloquent {
     use \Venturecraft\Revisionable\RevisionableTrait; 
     use \Swift\ElasticSearchEventTrait;
     
-    protected $table = "swift_pr";
+    protected $table = "scott_swift.swift_pr";
     
     protected $guarded = array('id');
     
-    protected $appends = array('customer_name','owner','company_name');
+    protected $appends = array('customer_name','owner_name','company_name','type_name');
     
-    protected $fillable = array('description','customer_code','company_code','driver_id','owner_user_id','paper_number');
+    protected $fillable = array('description','customer_code','company_code','owner_user_id','paper_number','type');
 
     public static $company = ['269'=>'Scott & Co Ltd'];
 
     protected $dates = ['deleted_at'];
+
+    protected $attributes = ['type'=>self::SALESMAN];
+
+    protected $with = ['product','customer','owner'];
+
+    /*
+     * Constants
+     */
+
+    const SALESMAN = 1;
+    const ON_DELIVERY = 2;
+    const INVOICE_CANCELLED = 3;
+
+    public static $type = [self::SALESMAN => 'Salesman',
+                    self::ON_DELIVERY => 'On Delivery',
+                    self::INVOICE_CANCELLED => 'Invoice Cancelled'
+                    ];
     
     /* Revisionable */
     
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'description','customer_code','company_code','driver_id','paper_number'
+        'description','customer_code','company_code','paper_number'
     );
     
     protected $revisionFormattedFieldNames = array(
         'customer_code' => 'Customer Code',
         'description' => 'Description',
         'company_code' => 'Company Code',
-        'driver_id' => 'Driver',
         'paper_number' => 'RFRF Paper number'
     );
     
@@ -41,6 +57,7 @@ class SwiftPR extends Eloquent {
     public $revisionPrimaryIdentifier = "id";
     public $keepCreateRevision = true;
     public $softDelete = true;
+    public $revisionRelations = ['product','order','pickup','approval','document'];
     
     
     /*
@@ -50,11 +67,11 @@ class SwiftPR extends Eloquent {
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
-    public $esContext = "pr";
-    public $esinfoContext = "pr";
+    public $esContext = "product-returns";
+    public $esInfoContext = "product-returns";
     //Main Document
     public $esMain = true;
-    public $esRemove = ['owner_user_id','driver_id'];
+    public $esRemove = ['owner_user_id','type'];
     
     
     /*
@@ -78,7 +95,7 @@ class SwiftPR extends Eloquent {
         static::bootRevisionable();
         
         static::creating(function($model){
-            $this->owner_user_id = \Sentry::getUser()->id;
+            $model->owner_user_id = \Sentry::getUser()->id;
         });
     }
 
@@ -86,7 +103,7 @@ class SwiftPR extends Eloquent {
      * Accessors
      */
 
-    public function getOwnerAttribute()
+    public function getOwnerNameAttribute()
     {
         if($user = \Sentry::findUserById($this->owner_user_id))
         {
@@ -115,7 +132,19 @@ class SwiftPR extends Eloquent {
 
         return "";
     }
-    
+
+    public function getTypeNameAttribute()
+    {
+        if(key_exists($this->type,self::$type))
+        {
+            return self::$type[$this->type];
+        }
+        else
+        {
+            return "";
+        }
+    }
+
     /*
      * Utility
      */
@@ -140,6 +169,16 @@ class SwiftPR extends Eloquent {
     {
         return "pr_".$this->id;
     }
+
+    public function isOwner($user_id=false)
+    {
+        if($user_id===false)
+        {
+            $user_id = \Sentry::getUser()->id;
+        }
+
+        return $this->owner_user_id === $user_id;
+    }
     
     /*
      * Relationships
@@ -157,8 +196,9 @@ class SwiftPR extends Eloquent {
     
     public function owner()
     {
-        return $this->belongsTo('users','owner_user_id');
+        return $this->belongsTo('user','owner_user_id');
     }
+
     
     /*
      * Morphic
@@ -177,11 +217,16 @@ class SwiftPR extends Eloquent {
     public function pickup()
     {
         return $this->morphMany('SwiftPickup','pickable');
-    }    
+    }
+
+    public function creditNote()
+    {
+        return $this->morphMany('SwiftCreditNote','creditable');
+    }
     
     public function document()
     {
-        return $this->morphMany('SwiftDocument','document');
+        return $this->morphMany('SwiftPRDocument','document');
     }
     
     public function flag()

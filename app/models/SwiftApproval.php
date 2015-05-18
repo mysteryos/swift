@@ -52,7 +52,11 @@ class SwiftApproval extends Eloquent {
     const APC_HOD = 5;
     const APC_PAYMENT = 6;
     const APC_REQUESTER = 7;
-    
+    const PR_REQUESTER = 8;
+    const PR_PICKUP = 9;
+    const PR_RECEPTION = 10;
+    const PR_STOREVALIDATION = 11;
+    const PR_CREDITNOTE = 12;
     /*
      * Approved Constants
      */
@@ -129,5 +133,33 @@ class SwiftApproval extends Eloquent {
     public function aprequest()
     {
         return $this->morphByMany('SwiftAPRequest','approvable');
+    }
+
+    /*
+     * Scope
+     */
+
+    public function scopeApprovedBy($query,$typeOfApprover,$operator=false)
+    {
+        if($operator === false)
+        {
+            return $q->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::APPROVED);
+        }
+        else
+        {
+            return $q->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::APPROVED,$operator);
+        }
+    }
+
+    public function scopeRejectedBy($query,$typeOfApprover,$operator=false)
+    {
+        if($operator === false)
+        {
+            return $q->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::REJECTED);
+        }
+        else
+        {
+            return $q->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::REJECTED,$operator);
+        }
     }
 }

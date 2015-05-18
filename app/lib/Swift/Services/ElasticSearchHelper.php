@@ -92,6 +92,11 @@ class ElasticSearchHelper {
                         $params['body']['doc'][$data['info-context']] = array();
                     }
                 }
+                else
+                {
+                    \Log::error("Parent not found for {$data['context']} - {$data['class']}, Id: {$data['id']}");
+                    return false;
+                }
             }
             \Es::update($params);
         }

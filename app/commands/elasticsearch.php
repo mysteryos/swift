@@ -98,6 +98,9 @@ class elasticsearch extends Command {
                             $this->info('ACP Indexed ID:'.$acp->id);
                         }
                         break;
+                    case "product-returns":
+                        
+                        break;
                     default:
                         $this->error("We don't support this context!");
                         break;

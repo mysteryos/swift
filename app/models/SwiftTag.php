@@ -44,11 +44,25 @@ class SwiftTag extends eloquent {
     const OT_COSTING = 13;
     const OT_GRN = 14;
     const OT_PACKING_LIST = 15;
+
+    /*
+     * A&P Request Tags
+     */
     const AP_EVENTFLYER = 16;
+
+    /*
+     * Accounts Payable Tags
+     */
     const ACP_INVOICE = 17;
     const ACP_CREDITNOTE = 18;
-
     const SUPPLIER_BRN = 19;
+
+    /*
+     * Product Return Tags
+     */
+
+    const PR_PIC = 20;
+    const PR_PAPER = 21;
         
     /*
      * Compilation of Order Tracking Tags
@@ -68,11 +82,24 @@ class SwiftTag extends eloquent {
      */
     public static $aprequestTags = [self::AP_EVENTFLYER => "Event flyer"];
 
+    /*
+     * Compilation of Accounts Payable Tags
+     */
     public static $acpayableTags = [self::ACP_INVOICE => "Invoice",
                                     self::ACP_CREDITNOTE => "Credit Note"
                                     ];
 
+    /*
+     * Compilation of Supplier Tags
+     */
     public static $supplierTags = [self::SUPPLIER_BRN => "BRN"];
+
+    /*
+     * Compulation of Product Returns Tags
+     */
+
+    public static $prTags = [self::PR_PIC => "Picture",
+                            self::PR_PAPER => "Return Form"];
     
     /*
      * Event Observers

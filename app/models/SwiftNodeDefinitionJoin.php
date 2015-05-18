@@ -38,7 +38,19 @@ class SwiftNodeDefinitionJoin extends Eloquent {
      * TLDR: Many Nodes to 1 'AND' Connection. After A is complete, they move to B,C, & D
      */
     public static $P_AND_JOIN = 3;
-    
+
+    /*
+     * Name: Multiple Choice (OR-Split)
+     * TLDR: After either B, C or D is complete, workflow can moves to E
+     */
+    public static $P_OR_SPLIT = 6;
+
+    /*
+     * Name: Synchronizing Merge (OR-Join)
+     * TLDR: After B and/or C has completed, it moves to E; Ignores conditions while branching
+     */
+    public static $P_OR_JOIN = 7;
+
     /*
      * Name: Exclusive Choice (XOR-Split)
      * Use Case Example: After an order has been received, the payment can be performed by either credit card or bank transfer.
@@ -52,18 +64,6 @@ class SwiftNodeDefinitionJoin extends Eloquent {
      * TLDR: After E has been completed, workflow moves to either B, C or D
      */
     public static $P_XOR_JOIN = 5;
-    
-    /*
-     * Name: Multiple Choice (OR-Split)
-     * TLDR: After either B, C or D is complete, workflow can moves to E
-     */
-    public static $P_OR_SPLIT = 6;
-    
-    /*
-     * Name: Synchronizing Merge (OR-Join)
-     * TLDR: After B and/or C has completed, it moves to E; Ignores conditions while branching
-     */
-    public static $P_OR_JOIN = 7;  
     
     /*
      * Name: Exclusive Compulsory Choice (XAND-Split)

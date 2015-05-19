@@ -20,7 +20,7 @@ class SwiftPRProduct extends Eloquent {
     
     protected $appends = array('name','reason_text');
 
-    protected $with = ['reason'];
+    protected $with = ['reason','approvalretailman'];
     
     protected $dates = ['deleted_at'];
     
@@ -160,11 +160,6 @@ class SwiftPRProduct extends Eloquent {
         return $this->belongsTo('SwiftPR','pr_id');
     }
     
-    public function approval()
-    {
-        return $this->morphMany('SwiftApproval','approvable');        
-    }
-    
     public function jdeproduct()
     {
         return $this->belongsTo('JdeProduct','jde_itm','ITM');
@@ -188,6 +183,16 @@ class SwiftPRProduct extends Eloquent {
     /*
      * Utility
      */
+
+    public function getApprovalStatus()
+    {
+        if($this->approvalretailman)
+        {
+            return $this->approvalretailman->approved;
+        }
+
+        return \SwiftApproval::PENDING;
+    }
     
     
 }

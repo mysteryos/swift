@@ -115,7 +115,7 @@
            type: 'GET',
            success:function(html)
            {
-                $('#btn-publish').removeAttr('disabled').removeClass('disable');
+                $btnPublish.removeAttr('disabled').removeClass('disable');
                 $productContainer.find('div.loading-overlay').remove();
                 $productContainer.slideUp('300',function(){
                     $(this).html(html);
@@ -127,7 +127,7 @@
            {
                $btnPublish.removeAttr('disabled').removeClass('disable');
                messenger_notiftop(xhr.responseText,'error',10);
-               $('#product-container').find('div.loading-overlay').remove();
+               $('#product-container').find('div.loading-overlay').remove().html('<p class="col-xs-12 text-center">Product Information will Appear here</p>');
            }
         });
     });

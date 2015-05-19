@@ -57,11 +57,11 @@ class Helper {
         
         if(isset($data['product_id']))
         {
-            $prod = \SwiftAPProduct::find((int)$data['product_id']);
-            if(count($prod) && isset($prod->jde_itm) && (int)$prod->jde_itm > 0)
+            $prod = $data['class']::find((int)$data['product_id']);
+            if($prod && isset($prod->jde_itm) && (int)$prod->jde_itm > 0)
             {
                 $result = \JdeSales::getProductLatestCostPrice($prod->jde_itm);
-                if(count($result))
+                if($result)
                 {
                     $prod->price = round($result->UPRC,2);
                 }

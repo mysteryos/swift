@@ -8,19 +8,21 @@ class JdeSales extends Eloquent {
     
     public static function getProductHighestPrice($productCode)
     {
-        return self::where('UPRC','>',DB::raw(0))
+        return self::remember(self::$cache_expiry_time)
+              ->where('UPRC','>',DB::raw(0))
               ->where('ITM','=',$productCode,'AND')
               ->whereIn('DCTO',array('3S','4S','S9'),'AND')
               ->orderBy('UPRC','DESC')->take(1)
-              ->remember(self::$cache_expiry_time)->get();
+              ->get();
     }
     
     public static function getProductLatestCostPrice($productCode)
     {
-        return self::where('UPRC','>',DB::raw(0))
+        return self::remember(self::$cache_expiry_time)
+            ->where('UPRC','>',\DB::raw(0))
+            ->whereIn('DCTO',['3S','4S'],'AND')
             ->where('ITM','=',$productCode,'AND')
-            ->remember(self::$cache_expiry_time)
-            ->orderBy('IVD','DESC')->take(1)->first();
+            ->orderBy('IVD','DESC')->take(1)->get()->first();
     }
 
     public static function getByInvoiceCode($invoiceCode,$offset,$limit)

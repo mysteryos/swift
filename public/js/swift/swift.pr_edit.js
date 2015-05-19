@@ -46,7 +46,7 @@ function addMulti($dummy,pk)
                         return item.text;
                     },
                     initSelection: function (element, callback) {
-                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
+                        callback({id: element.val() , text: element.parents('td.editable-select2').children('a.product-editable').html()});
                     }
                 }
             });
@@ -123,6 +123,167 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+$pk); 
     });
     return true;
+}
+
+function editableElement($element)
+{
+    $element.each(function(){
+        var $this = $(this);
+        if(this.getAttribute('data-type')=="select2" && $this.hasClass('product-editable'))
+        {
+            $this.editable({
+                disabled: $this.hasClass('editable-disabled'),
+                placeholder: 'Select a product',
+                onblur: 'submit',
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },                    
+                    ajax: {
+                        url: '/ajaxsearch/product',
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 10,
+                                page: page
+                            };
+                        },
+                        results: function (data, page) {
+                            var more = (page * 10) < data.total;
+                            if(data.total > 0)
+                            {
+                                return {results: data.products, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        }
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('td.editable-select2').children('a.product-editable').html()});
+                    }                     
+                }                 
+            });
+        }
+        else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="customer_code" && this.getAttribute('data-context')=="generalinfo")
+        {
+            $this.editable({
+                disabled: $this.hasClass('editable-disabled'),
+                placeholder: "Select a customer",
+                onblur: 'submit',
+                select2: {
+                    allowClear: false,
+                    minimumInputLength: 3,
+                    id: function (item) {
+                        return item.id;
+                    },
+                    ajax: {
+                        url: "/ajaxsearch/customercode",
+                        dataType: "json",
+                        quietMillis: 500,
+                        data: function (term, page) {
+                            return {
+                                term: term,
+                                limit: 10,
+                                page: page
+                            };
+                        },
+                        results: function (data, page){
+                            var more = (page * 10) < data.total
+                            if(data.total > 0)
+                            {
+                                var found;
+                                found = $.map(data.customers, function (item) {
+                                    return {
+                                        id: item.AN8,
+                                        name: item.ALPH,
+                                        text: item.ALPH+" (Code: "+item.AN8+")",
+                                        category: item.AC09
+                                    }
+                                 });
+                                return {results: found, more:more};
+                            }
+                            else
+                            {
+                                return {results: ''};
+                            }
+                        },
+                    },
+                    formatSelection: function (item) {
+                        return item.text;
+                    },
+                    initSelection: function (element, callback) {
+                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
+                    }                    
+                }
+            });
+        }
+        else
+        {
+            $this.editable({
+               disabled: $this.hasClass('editable-disabled'),
+               onblur: 'submit'
+            });
+
+        }
+        
+        $this.on('shown',function(e){
+            presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+            if(this.getAttribute('data-type')=="select2")
+            {
+                /*
+                 * Resize to fit within space
+                 */
+                $(this).parent('.editable-select2').find('.select2-container').width($(this).parents('.editable-select2').width()*0.7);
+            }
+            return true;
+        }).on('hidden',function(e,reason){
+            presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
+            return true;
+        });
+        if(this.getAttribute('data-name') === "approval_approved")
+        {
+            /*
+             * Approvals only
+             */
+            $this.on('save',function(e,params){
+                if(this.getAttribute('data-pk') == "0")
+                {
+                    var response = $.parseJSON(params.response);
+                    //Set new pk value
+                    $(this).editable('option', 'pk', response.encrypted_id);
+                    $(this).attr('data-pk',response.encrypted_id);
+                    
+                    //Set comment pk as well
+                    $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').editable('option', 'pk', response.encrypted_id);
+                    $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').attr('data-pk',response.encrypted_id);
+                    
+                    //Trigger Single Value Save as well
+                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
+                }
+                return true;        
+            });
+        }
+        else
+        {
+            //Normal Editables
+            $this.on('save',function(e,params){
+                if($(this).editable('option','pk') !== "0")
+                {
+                    //Bug fix for disappearing pks - Weird
+                    $(this).editable('option','pk',$(this).attr('data-pk'));
+                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
+                }
+                return true;
+            });            
+        }
+    });    
 }
 
 (window.pr_edit = function () {
@@ -273,166 +434,11 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
     
-    $('.editable:not(.dummy)').each(function(){
-        var $this = $(this);
-        if(this.getAttribute('data-type')=="select2" && $this.hasClass('product-editable'))
-        {
-            $this.editable({
-                disabled: $this.hasClass('editable-disabled'),
-                placeholder: 'Select a product',
-                onblur: 'submit',
-                select2: {
-                    allowClear: false,
-                    minimumInputLength: 3,
-                    id: function (item) {
-                        return item.id;
-                    },                    
-                    ajax: {
-                        url: '/ajaxsearch/product',
-                        data: function (term, page) {
-                            return {
-                                term: term,
-                                limit: 10,
-                                page: page
-                            };
-                        },
-                        results: function (data, page) {
-                            var more = (page * 10) < data.total;
-                            if(data.total > 0)
-                            {
-                                return {results: data.products, more:more};
-                            }
-                            else
-                            {
-                                return {results: ''};
-                            }
-                        }
-                    },
-                    formatSelection: function (item) {
-                        return item.text;
-                    },
-                    initSelection: function (element, callback) {
-                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.product-editable').html()});
-                    }                     
-                }                 
-            });
-        }
-        else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="customer_code" && this.getAttribute('data-context')=="generalinfo")
-        {
-            $this.editable({
-                disabled: $this.hasClass('editable-disabled'),
-                placeholder: "Select a customer",
-                onblur: 'submit',
-                select2: {
-                    allowClear: false,
-                    minimumInputLength: 3,
-                    id: function (item) {
-                        return item.id;
-                    },
-                    ajax: {
-                        url: "/ajaxsearch/customercode",
-                        dataType: "json",
-                        quietMillis: 500,
-                        data: function (term, page) {
-                            return {
-                                term: term,
-                                limit: 10,
-                                page: page
-                            };
-                        },
-                        results: function (data, page){
-                            var more = (page * 10) < data.total
-                            if(data.total > 0)
-                            {
-                                var found;
-                                found = $.map(data.customers, function (item) {
-                                    return {
-                                        id: item.AN8,
-                                        name: item.ALPH,
-                                        text: item.ALPH+" (Code: "+item.AN8+")",
-                                        category: item.AC09
-                                    }
-                                 });
-                                return {results: found, more:more};
-                            }
-                            else
-                            {
-                                return {results: ''};
-                            }
-                        },
-                    },
-                    formatSelection: function (item) {
-                        return item.text;
-                    },
-                    initSelection: function (element, callback) {
-                        callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
-                    }                    
-                }
-            });
-        }
-        else
-        {
-            $this.editable({
-               disabled: $this.hasClass('editable-disabled'),
-               onblur: 'submit'
-            });
-
-        }
-        
-        $this.on('shown',function(e){
-            presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
-            if(this.getAttribute('data-type')=="select2")
-            {
-                /*
-                 * Resize to fit within space
-                 */
-                $(this).parent('.editable-select2').find('.select2-container').width($(this).parents('.editable-select2').width()*0.7);
-            }
-            return true;
-        }).on('hidden',function(e,reason){
-            presenceChannelCurrent.trigger('client-editable-hidden',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
-            return true;
-        });
-        if(this.getAttribute('data-name') === "approval_approved")
-        {
-            /*
-             * Approvals only
-             */
-            $this.on('save',function(e,params){
-                if(this.getAttribute('data-pk') == "0")
-                {
-                    var response = $.parseJSON(params.response);
-                    //Set new pk value
-                    $(this).editable('option', 'pk', response.encrypted_id);
-                    $(this).attr('data-pk',response.encrypted_id);
-                    
-                    //Set comment pk as well
-                    $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').editable('option', 'pk', response.encrypted_id);
-                    $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').attr('data-pk',response.encrypted_id);
-                    
-                    //Trigger Single Value Save as well
-                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
-                }
-                return true;        
-            });
-        }
-        else
-        {
-            //Normal Editables
-            $this.on('save',function(e,params){
-                if($(this).editable('option','pk') !== "0")
-                {
-                    //Bug fix for disappearing pks - Weird
-                    $(this).editable('option','pk',$(this).attr('data-pk'));
-                    presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
-                }
-                return true;
-            });            
-        }
-    });
+    //Enable X-Editable
+    editableElement($('.editable:not(.dummy)'));
     
     //Multi
-    $('.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable').on('save',function(e,params){
+    $.maindiv.on('save','.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable',function(e,params){
         var $this = $(this);
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
@@ -448,12 +454,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})
         }
         return true;
-    }).on('submit',function(){
+    }).on('submit','.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable',function(){
         if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('.multi').prepend("<div class='loading-overlay'></div>");
         }
-    }).on('error',function(){
+    }).on('error','.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable',function(){
         if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('.multi').find('div.loading-overlay').remove();
@@ -517,6 +523,154 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             }
         }
         return false;
+    });
+    
+    /*
+     * Add From Invoice
+     */
+     
+    var $saveProductByInvoiceForm = $('#productFromInvoiceForm').validate({
+        ignore: '',
+        rules : {
+            invoice_id: {
+                required: true
+            },
+            'jde_itm[]': {
+                required: true
+            }
+        },
+        messages: {
+            invoice_id: {
+                required: 'Please select an invoice'
+            },
+            'jde_itm[]': {
+                required: 'Please select at least one product'
+            }
+        },
+        
+        // Ajax form submition
+        submitHandler : function(form) {
+                var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
+                                message: 'Adding Products From Invoice',
+                                type: 'info',
+                                id: 'notif-top',
+                                hideAfter: 0
+                              });
+                $('#btn-addProducts').attr('disabled','disabled').addClass('disable');
+                $(form).ajaxSubmit({
+                    dataType: 'json',
+                    success : function(data) {
+                        console.log($('#product-form'));
+                        $('<div/>',{
+                            'class':'loading-overlay'
+                        }).appendTo('#product-form');
+                        $('#product-form').load(document.getElementById('product-form').getAttribute('data-load'),null,function(){
+                            editableElement($('#product-form .editable:not(.dummy)'));
+                            $(this).find('div.loading-overlay').remove();
+                        });
+                        savemsg.update({
+                            type: 'success',
+                            message: data.msg,
+                            hideAfter: 5
+                        });
+                        $('#productFromInvoiceModal').modal('hide');
+                    },
+                    error: function (xhr, status, error) {
+                        $('#btn-addProducts').removeAttr('disabled').removeClass('disable');
+                        savemsg.update({
+                            type: 'error',
+                            message: xhr.responseText,
+                            hideAfter: 5
+                        });
+                    }
+                });
+
+                return false;
+        }
+    });
+    
+    $('#invoice_id').select2({
+        placeholder: 'Enter an invoice number',
+        allowClear: true,
+        minimumInputLength: 3,
+        positionDropdownAbsolute: false,
+        ajax: {
+             url: "/ajaxsearch/pr-invoice-code",
+             dataType: "json",
+             quietMillis: 500,
+             data: function (term, page) {
+                 return {
+                     term: term,
+                     limit: 10,
+                     page: page
+                 };
+             },
+             results: function (data, page){
+                 var more = (page * 10) < data.total;
+                 if(data.total > 0)
+                 {
+                     var found;
+                     found = $.map(data.invoices, function (item) {
+                                return {
+                                    id: item.DOC,
+                                    name: item.DOC,
+                                    text: item.DOC+" ("+item.DCTO+")"+ " - "+item.IVD+ " - "+item.ALPH+" ("+item.AN8+")",
+                                };
+                      });
+                     return {results: found, more:more};
+                 }
+                 else
+                 {
+                     return {results: ''};
+                 }
+             }
+        }
+    }).on('select2-open',function(){
+            $('#select2-drop-mask')
+            .height($(window).height())
+            .width($(window).width())
+            .css({
+                'opacity' : '.1',
+                'position': 'fixed',
+                'top': '0',
+                'left': '0'
+            });
+    }).on('change',function(){
+        $('#product-list').prepend("<div class='loading-overlay'></div>");
+        $('#btn-addProducts').attr('disabled','disabled').addClass('disable');
+        $.ajax({
+           url:  '/product-returns/invoice-products-for-form/'+$(this).val(),
+           type: 'GET',
+           success:function(html)
+           {
+                $('#btn-addProducts').removeAttr('disabled').removeClass('disable');
+                $('#product-list').find('div.loading-overlay').remove();
+                $('#product-list').slideUp('300',function(){
+                    $(this).html(html);
+                    $('#product_tick_all').on('click',function(){
+                        $('.product_checkbox').prop('checked',this.checked); 
+                    });
+                    $(this).on('click','.pointable',function(){
+                        var $checkbox = $(this).parent('tr').find('input:checkbox');
+                        $checkbox.prop('checked', !$checkbox.prop('checked'));
+                    });
+                    $(this).slideDown('300');
+                });
+               
+           },
+           error: function(xhr)
+           {
+               $('#btn-addProducts').removeAttr('disabled').removeClass('disable');
+               messenger_notiftop(xhr.responseText,'error',10);
+               $('#product-list').find('div.loading-overlay').remove().html('<p class="text-center col-xs-12">Product Info will appear here</p>');
+           }
+        });
+    });
+     
+    $('#productFromInvoiceModal').on('shown.bs.modal', function(){
+        $saveProductByInvoiceForm.resetForm();
+        $('#product-list').html('<p class="text-center col-xs-12">Product Info will appear here</p>');
+        $('#invoice_id').select2('data', null);
     });
     
     /*

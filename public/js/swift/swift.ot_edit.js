@@ -299,8 +299,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 });
 
                 return false;
-        }        
-    });    
+        }
+    });
     
     $('#payableFormModal').on('shown.bs.modal', function(){
         $payableForm.resetForm();

@@ -1,5 +1,11 @@
 <?php
 
+/*
+ * Product Returns Controller
+ *
+ * URL: product-returns
+ */
+
 class ProductReturnsController extends UserController {
     
     public function __construct(){
@@ -47,6 +53,8 @@ class ProductReturnsController extends UserController {
     /*
      * GET: Forms View
      *
+     * @param boolean $type
+     * @param int $page
      * @return \Illuminate\Support\Facades\Response
      */
     public function getForms($type=false,$page=1)
@@ -297,6 +305,8 @@ class ProductReturnsController extends UserController {
     /*
      * Form Data Processing
      *
+     * @param string $id
+     * @param boolean $edit
      * @return \Illuminate\Support\Facades\Response
      */
     private function form($id,$edit=false)
@@ -413,6 +423,7 @@ class ProductReturnsController extends UserController {
     /*
      * GET: Read-only View
      *
+     * @param string $id
      * @return \Illuminate\Support\Facades\Response
      */
     public function getView($id)
@@ -434,6 +445,7 @@ class ProductReturnsController extends UserController {
     /*
      * GET: Edit View
      *
+     * @param string $id
      * @return \Illuminate\Support\Facades\Response
      */
     public function getEdit($id)
@@ -455,6 +467,7 @@ class ProductReturnsController extends UserController {
     /*
      * GET: Create Form View
      *
+     * @param int $type
      * @return \Illuminate\Support\Facades\Response
      */
     public function getCreate($type = SwiftPR::SALESMAN)
@@ -514,6 +527,7 @@ class ProductReturnsController extends UserController {
     /*
      * Save new invoice cancelled Form
      *
+     * @param int $type
      * @return \Illuminate\Support\Facades\Response
      */
 
@@ -637,6 +651,7 @@ class ProductReturnsController extends UserController {
     /*
      * PUT: General Info
      *
+     * @param string $form_id
      * @return \Illuminate\Support\Facades\Response
      */
 
@@ -680,25 +695,168 @@ class ProductReturnsController extends UserController {
     }
 
     /*
-     * Ajax Call to get Invoice Products
+     * PUT: Product
      *
      * @return \Illuminate\Support\Facades\Response
      */
-    public function getInvoiceProducts($invoice_code)
+
+    public function putProduct($form_id)
     {
-        if($invoice_code > 0)
+        $id = \Crypt::decrypt($form_id);
+        $form = \SwiftPR::find($id);
+
+        /*
+         * Basic Permission Check
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
-            $lines = JdeSales::getProducts($invoice_code);
-            if(count($lines))
+            return parent::forbidden();
+        }
+
+        /*
+         * If not admin & not owner of form
+         */
+        if(!$this->isAdmin && !$pr->isOwner())
+        {
+            return parent::forbidden();
+        }
+
+        if($form)
+        {
+            $v = \Input::get('value');
+            //Validation
+
+            switch(\Input::get('name'))
             {
-                return Response::make(\View::make("product-returns/invoice-cancelled-products",['lines'=>$lines])->render());
+                case 'jde_itm':
+                    if(!is_numeric($v) || $v === "")
+                    {
+                        return \Response::make("Please select a valid product",500);
+                    }
+                    else
+                    {
+                        if(!\JdeProduct::find(Input::get('value')))
+                        {
+                            return \Response::make("Please select an existing product",500);
+                        }
+                    }
+                    break;
+                case 'pickup':
+                    if($v === "" || !is_numeric($v))
+                    {
+                        return \Response::make("Please select a valid pickup option",500);
+                    }
+                    else
+                    {
+                        if(!in_array($v,[0,1]))
+                        {
+                            return \Response::make("Please select a valid pickup value",500);
+                        }
+                    }
+                    break;
+                case 'reason_id':
+                    if($v === "" || !is_numeric($v))
+                    {
+                        return \Response::make("Please select a valid reason code",500);
+                    }
+                    else
+                    {
+                        if(!\SwiftPRReason::find($v))
+                        {
+                            return \Response::make("Please select an existing reason code",500);
+                        }
+                    }
+                    break;
+                case 'invoice_id':
+                    if($v === "" || !is_numeric($v))
+                    {
+                        return \Response::make("Please enter a valid invoice number",500);
+                    }
+                    else
+                    {
+                        if($v < 0)
+                        {
+                            return \Response::make("Please enter a positive value",500);
+                        }
+                    }
+                    break;
+                case 'qty_client':
+                case 'qty_pickup':
+                case 'qty_store':
+                case 'qty_triage_picking':
+                case 'qty_triage_disposal':
+                    if($v === "" || !is_numeric($v))
+                    {
+                        return \Response::make("Please enter a valid quantity",500);
+                    }
+                    else
+                    {
+                        if($v < 0)
+                        {
+                            return \Response::make("Please enter a positive value",500);
+                        }
+                    }
+                    break;
+                default:
+                    return \Response::make("Unknown field",500);
+                    break;
+            }
+
+            /*
+             * New Product
+             */
+            if(is_numeric(Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $p = new \SwiftPRProduct();
+                $p->{\Input::get('name')} = \Input::get('value') == "" ? null : $v;
+                if($form->product()->save($p))
+                {
+                    switch(\Input::get('name'))
+                    {
+                        case 'jde_itm':
+                            \Queue::push('Helper@getProductPrice',array('product_id'=>$p->id,'class'=>get_class($p)));
+                            break;
+                    }
+                    return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($p->id),'id'=>$p->id]));
+                }
+                else
+                {
+                    return \Response::make('Failed to save. Please retry',400);
+                }
+
             }
             else
             {
-                return Response::make("Invoice number not found",500);
+                $p = \SwiftPRProduct::find(\Crypt::decrypt(\Input::get('pk')));
+                if($p)
+                {
+                    switch(\Input::get('name'))
+                    {
+                        case 'jde_itm':
+                            \Queue::push('Helper@getProductPrice',array('product_id'=>$p->id,'class'=>get_class($p)));
+                            break;
+                    }
+
+                    $p->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
+                    if($p->save())
+                    {
+                        return \Response::make('Success');
+                    }
+                    else
+                    {
+                        return \Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return \Response::make('Error saving product: Invalid PK',400);
+                }
             }
+            
         }
-        return Response::make("No invoice number",500);
+
+        return \Response::make("Form not found",500);
     }
 
     /*
@@ -869,6 +1027,83 @@ class ProductReturnsController extends UserController {
         }
     }
 
+    /*
+     * Save Product From Invoice By Form
+     *
+     * @return string
+     */
+
+    public function postSaveProductByInvoice()
+    {
+        if(\Input::has('pr_id'))
+        {
+            $pr_id = \Input::get('pr_id');
+            $pr = \SwiftPR::find(\Crypt::decrypt($pr_id));
+
+            if($pr)
+            {
+                /*
+                 * Save Products
+                 */
+                $products = \Input::get('jde_itm',false);
+                if($products === false)
+                {
+                    return \Response::make("Please select at least one product",500);
+                }
+
+                $qty_included = \Input::has('quantity_included');
+
+                $invoice_lines = \JdeSales::getProducts(\Input::get('invoice_id'));
+                
+                foreach($products as $line_number => $jde_itm)
+                {
+                    //Check if Valid Product ITM
+                    if(is_numeric($jde_itm) && \JdeProduct::find($jde_itm))
+                    {
+                        $qty_client = $price = null;
+                        $filter = $invoice_lines->filter(function($line) use ($line_number){
+                                                return (int)$line->LNID === (int)$line_number;
+                                            })->first();
+                        if($filter)
+                        {
+                            if($qty_included)
+                            {
+                                $qty_client = $filter->SOQS;
+                            }
+                            $price = $filter->AEXP/$filter->SOQS;
+                        }
+
+                        //Save Product Relationship
+                        $pr->product()->save(
+                            new SwiftPRProduct([
+                                'jde_itm' => $jde_itm,
+                                'pickup' => ($pr->type === \SwiftPR::SALESMAN ? 1 : 0),
+                                'qty_client' => $qty_client,
+                                'invoice_id' => \Input::get('invoice_id'),
+                                'invoice_recognition' => \SwiftPRProduct::INVOICE_AUTO,
+                                'price' => $price
+                            ])
+                        );
+                    }
+                    else
+                    {
+                        return \Response::make("Unable to find product with Id: $jde_itm",500);
+                    }
+                }
+
+                return \Response::json(["msg"=>"Products added successfully"]);
+                
+            }
+        }
+
+        return \Response::make("Form not found",500);
+    }
+
+    /*
+     * Document: Save
+     * @param string $pr_id
+     * @return string
+     */
     public function postUpload($pr_id)
     {
 
@@ -915,7 +1150,10 @@ class ProductReturnsController extends UserController {
     }
 
     /*
-     * Delete upload
+     * Document: Delete
+     *
+     * @param string $doc_id
+     * @return string
      */
 
     public function deleteUpload($doc_id)
@@ -964,19 +1202,19 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        if(Input::get('pk') && !is_numeric(Input::get('pk')))
+        if(\Input::get('pk') && !is_numeric(\Input::get('pk')))
         {
-            $doc = SwiftPRDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
+            $doc = \SwiftPRDocument::with('tag')->find(\Crypt::decrypt(\Input::get('pk')));
             if($doc)
             {
                 //Lets check those tags
                 if(count($doc->tag))
                 {
-                    if(Input::get('value'))
+                    if(\Input::get('value'))
                     {
                         //It already has some tags
                         //Save those not in table
-                        foreach(Input::get('value') as $val)
+                        foreach(\Input::get('value') as $val)
                         {
                             $found = false;
                             foreach($doc->tag as $t)
@@ -993,12 +1231,12 @@ class ProductReturnsController extends UserController {
                                 /*
                                  * Validate dat tag
                                  */
-                                if(key_exists($val,SwiftTag::$prTags))
+                                if(key_exists($val,\SwiftTag::$prTags))
                                 {
-                                    $tag = new SwiftTag(array('type'=>$val));
+                                    $tag = new \SwiftTag(array('type'=>$val));
                                     if(!$doc->tag()->save($tag))
                                     {
-                                        return Response::make('Error: Unable to save tags',400);
+                                        return \Response::make('Error: Unable to save tags',400);
                                     }
                                 }
                             }
@@ -1009,7 +1247,7 @@ class ProductReturnsController extends UserController {
                         foreach($doc->tag as $t)
                         {
                             $found = false;
-                            foreach(Input::get('value') as $val)
+                            foreach(\Input::get('value') as $val)
                             {
                                 if($val == $t->type)
                                 {
@@ -1022,7 +1260,7 @@ class ProductReturnsController extends UserController {
                             {
                                 if(!$t->delete())
                                 {
-                                    return Response::make('Error: Cannot delete tag',400);
+                                    return \Response::make('Error: Cannot delete tag',400);
                                 }
                             }
                         }
@@ -1032,42 +1270,42 @@ class ProductReturnsController extends UserController {
                         //Delete all existing tags
                         if(!$doc->tag()->delete())
                         {
-                            return Response::make('Error: Cannot delete tag',400);
+                            return \Response::make('Error: Cannot delete tag',400);
                         }
                     }
                 }
                 else
                 {
                     //Alright, just save then
-                    foreach(Input::get('value') as $val)
+                    foreach(\Input::get('value') as $val)
                     {
                         /*
                          * Validate dat tag
                          */
-                        if(key_exists($val,SwiftTag::$prTags))
+                        if(key_exists($val,\SwiftTag::$prTags))
                         {
-                            $tag = new SwiftTag(array('type'=>$val));
+                            $tag = new \SwiftTag(array('type'=>$val));
                             if(!$doc->tag()->save($tag))
                             {
-                                return Response::make('Error: Unable to save tags',400);
+                                return \Response::make('Error: Unable to save tags',400);
                             }
                         }
                         else
                         {
-                            return Response::make('Error: Invalid tags',400);
+                            return \Response::make('Error: Invalid tags',400);
                         }
                     }
                 }
-                return Response::make('Success');
+                return \Response::make('Success');
             }
             else
             {
-                return Response::make('Error: Document not found',400);
+                return \Response::make('Error: Document not found',400);
             }
         }
         else
         {
-            return Response::make('Error: Document number invalid',400);
+            return \Response::make('Error: Document number invalid',400);
         }
     }
 
@@ -1112,5 +1350,178 @@ class ProductReturnsController extends UserController {
             return Response::make('A&P Request form not found',404);
         }
     }
+
+    /*
+     * AJAX CALLS: Start
+     */
+
+    /*
+     * Ajax Call to get Invoice Products
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function getInvoiceProducts($invoice_code)
+    {
+        if($invoice_code > 0)
+        {
+            $lines = JdeSales::getProducts($invoice_code);
+            if(count($lines))
+            {
+                return Response::make(\View::make("product-returns/invoice-cancelled-products",['lines'=>$lines])->render());
+            }
+            else
+            {
+                return Response::make("Invoice number not found",500);
+            }
+        }
+        return Response::make("No invoice number",500);
+    }
+
+    /*
+     * Ajax Call to get Invoice Products For Form
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function getInvoiceProductsForForm($invoice_code)
+    {
+        if($invoice_code > 0 && is_numeric($invoice_code))
+        {
+            $lines = JdeSales::getProducts($invoice_code);
+            if(count($lines))
+            {
+                return Response::make(\View::make("$this->context/invoice-products-by-form",['lines'=>$lines])->render());
+            }
+            else
+            {
+                return Response::make("Invoice number not found",500);
+            }
+        }
+        return Response::make("No invoice number",500);
+    }
+
+    /*
+     * Ajax call to display help information on workflow status
+     *
+     * @return string
+     */
+
+    public function getHelp($id)
+    {
+        /*
+        * Check Permissions
+        */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return "You don't have access to this resource.";
+        }
+
+        $needPermission = true;
+
+        if($this->currentUser->hasAccess($this->adminPermission))
+        {
+            $needPermission = false;
+        }
+
+        $form = \SwiftPR::find(\Crypt::decrypt($id));
+        if(count($form))
+        {
+            return \WorkflowActivity::progressHelp($form,$needPermission);
+        }
+        else
+        {
+            return "We can't find the resource that you were looking for.";
+        }
+    }
+
+    /*
+     * GET list of products by form
+     *
+     * @return string
+     */
+    public function getProductsByForm($pr_id)
+    {
+        $pr = \SwiftPR::getById(Crypt::decrypt($pr_id));
+        if($pr)
+        {
+            $this->data['current_activity'] = \WorkflowActivity::progress($pr,$this->context);
+            $this->data['form'] = $pr;
+            $this->data['erporder_status'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$status));
+            $this->data['erporder_type'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$prType));
+            $this->data['pickup_status'] = json_encode(\Helper::jsonobject_encode(\SwiftPickup::$pr_status));
+            $this->data['pr_type'] = json_encode(\Helper::jsonobject_encode(\SwiftPR::$type));
+            $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(\SwiftApproval::$approved));
+            $this->data['product_reason_codes'] = json_encode(\Helper::jsonobject_encode(\SwiftPRReason::getAll()));
+            $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$prTags));
+            $this->data['owner'] = \Helper::getUserName($pr->owner_user_id,$this->currentUser);
+            $this->data['isOwner'] = $pr->isOwner();
+            $this->data['edit'] = true;
+            $this->data['publishOwner'] = $this->data['publishPickup'] =
+                                            $this->data['publishReception'] =
+                                            $this->data['publishCreditNote'] =
+                                            $this->data['driverInfo'] =
+                                            $this->data['addProduct'] = false;
+            $pr->encrypted_id = \Crypt::encrypt($pr->id);
+
+            if($this->data['current_activity']['status'] == \SwiftWorkflowActivity::INPROGRESS)
+            {
+                if(!array_key_exists('definition_obj',$this->data['current_activity']))
+                {
+                    /*
+                     * Detect buggy workflows
+                     * Update on the spot
+                     */
+                    \WorkflowActivity::update($acp);
+                }
+
+                foreach($this->data['current_activity']['definition_obj'] as $d)
+                {
+                    if($d->data != "")
+                    {
+                        if(isset($d->data->publishOwner) && ($this->isAdmin || $pr->isOwner()))
+                        {
+                            $this->data['publishOwner'] = true;
+                            if(isset($d->data->addProduct) && ($pr->isOwner() || $this->isAdmin))
+                            {
+                                $this->data['addProduct'] = true;
+                            }
+                            break;
+                        }
+
+                        if(isset($d->data->publishPickup) && ($this->isAdmin || $this->isStorePickup))
+                        {
+                            $this->data['publishPickup'] = true;
+                            break;
+                        }
+
+                        if(isset($d->data->publishReception) && ($this->isAdmin || $this->isStoreReception))
+                        {
+                            $this->data['publishReception'] = true;
+                            break;
+                        }
+
+                        if(isset($d->data->publishCreditNote) && ($this->isAdmin || $this->isCreditor))
+                        {
+                            $this->data['publishCreditNote'] = true;
+                            break;
+                        }
+
+                        if(isset($d->data->driverInfo) && ($this->isAdmin || $this->isStorePickup))
+                        {
+                            $this->data['driverInfo'] = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return \Response::make(\View::make("$this->context/edit_product_table",$this->data)->render());
+        }
+
+        return \Response::make("An error occured fetching the products. Please refresh the page.",500);
+    }
+
+    /*
+     * AJAX CALLS: End
+     */
 }
     

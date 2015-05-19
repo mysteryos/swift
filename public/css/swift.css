@@ -9,6 +9,10 @@
     
 }
 
+.pointable {
+    cursor: pointer;
+}
+
 /*
 * Plugin: At Who
 */

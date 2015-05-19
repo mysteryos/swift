@@ -116,6 +116,7 @@
                         <h2>Products</h2>
                         @if(($edit && $addProduct) || $isAdmin)
                             <div class="widget-toolbar" role="menu">
+                                <a class="btn btn-primary" id="btn-add-new-from-invoice" href="javascript:void(0);" data-target="#productFromInvoiceModal" data-toggle="modal"><i class="fa fa-plus"></i> Add From Invoice</a>
                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                             </div>
                         @endif
@@ -146,70 +147,8 @@
                     <div>
                         <!-- widget content -->
                         <div class="widget-body">
-                            <form class="form-horizontal">
-                                <table class="table table-bordered table-responsive">
-                                    <tr>
-                                        <th rowspan='2'>
-                                            Id
-                                        </th>
-                                        <th rowspan='2'>
-                                            Product
-                                        </th>
-                                        @if(!$addProduct)
-                                            <th rowspan='2'>
-                                                Approval
-                                            </th>
-                                            <th rowspan='2'>
-                                                Comment
-                                            </th>
-                                        @endif
-                                        @if($form->type === \SwiftPR::SALESMAN)
-                                            <th rowspan='2'>
-                                                Pickup
-                                            </th>
-                                        @endif
-                                        <th rowspan='2'>
-                                            Reason
-                                        </th>
-                                        <th rowspan='2'>
-                                            Comment
-                                        </th>
-                                        <th colspan='@if($form->type === \SwiftPR::SALESMAN && !$addProduct){{5}}@else{{1}}@endif' class="text-center">
-                                            Quantity
-                                        </th>
-                                        <th rowspan='2'>
-                                            &nbsp;
-                                        </th>
-                                    </tr>
-                                    <tr>
-                                        <th>
-                                            Client
-                                        </th>
-                                        @if($form->type === \SwiftPR::SALESMAN && !$addProduct)
-                                            <th>
-                                                Pickup
-                                            </th>
-                                            <th>
-                                                Store
-                                            </th>
-                                            <th>
-                                                Picking
-                                            </th>
-                                            <th>
-                                                Disposal
-                                            </th>
-                                        @endif
-                                    </tr>
-                                    @if(count($form->product))
-                                        @foreach($form->product as &$p)
-                                            <?php $p->id = Crypt::encrypt($p->id); ?>
-                                            @include('product-returns.edit_product',array('p'=>$p))
-                                        @endforeach
-                                    @else
-                                        @include('product-returns.edit_product')
-                                    @endif
-                                    @include('product-returns.edit_product',array('dummy'=>true,'p'=>null))
-                                </table>
+                            <form class="form-horizontal" id="product-form" data-load="/{{$rootURL}}/products-by-form/{{urlencode($form->encrypted_id)}}">
+                                @include('product-returns.edit_product_table')
                             </form>
                         </div>
                         <!-- end widget content -->
@@ -217,6 +156,47 @@
                     <!-- end widget div -->
                 </div>
                 <!-- end widget -->
+                
+                <!-- Add Product From Invoice Modal -->
+                <div class="modal fade" id="productFromInvoiceModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                    &times;
+                                </button>
+                                <h4 class="modal-title" id="myModalLabel"><i class="fa fa-lg fa-file-o"></i> Add Products From Invoice</h4>
+                            </div>
+                            <form action="/{{$rootURL}}/save-product-by-invoice" name="save_product_by_invoice_form" method="POST" class="form-horizontal" id="productFromInvoiceForm">
+                                <input type="hidden" name="pr_id" value="{{$form->encrypted_id}}" />
+                                <div class="modal-body">
+                                    <div class="well well-sm">
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" name="quantity_included" value="0">
+                                                Quantity Included </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">Invoice Number*</label>
+                                        <div class="col-md-10">
+                                            <input type="hidden" class="full-width" id="invoice_id" name="invoice_id" placeholder="Type in the invoice number" />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-12" id="product-list">
+                                            <p class="text-center col-xs-12">Product Info will appear here</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default col-xs-3 col-xs-offset-3" data-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-info col-xs-3 col-xs-offset-3" id="btn-addProducts" name="save_selected"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+                                </div>
+                            </form>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
             </article>
             <!-- NEW COL END -->
             

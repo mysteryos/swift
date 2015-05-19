@@ -594,33 +594,33 @@ class APRequestController extends UserController {
              */
             
             //Name
-            if(Input::get('name') == 'name' && trim(Input::get('value')==""))
+            if(\Input::get('name') == 'name' && trim(\Input::get('value')==""))
             {
-                return Response::make('Please enter a name',400);
+                return \Response::make('Please enter a name',400);
             }
             
-             if(Input::get('name') == 'customer_code' && trim(Input::get('value')==""))
+             if(\Input::get('name') == 'customer_code' && trim(\Input::get('value')==""))
             {
-                return Response::make('Please enter a customer name',400);
+                return \Response::make('Please enter a customer name',400);
             }
             
             /*
              * Save
              */
-            $aprequest->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+            $aprequest->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
             if($aprequest->save())
             {
-                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($aprequest),'id'=>$aprequest->id,'user_id'=>$this->currentUser->id));
-                return Response::make('Success', 200);
+                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($aprequest),'id'=>$aprequest->id,'user_id'=>$this->currentUser->id));
+                return \Response::make('Success', 200);
             }
             else
             {
-                return Response::make('Failed to save. Please retry',400);
+                return \Response::make('Failed to save. Please retry',400);
             }
         }
         else
         {
-            return Response::make('A&P Request form not found',404);
+            return \Response::make('A&P Request form not found',404);
         }
     }
     
@@ -634,25 +634,25 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
+        $form = \SwiftAPRequest::find(Crypt::decrypt($apr_id));
         
         /*
          * Manual Validation
          */
         if(count($form))
         {
-            switch(Input::get('name'))
+            switch(\Input::get('name'))
             {
                 case 'status':
-                    if(!array_key_exists(Input::get('value'),SwiftAPProduct::$reason))
+                    if(!array_key_exists(\Input::get('value'),\SwiftAPProduct::$reason))
                     {
-                        return Response::make('Please select a valid reason code',400);
+                        return \Response::make('Please select a valid reason code',400);
                     }
                     break;
                 case 'quantity':
-                    if((!is_numeric(Input::get('value')) && Input::get('value') != "") || (is_numeric(Input::get('value')) && (int)Input::get('value') < 0))
+                    if((!is_numeric(\Input::get('value')) && \Input::get('value') != "") || (is_numeric(\Input::get('value')) && (int)\Input::get('value') < 0))
                     {
-                        return Response::make('Please enter a valid numeric value',400);
+                        return \Response::make('Please enter a valid numeric value',400);
                     }
                     break;
             }       
@@ -663,43 +663,43 @@ class APRequestController extends UserController {
             if(is_numeric(Input::get('pk')))
             {
                 //All Validation Passed, let's save
-                $APProduct = new SwiftAPProduct();
-                $APProduct->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                $APProduct = new \SwiftAPProduct();
+                $APProduct->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
                 if($form->product()->save($APProduct))
                 {
-                    switch(Input::get('name'))
+                    switch(\Input::get('name'))
                     {
                         case 'jde_itm':
-                            Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id));
+                            \Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id,'class'=>get_class($APProduct)));
                             break;
                     }
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($APProduct->id),'id'=>$APProduct->id]));
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                    return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($APProduct->id),'id'=>$APProduct->id]));
                 }
                 else
                 {
-                    return Response::make('Failed to save. Please retry',400);
+                    return \Response::make('Failed to save. Please retry',400);
                 }
                 
             }
             else
             {
-                $APProduct = SwiftAPProduct::find(Crypt::decrypt(Input::get('pk')));
+                $APProduct = \SwiftAPProduct::find(Crypt::decrypt(Input::get('pk')));
                 if(count($APProduct))
                 {
-                    switch(Input::get('name'))
+                    switch(\Input::get('name'))
                     {
                         case 'jde_itm':
                             $APProduct->price = 0;
-                            Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id));
+                            \Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id,'class'=>get_class($APProduct)));
                             break;
                     }
                     
-                    $APProduct->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                    $APProduct->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
                     if($APProduct->save())
                     {
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                        return Response::make('Success');
+                        \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                        return \Response::make('Success');
                     }
                     else
                     {

@@ -43,7 +43,7 @@ class SwiftPRReason extends Eloquent
         $all = self::remember(60)
                 ->orderBy('Category','ASC')
                 ->orderBy('Name','ASC')
-                ->all();
+                ->get();
         foreach($all as $row)
         {
             $result[$row->id] = $row->category." - ".$row->name;

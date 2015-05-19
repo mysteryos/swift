@@ -36,6 +36,12 @@ class SwiftErpOrder extends Eloquent {
                                 self::TYPE_RETURN_AP => '9C - A&P Return',
                                 self::TYPE_ORDER_AP=>'S9 - A&P Sale'
                             );
+
+    public static $prType = [
+                                self::TYPE_RETURN_CASH => '3C - Cash Return',
+                                self::TYPE_RETURN_CREDIT => '4C - Credit Return',
+                                self::TYPE_RETURN_AP => '9C - A&P Return',
+                            ];
     
     
     /* Revisionable */

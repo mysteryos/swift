@@ -7,8 +7,6 @@
 
 namespace Swift\PR;
 
-Use SwiftPR;
-
 class NodeDefinition
 {
 
@@ -44,11 +42,20 @@ class NodeDefinition
             $returnReasonList = array();
         }
 
-        $apr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+        $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
 
-        if(count($apr))
+        if(count($pr))
         {
-            $countapproval = $apr->approval()->where('type','=',\SwiftApproval::PR_REQUESTER)->count();
+            if($pr->type === \SwiftPR::ON_DELIVERY)
+            {
+                if($pr->paper_number === "")
+                {
+                    $returnReasonList['norfrfnumber'] = "Please input an RFRF number";
+                    return $returnReason ? $returnReasonList : false;
+                }
+            }
+
+            $countapproval = $pr->approval()->where('type','=',\SwiftApproval::PR_REQUESTER)->count();
             if($countapproval > 0)
             {
                 return true;
@@ -76,6 +83,11 @@ class NodeDefinition
                 return true;
                 break;
             case 'system':
+                if($returnReason)
+                {
+                    return ['weworking'=>'System is currently approving the products'];
+                }
+                
                 if(\Helper::loginSysUser())
                 {
                     $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
@@ -146,7 +158,7 @@ class NodeDefinition
                     }
                     else
                     {
-                        $returnReasonList['ccare'] = "Please create a JDE order & set its status to filled";
+                        $returnReasonList['ccare'] = "Please create a JDE order & set its status to 'filled'";
                     }
                 }
                 break;
@@ -166,18 +178,18 @@ class NodeDefinition
         $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($pr)
         {
-            //If type is 'on delivery', or 'invoice cancelled' = no reception
-            if(in_array($pr->type,[SwiftPR::ON_DELIVERY,SwiftPR::INVOICE_CANCELLED]))
+            //If type is 'on delivery', or 'invoice cancelled' = no pickup
+            if(in_array($pr->type,[\SwiftPR::ON_DELIVERY,\SwiftPR::INVOICE_CANCELLED]))
             {
                 return true;
             }
             
             //Else check products
             $countProducts = $pr->product()
-                            ->where('pickup','=',\SwiftPRProduct::PICKUP)
-                            ->whereHas('approval',function($q){
-                                return $q->approvedBy(\SwiftApproval::PR_RETAILMAN);
-                            })->count();
+                                ->where('pickup','=',\SwiftPRProduct::PICKUP)
+                                ->whereHas('approval',function($q){
+                                    return $q->approvedBy(\SwiftApproval::PR_RETAILMAN);
+                                })->count();
 
             /*
              * Got Products to Pickup

@@ -1,21 +1,15 @@
 /* 
- * Name: A&P Request: Create Form
+ * Name: Product Returns: Create Form
  */
-(window.apr_create = function() {
-    $('#aprequest-create-form').validate({
+(window.pr_create = function() {
+    $('#pr_create_form').validate({
         ignore: '',
         rules : {
-            name: {
-                    required: true
-            },
             customer_code: {
                 required: true
             }
         },
         messages: {
-            name: {
-                required: 'Please enter a name to identify this a&p request'
-            },
             customer_code: {
                 required: 'Please select a customer'
             }
@@ -23,39 +17,39 @@
 
         // Ajax form submition
         submitHandler : function(form) {
-                var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
-                                message: 'Saving A&P Request form',
-                                type: 'info',
-                                id: 'notif-top'
-                              });
-                $('#save-draft').attr('disabled','disabled').addClass('disable');
-                $(form).ajaxSubmit({
-                        dataType: 'json',
-                        success : function(data) {
-                            savemsg.update({
-                                type: 'success',
-                                message: 'Save Success!',
-                            });
-                            $.pjax({
-                                container: '#main',
-                                url: data.url,
-                                beforeReplace: function()
-                                {
-                                    savemsg.hide();
-                                }
-                            });
-                        },
-                        error: function (data) {
-                            $('#save-draft').removeAttr('disabled').removeClass('disable');
-                            savemsg.update({
-                                type: 'error',
-                                message: 'Save Failed! Please retry.',
-                                hideAfter: 5,
-                            });
-                        }
-                });
+            var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
+                            message: 'Saving product return draft form',
+                            type: 'info',
+                            id: 'notif-top'
+                          });
+            $('#btn-publish,#btn-reset').attr('disabled','disabled').addClass('disable');
+            $(form).ajaxSubmit({
+                    dataType: 'json',
+                    success : function(data) {
+                        savemsg.update({
+                            type: 'success',
+                            message: 'Save Success!',
+                        });
+                        $.pjax({
+                            container: '#main',
+                            url: data.url,
+                            beforeReplace: function()
+                            {
+                                savemsg.hide();
+                            }
+                        });
+                    },
+                    error: function (data) {
+                        $('#btn-publish,#btn-reset').removeAttr('disabled').removeClass('disable');
+                        savemsg.update({
+                            type: 'error',
+                            message: 'Save Failed! Please retry.',
+                            hideAfter: 5,
+                        });
+                    }
+            });
 
-                return false;
+            return false;
         }
     });
     
@@ -114,6 +108,11 @@
             });
     }).on('change',function(){
         $(this).valid();        
+    });
+    
+    $('#btn-reset').on('click',function(){
+        $('#ccode').val('');
+        return true;
     });
 
     messenger_hidenotiftop();

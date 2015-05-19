@@ -14,7 +14,12 @@ class ProductReturnsController extends UserController {
         //Is?
         $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
         $this->isSalesman = $this->data['isSalesman'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.salesman"));
+        $this->isRetailMan = $this->data['isRetailMan'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.retailman"));
         $this->isCcare = $this->data['isCcare'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.ccare"));
+        $this->isStorePickup = $this->data['isStorePickup'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storepickup"));
+        $this->isStoreReception = $this->data['isStoreReception'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storereception"));
+        $this->isStoreValidation = $this->data['isStoreValidation'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storevalidation"));
+        $this->isCreditor = $this->data['isCreditor'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.creditor"));
 
         //Can?
         $this->canCreate = $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
@@ -29,11 +34,21 @@ class ProductReturnsController extends UserController {
         return Redirect::to('/'.$this->rootURL.'/overview');
     }
 
+    /*
+     * GET: Overview View
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
     public function getOverview()
     {
 
     }
 
+    /*
+     * GET: Forms View
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
     public function getForms($type=false,$page=1)
     {
         $limitPerPage = 15;
@@ -279,10 +294,15 @@ class ProductReturnsController extends UserController {
         return $this->makeView('product-returns/forms');
     }
 
+    /*
+     * Form Data Processing
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
     private function form($id,$edit=false)
     {
-        $pr_id = Crypt::decrypt($id);
-        $pr = SwiftPR::getById($pr_id);
+        $pr_id = \Crypt::decrypt($id);
+        $pr = \SwiftPR::getById($pr_id);
 
         if($pr)
         {
@@ -290,9 +310,9 @@ class ProductReturnsController extends UserController {
              * Set Read
              */
 
-            if(!Flag::isRead($pr))
+            if(!\Flag::isRead($pr))
             {
-                Flag::toggleRead($pr);
+                \Flag::toggleRead($pr);
             }
 
             /*
@@ -306,20 +326,22 @@ class ProductReturnsController extends UserController {
             $this->data['form'] = $pr;
             $this->data['flag_important'] = \Flag::isImportant($pr);
             $this->data['flag_starred'] = \Flag::isStarred($pr);
-            
-            $order_type = \SwiftErpOrder::$types;
-            //Remove Order - S9
-            unset($order_type[array_search(SwiftErpOrder::TYPE_ORDER_AP,\SwiftErpOrder::$types)]);
-            $this->data['drivers'] = json_encode(Helper::jsonobject_encode(SwiftPRDriver::getAll()));
-            $this->data['order_type'] = json_encode(Helper::jsonobject_encode($order_type));
-            $this->data['pr_type'] = json_encode(Helper::jsonobject_encode(SwiftPR::$type));
-            $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
-            $this->data['product_reason_codes'] = json_encode(Helper::jsonobject_encode(SwiftPRReason::getAll()));
+            $this->data['erporder_status'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$status));
+            $this->data['erporder_type'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$prType));
+            $this->data['pickup_status'] = json_encode(\Helper::jsonobject_encode(\SwiftPickup::$pr_status));
+            $this->data['drivers'] = json_encode(\Helper::jsonobject_encode(SwiftDriver::getAll()));
+            $this->data['pr_type'] = json_encode(\Helper::jsonobject_encode(SwiftPR::$type));
+            $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(SwiftApproval::$approved));
+            $this->data['product_reason_codes'] = json_encode(\Helper::jsonobject_encode(SwiftPRReason::getAll()));
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$prTags));
-            $this->data['owner'] = Helper::getUserName($pr->owner_user_id,$this->currentUser);
+            $this->data['owner'] = \Helper::getUserName($pr->owner_user_id,$this->currentUser);
             $this->data['isOwner'] = $pr->isOwner();
             $this->data['edit'] = $edit;
-            $this->data['publishOwner'] = $this->data['driverInfo'] = $this->data['addProduct'] = false;
+            $this->data['publishOwner'] = $this->data['publishPickup'] =
+                                            $this->data['publishReception'] =
+                                            $this->data['publishCreditNote'] =
+                                            $this->data['driverInfo'] =
+                                            $this->data['addProduct'] = false;
             $pr->encrypted_id = \Crypt::encrypt($pr->id);
 
             if($edit === true)
@@ -334,29 +356,43 @@ class ProductReturnsController extends UserController {
                          */
                         \WorkflowActivity::update($acp);
                     }
-                    else
+                    
+                    foreach($this->data['current_activity']['definition_obj'] as $d)
                     {
-                        foreach($this->data['current_activity']['definition_obj'] as $d)
+                        if($d->data != "")
                         {
-                            if($d->data != "")
+                            if(isset($d->data->publishOwner) && ($this->isAdmin || $pr->isOwner()))
                             {
-                                if(isset($d->data->publishOwner) && ($this->isAdmin || $pr->isOwner()))
-                                {
-                                    $this->data['publishOwner'] = true;
-                                    break;
-                                }
-
-                                if(isset($d->data->driverInfo) && ($this->currentUser->hasAccess(Config::get("permission.{$this->context}.pickup")) || $this->isAdmin))
-                                {
-                                    $this->data['driverInfo'] = true;
-                                    break;
-                                }
-
+                                $this->data['publishOwner'] = true;
                                 if(isset($d->data->addProduct) && ($pr->isOwner() || $this->isAdmin))
                                 {
                                     $this->data['addProduct'] = true;
-                                    break;
                                 }
+                                break;
+                            }
+
+                            if(isset($d->data->publishPickup) && ($this->isAdmin || $this->isStorePickup))
+                            {
+                                $this->data['publishPickup'] = true;
+                                break;
+                            }
+
+                            if(isset($d->data->publishReception) && ($this->isAdmin || $this->isStoreReception))
+                            {
+                                $this->data['publishReception'] = true;
+                                break;
+                            }
+
+                            if(isset($d->data->publishCreditNote) && ($this->isAdmin || $this->isCreditor))
+                            {
+                                $this->data['publishCreditNote'] = true;
+                                break;
+                            }
+
+                            if(isset($d->data->driverInfo) && ($this->isAdmin || $this->isStorePickup))
+                            {
+                                $this->data['driverInfo'] = true;
+                                break;
                             }
                         }
                     }
@@ -374,11 +410,63 @@ class ProductReturnsController extends UserController {
         }
     }
 
+    /*
+     * GET: Read-only View
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function getView($id)
+    {
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        {
+            return Redirect::action('ProductReturnsController@getEdit',array('id'=>$id));
+        }
+        elseif($this->currentUser->hasAccess($this->viewPermission))
+        {
+            return $this->form($id,false);
+        }
+        else
+        {
+            return parent::forbidden();
+        }
+    }
+
+    /*
+     * GET: Edit View
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function getEdit($id)
+    {
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        {
+            return $this->form($id,true);
+        }
+        elseif($this->currentUser->hasAccess($this->viewPermission))
+        {
+            return Redirect::action('ProductReturnsController@getView',array('id'=>$id));
+        }
+        else
+        {
+            return parent::forbidden();
+        }
+    }
+
+    /*
+     * GET: Create Form View
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
     public function getCreate($type = SwiftPR::SALESMAN)
     {
         if(!$this->canCreate)
         {
             return parent::forbidden();
+        }
+
+        if(!in_array($type,[\SwiftPR::ON_DELIVERY,\SwiftPR::SALESMAN]))
+        {
+            return parent::notfound();
         }
 
         $this->data['type'] = $type;
@@ -415,45 +503,84 @@ class ProductReturnsController extends UserController {
                 return parent::notfound();
                 break;
         }
-
+        
+        $this->data['type_name'] = \SwiftPR::$type[$type];
+        $this->data['type'] = $type;
         $this->pageTitle = 'Create';
         return $this->makeView("$this->context/create");
         
     }
 
-    public function postCreate()
+    /*
+     * Save new invoice cancelled Form
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+
+    public function postCreate($type)
     {
+
+        if(!$this->canCreate && !$this->canCreateSalesman && !$this->canCreateOnDelivery)
+        {
+            return parent::forbidden();
+        }
+
         /*
          * validation
          */
 
-        if((int)Input::get('customer_code') === 0)
+        if((int)\Input::get('customer_code') === 0)
         {
-            return Reaponse::make('Please select a customer',500);
+            return \Reaponse::make('Please select a customer',500);
         }
         else
         {
-            if(!JdeCustomer::find(Input::get('customer_code')))
+            if(!\JdeCustomer::find(\Input::get('customer_code')))
             {
-                return Response::make('Please select an existing customer',500);
+                return \Response::make('Please select an existing customer',500);
             }
+        }
+
+        if(!in_array($type,[\SwiftPR::SALESMAN,\SwiftPR::ON_DELIVERY]))
+        {
+            return \Response::make('Type of product return is not valid',500);
         }
 
         $pr = new SwiftPR([
             'type' => $type,
-            'customer_code' => Input::get('customer_code'),
+            'customer_code' => \Input::get('customer_code'),
             'owner_user_id' => $this->currentUser->id
         ]);
 
         if($pr->save())
         {
-
+            if(\WorkflowActivity::update($pr,$this->context))
+            {
+                //Story Relate
+                \Queue::push('Story@relateTask',array('obj_class'=>get_class($pr),
+                                                     'obj_id'=>$pr->id,
+                                                     'action'=>\SwiftStory::ACTION_CREATE,
+                                                     'user_id'=>$this->currentUser->id,
+                                                     'context'=>get_class($pr)));
+                //Success
+                echo json_encode(['success'=>1,'url'=>\Helper::generateUrl($pr)]);
+            }
+            else
+            {
+                return \Response::make("Failed to save workflow",400);
+            }
         }
         else
         {
-            return Response::make("Save unsuccessful",500);
+            return \Response::make("Save unsuccessful",500);
         }
     }
+
+    /*
+     * Save new invoice cancelled Form
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
 
     public function postCreateInvoiceCancelled()
     {
@@ -463,13 +590,13 @@ class ProductReturnsController extends UserController {
             return \Response::make("You don't have permission for this action",500);
         }
 
-        if(Input::has('invoice_code'))
+        if(\Input::has('invoice_code'))
         {
-            $invoiceCode = Input::get('invoice_code');
-            $lines = JdeSales::getProducts((int)$invoiceCode);
+            $invoiceCode = \Input::get('invoice_code');
+            $lines = \JdeSales::getProducts((int)$invoiceCode);
             if(count($lines))
             {
-                $invoiceCancelledId = SwiftPRReason::getInvoiceCancelledScottId();
+                $invoiceCancelledId = \SwiftPRReason::getInvoiceCancelledScottId();
 
                 /*Check if form already exists*/
 
@@ -507,6 +634,56 @@ class ProductReturnsController extends UserController {
         }
     }
 
+    /*
+     * PUT: General Info
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+
+    public function putGeneralinfo($form_id)
+    {
+        $id = \Crypt::decrypt($form_id);
+        $pr = \SwiftPR::find($id);
+
+        if($pr)
+        {
+            if($this->currentUser->hasAccess($this->editPermission))
+            {
+                switch(Input::get('name'))
+                {
+                    case 'type':
+                        if(!$this->currentUser->isSuperUser())
+                        {
+                            return parent::forbidden();
+                        }
+                        break;
+                }
+
+                $pr->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+                if($pr->save())
+                {
+                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($pr),'id'=>$pr->id,'user_id'=>$this->currentUser->id));
+                    return Response::make('Success', 200);
+                }
+                else
+                {
+                    return Response::make('Failed to save. Please retry',400);
+                }
+            }
+            else
+            {
+                return parent::forbidden();
+            }
+        }
+
+        return \Response::make("Form not found",500);
+    }
+
+    /*
+     * Ajax Call to get Invoice Products
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
     public function getInvoiceProducts($invoice_code)
     {
         if($invoice_code > 0)
@@ -522,6 +699,418 @@ class ProductReturnsController extends UserController {
             }
         }
         return Response::make("No invoice number",500);
+    }
+
+    /*
+     * Approval of products for Retail Man
+     *
+     * @param int $type
+     * @param string $product_id
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function putProductapproval($type,$product_id)
+    {
+        /*  
+         * Check Permissions
+         */        
+        if(!$this->isRetailMan)
+        {
+            return parent::forbidden();
+        }
+        
+        $product = \SwiftPRProduct::find(\Crypt::decrypt($product_id));
+        
+        if(count($product))
+        {
+            if(Input::get('name') == "approval_approved" && in_array(\Input::get('value'),array(\SwiftApproval::REJECTED,\SwiftApproval::APPROVED,\SwiftApproval::PENDING)))
+            {
+                switch((int)$type)
+                {
+                    case \SwiftApproval::PR_RETAILMAN:
+                        if(is_numeric(\Input::get('pk')))
+                        {
+                            /*
+                             * New Entry
+                             */
+                            //All Validation Passed, let's save
+                            $approval = new \SwiftApproval(array('type'=>(int)$type,'approval_user_id'=>$this->currentUser->id, 'approved' => Input::get('value')));
+                            if($product->approval()->save($approval))
+                            {
+                                $pr = $product->pr()->first();
+                                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($pr),'id'=>$pr->id,'user_id'=>$this->currentUser->id));
+                                return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($approval->id),'id'=>$approval->id]));
+                            }
+                            else
+                            {
+                                return Response::make('Failed to save. Please retry',400);
+                            }
+
+                        }
+                        else
+                        {
+                            $approval = SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
+                            if(count($approval))
+                            {
+                                $approval->approved = Input::get('value') == "" ? null : Input::get('value');
+                                if($approval->save())
+                                {
+                                    $pr = $product->pr()->first();
+                                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($pr),'id'=>$pr->id,'user_id'=>$this->currentUser->id));
+                                    return Response::make('Success');
+                                }
+                                else
+                                {
+                                    return Response::make('Failed to save. Please retry',400);
+                                }
+                            }
+                            else
+                            {
+                                return Response::make('Error saving approval information: Invalid PK',400);
+                            }
+                        }
+                        break;
+                    default:
+                        return Response::make('Type of approval unknown',400);
+                        break;
+                }
+            }
+            else
+            {
+                return Response::make('Invalid Request',400);
+            }
+        }
+        else
+        {
+            return Response::make('Product not found',404);
+        }
+    }
+
+    /*
+     * Approval Comment for Retail Man
+     *
+     * @param int $type
+     * @param string $product_id
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function putProductapprovalcomment($type,$product_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->isRetailMan)
+        {
+            return parent::forbidden();
+        }
+
+        $product = SwiftPRProduct::find(Crypt::decrypt($product_id));
+
+        if(count($product))
+        {
+            if(Input::get('name') == "approval_comment")
+            {
+                switch((int)$type)
+                {
+                    case \SwiftApproval::PR_RETAILMAN:
+                        if(is_numeric(Input::get('pk')))
+                        {
+                            return Response::make('Please approve the product first',400);
+                        }
+                        else
+                        {
+                            $approval = \SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
+                            if(count($approval))
+                            {
+                                if($approval->approved == SwiftApproval::REJECTED && trim(Input::get('value'))=="")
+                                {
+                                    return Response::make('Please enter a comment for rejected product',400);
+                                }
+
+                                //Get Comments
+                                $comment = $approval->comments()->first();
+
+                                if(count($comment))
+                                {
+                                    $comment->comment = trim(Input::get('value'));
+                                    if($comment->save())
+                                    {
+                                        return Response::make('Success');
+                                    }
+                                }
+                                else
+                                {
+                                    $newcomment = new SwiftComment(['comment'=>trim(Input::get('value')),'user_id'=>$this->currentUser->id]);
+                                    if($approval->comments()->save($newcomment))
+                                    {
+                                        return Response::make('Success');
+                                    }
+                                }
+                                return Response::make('Failed to save. Please retry',400);
+                            }
+                            else
+                            {
+                                return Response::make('Error saving approval comment: Invalid PK',400);
+                            }
+                        }
+                        break;
+                    default:
+                        return Response::make('Type of approval unknown',400);
+                        break;
+                }
+            }
+            else
+            {
+                return Response::make('Invalid Request',400);
+            }
+        }
+        else
+        {
+            return Response::make('Product not found',404);
+        }
+    }
+
+    public function postUpload($pr_id)
+    {
+
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        $pr = SwiftPR::find(Crypt::decrypt($pr_id));
+        /*
+         * Manual Validation
+         */
+        if(count($pr))
+        {
+            if(Input::file('file'))
+            {
+                $doc = new SwiftPRDocument();
+                $doc->document = Input::file('file');
+                if($pr->document()->save($doc))
+                {
+                    echo json_encode(['success'=>1,
+                                    'url'=>$doc->getAttachedFiles()['document']->url(),
+                                    'id'=>Crypt::encrypt($doc->id),
+                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(),
+                                    'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
+                }
+                else
+                {
+                    return Response::make('Upload failed.',400);
+                }
+            }
+            else
+            {
+                return Response::make('File not found.',400);
+            }
+        }
+        else
+        {
+            return Response::make('Product returns form not found',404);
+        }
+    }
+
+    /*
+     * Delete upload
+     */
+
+    public function deleteUpload($doc_id)
+    {
+
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        $doc = SwiftAPDocument::find(Crypt::decrypt($doc_id));
+        /*
+         * Manual Validation
+         */
+        if(count($doc))
+        {
+            if($doc->delete())
+            {
+                echo json_encode(['success'=>1,'url'=>$doc->getAttachedFiles()['document']->url(),'id'=>Crypt::encrypt($doc->id)]);
+            }
+            else
+            {
+                return Response::make('Delete failed.',400);
+            }
+        }
+        else
+        {
+            return Response::make('Document not found',404);
+        }
+    }
+
+    /*
+     * Tags: REST
+     */
+
+    public function putTag()
+    {
+        /*
+        * Check Permissions
+        */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        if(Input::get('pk') && !is_numeric(Input::get('pk')))
+        {
+            $doc = SwiftPRDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
+            if($doc)
+            {
+                //Lets check those tags
+                if(count($doc->tag))
+                {
+                    if(Input::get('value'))
+                    {
+                        //It already has some tags
+                        //Save those not in table
+                        foreach(Input::get('value') as $val)
+                        {
+                            $found = false;
+                            foreach($doc->tag as $t)
+                            {
+                                if($t->type == $val)
+                                {
+                                    $found = true;
+                                    break;
+                                }
+                            }
+                            //Save
+                            if(!$found)
+                            {
+                                /*
+                                 * Validate dat tag
+                                 */
+                                if(key_exists($val,SwiftTag::$prTags))
+                                {
+                                    $tag = new SwiftTag(array('type'=>$val));
+                                    if(!$doc->tag()->save($tag))
+                                    {
+                                        return Response::make('Error: Unable to save tags',400);
+                                    }
+                                }
+                            }
+                        }
+
+                        //Delete values from table, not in value array
+
+                        foreach($doc->tag as $t)
+                        {
+                            $found = false;
+                            foreach(Input::get('value') as $val)
+                            {
+                                if($val == $t->type)
+                                {
+                                    $found = true;
+                                    break;
+                                }
+                            }
+                            //Delete
+                            if(!$found)
+                            {
+                                if(!$t->delete())
+                                {
+                                    return Response::make('Error: Cannot delete tag',400);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //Delete all existing tags
+                        if(!$doc->tag()->delete())
+                        {
+                            return Response::make('Error: Cannot delete tag',400);
+                        }
+                    }
+                }
+                else
+                {
+                    //Alright, just save then
+                    foreach(Input::get('value') as $val)
+                    {
+                        /*
+                         * Validate dat tag
+                         */
+                        if(key_exists($val,SwiftTag::$prTags))
+                        {
+                            $tag = new SwiftTag(array('type'=>$val));
+                            if(!$doc->tag()->save($tag))
+                            {
+                                return Response::make('Error: Unable to save tags',400);
+                            }
+                        }
+                        else
+                        {
+                            return Response::make('Error: Invalid tags',400);
+                        }
+                    }
+                }
+                return Response::make('Success');
+            }
+            else
+            {
+                return Response::make('Error: Document not found',400);
+            }
+        }
+        else
+        {
+            return Response::make('Error: Document number invalid',400);
+        }
+    }
+
+    /*
+     * Cancel Form
+     */
+
+    public function postCancel($pr_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        $form = \SwiftPR::find(\Crypt::decrypt($pr_id));
+
+        if(count($form))
+        {
+
+            /*
+             * Normal User but not creator = no access
+             */
+            if($this->currentUser->hasAccess($this->editPermission) &&
+                !$this->currentUser->isSuperUser() &&
+                $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
+            {
+                return Response::make('Do not cancel, that which is not yours',400);
+            }
+
+            if(\WorkflowActivity::cancel($form))
+            {
+                return Response::make('Workflow has been cancelled',200);
+            }
+
+            return Response::make('Unable to cancel workflow',400);
+        }
+        else
+        {
+            return Response::make('A&P Request form not found',404);
+        }
     }
 }
     

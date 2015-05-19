@@ -63,7 +63,7 @@
                                         echo implode(",",$tag);
                                     }
 
-                                ?>" data-source='{{ $tags }}' data-emptytext="No tags" data-name="type" data-mode="popup" data-placement="bottom" data-type="checklist" data-url="/order-tracking/tag" data-pk="{{Crypt::encrypt($d->id)}}" class="editable tags"></a>
+                                ?>" data-source='{{ $tags }}' data-emptytext="No tags" data-name="type" data-mode="popup" data-placement="bottom" data-type="checklist" data-url="/{{$rootURL}}/tag" data-pk="{{Crypt::encrypt($d->id)}}" class="editable tags"></a>
                     </div>
                 </div>
             </div>
@@ -87,7 +87,7 @@
         <div class="row">
             <div class="col-xs-12">
                 <i class="fa fa-tags"></i>&nbsp;
-                <a data-title="Select Tags" data-value="" data-emptytext="No tags" data-name="type" data-mode="popup" data-source='{{ $tags }}' data-type="checklist" data-url="/order-tracking/tag" data-pk="0" class="editable tag dummy hide"></a>
+                <a data-title="Select Tags" data-value="" data-emptytext="No tags" data-name="type" data-mode="popup" data-source='{{ $tags }}' data-type="checklist" data-url="/{{$rootURL}}/tag" data-pk="0" class="editable tag dummy hide"></a>
             </div>
         </div>
     </div>

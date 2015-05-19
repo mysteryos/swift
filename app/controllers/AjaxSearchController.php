@@ -100,6 +100,33 @@ Class AjaxSearchController extends UserController {
                         $total = count($customers);
                     }
                     break;
+                case "product-returns":
+                    $class = \Config::get("context.$context");
+
+                    //Get most popular customers by user
+                    $customers = $class::groupBy('customer_code')
+                                ->select(DB::raw("COUNT(*) as  count"),"customer_code")
+                                ->where('owner_user_id','=',$this->currentUser->id)
+                                ->orderBy('count')
+                                ->lists("customer_code");
+
+                    if(count($customers))
+                    {
+                        $searchresult = \JdeCustomer::getIn($customers,$offset,$limit);
+                        $total = count($customers);
+                    }
+                    else
+                    {
+                        //Get most popular customers on system
+                        $customers = $class::groupBy('customer_code')
+                                    ->select(DB::raw("COUNT(*) as  count"),"customer_code")
+                                    ->orderBy('count')
+                                    ->lists("customer_code");
+
+                        $searchresult = \JdeCustomer::getIn($customers,$offset,$limit);
+                        $total = count($customers);
+                    }
+                    break;
             }
         }
         else

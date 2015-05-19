@@ -1166,7 +1166,7 @@ class APRequestController extends UserController {
                             }
                             else
                             {
-                                return Response::make('Error saving customs information: Invalid PK',400);
+                                return Response::make('Error saving approval information: Invalid PK',400);
                             }
                         }
                         break;

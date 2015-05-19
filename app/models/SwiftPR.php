@@ -57,7 +57,7 @@ class SwiftPR extends Eloquent {
     public $revisionPrimaryIdentifier = "id";
     public $keepCreateRevision = true;
     public $softDelete = true;
-    public $revisionRelations = ['product','order','pickup','approval','document'];
+    public $revisionRelations = ['product','order','pickup','approval','document','creditNote'];
     
     
     /*
@@ -253,6 +253,11 @@ class SwiftPR extends Eloquent {
     {
         return $this->morphMany('SwiftStory','storyfiable');
     }
+
+    public function comments()
+    {
+        return $this->morphMany('SwiftComment','commentable');
+    }
     
     /*
      * Query
@@ -316,6 +321,12 @@ class SwiftPR extends Eloquent {
                             })->whereHas('flag',function($q){
                                 return $q->where('type','=',SwiftFlag::IMPORTANT,'AND')->where('active','=',SwiftFlag::ACTIVE);
                             },'=',0)->count();
-    }    
+    }
+
+    public static function getById($id)
+    {
+        return self::with(['product','document','approval','pickup','pickup.driver','creditNote','order','comments','workflow','owner','customer'])
+                ->first();
+    }
 }
 

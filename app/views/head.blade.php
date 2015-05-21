@@ -20,7 +20,7 @@
         <link rel="stylesheet" type="text/css" href="{{ Bust::url('/css/all.css') }}"/>
                 
 	</head>
-        <body class="fixed-header fixed-ribbon smart-style-3 minified" style="overflow:hidden;position:relative;">
+        <body class="fixed-header fixed-ribbon smart-style-3 minified" style="overflow:hidden;position:relative;" data-version="{{\Config::get('website.version')}}">
             <!-- PRE-LOADER -->
             @include('preloader')
             <!-- END PRE-LOADER -->

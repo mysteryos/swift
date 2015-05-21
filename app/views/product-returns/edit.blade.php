@@ -19,6 +19,7 @@
             @endif
             <a class="btn btn-default btn-mark-important" href="/{{ $rootURL }}/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>
             @if($edit)<a class="btn btn-default btn-help" data-href="/{{$rootURL}}/help/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
+            @if($currentUser->isSuperUser() || $isAdmin)<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{$form->encrypted_id}}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
@@ -36,6 +37,7 @@
                 </button>
             @endif
             <a class="btn btn-default btn-mark-important" href="/{{ $rootURL }}/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>
+            @if($currentUser->isSuperUser() || $isAdmin)<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{$form->encrypted_id}}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
 </div>
@@ -170,19 +172,81 @@
                             <form action="/{{$rootURL}}/save-product-by-invoice" name="save_product_by_invoice_form" method="POST" class="form-horizontal" id="productFromInvoiceForm">
                                 <input type="hidden" name="pr_id" value="{{$form->encrypted_id}}" />
                                 <div class="modal-body">
-                                    <div class="well well-sm">
-                                        <div class="checkbox">
-                                            <label>
-                                                <input type="checkbox" name="quantity_included" value="0">
-                                                Quantity Included </label>
-                                        </div>
-                                    </div>
                                     <div class="form-group">
                                         <label class="col-md-2 control-label">Invoice Number*</label>
                                         <div class="col-md-10">
                                             <input type="hidden" class="full-width" id="invoice_id" name="invoice_id" placeholder="Type in the invoice number" />
                                         </div>
                                     </div>
+                                    <fieldset>
+                                        <legend>Optional</legend>
+                                        <div class="form-group">
+                                            <label class="col-xs-2 control-label">&nbsp;</label>
+                                            <div class="col-xs-10">
+                                                <div class="checkbox">
+                                                    <label>
+                                                        <input type="checkbox" name="qty_client_included" value="1">
+                                                        Include Qty Client </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @if($form->type === \SwiftPR::ON_DELIVERY)
+                                            <div class="form-group">
+                                                <label class="col-xs-2 control-label">&nbsp;</label>
+                                                <div class="col-xs-10">
+                                                    <div class="checkbox">
+                                                        <label>
+                                                            <input type="checkbox" name="qty_pickup_included" value="1" id="qty_pickup_included">
+                                                            Include Qty Pickup </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" data-qtyincluded="1">
+                                                <label class="col-xs-2 control-label">Qty</label>
+                                                <div class="col-xs-10">
+                                                    <label class="radio radio-inline">
+                                                        <input type="radio" name="qty_to" value="picking" />
+                                                        To Picking </label>
+                                                    <label class="radio radio-inline" name="qty_to" value="disposal" />
+                                                        <input type="radio">
+                                                        To Disposal </label>
+                                                    <label class="radio radio-inline" name="qty_to" value="n/a" />
+                                                        <input type="radio">
+                                                        N/A </label>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        @if($form->type === \SwiftPR::SALESMAN)
+                                            <div class="form-group">
+                                                <label class="col-xs-2 control-label">Pickup</label>
+                                                <div class="col-xs-10">
+                                                    <select class="form-control">
+                                                        <option selected>Select an option</option>
+                                                        <option value="1">Yes</option>
+                                                        <option value="0">No</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        <div class="form-group">
+                                            <label class="col-xs-2 control-label">Reason</label>
+                                            <div class="col-xs-10">
+                                                <select class="form-control" name="reason_code">
+                                                    <option>Select a reason</option>
+                                                    @foreach($product_reason_codes_array as $rkey => $rvalue)
+                                                        <option value="{{$rkey}}">{{$rvalue}}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-xs-2 control-label">Reason Comment</label>
+                                            <div class="col-xs-10">
+                                                <input name="reason_comment" type="text" class="form-control" placeholder="Type in a comment" />
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                    <hr/>
                                     <div class="row">
                                         <div class="col-xs-12" id="product-list">
                                             <p class="text-center col-xs-12">Product Info will appear here</p>

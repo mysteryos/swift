@@ -371,7 +371,35 @@ function editableElement($element)
                 return xhr.responseText;
             }
         });
-    });    
+    });
+    
+    $('a.btn-force-update').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $this.attr('disabled','disabled');
+        $this.addClass('loading-animation');
+        $.ajax({
+            url: $this.attr('data-href'),
+            type: 'GET',
+            success:function(text)
+            {
+                $.smallBox({
+			title : "Workflow information",
+			content : text,
+			color : "#26A65B",
+			icon : "fa fa-check"
+		});
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');                
+            },
+            error:function(xhr, status, error)
+            {
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');
+                return xhr.responseText;
+            }
+        });
+    });     
     
     //Mark as important button
     
@@ -666,6 +694,17 @@ function editableElement($element)
            }
         });
     });
+    
+    $('#qty_pickup_included').on('click',function(){
+        if(this.checked)
+        {
+            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').show(); 
+        }
+        else
+        {
+            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').hide(); 
+        }
+    });
      
     $('#productFromInvoiceModal').on('shown.bs.modal', function(){
         $saveProductByInvoiceForm.resetForm();
@@ -944,17 +983,36 @@ function editableElement($element)
     $('a.file-view').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
-        $.colorbox({
-           href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
-           maxHeight:"100%",
-           maxWidth:"90%",
-           innerWidth:"100%",
-           innerHeight:"100%",
-           initialWidth:"64px",
-           initialHeight:"84px",
-           closeButton:true,
-           iframe: true,
-        });
+        //For Images
+        if($this.attr('href').indexOf('.jpg') !== -1 || $this.attr('href').indexOf('.jpeg') !== -1 || $this.attr('href').indexOf('.png') !== -1 || $this.attr('href').indexOf('.bmp') !== -1)
+        {
+            $.colorbox({
+               href: $this.attr('href'),
+               maxHeight:"100%",
+               maxWidth:"90%",
+               innerWidth:"100%",
+               innerHeight:"100%",
+               initialWidth:"64px",
+               initialHeight:"84px",
+               closeButton:true,
+               iframe: false,
+            });
+        }
+        else
+        {
+            //For Docs
+            $.colorbox({
+               href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+               maxHeight:"100%",
+               maxWidth:"90%",
+               innerWidth:"100%",
+               innerHeight:"100%",
+               initialWidth:"64px",
+               initialHeight:"84px",
+               closeButton:true,
+               iframe: true,
+            });
+        }
     });
     
     $.document_.bind('cbox_complete', function () {

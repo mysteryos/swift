@@ -8,7 +8,9 @@ class SwiftPRProduct extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait; 
     use \Swift\ElasticSearchEventTrait;
-    
+
+    public $readableName = "Product Returns";
+
     protected $table = "swift_pr_product";
     
     protected $fillable = array("pr_id","jde_itm","qty_client","qty_pickup","qty_store",

@@ -1211,6 +1211,16 @@ $.document_.on('pjax:success, pjax:end',function(){
     //Execute Javascript
     $('.popover, .tooltip').remove();
     executePageScript();
+    //Check Site Version
+    if($.root_.attr('data-version') !== document.getElementById('site_version').value)
+    {
+        $.smallBox({
+                title : "System Update Available",
+                content: "Refresh page & apply update? <p class='text-align-right'><a href='javascript:void(0);' onclick='window.location.reload();' class='btn btn-primary btn-sm'>Yes</a> <a href='javascript:void(0);' class='btn btn-danger btn-sm'>No</a></p>",
+                color : "#F89406",
+                icon : "fa fa-bolt"
+        });        
+    }
 });
 
 $.document_.on('pjax:beforeSend',function(){

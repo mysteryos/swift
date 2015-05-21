@@ -5,7 +5,7 @@ class APRequestController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "A&P Request";
-        $this->rootURL = $this->context = $this->data['context'] = "aprequest";
+        $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "aprequest";
         /*
          * Permissions
          */
@@ -15,6 +15,8 @@ class APRequestController extends UserController {
         $this->ccarePermission = \Config::get("permission.{$this->context}.ccare");
         $this->storePermission = \Config::get("permission.{$this->context}.store");
         $this->createPermission = \Config::get("permission.{$this->context}.create");
+
+        $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
     }
     
     public function getIndex()
@@ -97,12 +99,18 @@ class APRequestController extends UserController {
         if(count($apr))
         {
             /*
+             * Encrypted Id
+             */
+
+            $apr->encrypted_id = \Crypt::encrypt($apr->id);
+
+            /*
              * Set Read
              */
             
             if(!Flag::isRead($apr))
             {
-                Flag::toggleRead($apr);
+                \Flag::toggleRead($apr);
             }
             
             /*
@@ -121,11 +129,10 @@ class APRequestController extends UserController {
              */
             $owner = $apr->revisionHistory()->orderBy('created_at','asc')->first();
             $this->data['isCreator'] = ($this->currentUser->id == $owner->user_id ? true : false);
-            $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
             //Workflow Activity
-            $this->data['current_activity'] = WorkflowActivity::progress($apr,$this->context);
+            $this->data['current_activity'] = \WorkflowActivity::progress($apr,$this->context);
             //Audit data
-            $this->data['activity'] = Helper::getMergedRevision(array('product','document','delivery','order','product.approvalexec','product.approvalcatman'),$apr);
+            $this->data['activity'] = \Helper::getMergedRevision(array('product','document','delivery','order','product.approvalexec','product.approvalcatman'),$apr);
             $this->pageTitle = "{$apr->name} (ID: $apr->id)";
             $this->data['form'] = $apr;
             /*
@@ -142,7 +149,6 @@ class APRequestController extends UserController {
              */
             $this->data['flag_important'] = Flag::isImportant($apr);
             $this->data['flag_starred'] = Flag::isStarred($apr);
-            $this->data['rootURL'] = $this->rootURL;
 
             /*
              * Edit Access
@@ -235,7 +241,7 @@ class APRequestController extends UserController {
             }
             
             //Save recently viewed form
-            Helper::saveRecent($apr,$this->currentUser);
+            \Helper::saveRecent($apr,$this->currentUser);
 
             return $this->makeView("$this->rootURL/edit");
         }
@@ -684,13 +690,12 @@ class APRequestController extends UserController {
             }
             else
             {
-                $APProduct = \SwiftAPProduct::find(Crypt::decrypt(Input::get('pk')));
+                $APProduct = \SwiftAPProduct::find(\Crypt::decrypt(Input::get('pk')));
                 if(count($APProduct))
                 {
                     switch(\Input::get('name'))
                     {
                         case 'jde_itm':
-                            $APProduct->price = 0;
                             \Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id,'class'=>get_class($APProduct)));
                             break;
                     }

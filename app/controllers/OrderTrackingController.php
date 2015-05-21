@@ -10,6 +10,8 @@ class OrderTrackingController extends UserController {
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
         $this->createPermission = \Config::get("permission.{$this->context}.create");
+
+        $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
     }
     
     public function getIndex()
@@ -771,6 +773,10 @@ class OrderTrackingController extends UserController {
         $order = SwiftOrder::getById($order_id);
         if(count($order))
         {
+            //Set encrypted Id
+
+            $order->encrypted_id = \Crypt::encrypt($order->id);
+
             /*
              * Set Read
              */

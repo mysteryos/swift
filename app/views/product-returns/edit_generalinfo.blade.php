@@ -13,7 +13,7 @@
                 <a href="#" id="generalinfo_customer_{{ $form->id }}" class="editable editable-click @if(!$isOwner && !$isAdmin) editable-disabled @endif" data-type="select2" data-name="customer_code" data-pk="{{$form->encrypted_id}}" data-context="generalinfo" data-url="/{{ $rootURL }}/generalinfo" data-value="{{ $form->customer_code or "" }}">@if(null !== $form->customer->getReadableName()){{$form->customer->getReadableName()}}@endif</a>
             </div>
         </div>
-        @if($form->type === \SwiftPR::ON_DELIVERY || $currentUser->isSuperUser())
+        @if($form->type === \SwiftPR::ON_DELIVERY)
         <div class="form-group">
             <label class="col-md-2 control-label">RFRF Paper Number</label>
             <div class="col-md-10">

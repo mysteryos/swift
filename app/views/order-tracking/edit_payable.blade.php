@@ -14,7 +14,7 @@
 			</div>
             <form action="/accounts-payable/save-by-form" name="payable_form" method="POST" class="form-horizontal" id="payableForm">
                 <input type="hidden" name="payable_type" value="{{get_class($order)}}" />
-                <input type="hidden" name="payable_id" value="{{\Crypt::encrypt($order->getKey())}}" />
+                <input type="hidden" name="payable_id" value="{{$order->encrypted_id}}" />
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="col-md-2 control-label">Type*</label>

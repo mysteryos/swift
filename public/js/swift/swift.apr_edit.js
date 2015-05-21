@@ -856,17 +856,36 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     $('a.file-view').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
-        $.colorbox({
-           href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
-           maxHeight:"100%",
-           maxWidth:"90%",
-           innerWidth:"100%",
-           innerHeight:"100%",
-           initialWidth:"64px",
-           initialHeight:"84px",
-           closeButton:true,
-           iframe: true,
-        });
+        //For images
+        if($this.attr('href').indexOf('.jpg') !== -1 || $this.attr('href').indexOf('.jpeg') !== -1 || $this.attr('href').indexOf('.png') !== -1 || $this.attr('href').indexOf('.bmp') !== -1)
+        {
+            $.colorbox({
+               href: $this.attr('href'),
+               maxHeight:"100%",
+               maxWidth:"90%",
+               innerWidth:"100%",
+               innerHeight:"100%",
+               initialWidth:"64px",
+               initialHeight:"84px",
+               closeButton:true,
+               iframe: false,
+            });
+        }
+        else
+        {
+            //For Docs
+            $.colorbox({
+               href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+               maxHeight:"100%",
+               maxWidth:"90%",
+               innerWidth:"100%",
+               innerHeight:"100%",
+               initialWidth:"64px",
+               initialHeight:"84px",
+               closeButton:true,
+               iframe: true,
+            });
+        }
     });
     
     $.document_.bind('cbox_complete', function () {

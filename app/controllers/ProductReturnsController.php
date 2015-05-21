@@ -11,7 +11,7 @@ class ProductReturnsController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "Product Returns";
-        $this->rootURL = $this->data['rootURL'] = $this->context = "product-returns";
+        $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "product-returns";
         $this->adminPermission = \Config::get("permission.{$this->context}.admin");
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
@@ -37,7 +37,7 @@ class ProductReturnsController extends UserController {
     
     public function getIndex()
     {
-        return Redirect::to('/'.$this->rootURL.'/overview');
+        return \Redirect::to('/'.$this->rootURL.'/overview');
     }
 
     /*
@@ -160,32 +160,32 @@ class ProductReturnsController extends UserController {
         {
             case 'inprogress':
                 $prquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
-                    return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS);
+                    return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS);
                 });
                 break;
             case 'rejected':
                 $prquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
-                   return $q->where('status','=',SwiftWorkflowActivity::REJECTED);
+                   return $q->where('status','=',\SwiftWorkflowActivity::REJECTED);
                 });
                 break;
             case 'completed':
                 $prquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
-                   return $q->where('status','=',SwiftWorkflowActivity::COMPLETE);
+                   return $q->where('status','=',\SwiftWorkflowActivity::COMPLETE);
                 });
                 break;
             case 'starred':
                 $prquery->orderBy('updated_at','desc')->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                   return $q->where('type','=',\SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE);
                 });
                 break;
             case 'important':
                 $prquery->orderBy('updated_at','desc')->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::IMPORTANT,'AND');
+                   return $q->where('type','=',\SwiftFlag::IMPORTANT,'AND');
                 });
                 break;
             case 'recent':
                 $prquery->join('swift_recent',function($join) use ($prquery){
-                    $join->on('swift_recent.recentable_type','=',DB::raw('"SwiftOrder"'));
+                    $join->on('swift_recent.recentable_type','=',\DB::raw('"SwiftOrder"'));
                     $join->on('swift_recent.recentable_id','=','swift_order.id');
                 })->orderBy('swift_recent.updated_at','DESC')->select('swift_order.*');
                 break;
@@ -244,7 +244,7 @@ class ProductReturnsController extends UserController {
         {
 
             //Set Current Workflow Activity
-            $f->current_activity = WorkflowActivity::progress($f);
+            $f->current_activity = \WorkflowActivity::progress($f);
 
             //If in progress, we filter
             if($type == 'inprogress')
@@ -257,7 +257,7 @@ class ProductReturnsController extends UserController {
                 {
                     foreach($f->current_activity['definition'] as $d)
                     {
-                        if(NodeActivity::hasAccess($d,SwiftNodePermission::RESPONSIBLE))
+                        if(\NodeActivity::hasAccess($d,\SwiftNodePermission::RESPONSIBLE))
                         {
                             $hasAccess = true;
                             break;
@@ -277,12 +277,12 @@ class ProductReturnsController extends UserController {
             }
 
             //Set Revision
-            $f->revision_latest = Helper::getMergedRevision($f->revisionRelations,$f);
+            $f->revision_latest = \Helper::getMergedRevision($f->revisionRelations,$f);
 
             //Set Starred/important
-            $f->flag_starred = Flag::isStarred($f);
-            $f->flag_important = Flag::isImportant($f);
-            $f->flag_read = Flag::isRead($f);
+            $f->flag_starred = \Flag::isStarred($f);
+            $f->flag_important = \Flag::isImportant($f);
+            $f->flag_read = \Flag::isRead($f);
         }
         
         $this->data['forms'] = $forms;
@@ -339,10 +339,11 @@ class ProductReturnsController extends UserController {
             $this->data['erporder_status'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$status));
             $this->data['erporder_type'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$prType));
             $this->data['pickup_status'] = json_encode(\Helper::jsonobject_encode(\SwiftPickup::$pr_status));
-            $this->data['drivers'] = json_encode(\Helper::jsonobject_encode(SwiftDriver::getAll()));
-            $this->data['pr_type'] = json_encode(\Helper::jsonobject_encode(SwiftPR::$type));
-            $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(SwiftApproval::$approved));
-            $this->data['product_reason_codes'] = json_encode(\Helper::jsonobject_encode(SwiftPRReason::getAll()));
+            $this->data['drivers'] = json_encode(\Helper::jsonobject_encode(\SwiftDriver::getAll()));
+            $this->data['pr_type'] = json_encode(\Helper::jsonobject_encode(\SwiftPR::$type));
+            $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(\SwiftApproval::$approved));
+            $this->data['product_reason_codes'] = json_encode(\Helper::jsonobject_encode(\SwiftPRReason::getAll()));
+            $this->data['product_reason_codes_array'] = \SwiftPRReason::getAll();
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$prTags));
             $this->data['owner'] = \Helper::getUserName($pr->owner_user_id,$this->currentUser);
             $this->data['isOwner'] = $pr->isOwner();
@@ -410,7 +411,7 @@ class ProductReturnsController extends UserController {
             }
 
             //Save recently viewed form
-            Helper::saveRecent($pr,$this->currentUser);
+            \Helper::saveRecent($pr,$this->currentUser);
 
             return $this->makeView("$this->context/edit");
         }
@@ -430,7 +431,7 @@ class ProductReturnsController extends UserController {
     {
         if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
-            return Redirect::action('ProductReturnsController@getEdit',array('id'=>$id));
+            return \Redirect::action('ProductReturnsController@getEdit',array('id'=>$id));
         }
         elseif($this->currentUser->hasAccess($this->viewPermission))
         {
@@ -456,7 +457,7 @@ class ProductReturnsController extends UserController {
         }
         elseif($this->currentUser->hasAccess($this->viewPermission))
         {
-            return Redirect::action('ProductReturnsController@getView',array('id'=>$id));
+            return \Redirect::action('ProductReturnsController@getView',array('id'=>$id));
         }
         else
         {
@@ -489,19 +490,19 @@ class ProductReturnsController extends UserController {
          */
         switch($type)
         {
-            case SwiftPR::SALESMAN:
+            case \SwiftPR::SALESMAN:
                 if(!$this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-salesman")))
                 {
                     return parent::forbidden();
                 }
                 break;
-            case SwiftPR::ON_DELIVERY:
+            case \SwiftPR::ON_DELIVERY:
                 if(!$this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-ondelivery")))
                 {
                     return parent::forbidden();
                 }
                 break;
-            case SwiftPR::INVOICE_CANCELLED:
+            case \SwiftPR::INVOICE_CANCELLED:
                 if(!$this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-invoice-cancelled")))
                 {
                     return parent::forbidden();
@@ -545,7 +546,7 @@ class ProductReturnsController extends UserController {
 
         if((int)\Input::get('customer_code') === 0)
         {
-            return \Reaponse::make('Please select a customer',500);
+            return \Response::make('Please select a customer',500);
         }
         else
         {
@@ -626,7 +627,7 @@ class ProductReturnsController extends UserController {
                             
                 if(count($formExist) > 0 )
                 {
-                    return Response::make("Invoice already cancelled, <a href='".Helper::generateURL($formExist->first())."' class='pjax'>Click here to view form</a>",500);
+                    return \Response::make("Invoice already cancelled, <a href='".Helper::generateURL($formExist->first())."' class='pjax'>Click here to view form</a>",500);
                 }
 
                 \Queue::push('Helper@saveInvoiceCancelled',
@@ -657,32 +658,55 @@ class ProductReturnsController extends UserController {
 
     public function putGeneralinfo($form_id)
     {
+        //Basic Permission Check
+        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        {
+            return parent::forbidden();
+        }
+
         $id = \Crypt::decrypt($form_id);
         $pr = \SwiftPR::find($id);
 
         if($pr)
         {
-            if($this->currentUser->hasAccess($this->editPermission))
+            //If owner or is an Admin
+            if($pr->isOwner() || $this->isAdmin)
             {
-                switch(Input::get('name'))
+                switch(\Input::get('name'))
                 {
                     case 'type':
                         if(!$this->currentUser->isSuperUser())
                         {
                             return parent::forbidden();
                         }
+                    case 'customer_code':
+                        if(\Input::get('value') === "" || !is_numeric(\Input::get('value')))
+                        {
+                            return \Response::make('Please select a valid customer',500);
+                        }
+                        else
+                        {
+                            if(!\JdeCustomer::find(Input::get('value')))
+                            {
+                                return \Response::make('Please select an existing customer',500);
+                            }
+                        }
+                    case 'paper_number':
+                    case 'description':
+                        break;
+                    default:
+                        return \Response::make("Unknown Field",500);
                         break;
                 }
 
                 $pr->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($pr->save())
                 {
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($pr),'id'=>$pr->id,'user_id'=>$this->currentUser->id));
-                    return Response::make('Success', 200);
+                    return \Response::make('Success', 200);
                 }
                 else
                 {
-                    return Response::make('Failed to save. Please retry',400);
+                    return \Response::make('Failed to save. Please retry',400);
                 }
             }
             else
@@ -860,7 +884,48 @@ class ProductReturnsController extends UserController {
     }
 
     /*
-     * Approval of products for Retail Man
+     * DELETE: Product
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function deleteProduct()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        $id = \Crypt::decrypt(\Input::get('pk'));
+        $obj = \SwiftPRProduct::find($id);
+        if($obj)
+        {
+            $form = $obj->pr()->get();
+
+            if(!$form->isOwner() && !$this->isAdmin)
+            {
+                return \Response::make("You don't have permission to complete this action",500);
+            }
+
+            if($obj->delete())
+            {
+                return \Response::make('Success');
+            }
+            else
+            {
+                return \Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return \Response::make('Record not found',404);
+        }
+    }
+
+    /*
+     * Approval of products for Retail Manager
      *
      * @param int $type
      * @param string $product_id

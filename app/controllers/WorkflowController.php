@@ -57,4 +57,20 @@ class WorkflowController extends UserController {
         echo View::make('workflow-history',$this->data)->render();
     }
 
+    public function getForceUpdate($context,$encrypted_id)
+    {
+        $id = \Crypt::decrypt($encrypted_id);
+        $class = \Config::get("context.$context");
+        if($class)
+        {
+            $form = $class::find($id);
+            \WorkflowActivity::update($form,$context);
+            return \Response::make("Workflow has been updated");
+        }
+        else
+        {
+            return \Response::make("Context not supported",500);
+        }
+    }
+
 }

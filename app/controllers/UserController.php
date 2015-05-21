@@ -18,8 +18,8 @@ class UserController extends Controller {
             //Register Base JS/CSS files
             if (!Request::header('X-PJAX'))
             {
-                $this->data['js'] = Config::get('assets.js');
-                $this->data['css'] = Config::get('assets.css');
+                $this->data['js'] = \Config::get('assets.js');
+                $this->data['css'] = \Config::get('assets.css');
 
                 /*
                  * Cache Buster
@@ -27,14 +27,14 @@ class UserController extends Controller {
                 array_walk($this->data['js'],function(&$v){
                     if(strpos($v,'/js/') === 0)
                     {
-                        $v = Bust::url($v);
+                        $v = \Bust::url($v);
                     }
                 });
 
                 array_walk($this->data['css'],function(&$v){
                     if(strpos($v,'/css/') === 0)
                     {
-                        $v = Bust::url($v);
+                        $v = \Bust::url($v);
                     }
                 });
             }
@@ -45,7 +45,7 @@ class UserController extends Controller {
                 $this->data['css'] = array();
             }
 
-            $this->currentUser = Sentry::getUser();
+            $this->currentUser = \Sentry::getUser();
             $this->data['currentUser'] = $this->currentUser;
         }
         

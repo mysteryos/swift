@@ -8,29 +8,31 @@
         <div class="ribbon-button-alignment hidden-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
+            @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if(isset($isSubscribed))
                 <button class="btn btn-default btn-togglesubscribe" data-href="{{$subscriptionUrl}}">
                     <i class="fa fa-lg fa-heart-o" rel="tooltip" data-original-title="Subscribe" data-placement="bottom" @if($isSubscribed)style="display:none;"@endif></i>
                     <i class="fa fa-lg fa-heart" rel="tooltip" data-original-title="Unsubscribe" data-placement="bottom" @if(!$isSubscribed)style="display:none;"@endif></i>
                 </button>
             @endif
-            @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && ($isAdmin || $isCreator))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
+            @if($currentUser->isSuperUser() || $isAdmin)<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && ($isAdmin || $isCreator))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ $order->encrypted_id }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
+            @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if(isset($isSubscribed))
                 <button class="btn btn-default btn-togglesubscribe" data-href="{{$subscriptionUrl}}">
                     <i class="fa fa-lg fa-heart-o" rel="tooltip" data-original-title="Subscribe" data-placement="bottom" @if($isSubscribed)style="display:none;"@endif></i>
                     <i class="fa fa-lg fa-heart" rel="tooltip" data-original-title="Unsubscribe" data-placement="bottom" @if(!$isSubscribed)style="display:none;"@endif></i>
                 </button>
             @endif
-            @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode(Crypt::encrypt($order->id)) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif            
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && ($isAdmin || $isCreator))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ Crypt::encrypt($order->id) }}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if($isAdmin)<a class="btn btn-default btn-mark-important" href="/order-tracking/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
+            @if($currentUser->isSuperUser() || $isAdmin)<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && ($isAdmin || $isCreator))<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/order-tracking/cancel/{{ $order->encrypted_id }}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
 
 </div>
@@ -38,7 +40,7 @@
 
 <!-- MAIN CONTENT -->
 <div id="content" data-js="@if($edit){{"ot_edit"}}@else{{"ot_view"}}@endif" data-urljs="@if($edit){{Bust::url('/js/swift/swift.ot_edit.js')}}@else{{Bust::url('/js/swift/swift.ot_view.js')}}@endif">
-    <input type="hidden" name="id" id="id" value="{{ Crypt::encrypt($order->id) }}" />
+    <input type="hidden" name="id" id="id" value="{{ $order->encrypted_id }}" />
     <input type="hidden" name="last_update" id="last_update" value="{{ $order->updated_at }}" />
     <input type="hidden" name="channel_name" id="channel_name" value="{{ $order->channelName() }}" />
     <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
@@ -64,7 +66,7 @@
 	</div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
             <h1 class="page-title txt-color-blueDark">
-                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span> <a href="/workflow/by-form/{{get_class($order)}}/{{Crypt::encrypt($order->id)}}" class="colorbox-ajax" rel="tooltip" data-placement="bottom" data-original-title="Workflow History"><i class="fa fa-history"></i></a>
+                <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span> <a href="/workflow/by-form/{{get_class($order)}}/{{$order->encrypted_id}}" class="colorbox-ajax" rel="tooltip" data-placement="bottom" data-original-title="Workflow History"><i class="fa fa-history"></i></a>
             </h1>
         </div>
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">

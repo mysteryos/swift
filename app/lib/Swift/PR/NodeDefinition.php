@@ -26,7 +26,7 @@ class NodeDefinition
 
         if(strpos($method,'prCustomercare') !== false)
         {
-            return self::prCustomercare($args[0],$args[1]);
+            return self::prCustomercare($args[0],str_replace('prCustomercare','',$method),$args[1]);
         }
     }
 
@@ -95,7 +95,7 @@ class NodeDefinition
 
                     foreach($pr->product as $p)
                     {
-                        $p->approval()->save(new \SwiftApproval([
+                        $p->approvalretailman()->save(new \SwiftApproval([
                             'type' => \SwiftApproval::PR_RETAILMAN,
                             'approved' => \SwiftApproval::APPROVED,
                             'approval_user_id' => \Sentry::getUser()->id
@@ -110,7 +110,7 @@ class NodeDefinition
                 if($pr)
                 {
                     $countProducts = $pr->product()->count();
-                    $countApprovals = $pr->product()->whereHas('approval',function($q){
+                    $countApprovals = $pr->product()->whereHas('approvalretailman',function($q){
                         return $q->approvedBy(\SwiftApproval::PR_RETAILMAN);
                     })->count();
 
@@ -136,7 +136,7 @@ class NodeDefinition
             $returnReasonList = array();
         }
         
-        switch(strttolower($customerType))
+        switch(strtolower($customerType))
         {
             case 'routing':
                 return true;
@@ -150,7 +150,7 @@ class NodeDefinition
                     {
                         foreach($order as $o)
                         {
-                            if($o->ref != "" && $o->status == \SwiftErpOrder::FILLED)
+                            if($o->ref != "" && $o->status == \SwiftErpOrder::FILLED && array_key_exists($o->type,\SwiftErpOrder::$prType))
                             {
                                 return true;
                             }
@@ -187,8 +187,8 @@ class NodeDefinition
             //Else check products
             $countProducts = $pr->product()
                                 ->where('pickup','=',\SwiftPRProduct::PICKUP)
-                                ->whereHas('approval',function($q){
-                                    return $q->approvedBy(\SwiftApproval::PR_RETAILMAN);
+                                ->whereHas('approvalretailman',function($q){
+                                    return $q->where('approved','=',\SwiftApproval::APPROVED);
                                 })->count();
 
             /*
@@ -245,8 +245,8 @@ class NodeDefinition
             $products = $pr->product()
                             ->with('discrepancy')
                             ->where('pickup','=',\SwiftPRProduct::PICKUP)
-                            ->whereHas('approval',function($q){
-                                return $q->approvedBy(\SwiftApproval::PR_RETAILMAN);
+                            ->whereHas('approvalretailman',function($q){
+                                return $q->where('approved','=',\SwiftApproval::APPROVED);;
                             })->get();
 
             /*

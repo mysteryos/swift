@@ -83,6 +83,7 @@ class APRequestController extends UserController {
         $this->data['inprogress_important_responsible'] = $aprequest_inprogress_important_responsible;
         /*$this->data['aprequest_storage'] = $storage_array*/
         $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
+        $this->adminList();
         
         return $this->makeView('aprequest/overview');        
         
@@ -196,7 +197,9 @@ class APRequestController extends UserController {
                                     $this->data['canModifyProduct'] = true;
                                 }
 
-                                if(isset($d->data->manualpublish) && ($this->data['isAdmin'] || $apr->revisionHistory()->orderBy('created_at','ASC')->first()->user_id == $this->currentUser->id))
+                                if(isset($d->data->manualpublish) && 
+                                    !$apr->approval()->where('type','=',\SwiftApproval::APR_REQUESTER)->count() &&
+                                    ($this->data['isAdmin'] || $apr->revisionHistory()->orderBy('created_at','ASC')->first()->user_id == $this->currentUser->id))
                                 {
                                     $this->data['canPublish'] = true;
                                     break;
@@ -797,84 +800,7 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
-        
-        /*
-         * Manual Validation
-         */
-        if(count($form))
-        {
-            switch(Input::get('name'))
-            {
-                case 'status':
-                    if(!array_key_exists(Input::get('value'),SwiftErpOrder::$status))
-                    {
-                        return Response::make('Please select a valid status',400);
-                    }
-                    break;
-                case 'type':
-                    if(!array_key_exists(Input::get('value'),SwiftErpOrder::$type))
-                    {
-                        return Response::make('Please select a valid type',400);
-                    }
-                    break;
-            }
-            
-            /*
-             * New Erp Order
-             */
-            if(is_numeric(Input::get('pk')))
-            {
-                //All Validation Passed, let's save
-                $erpOrder = new SwiftErpOrder();
-                $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
-                if(!$this->currentUser->hasAccess($this->adminPermission))
-                {
-                    $erpOrder->type = \SwiftErpOrder::TYPE_ORDER_AP;
-                }
-                if($form->order()->save($erpOrder))
-                {
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($erpOrder->id),'id'=>$erpOrder->id]));
-                }
-                else
-                {
-                    return Response::make('Failed to save. Please retry',400);
-                }
-                
-            }
-            else
-            {
-                if(!$this->currentUser->hasAccess($this->adminPermission) && Input::get('name') == 'type')
-                {
-                    return Response::make("You don't have permission to modify type of order.",400);
-                }
-                
-                $erpOrder = SwiftErpOrder::find(Crypt::decrypt(Input::get('pk')));
-                if($erpOrder)
-                {
-                    $erpOrder->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
-                    
-                    if($erpOrder->save())
-                    {
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                        return Response::make('Success');
-                    }
-                    else
-                    {
-                        return Response::make('Failed to save. Please retry',400);
-                    }
-                }
-                else
-                {
-                    return Response::make('Error saving order: Invalid PK',400);
-                }
-            }
-        }
-        else
-        {
-            return Response::make('A&P Request form not found',404);
-        }
+        return (new \Process\SwiftErpOrder($this))->put(\Config::get("context.$this->context"),$apr_id);
         
     }
     
@@ -888,23 +814,7 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        $erpOrder = SwiftErpOrder::find(Crypt::decrypt(Input::get('pk')));
-        
-        if(count($erpOrder))
-        {
-            if($erpOrder->delete())
-            {
-                return Response::make('Success');
-            }
-            else
-            {
-                return Response::make('Unable to delete',400);
-            }                        
-        }
-        else
-        {
-            return Response::make('JDE order not found',404);
-        }        
+        return \Helper::deleteChildModel('SwiftErpOrder');
     }
     
     public function putDelivery($apr_id)
@@ -945,16 +855,16 @@ class APRequestController extends UserController {
             if(is_numeric(Input::get('pk')))
             {
                 //All Validation Passed, let's save
-                $delivery = new SwiftDelivery();
+                $delivery = new \SwiftDelivery();
                 $delivery->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                 if($form->delivery()->save($delivery))
                 {
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                    return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($delivery->id),'id'=>$delivery->id]));
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                    return \Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($delivery->id),'id'=>$delivery->id]));
                 }
                 else
                 {
-                    return Response::make('Failed to save. Please retry',400);
+                    return \Response::make('Failed to save. Please retry',400);
                 }
                 
             }
@@ -966,23 +876,23 @@ class APRequestController extends UserController {
                     $delivery->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($delivery->save())
                     {
-                        Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                        return Response::make('Success');
+                        \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                        return \Response::make('Success');
                     }
                     else
                     {
-                        return Response::make('Failed to save. Please retry',400);
+                        return \Response::make('Failed to save. Please retry',400);
                     }
                 }
                 else
                 {
-                    return Response::make('Error saving delivery: Invalid PK',400);
+                    return \Response::make('Error saving delivery: Invalid PK',400);
                 }
             }
         }
         else
         {
-            return Response::make('A&P Request form not found',404);
+            return \Response::make('A&P Request form not found',404);
         }        
     }
     

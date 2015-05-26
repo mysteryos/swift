@@ -139,5 +139,5 @@ class SwiftErpOrder extends Eloquent {
     {
         return $this->morphByMany('SwiftAPRequest','orderable');
     }
-    
+
 }

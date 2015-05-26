@@ -47,7 +47,7 @@ class ProductReturnsController extends UserController {
      */
     public function getOverview()
     {
-
+        $this->adminList();
     }
 
     /*
@@ -330,6 +330,9 @@ class ProductReturnsController extends UserController {
              */
             $this->enableComment($pr);
 
+            /*
+             * View Variables
+             */
             $this->data['current_activity'] = \WorkflowActivity::progress($pr,$this->context);
             $this->data['activity'] = \Helper::getMergedRevision($pr->revisionRelations,$pr);
             $this->pageTitle = $pr->getReadableName();
@@ -355,6 +358,7 @@ class ProductReturnsController extends UserController {
                                             $this->data['addProduct'] = false;
             $pr->encrypted_id = \Crypt::encrypt($pr->id);
 
+            //If we can edit the form
             if($edit === true)
             {
                 if($this->data['current_activity']['status'] == \SwiftWorkflowActivity::INPROGRESS)
@@ -367,45 +371,60 @@ class ProductReturnsController extends UserController {
                          */
                         \WorkflowActivity::update($acp);
                     }
-                    
+
+                    //Set the controls
+
                     foreach($this->data['current_activity']['definition_obj'] as $d)
                     {
                         if($d->data != "")
                         {
-                            if(isset($d->data->publishOwner) && ($this->isAdmin || $pr->isOwner()))
+                            //Add Product
+                            if(isset($d->data->publishOwner) &&
+                                !$pr->approval()->where('type','=',\SwiftApproval::PR_REQUESTER)->count() &&
+                                ($this->isAdmin || $pr->isOwner()))
                             {
                                 $this->data['publishOwner'] = true;
-                                if(isset($d->data->addProduct) && ($pr->isOwner() || $this->isAdmin))
+                                if(isset($d->data->addProduct) && $pr->isOwner())
                                 {
                                     $this->data['addProduct'] = true;
                                 }
                                 break;
                             }
 
+                            //Store Pickup
                             if(isset($d->data->publishPickup) && ($this->isAdmin || $this->isStorePickup))
                             {
                                 $this->data['publishPickup'] = true;
                                 break;
                             }
 
+                            //Store Reception
                             if(isset($d->data->publishReception) && ($this->isAdmin || $this->isStoreReception))
                             {
                                 $this->data['publishReception'] = true;
                                 break;
                             }
 
+                            //Credit Note
                             if(isset($d->data->publishCreditNote) && ($this->isAdmin || $this->isCreditor))
                             {
                                 $this->data['publishCreditNote'] = true;
                                 break;
                             }
 
+                            //Driver Information
                             if(isset($d->data->driverInfo) && ($this->isAdmin || $this->isStorePickup))
                             {
                                 $this->data['driverInfo'] = true;
                                 break;
                             }
                         }
+                    }
+
+                    //Admins can edit products anytime
+                    if($this->isAdmin)
+                    {
+                        $this->data['addProduct'] = true;
                     }
                 }
             }
@@ -561,34 +580,7 @@ class ProductReturnsController extends UserController {
             return \Response::make('Type of product return is not valid',500);
         }
 
-        $pr = new SwiftPR([
-            'type' => $type,
-            'customer_code' => \Input::get('customer_code'),
-            'owner_user_id' => $this->currentUser->id
-        ]);
-
-        if($pr->save())
-        {
-            if(\WorkflowActivity::update($pr,$this->context))
-            {
-                //Story Relate
-                \Queue::push('Story@relateTask',array('obj_class'=>get_class($pr),
-                                                     'obj_id'=>$pr->id,
-                                                     'action'=>\SwiftStory::ACTION_CREATE,
-                                                     'user_id'=>$this->currentUser->id,
-                                                     'context'=>get_class($pr)));
-                //Success
-                echo json_encode(['success'=>1,'url'=>\Helper::generateUrl($pr)]);
-            }
-            else
-            {
-                return \Response::make("Failed to save workflow",400);
-            }
-        }
-        else
-        {
-            return \Response::make("Save unsuccessful",500);
-        }
+        return $this->process()->create($type);
     }
 
     /*
@@ -605,48 +597,128 @@ class ProductReturnsController extends UserController {
             return \Response::make("You don't have permission for this action",500);
         }
 
-        if(\Input::has('invoice_code'))
+        return $this->process('SwiftPR')->createInvoiceCancelled();
+    }
+
+    /*
+     * GET: Publish Owner
+     *
+     * @param string $form_id
+     * @return \Illuminate\Support\Facades\Response
+     */
+
+    public function postPublishOwner($form_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
-            $invoiceCode = \Input::get('invoice_code');
-            $lines = \JdeSales::getProducts((int)$invoiceCode);
-            if(count($lines))
+            return parent::forbidden();
+        }
+
+        $form = \SwiftPR::with('product','product.discrepancy')->find(Crypt::decrypt($form_id));
+
+        if($form)
+        {
+            if(!$this->isAdmin && !$form->isOwner())
             {
-                $invoiceCancelledId = \SwiftPRReason::getInvoiceCancelledScottId();
+                return \Response::make("You don't have permission to publish this form" ,500);
+            }
 
-                /*Check if form already exists*/
+            if(!count($form->product))
+            {
+                return \Response::make('Please add some products to your form',500);
+            }
 
-                $formExist = \SwiftPR::where('customer_code','=',$lines->first()->AN8)
-                            ->whereHas('workflow',function($q){
-                                //Status = Inprogress or Complete
-                                return $q->where('status','!=',\SwiftWorkflowActivity::REJECTED);
-                            })
-                            ->whereHas('product',function($q) use ($invoiceCancelledId,$invoiceCode){
-                                return $q->where('reason_id','=',$invoiceCancelledId)
-                                         ->where('invoice_id','=',$invoiceCode,'AND');
-                            })->get();
-                            
-                if(count($formExist) > 0 )
+            //Validation
+
+            foreach($form->product as $p)
+            {
+                switch($form->type)
                 {
-                    return \Response::make("Invoice already cancelled, <a href='".Helper::generateURL($formExist->first())."' class='pjax'>Click here to view form</a>",500);
+                    case \SwiftPR::ON_DELIVERY:
+                        if($p->qty_pickup === null || $p->qty_pickup < 0)
+                        {
+                            return \Response::make("Please set a valid quantity at pickup for '$p->name' (ID: $p->id)",500);
+                        }
+
+                        if($p->qty_pickup !== ($p->qty_triage_pickup + $p->qty_triage_disposal))
+                        {
+                            return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
+                        }
+                    case \SwiftPR::SALESMAN:
+                        if($p->jde_itm === null)
+                        {
+                            return \Response::make("Please set a Product for (ID: $p->id)",500);
+                        }
+
+                        if($p->qty_client === null || $p->qty_client < 0)
+                        {
+                            return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
+                        }
+
+                        if($p->reason_id === null)
+                        {
+                            return \Response::make("Please set a reason for '$p->name' (ID: $p->id)",500);
+                        }
                 }
+            }
 
-                \Queue::push('Helper@saveInvoiceCancelled',
-                            ['invoice_id'=>$invoiceCode,
-                             'user_id'=>$this->currentUser->id,
-                             'context'=>$this->context]);
+            if($form->type === \SwiftPR::ON_DELIVERY)
+            {
+                if($form->paper_number === null)
+                {
+                    return \Response::make("Please enter an RFRF Paper number",500);
+                }
+            }
 
-                return \Response::make("Invoice with Number: ".$invoiceCode." is being cancelled.");
+            /*
+             * All Clear -  we process
+             */
 
+            //Add the Approval
+
+            $approval = $form->approval()
+                        ->where('type','=',SwiftApproval::PR_REQUESTER,'AND')
+                        ->where('approved','=',SwiftApproval::APPROVED)
+                        ->count();
+            if($approval)
+            {
+                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                /*
+                 * Check if form has already been approved
+                 */
+                return \Response::make('Form already approved. System is busy processing',200);
             }
             else
             {
-                return \Response::make("Invoice not found",500);
+                $approvalSaved = $form->approval()->save(
+                   new \SwiftApproval([
+                        'type' => \SwiftApproval::PR_REQUESTER,
+                        'approved' => \SwiftApproval::APPROVED,
+                        'approval_user_id' => $this->currentUser->id
+                   ])
+                );
+
+                if($approvalSaved)
+                {
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                    return \Response::make('success');
+                }
+                else
+                {
+                    return \Response::make('Failed to approve form',400);
+                }
             }
         }
         else
         {
-            return \Response::make("Please input an invoice code");
+            return \Response::make("Form not found",500);
         }
+
+        return \Response::make("Unable to complete action",500);
+        
     }
 
     /*
@@ -664,58 +736,8 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        $id = \Crypt::decrypt($form_id);
-        $pr = \SwiftPR::find($id);
+        return $this->process('SwiftPR')->save($form_id);
 
-        if($pr)
-        {
-            //If owner or is an Admin
-            if($pr->isOwner() || $this->isAdmin)
-            {
-                switch(\Input::get('name'))
-                {
-                    case 'type':
-                        if(!$this->currentUser->isSuperUser())
-                        {
-                            return parent::forbidden();
-                        }
-                    case 'customer_code':
-                        if(\Input::get('value') === "" || !is_numeric(\Input::get('value')))
-                        {
-                            return \Response::make('Please select a valid customer',500);
-                        }
-                        else
-                        {
-                            if(!\JdeCustomer::find(Input::get('value')))
-                            {
-                                return \Response::make('Please select an existing customer',500);
-                            }
-                        }
-                    case 'paper_number':
-                    case 'description':
-                        break;
-                    default:
-                        return \Response::make("Unknown Field",500);
-                        break;
-                }
-
-                $pr->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
-                if($pr->save())
-                {
-                    return \Response::make('Success', 200);
-                }
-                else
-                {
-                    return \Response::make('Failed to save. Please retry',400);
-                }
-            }
-            else
-            {
-                return parent::forbidden();
-            }
-        }
-
-        return \Response::make("Form not found",500);
     }
 
     /*
@@ -726,9 +748,6 @@ class ProductReturnsController extends UserController {
 
     public function putProduct($form_id)
     {
-        $id = \Crypt::decrypt($form_id);
-        $form = \SwiftPR::find($id);
-
         /*
          * Basic Permission Check
          */
@@ -737,150 +756,7 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        /*
-         * If not admin & not owner of form
-         */
-        if(!$this->isAdmin && !$pr->isOwner())
-        {
-            return parent::forbidden();
-        }
-
-        if($form)
-        {
-            $v = \Input::get('value');
-            //Validation
-
-            switch(\Input::get('name'))
-            {
-                case 'jde_itm':
-                    if(!is_numeric($v) || $v === "")
-                    {
-                        return \Response::make("Please select a valid product",500);
-                    }
-                    else
-                    {
-                        if(!\JdeProduct::find(Input::get('value')))
-                        {
-                            return \Response::make("Please select an existing product",500);
-                        }
-                    }
-                    break;
-                case 'pickup':
-                    if($v === "" || !is_numeric($v))
-                    {
-                        return \Response::make("Please select a valid pickup option",500);
-                    }
-                    else
-                    {
-                        if(!in_array($v,[0,1]))
-                        {
-                            return \Response::make("Please select a valid pickup value",500);
-                        }
-                    }
-                    break;
-                case 'reason_id':
-                    if($v === "" || !is_numeric($v))
-                    {
-                        return \Response::make("Please select a valid reason code",500);
-                    }
-                    else
-                    {
-                        if(!\SwiftPRReason::find($v))
-                        {
-                            return \Response::make("Please select an existing reason code",500);
-                        }
-                    }
-                    break;
-                case 'invoice_id':
-                    if($v === "" || !is_numeric($v))
-                    {
-                        return \Response::make("Please enter a valid invoice number",500);
-                    }
-                    else
-                    {
-                        if($v < 0)
-                        {
-                            return \Response::make("Please enter a positive value",500);
-                        }
-                    }
-                    break;
-                case 'qty_client':
-                case 'qty_pickup':
-                case 'qty_store':
-                case 'qty_triage_picking':
-                case 'qty_triage_disposal':
-                    if($v === "" || !is_numeric($v))
-                    {
-                        return \Response::make("Please enter a valid quantity",500);
-                    }
-                    else
-                    {
-                        if($v < 0)
-                        {
-                            return \Response::make("Please enter a positive value",500);
-                        }
-                    }
-                    break;
-                default:
-                    return \Response::make("Unknown field",500);
-                    break;
-            }
-
-            /*
-             * New Product
-             */
-            if(is_numeric(Input::get('pk')))
-            {
-                //All Validation Passed, let's save
-                $p = new \SwiftPRProduct();
-                $p->{\Input::get('name')} = \Input::get('value') == "" ? null : $v;
-                if($form->product()->save($p))
-                {
-                    switch(\Input::get('name'))
-                    {
-                        case 'jde_itm':
-                            \Queue::push('Helper@getProductPrice',array('product_id'=>$p->id,'class'=>get_class($p)));
-                            break;
-                    }
-                    return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($p->id),'id'=>$p->id]));
-                }
-                else
-                {
-                    return \Response::make('Failed to save. Please retry',400);
-                }
-
-            }
-            else
-            {
-                $p = \SwiftPRProduct::find(\Crypt::decrypt(\Input::get('pk')));
-                if($p)
-                {
-                    switch(\Input::get('name'))
-                    {
-                        case 'jde_itm':
-                            \Queue::push('Helper@getProductPrice',array('product_id'=>$p->id,'class'=>get_class($p)));
-                            break;
-                    }
-
-                    $p->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
-                    if($p->save())
-                    {
-                        return \Response::make('Success');
-                    }
-                    else
-                    {
-                        return \Response::make('Failed to save. Please retry',400);
-                    }
-                }
-                else
-                {
-                    return \Response::make('Error saving product: Invalid PK',400);
-                }
-            }
-            
-        }
-
-        return \Response::make("Form not found",500);
+        return $this->process('SwiftPRProduct')->save($form_id);
     }
 
     /*
@@ -898,30 +774,40 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        $id = \Crypt::decrypt(\Input::get('pk'));
-        $obj = \SwiftPRProduct::find($id);
-        if($obj)
-        {
-            $form = $obj->pr()->get();
+        return $this->process('SwiftPRProduct')->delete();
+    }
 
-            if(!$form->isOwner() && !$this->isAdmin)
-            {
-                return \Response::make("You don't have permission to complete this action",500);
-            }
-
-            if($obj->delete())
-            {
-                return \Response::make('Success');
-            }
-            else
-            {
-                return \Response::make('Unable to delete',400);
-            }
-        }
-        else
+    /*
+     * PUT: JDE Order
+     *
+     * @param string $pr_id
+     * @param
+     */
+    public function putErporder($pr_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->isAdmin && !$this->isCcare)
         {
-            return \Response::make('Record not found',404);
+            return parent::forbidden();
         }
+
+        return $this->process('SwiftErpOrder')->saveByParent($pr_id,\Config::get("context.$this->context"));
+
+    }
+
+    public function deleteErporder()
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->ccarePermission]))
+        {
+            return parent::forbidden();
+        }
+
+        return $this->process('SwiftErpOrder')->delete();
     }
 
     /*
@@ -932,7 +818,7 @@ class ProductReturnsController extends UserController {
      *
      * @return \Illuminate\Support\Facades\Response
      */
-    public function putProductapproval($type,$product_id)
+    public function putProductApproval($type,$product_id)
     {
         /*  
          * Check Permissions
@@ -944,9 +830,9 @@ class ProductReturnsController extends UserController {
         
         $product = \SwiftPRProduct::find(\Crypt::decrypt($product_id));
         
-        if(count($product))
+        if($product)
         {
-            if(Input::get('name') == "approval_approved" && in_array(\Input::get('value'),array(\SwiftApproval::REJECTED,\SwiftApproval::APPROVED,\SwiftApproval::PENDING)))
+            if(\Input::get('name') == "approval_approved" && in_array(\Input::get('value'),array(\SwiftApproval::REJECTED,\SwiftApproval::APPROVED,\SwiftApproval::PENDING)))
             {
                 switch((int)$type)
                 {
@@ -957,55 +843,55 @@ class ProductReturnsController extends UserController {
                              * New Entry
                              */
                             //All Validation Passed, let's save
-                            $approval = new \SwiftApproval(array('type'=>(int)$type,'approval_user_id'=>$this->currentUser->id, 'approved' => Input::get('value')));
-                            if($product->approval()->save($approval))
+                            $approval = new \SwiftApproval(array('type'=>(int)$type,'approval_user_id'=>$this->currentUser->id, 'approved' => \Input::get('value')));
+                            if($product->approvalretailman()->save($approval))
                             {
                                 $pr = $product->pr()->first();
                                 \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($pr),'id'=>$pr->id,'user_id'=>$this->currentUser->id));
-                                return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($approval->id),'id'=>$approval->id]));
+                                return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($approval->id),'id'=>$approval->id]));
                             }
                             else
                             {
-                                return Response::make('Failed to save. Please retry',400);
+                                return \Response::make('Failed to save. Please retry',400);
                             }
 
                         }
                         else
                         {
-                            $approval = SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
+                            $approval = \SwiftApproval::find(\Crypt::decrypt(Input::get('pk')));
                             if(count($approval))
                             {
-                                $approval->approved = Input::get('value') == "" ? null : Input::get('value');
+                                $approval->approved = \Input::get('value') == "" ? null : \Input::get('value');
                                 if($approval->save())
                                 {
                                     $pr = $product->pr()->first();
-                                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($pr),'id'=>$pr->id,'user_id'=>$this->currentUser->id));
-                                    return Response::make('Success');
+                                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($pr),'id'=>$pr->id,'user_id'=>$this->currentUser->id));
+                                    return \Response::make('Success');
                                 }
                                 else
                                 {
-                                    return Response::make('Failed to save. Please retry',400);
+                                    return \Response::make('Failed to save. Please retry',400);
                                 }
                             }
                             else
                             {
-                                return Response::make('Error saving approval information: Invalid PK',400);
+                                return \Response::make('Error saving approval information: Invalid PK',400);
                             }
                         }
                         break;
                     default:
-                        return Response::make('Type of approval unknown',400);
+                        return \Response::make('Type of approval unknown',400);
                         break;
                 }
             }
             else
             {
-                return Response::make('Invalid Request',400);
+                return \Response::make('Invalid Request',400);
             }
         }
         else
         {
-            return Response::make('Product not found',404);
+            return \Response::make('Product not found',404);
         }
     }
 
@@ -1026,27 +912,27 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        $product = SwiftPRProduct::find(Crypt::decrypt($product_id));
+        $product = \SwiftPRProduct::find(\Crypt::decrypt($product_id));
 
         if(count($product))
         {
-            if(Input::get('name') == "approval_comment")
+            if(\Input::get('name') == "approval_comment")
             {
                 switch((int)$type)
                 {
                     case \SwiftApproval::PR_RETAILMAN:
-                        if(is_numeric(Input::get('pk')))
+                        if(is_numeric(\Input::get('pk')))
                         {
-                            return Response::make('Please approve the product first',400);
+                            return \Response::make('Please approve the product first',400);
                         }
                         else
                         {
-                            $approval = \SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
+                            $approval = \SwiftApproval::find(\Crypt::decrypt(\Input::get('pk')));
                             if(count($approval))
                             {
-                                if($approval->approved == SwiftApproval::REJECTED && trim(Input::get('value'))=="")
+                                if($approval->approved == \SwiftApproval::REJECTED && trim(\Input::get('value'))=="")
                                 {
-                                    return Response::make('Please enter a comment for rejected product',400);
+                                    return \Response::make('Please enter a comment for rejected product',400);
                                 }
 
                                 //Get Comments
@@ -1054,41 +940,41 @@ class ProductReturnsController extends UserController {
 
                                 if(count($comment))
                                 {
-                                    $comment->comment = trim(Input::get('value'));
+                                    $comment->comment = trim(\Input::get('value'));
                                     if($comment->save())
                                     {
-                                        return Response::make('Success');
+                                        return \Response::make('Success');
                                     }
                                 }
                                 else
                                 {
-                                    $newcomment = new SwiftComment(['comment'=>trim(Input::get('value')),'user_id'=>$this->currentUser->id]);
+                                    $newcomment = new \SwiftComment(['comment'=>trim(\Input::get('value')),'user_id'=>$this->currentUser->id]);
                                     if($approval->comments()->save($newcomment))
                                     {
-                                        return Response::make('Success');
+                                        return \Response::make('Success');
                                     }
                                 }
-                                return Response::make('Failed to save. Please retry',400);
+                                return \Response::make('Failed to save. Please retry',400);
                             }
                             else
                             {
-                                return Response::make('Error saving approval comment: Invalid PK',400);
+                                return \Response::make('Error saving approval comment: Invalid PK',400);
                             }
                         }
                         break;
                     default:
-                        return Response::make('Type of approval unknown',400);
+                        return \Response::make('Type of approval unknown',400);
                         break;
                 }
             }
             else
             {
-                return Response::make('Invalid Request',400);
+                return \Response::make('Invalid Request',400);
             }
         }
         else
         {
-            return Response::make('Product not found',404);
+            return \Response::make('Product not found',404);
         }
     }
 
@@ -1116,7 +1002,8 @@ class ProductReturnsController extends UserController {
                     return \Response::make("Please select at least one product",500);
                 }
 
-                $qty_included = \Input::has('quantity_included');
+                $qty_client_included = \Input::has('qty_client_included');
+                $qty_pickup_included = \Input::has('qty_pickup_included');
 
                 $invoice_lines = \JdeSales::getProducts(\Input::get('invoice_id'));
                 
@@ -1125,25 +1012,83 @@ class ProductReturnsController extends UserController {
                     //Check if Valid Product ITM
                     if(is_numeric($jde_itm) && \JdeProduct::find($jde_itm))
                     {
-                        $qty_client = $price = null;
+                        //Variable Declarations
+                        $qty_client = $qty_pickup = $price = $qty_triage_picking = $qty_triage_disposal = $reason_id = $reason_others = null;
+
+                        //Get Invoice Lines
                         $filter = $invoice_lines->filter(function($line) use ($line_number){
                                                 return (int)$line->LNID === (int)$line_number;
                                             })->first();
+
+                        //If there are at least one line
                         if($filter)
                         {
-                            if($qty_included)
+                            //Quantity Client
+                            if($qty_client_included)
                             {
                                 $qty_client = $filter->SOQS;
                             }
+                            //Quantity Pickup
+                            if($qty_pickup_included)
+                            {
+                                $qty_pickup = $filter->SOQS;
+                                if(\Input::has('qty_to'))
+                                {
+                                    switch(\Input::get('qty_to'))
+                                    {
+                                        case 'picking':
+                                            $qty_triage_picking = $filter->SOQS;
+                                            break;
+                                        case 'disposal':
+                                            $qty_triage_disposal = $filter->SOQS;
+                                            break;
+                                    }
+                                }
+                            }
                             $price = $filter->AEXP/$filter->SOQS;
+                        }
+
+                        //Pickup
+                        if($pr->type === \SwiftPR::SALESMAN && \Input::has('pickup'))
+                        {
+                            if(in_array(Input::get('pickup'),[0,1]))
+                            {
+                                $pickup = \Input::get('pickup');
+                            }
+                            else
+                            {
+                                $pickup = 1;
+                            }
+                        }
+                        else
+                        {
+                            $pickup = 0;
+                        }
+
+                        //Reason Id
+                        if(\SwiftPRReason::find(\Input::get('reason_id',0)))
+                        {
+                            $reason_id = \Input::get('reason_id');
+                        }
+
+                        //Reason Others
+
+                        if(\Input::get('reason_others',""))
+                        {
+                            $reason_others = trim(\Input::get('reason_others'));
                         }
 
                         //Save Product Relationship
                         $pr->product()->save(
                             new SwiftPRProduct([
                                 'jde_itm' => $jde_itm,
-                                'pickup' => ($pr->type === \SwiftPR::SALESMAN ? 1 : 0),
+                                'pickup' => $pickup,
                                 'qty_client' => $qty_client,
+                                'qty_pickup' => $qty_pickup,
+                                'qty_triage_picking' => $qty_triage_picking,
+                                'qty_triage_disposal' => $qty_triage_disposal,
+                                'reason_id' => $reason_id,
+                                'reason_others' => $reason_others,
                                 'invoice_id' => \Input::get('invoice_id'),
                                 'invoice_recognition' => \SwiftPRProduct::INVOICE_AUTO,
                                 'price' => $price
@@ -1398,7 +1343,7 @@ class ProductReturnsController extends UserController {
              */
             if($this->currentUser->hasAccess($this->editPermission) &&
                 !$this->currentUser->isSuperUser() &&
-                $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
+                !$form->isOwner())
             {
                 return Response::make('Do not cancel, that which is not yours',400);
             }

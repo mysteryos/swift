@@ -153,6 +153,12 @@ class OrderTrackingController extends UserController {
         /*
          * Stories
          */
+
+        /*
+         * Fetch Admin List
+         */
+
+        $this->adminList();
         
         $this->data['business_unit'] = $business_unit;
         $this->data['rootURL'] = $this->rootURL;
@@ -161,6 +167,7 @@ class OrderTrackingController extends UserController {
         $this->data['order_inprogress_responsible'] = $order_inprogress_responsible;
         $this->data['order_inprogress_important'] = $order_inprogress_important;
         $this->data['order_inprogress_important_responsible'] = $order_inprogress_important_responsible;
+
         /*$this->data['order_storage'] = $storage_array*/
         $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
         

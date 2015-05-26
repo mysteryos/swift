@@ -2,10 +2,10 @@
 
 class UserController extends Controller {
 
-        public $pageName;
-        public $pageTitle;
-        
-        public $data = array();
+    public $pageName;
+    public $pageTitle;
+
+    public $data = array();
         
 	/**
 	 * Setup the layout used by the controller.
@@ -13,117 +13,171 @@ class UserController extends Controller {
 	 * @return void
 	 */
         
-        public function __construct()
+    public function __construct()
+    {
+        //Register Base JS/CSS files
+        if (!Request::header('X-PJAX'))
         {
-            //Register Base JS/CSS files
-            if (!Request::header('X-PJAX'))
-            {
-                $this->data['js'] = \Config::get('assets.js');
-                $this->data['css'] = \Config::get('assets.css');
+            $this->data['js'] = \Config::get('assets.js');
+            $this->data['css'] = \Config::get('assets.css');
 
-                /*
-                 * Cache Buster
-                 */
-                array_walk($this->data['js'],function(&$v){
-                    if(strpos($v,'/js/') === 0)
-                    {
-                        $v = \Bust::url($v);
-                    }
-                });
+            /*
+             * Cache Buster
+             */
+            array_walk($this->data['js'],function(&$v){
+                if(strpos($v,'/js/') === 0)
+                {
+                    $v = \Bust::url($v);
+                }
+            });
 
-                array_walk($this->data['css'],function(&$v){
-                    if(strpos($v,'/css/') === 0)
-                    {
-                        $v = \Bust::url($v);
-                    }
-                });
-            }
-            else
-            {
-                //If PJAX request, no need to load base JS libraries
-                $this->data['js'] = array();
-                $this->data['css'] = array();
-            }
-
-            $this->currentUser = \Sentry::getUser();
-            $this->data['currentUser'] = $this->currentUser;
+            array_walk($this->data['css'],function(&$v){
+                if(strpos($v,'/css/') === 0)
+                {
+                    $v = \Bust::url($v);
+                }
+            });
         }
-        
-        /*
-         * Combine Assets and Sets Data
-         */
-        public function makeView($view)
+        else
         {
-            $menu = new Swift\Menu();
-            $this->data['sidemenu'] =  $menu->generateHTML();
-            if (Request::header('X-PJAX')) {
-                $this->data['before_js'] = $this->data['js'];
-            }
-            else
-            {
-                $this->data['assets'] = "\"".implode('", "', array_merge($this->data['css'],$this->data['js']))."\"";
-            }
-            $this->data['pageTitle'] = ($this->pageTitle != "" ? $this->pageTitle." - " : "").$this->pageName;
-            $this->data['notifications'] = SwiftNotification::getByUser($this->currentUser->id,10);
+            //If PJAX request, no need to load base JS libraries
+            $this->data['js'] = array();
+            $this->data['css'] = array();
+        }
+
+        $this->currentUser = \Sentry::getUser();
+        $this->data['currentUser'] = $this->currentUser;
+    }
+
+    /*
+     * Combine Assets and Sets Data
+     */
+    public function makeView($view)
+    {
+        $menu = new Swift\Menu();
+        $this->data['sidemenu'] =  $menu->generateHTML();
+        if (Request::header('X-PJAX')) {
+            $this->data['before_js'] = $this->data['js'];
+        }
+        else
+        {
+            $this->data['assets'] = "\"".implode('", "', array_merge($this->data['css'],$this->data['js']))."\"";
+        }
+        $this->data['pageTitle'] = ($this->pageTitle != "" ? $this->pageTitle." - " : "").$this->pageName;
+        $this->data['notifications'] = SwiftNotification::getByUser($this->currentUser->id,10);
 //            dd($this->data['notifications']);
-            $this->data['notification_unread_count'] = SwiftNotification::getUnreadCountByUser($this->currentUser->id);
-            return View::make($view,$this->data);
-        }
-        
-        /*
-         * Add JS to Assets
-         */
-        public function addJs($js)
+        $this->data['notification_unread_count'] = SwiftNotification::getUnreadCountByUser($this->currentUser->id);
+        return View::make($view,$this->data);
+    }
+
+    /*
+     * Add JS to Assets
+     */
+    public function addJs($js)
+    {
+        $this->data['js'] = array_merge($this->data['js'], $js);
+    }
+
+    /*
+     * Add CSS to Assets
+     */
+    public function addCss($css)
+    {
+        $this->data['css'] = array_merge($this->data['css'], $css);
+    }
+
+    public function forbidden()
+    {
+        if (!Request::ajax())
         {
-            $this->data['js'] = array_merge($this->data['js'], $js);
+            $this->pageTitle = "Forbidden";
+            $view = self::makeView('general.forbidden');
+            return Response::make($view,403);
         }
-        
-        /*
-         * Add CSS to Assets
-         */
-        public function addCss($css)
+        else
         {
-            $this->data['css'] = array_merge($this->data['css'], $css);
+            return Response::make("You don't have access to this resource",403);
         }
-        
-        public function forbidden()
+    }
+
+    public function notfound()
+    {
+        if (!Request::ajax())
         {
-            if (!Request::ajax())
+            $this->pageTitle = "404 not found";
+            $view = self::makeView('general.notfound');
+            return Response::make($view,404);
+        }
+        else
+        {
+            return Response::make("We can't find the resource that you were looking for.",404);
+        }
+    }
+
+    public function enableComment($commentable)
+    {
+        $this->data['commentKey'] = Comment::makeKey($commentable);
+        $this->data['comments'] = $commentable->comments()->orderBy('created_at','DESC')->get();
+    }
+
+    public function enableSubscription($subscriptionable)
+    {
+        $this->data['subscriptionUrl'] = "/subscription/toggle-subscribe/".array_search(get_class($subscriptionable),\Config::get('context'))."/".$subscriptionable->getKey();
+        $this->data['isSubscribed'] = \Subscription::has($subscriptionable);
+    }
+
+    public function adminList()
+    {
+        $adminPermission = \Config::get("permission.$this->context.admin");
+        if($adminPermission)
+        {
+            $adminUsers = \Sentry::findAllUsersWithAccess($adminPermission);
+            foreach($adminUsers as $k=>$u)
             {
-                $this->pageTitle = "Forbidden";
-                $view = self::makeView('general.forbidden');
-                return Response::make($view,403);
+                if($u->isSuperUser())
+                {
+                    unset($adminUsers[$k]);
+                }
             }
-            else
+            if(count($adminUsers))
             {
-                return Response::make("You don't have access to this resource",403);
+                $adminList = [];
+                foreach($adminUsers as $u)
+                {
+                    $adminList[] = $u->first_name." ".$u->last_name;
+                }
+                $this->data['admin_list'] = implode(",",$adminList);
             }
-        }
-        
-        public function notfound()
-        {
-            if (!Request::ajax())
-            {
-                $this->pageTitle = "404 not found";
-                $view = self::makeView('general.notfound');
-                return Response::make($view,404);
-            }
-            else
-            {
-                return Response::make("We can't find the resource that you were looking for.",404);
-            }
-        }
-        
-        public function enableComment($commentable)
-        {
-            $this->data['commentKey'] = Comment::makeKey($commentable);
-            $this->data['comments'] = $commentable->comments()->orderBy('created_at','DESC')->get();
         }
 
-        public function enableSubscription($subscriptionable)
+        $this->data['admin_list'] = false;
+    }
+
+    public function process($baseClass=false)
+    {
+        if($baseClass === false)
         {
-            $this->data['subscriptionUrl'] = "/subscription/toggle-subscribe/".array_search(get_class($subscriptionable),\Config::get('context'))."/".$subscriptionable->getKey();
-            $this->data['isSubscribed'] = \Subscription::has($subscriptionable);
+            $baseClass = \Config::get("context.$this->context");
         }
+
+        $class = new $baseClass;
+        if($class instanceof \Illuminate\Database\Eloquent\Model)
+        {
+            $processClassName = "\Process\\$baseClass";
+            $processClass = new $processClassName($this);
+            if($processClass instanceof \Process\Process)
+            {
+                return $processClass;
+            }
+            else
+            {
+                throw new \RuntimeException("Process Class must be an instance of \Process\Process");
+            }
+        }
+        else
+        {
+            throw new \RuntimeException("Base class must be an instance of \Illuminate\Database\Eloquent\Model");
+        }
+    }
 
 }

@@ -27,7 +27,13 @@
             <h1 class="pull-right hidden-tablet">Module Health: {{ \Helper::systemHealth($late_node_forms_count,$pending_node_count) }}</h1>      
         </div>
     </div>
-    
+    @if($admin_list)
+    <div class="row">
+        <div class="col-xs-12">
+            <h2 class="pull-right hidden-mobile hidden-tablet">Administrators: {{$admin_list}}</h2>
+        </div>
+    </div>
+    @endif
     <!-- widget grid -->
     <section id="widget-grid">
 

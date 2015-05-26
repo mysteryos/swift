@@ -8,7 +8,10 @@ namespace Swift\PR;
  */
 class NodeMail
 {
-    //put your code here
+    public static function sendMail($workflowActivity,$permissions)
+    {
+        return true;
+    }
 
     public static function sendCancelledMail($pr)
     {

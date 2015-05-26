@@ -133,22 +133,22 @@ class NodeDefinitionJoin
     public static function toCcarerouting($nodeActivity)
     {
         //Check if all products has been cancelled
-        $workflow = $nodeActivity->workflowActivity()->first();
+        $workflowActivity = $nodeActivity->workflowActivity()->first();
         if($workflowActivity)
         {
-            $pr = $workflow->workflowable()->first();
+            $pr = $workflowActivity->workflowable()->first();
 
             $productcount = $pr->product()->count();
-            $rejectedproductcount = $pr->product()->whereHas('approval',function($q){
-                return $q->rejectedBy(\SwiftApproval::PR_RETAILMAN);
+            $rejectedproductcount = $pr->product()->whereHas('approvalretailman',function($q){
+                return $q->where('approved','=',\SwiftApproval::REJECTED);
             })->count();
 
             if($productcount == $rejectedproductcount)
             {
                 //All products have been rejected
                 //Update Workflow as Rejected
-                $workflow->status = SwiftWorkflowActivity::REJECTED;
-                $workflow->save();
+                $workflowActivity->status = SwiftWorkflowActivity::REJECTED;
+                $workflowActivity->save();
                 NodeMail::sendCancelledMail($pr);
                 return false;
             }
@@ -191,7 +191,7 @@ class NodeDefinitionJoin
                     {
                         //Check if definition node for customer category exists
                         $nodeDefinitionCount = \SwiftNodeDefinition::where('workflow_type_id','=',$workflowActivity->workflow_type_id)
-                                                ->where('name','=','ccarerouting_to_ccare'.strtolower($customer->AC09),'AND')
+                                                ->where('name','=','pr_customercare_'.strtolower($customer->AC09),'AND')
                                                 ->count();
                         if($nodeDefinitionCount === 0)
                         {

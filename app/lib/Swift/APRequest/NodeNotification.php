@@ -1,6 +1,6 @@
 <?php
 
-NameSpace Swift\APRequest;
+NameSpace Swift\PR;
 
 class NodeNotification {
     

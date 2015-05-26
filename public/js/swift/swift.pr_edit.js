@@ -466,7 +466,7 @@ function editableElement($element)
     editableElement($('.editable:not(.dummy)'));
     
     //Multi
-    $.maindiv.on('save','.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable',function(e,params){
+    $('.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable').on('save',function(e,params){
         var $this = $(this);
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")
@@ -482,12 +482,12 @@ function editableElement($element)
             presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})
         }
         return true;
-    }).on('submit','.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable',function(){
+    }).on('submit',function(){
         if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('.multi').prepend("<div class='loading-overlay'></div>");
         }
-    }).on('error','.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable',function(){
+    }).on('error',function(){
         if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('.multi').find('div.loading-overlay').remove();

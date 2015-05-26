@@ -220,7 +220,7 @@
                                             <div class="form-group">
                                                 <label class="col-xs-2 control-label">Pickup</label>
                                                 <div class="col-xs-10">
-                                                    <select class="form-control">
+                                                    <select class="form-control" name="pickup">
                                                         <option selected>Select an option</option>
                                                         <option value="1">Yes</option>
                                                         <option value="0">No</option>
@@ -231,7 +231,7 @@
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label">Reason</label>
                                             <div class="col-xs-10">
-                                                <select class="form-control" name="reason_code">
+                                                <select class="form-control" name="reason_id">
                                                     <option>Select a reason</option>
                                                     @foreach($product_reason_codes_array as $rkey => $rvalue)
                                                         <option value="{{$rkey}}">{{$rvalue}}</option>

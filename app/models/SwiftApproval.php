@@ -143,11 +143,11 @@ class SwiftApproval extends Eloquent {
     {
         if($operator === false)
         {
-            return $q->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::APPROVED);
+            return $query->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::APPROVED);
         }
         else
         {
-            return $q->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::APPROVED,$operator);
+            return $query->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::APPROVED,$operator);
         }
     }
 

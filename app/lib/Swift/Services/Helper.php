@@ -629,6 +629,34 @@ class Helper {
         }
     }
 
+
+    /*
+     * Delete a child model - X-editable
+     *
+     * @param string $childClass
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function deleteChildModel($childClass)
+    {
+        $child = $childClass::find(\Crypt::decrypt(\Input::get('pk')));
+
+        if($child)
+        {
+            if($child->delete())
+            {
+                return \Response::make('Success');
+            }
+            else
+            {
+                return \Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return \Response::make('Entry not found',404);
+        }
+    }
+
     /*
      * Reconciliate Swift Purchase Order with JDE Po Header
      */

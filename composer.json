@@ -33,7 +33,8 @@
                 "barryvdh/laravel-debugbar": "1.*",
 		"themonkeys/cachebuster": "dev-master",
                 "phpoffice/phpexcel": "1.8.0",
-                "tecnick.com/tcpdf": "dev-master"
+                "tecnick.com/tcpdf": "6.*",
+                "maxxscho/laravel-tcpdf": "0.*"
 	},
         "repositories": [
             {

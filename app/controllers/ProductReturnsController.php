@@ -12,12 +12,33 @@ class ProductReturnsController extends UserController {
         parent::__construct();
         $this->pageName = "Product Returns";
         $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "product-returns";
+
+        //Permissions
+        $this->setPermission();
+
+        //Is?
+        $this->isWho();
+
+        //Can?
+        $this->canWhat();
+        
+        /*
+         * Register Filters
+         */
+
+        $this->beforeFilter("@requirePermission",['on'=>'put|delete']);
+    }
+
+    private function setPermission()
+    {
         $this->adminPermission = \Config::get("permission.{$this->context}.admin");
         $this->viewPermission = \Config::get("permission.{$this->context}.view");
         $this->editPermission = \Config::get("permission.{$this->context}.edit");
         $this->createPermission = \Config::get("permission.{$this->context}.create");
+    }
 
-        //Is?
+    private function isWho()
+    {
         $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
         $this->isSalesman = $this->data['isSalesman'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.salesman"));
         $this->isRetailMan = $this->data['isRetailMan'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.retailman"));
@@ -26,13 +47,27 @@ class ProductReturnsController extends UserController {
         $this->isStoreReception = $this->data['isStoreReception'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storereception"));
         $this->isStoreValidation = $this->data['isStoreValidation'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storevalidation"));
         $this->isCreditor = $this->data['isCreditor'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.creditor"));
+    }
 
-        //Can?
+    private function canWhat()
+    {
         $this->canCreate = $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
         $this->canCreateSalesman = $this->data['canCreateSalesman'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-salesman"));
         $this->canCreateOnDelivery = $this->data['canCreateOnDelivery'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-ondelivery"));
         $this->canCreateInvoiceCancelled = $this->data['canCreateInvoiceCancelled'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-invoice-cancelled"));
         $this->canEdit = $this->data['canEdit'] = $this->currentUser->hasAccess($this->editPermission);
+    }
+
+    /*
+     * Filters
+     */
+    public function requirePermission($route,$request)
+    {
+        //Basic Check of permission
+        if(!$this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        {
+            return parent::forbidden();
+        }
     }
     
     public function getIndex()
@@ -597,7 +632,7 @@ class ProductReturnsController extends UserController {
             return \Response::make("You don't have permission for this action",500);
         }
 
-        return $this->process('SwiftPR')->createInvoiceCancelled();
+        return $this->process()->createInvoiceCancelled();
     }
 
     /*
@@ -730,14 +765,7 @@ class ProductReturnsController extends UserController {
 
     public function putGeneralinfo($form_id)
     {
-        //Basic Permission Check
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
-        {
-            return parent::forbidden();
-        }
-
-        return $this->process('SwiftPR')->save($form_id);
-
+        return $this->process()->save($form_id);
     }
 
     /*
@@ -748,14 +776,6 @@ class ProductReturnsController extends UserController {
 
     public function putProduct($form_id)
     {
-        /*
-         * Basic Permission Check
-         */
-        if(!$this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
-        {
-            return parent::forbidden();
-        }
-
         return $this->process('SwiftPRProduct')->save($form_id);
     }
 
@@ -766,14 +786,6 @@ class ProductReturnsController extends UserController {
      */
     public function deleteProduct()
     {
-        /*
-         * Check Permissions
-         */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
-        {
-            return parent::forbidden();
-        }
-
         return $this->process('SwiftPRProduct')->delete();
     }
 
@@ -781,7 +793,7 @@ class ProductReturnsController extends UserController {
      * PUT: JDE Order
      *
      * @param string $pr_id
-     * @param
+     * @return \Illuminate\Support\Facades\Response
      */
     public function putErporder($pr_id)
     {
@@ -793,21 +805,50 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        return $this->process('SwiftErpOrder')->saveByParent($pr_id,\Config::get("context.$this->context"));
+        return $this->process('SwiftErpOrder')
+                    ->saveByParent(\Crypt::decrypt($pr_id));
 
     }
 
+    /*
+     * DELETE: JDE Order
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
     public function deleteErporder()
+    {
+        return $this->process('SwiftErpOrder')->delete();
+    }
+
+    /*
+     * PUT: JDE Order
+     *
+     * @param string $pr_id
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function putPickup($pr_id)
     {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->ccarePermission]))
+        if(!$this->isAdmin && !$this->isStorePickup)
         {
             return parent::forbidden();
         }
 
-        return $this->process('SwiftErpOrder')->delete();
+        return $this->process('SwiftPickup')
+                    ->saveByParent(\Crypt::decrypt($pr_id));
+
+    }
+
+    /*
+     * DELETE: JDE Order
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function deletePickup()
+    {
+        return $this->process('SwiftPickup')->delete();
     }
 
     /*
@@ -1116,7 +1157,6 @@ class ProductReturnsController extends UserController {
      */
     public function postUpload($pr_id)
     {
-
         /*
          * Check Permissions
          */
@@ -1125,38 +1165,9 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        $pr = SwiftPR::find(Crypt::decrypt($pr_id));
-        /*
-         * Manual Validation
-         */
-        if(count($pr))
-        {
-            if(Input::file('file'))
-            {
-                $doc = new SwiftPRDocument();
-                $doc->document = Input::file('file');
-                if($pr->document()->save($doc))
-                {
-                    echo json_encode(['success'=>1,
-                                    'url'=>$doc->getAttachedFiles()['document']->url(),
-                                    'id'=>Crypt::encrypt($doc->id),
-                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(),
-                                    'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
-                }
-                else
-                {
-                    return Response::make('Upload failed.',400);
-                }
-            }
-            else
-            {
-                return Response::make('File not found.',400);
-            }
-        }
-        else
-        {
-            return Response::make('Product returns form not found',404);
-        }
+        return $this->process('SwiftDocument')
+                    ->setParentResource(new \SwiftPRDocument)
+                    ->upload('SwiftPR',\Crypt::decrypt($pr_id));
     }
 
     /*
@@ -1168,34 +1179,9 @@ class ProductReturnsController extends UserController {
 
     public function deleteUpload($doc_id)
     {
-
-        /*
-         * Check Permissions
-         */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
-        {
-            return parent::forbidden();
-        }
-
-        $doc = SwiftAPDocument::find(Crypt::decrypt($doc_id));
-        /*
-         * Manual Validation
-         */
-        if(count($doc))
-        {
-            if($doc->delete())
-            {
-                echo json_encode(['success'=>1,'url'=>$doc->getAttachedFiles()['document']->url(),'id'=>Crypt::encrypt($doc->id)]);
-            }
-            else
-            {
-                return Response::make('Delete failed.',400);
-            }
-        }
-        else
-        {
-            return Response::make('Document not found',404);
-        }
+        return $this->process('SwiftDocument')
+                    ->setParentResource(new \SwiftPRDocument)
+                    ->delete(\Crypt::decrypt($doc_id));
     }
 
     /*
@@ -1204,119 +1190,10 @@ class ProductReturnsController extends UserController {
 
     public function putTag()
     {
-        /*
-        * Check Permissions
-        */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
-        {
-            return parent::forbidden();
-        }
 
-        if(\Input::get('pk') && !is_numeric(\Input::get('pk')))
-        {
-            $doc = \SwiftPRDocument::with('tag')->find(\Crypt::decrypt(\Input::get('pk')));
-            if($doc)
-            {
-                //Lets check those tags
-                if(count($doc->tag))
-                {
-                    if(\Input::get('value'))
-                    {
-                        //It already has some tags
-                        //Save those not in table
-                        foreach(\Input::get('value') as $val)
-                        {
-                            $found = false;
-                            foreach($doc->tag as $t)
-                            {
-                                if($t->type == $val)
-                                {
-                                    $found = true;
-                                    break;
-                                }
-                            }
-                            //Save
-                            if(!$found)
-                            {
-                                /*
-                                 * Validate dat tag
-                                 */
-                                if(key_exists($val,\SwiftTag::$prTags))
-                                {
-                                    $tag = new \SwiftTag(array('type'=>$val));
-                                    if(!$doc->tag()->save($tag))
-                                    {
-                                        return \Response::make('Error: Unable to save tags',400);
-                                    }
-                                }
-                            }
-                        }
-
-                        //Delete values from table, not in value array
-
-                        foreach($doc->tag as $t)
-                        {
-                            $found = false;
-                            foreach(\Input::get('value') as $val)
-                            {
-                                if($val == $t->type)
-                                {
-                                    $found = true;
-                                    break;
-                                }
-                            }
-                            //Delete
-                            if(!$found)
-                            {
-                                if(!$t->delete())
-                                {
-                                    return \Response::make('Error: Cannot delete tag',400);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        //Delete all existing tags
-                        if(!$doc->tag()->delete())
-                        {
-                            return \Response::make('Error: Cannot delete tag',400);
-                        }
-                    }
-                }
-                else
-                {
-                    //Alright, just save then
-                    foreach(\Input::get('value') as $val)
-                    {
-                        /*
-                         * Validate dat tag
-                         */
-                        if(key_exists($val,\SwiftTag::$prTags))
-                        {
-                            $tag = new \SwiftTag(array('type'=>$val));
-                            if(!$doc->tag()->save($tag))
-                            {
-                                return \Response::make('Error: Unable to save tags',400);
-                            }
-                        }
-                        else
-                        {
-                            return \Response::make('Error: Invalid tags',400);
-                        }
-                    }
-                }
-                return \Response::make('Success');
-            }
-            else
-            {
-                return \Response::make('Error: Document not found',400);
-            }
-        }
-        else
-        {
-            return \Response::make('Error: Document number invalid',400);
-        }
+        return $this->process('SwiftTag')
+                    ->setParentResource(new \SwiftPRDocument)
+                    ->save(\SwiftTag::$prTags);
     }
 
     /*
@@ -1333,32 +1210,25 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        $form = \SwiftPR::find(\Crypt::decrypt($pr_id));
+        return $this->process('SwiftWorkflowActivity')
+                ->cancel('SwiftPR',\Crypt::decrypt($pr_id),function($process){
+                    return  $process->controller->currentUser->hasAccess($process->controller->editPermission) &&
+                            !$process->controller->currentUser->isSuperUser() &&
+                            !$process->form->isOwner();
+                });
+    }
 
-        if(count($form))
+    public function getPrintPickup($form_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
-
-            /*
-             * Normal User but not creator = no access
-             */
-            if($this->currentUser->hasAccess($this->editPermission) &&
-                !$this->currentUser->isSuperUser() &&
-                !$form->isOwner())
-            {
-                return Response::make('Do not cancel, that which is not yours',400);
-            }
-
-            if(\WorkflowActivity::cancel($form))
-            {
-                return Response::make('Workflow has been cancelled',200);
-            }
-
-            return Response::make('Unable to cancel workflow',400);
+            return parent::forbidden();
         }
-        else
-        {
-            return Response::make('A&P Request form not found',404);
-        }
+
+        return $this->process()->generatePdf([\Crypt::decrypt($form_id)]);
     }
 
     /*

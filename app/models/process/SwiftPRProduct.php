@@ -18,7 +18,7 @@ class SwiftPRProduct extends Process
     public function create()
     {
         $this->resource->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
-        if($this->parentForm->product()->save($p))
+        if($this->parentForm->product()->save($this->resource))
         {
             switch(\Input::get('name'))
             {
@@ -88,8 +88,7 @@ class SwiftPRProduct extends Process
 
     public function save($parentFormId)
     {
-        $this->pk = \Crypt::decrypt($parentFormId);
-        $this->setParentForm();
+        $this->parentForm = $this->parentResource->find(\Crypt::decrypt($parentFormId));
 
         /*
          * If not admin & not owner of form
@@ -104,7 +103,7 @@ class SwiftPRProduct extends Process
             $v = \Input::get('value');
             //Validation
 
-            switch($v)
+            switch(\Input::get('name'))
             {
                 case 'jde_itm':
                     if(!is_numeric($v) || $v === "")

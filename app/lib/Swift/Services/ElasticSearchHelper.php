@@ -48,7 +48,7 @@ class ElasticSearchHelper {
         $params['type'] = $data['context'];
         $model = new $data['class'];
         $form = $model::find($data['id']);
-        if(count($form))
+        if($form)
         {
             $params['id'] = $form->id;
             if($form->timestamps)
@@ -98,6 +98,19 @@ class ElasticSearchHelper {
                     return false;
                 }
             }
+            //Check if Exists
+            $result = @\Es::get([
+                'id' => $data['id'],
+                'index' => $params['index'],
+                'type' => $data['context']
+            ]);
+            
+            if($result['found'] === false)
+            {
+                //Index Document, if its not found
+                $this->indexEs($data);
+            }
+            
             \Es::update($params);
         }
     }

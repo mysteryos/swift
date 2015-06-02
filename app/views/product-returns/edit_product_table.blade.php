@@ -9,14 +9,12 @@
         <th rowspan='2'>
             Invoice No
         </th>
-        @if(!$addProduct)
-            <th rowspan='2'>
-                Approval
-            </th>
-            <th rowspan='2'>
-                Approval Comment
-            </th>
-        @endif
+        <th rowspan='2'>
+            Approval
+        </th>
+        <th rowspan='2'>
+            Approval Comment
+        </th>
         @if($form->type === \SwiftPR::SALESMAN)
             <th rowspan='2'>
                 Pickup

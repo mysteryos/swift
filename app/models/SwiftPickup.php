@@ -68,10 +68,10 @@ class SwiftPickup extends Eloquent
     //Indexing Enabled
     public $esEnabled = true;
     public $esInfoContext = "pickup";
-    public $esRemove = ['print_count','pickable_type','pickable_id','status','driver_id'];
+    public $esRemove = ['print_count','pickable_type','pickable_id','status','driver_id','comment'];
 
     public function esGetContext() {
-        return array_search($this->pickable_type,Config::get('context'));
+        return array_search($this->pickable_type,\Config::get('context'));
     }
 
     public function esGetParent()
@@ -140,7 +140,7 @@ class SwiftPickup extends Eloquent
 
     public function driver()
     {
-        return $this->belongsTo('SwiftPRDriver','driver_id')->withTrashed();
+        return $this->belongsTo('SwiftDriver','driver_id')->withTrashed();
     }
 
     public function pickable()

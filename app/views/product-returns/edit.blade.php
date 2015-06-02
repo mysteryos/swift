@@ -9,6 +9,7 @@
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-owner/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishPickup)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
+            @if($publishPickup || $isAdmin)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
             @if($publishReception)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-reception/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishCreditNote)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-creditnote/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if(isset($isSubscribed))
@@ -284,7 +285,7 @@
                             <form class="form-horizontal">
                                     @if(count($form->order))
                                         @foreach($form->order as &$e)
-                                            <?php $e->id = Crypt::encrypt($e->id); ?>
+                                            <?php $e->encrypted_id = \Crypt::encrypt($e->id); ?>
                                             @include('product-returns.edit_erporder',array('e'=>$e))
                                         @endforeach
                                     @else
@@ -318,7 +319,7 @@
                                 <form class="form-horizontal">
                                         @if(count($form->pickup))
                                             @foreach($form->pickup as &$pickup)
-                                                <?php $pickup->id = Crypt::encrypt($pickup->id); ?>
+                                                <?php $pickup->encrypted_id = $pickup->id; ?>
                                                 @include('product-returns.edit_pickup',array('pickup'=>$pickup))
                                             @endforeach
                                         @else

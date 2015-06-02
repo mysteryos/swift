@@ -30,6 +30,7 @@ abstract class Process {
         $this->controller = $controller;
         $this->form = false;
 
+
         /*
          * Resolve Resource Class
          */
@@ -50,43 +51,89 @@ abstract class Process {
     }
 
     /*
-     * Create Method
+     * Magic Function: Call
+     * Handles all standard event calls
+     *
+	 * @param  string  $method
+	 * @param  array   $parameters
+     * @return mixed
      */
-    abstract public function create();
-
-    /*
-     * Delete Method
-     */
-    abstract public function delete();
-
-    public function setResource()
+    public function __call($method,$args)
     {
-        if(!isset($this->resource))
+        /*
+         * If method name starts with 'on'
+         */
+        if(substr($method, 0, strlen('on')) === 'on' && strlen($method) > 2 && ctype_upper($method[2]))
         {
-            if(isset($this->resourceName))
+            if($args[0] instanceof \Closure)
             {
-               $this->resource = new $this->resourceName;
+                return $this->onEvent($args[0]);
             }
             else
             {
-                throw new RuntimeException("Resource Name must be set");
+                throw new \RuntimeException("Argument 1 expected to be a closure");
             }
         }
     }
 
-    public function setParentResource()
+    /*
+     * Handle Event Calls
+     */
+    private function onEvent($callback)
     {
-        if(!isset($this->parentResource))
+        if ($callback)
         {
-            $this->parentResourceName = \Config::get("context.".$this->controller->context);
-            if($this->parentResourceName)
+            return call_user_func($callback, $this);
+        }
+
+        return true;
+    }
+
+    /*
+     * Setters
+     */
+    public function setResource($resource=null)
+    {
+        if(!$resource)
+        {
+            if(!isset($this->resource))
             {
-                $this->parentResource = new $this->parentResourceName;
+                if(isset($this->resourceName))
+                {
+                   $this->resource = new $this->resourceName;
+                }
+                else
+                {
+                    throw new \RuntimeException("Resource Name must be set");
+                }
             }
-            else
+        }
+        else
+        {
+            $this->resource = $resource;
+        }
+    }
+
+    public function setParentResource($parentResource=null)
+    {
+        if(!$parentResource)
+        {
+            if(!isset($this->parentResource))
             {
-                throw new RuntimeException("Parent Resource Name must be set");
+                $this->parentResourceName = \Config::get("context.".$this->controller->context);
+                if($this->parentResourceName)
+                {
+                    $this->parentResource = new $this->parentResourceName;
+                }
+                else
+                {
+                    $this->parentResource = false;
+                }
             }
+        }
+        else
+        {
+            $this->parentResource = $parentResource;
         }
     }
 
@@ -99,7 +146,7 @@ abstract class Process {
                 try
                 {
                     //It's encrypted
-                    if(!is_numeric(\Input::has('pk')) && strlen(\Input::has('pk')) > 150)
+                    if(!is_numeric(\Input::get('pk')) && strlen(\Input::get('pk')) > 150)
                     {
                         $this->pk = \Crypt::decrypt(\Input::get('pk'));
                     }
@@ -109,8 +156,6 @@ abstract class Process {
                     }
                 } catch (Exception $ex) {
                     \Log::error("Attempt to decrypt PK failed, not valid encrypted PK - ".$ex->getMessage());
-                }
-                finally {
                     $this->pk = false;
                 }
             }
@@ -151,7 +196,7 @@ abstract class Process {
             {
                 throw new \RuntimeException("Primary key couldn't be resolved");
             }
-            $this->form = $this->resource->find($resourceId);
+            $this->form = $this->resource->find($this->pk);
         }
         else
         {

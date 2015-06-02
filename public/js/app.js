@@ -45,7 +45,7 @@ $.enableJarvisWidgets = true;
 
 // Warning: Enabling mobile widgets could potentially crash your webApp if you have too many 
 // 			widgets running at once (must have $.enableJarvisWidgets = true)
-$.enableMobileWidgets = false;
+$.enableMobileWidgets = true;
 
 
 /*

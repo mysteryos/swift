@@ -57,8 +57,10 @@ class SwiftAPProduct extends Eloquent {
     const RC_TRAINING = 4;
     const RC_CONTRIBUTION = 5;
     const RC_LISTING = 6;
+    const RC_EXCHANGE = 7;
     
-    public static $reason = array(self::RC_CONTRIBUTION=> 'Contribution',
+    public static $reason = array(self::RC_CONTRIBUTION => 'Contribution',
+                                  self::RC_EXCHANGE => 'Exchange',
                                   self::RC_EVENT => 'Event',
                                   self::RC_LISTING => 'Listing',
                                   self::RC_SPONSOR => 'Sponsorship',

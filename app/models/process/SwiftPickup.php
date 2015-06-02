@@ -1,41 +1,26 @@
 <?php
+/*
+ * Name: Swift Pickup
+ * Description: Processes Pickup
+ */
+
 namespace Process;
 
-/**
- * Description of SwiftErpOrder
- *
- * @author kpudaruth
- */
-class SwiftErpOrder extends Process
+class SwiftPickup extends Process
 {
-    
-    protected $resourceName = "SwiftErpOrder";
+    protected $resourceName = "SwiftPickup";
 
     public function __construct($controller)
     {
         parent::__construct($controller);
     }
 
-    /*
-     * Create Resource
-     * 
-     * @return \Illuminate\Support\Facades\Response
-     */
     public function create()
     {
-        //Swift AP Request Access
-        if(get_class($this->parentResource) === "SwiftAPRequest")
-        {
-            if(!$this->controller->currentUser->hasAccess($this->controller->adminPermission))
-            {
-                $this->resource->type = \SwiftErpOrder::TYPE_ORDER_AP;
-            }
-        }
-
-        return $this->processCreateByParent('order',true);
+        return $this->processCreateByParent('pickup',true);
     }
 
-    /*
+/*
      * Save By Parent Resource
      *
      * @param string $resourceId
@@ -54,16 +39,36 @@ class SwiftErpOrder extends Process
             switch(\Input::get('name'))
             {
                 case 'status':
-                    if(!array_key_exists(\Input::get('value'),\SwiftErpOrder::$status))
+                    if(!array_key_exists(\Input::get('value'),\SwiftPickup::$status))
                     {
                         return \Response::make('Please select a valid status',400);
                     }
                     break;
-                case 'type':
-                    if(!array_key_exists(\Input::get('value'),\SwiftErpOrder::$type))
+                case 'pickup_date':
+                    try
                     {
-                        return \Response::make('Please select a valid type',400);
+                        $mydate = \Carbon::createFromFormat("Y-m-d",\Input::get('value'));
+                    } catch (Exception $ex) {
+                        return \Response::make('Please enter a valid date',400);
                     }
+                    break;
+                case 'driver_id':
+                    if(is_numeric(\Input::get('value')))
+                    {
+                        if(!\SwiftDriver::find(\Input::get('value')))
+                        {
+                            return \Response::make("Please select a valid driver",400);
+                        }
+                    }
+                    else
+                    {
+                        return \Response::make("Please select a valid driver",400);
+                    }
+                    break;
+                case 'comment':
+                    break;
+                default:
+                    return \Response::make('Invalid field',400);
                     break;
             }
 
@@ -76,15 +81,7 @@ class SwiftErpOrder extends Process
             }
             else
             {
-                //Swift AP Request Access
-                if(!$this->controller->currentUser->hasAccess($this->controller->adminPermission) &&
-                    \Input::get('name') == 'type' &&
-                    $this->parentResourceName === "SwiftAPRequest")
-                {
-                    return \Response::make("You don't have permission to modify type of order.",400);
-                }
-
-                return $this->processPut(true);
+                return $this->processPut();
             }
         }
         else
@@ -95,7 +92,7 @@ class SwiftErpOrder extends Process
 
     /*
      * Delete Resource
-     * 
+     *
      * @param boolean $workflowUpdate
      * @return \Illuminate\Support\Facades\Response
      */
@@ -104,3 +101,4 @@ class SwiftErpOrder extends Process
         return $this->processDelete($workflowUpdate);
     }
 }
+

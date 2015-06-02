@@ -1,6 +1,6 @@
 <?php
 /**
- * Description of SwiftPRDriver
+ * Description of SwiftDriver
  *
  * @author kpudaruth
  */

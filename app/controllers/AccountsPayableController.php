@@ -11,20 +11,32 @@ class AccountsPayableController extends UserController {
         $this->viewPermission = "acp-view";
         $this->editPermission = "acp-edit";
         $this->createPermission = "acp-create";
-        $this->hodPermission = $this->data['isHod'] = "acp-hod";
+        $this->HODPermission = "acp-hod";
         $this->accountingPaymentVoucherPermission = "acp-paymentvoucher";
         $this->accountingPaymentIssuePermission = "acp-paymentissue";
+
+    }
+
+    private function canWhat()
+    {
+        $this->canCreate = $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
+        $this->canEdit = $this->data['canEdit'] = $this->currentUser->hasAccess($this->editPermission);
+        $this->canView = $this->data['canView'] = $this->currentUser->hasAccess($this->viewPermission);
+    }
+
+    private function isWho()
+    {
         $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
         $this->isAccountingDept = $this->data['isAccountingDept'] = $this->currentUser->hasAnyAccess([$this->accountingPaymentVoucherPermission,
                                                                     $this->accountingPaymentIssuePermission]);
-        $this->isHOD = $this->data['isHOD'] = $this->currentUser->hasAccess($this->hodPermission);
+        $this->isHOD = $this->data['isHOD'] = $this->currentUser->hasAccess($this->HODPermission);
     }
 
     public function getIndex()
     {
         return Redirect::to('/'.$this->context.'/overview');
     }
-    
+
     /*
      * Overview
      */
@@ -32,7 +44,6 @@ class AccountsPayableController extends UserController {
     public function getOverview()
     {
         $this->pageTitle = 'Overview';
-        $this->data['isAdmin'] = $this->isAdmin;
         $this->data['inprogress_limit'] = 15;
         $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
         $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta($this->context);
@@ -47,19 +58,12 @@ class AccountsPayableController extends UserController {
             $inprogress = SwiftACPRequest::getInProgress($this->data['inprogress_limit']);
             $inprogress_count = SwiftACPRequest::getInProgressCount();
             $inprogress_important = SwiftACPRequest::getInProgress(0,true);
-        }
-        
-        /*
-         * Admin can see all
-         */
-        if($this->data['isAdmin'])
-        {
             $inprogress = $inprogress->diff($inprogress_responsible);
             $inprogress_important = $inprogress_important->diff($inprogress_important_responsible);
         }
 
-        $inprogress_responsible = SwiftACPRequest::getInProgressResponsible();
-        $inprogress_important_responsible = SwiftACPRequest::getInProgressResponsible(0,true);
+        $inprogress_responsible = \SwiftACPRequest::getInProgressResponsible();
+        $inprogress_important_responsible = \SwiftACPRequest::getInProgressResponsible(0,true);
 
         if(count($inprogress) == 0 || count($inprogress_important) == 0 || count($inprogress_responsible) == 0 || count($inprogress_important_responsible) == 0)
         {
@@ -74,15 +78,14 @@ class AccountsPayableController extends UserController {
         {
             foreach($typearray as &$acp)
             {
-                $acp->current_activity = WorkflowActivity::progress($acp);
-                $acp->activity = Helper::getMergedRevision($acp->revisionRelations,$acp);
+                $acp->current_activity = \WorkflowActivity::progress($acp);
+                $acp->activity = \Helper::getMergedRevision($acp->revisionRelations,$acp);
             }
         }
 
         /*
          * Data
          */
-        $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
         $this->data['inprogress'] = $inprogress;
         $this->data['inprogress_responsible'] = $inprogress_responsible;
         $this->data['inprogress_important'] = $inprogress_important;
@@ -107,7 +110,7 @@ class AccountsPayableController extends UserController {
                 {
                     $type='inprogress';
                 }
-                else if($this->currentUser->hasPermission($this->createPermission))
+                else if($this->canCreate)
                 {
                     $type='mine';
                 }
@@ -120,18 +123,18 @@ class AccountsPayableController extends UserController {
         else
         {
             //Creators can have access to their own only.
-            if(!$this->isAdmin && $this->currentUser->hasPermission($this->createPermission) && !in_array($type,['mine','starred']))
+            if(!$this->isAdmin && $this->canCreate && !in_array($type,['mine','starred']))
             {
                 $type='mine';
             }
         }
 
-        $acprequestquery = SwiftACPRequest::query();
+        $acprequestquery = \SwiftACPRequest::query();
 
         if($type != 'inprogress')
         {
             //Get node definition list
-            $node_definition_result = SwiftNodeDefinition::getByWorkflowType(SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
+            $node_definition_result = \SwiftNodeDefinition::getByWorkflowTypeName($this->context)->all();
             $node_definition_list = array();
             foreach($node_definition_result as $v)
             {
@@ -874,7 +877,7 @@ class AccountsPayableController extends UserController {
 
             //Find HoDs;
             $this->data['approval_hod'] = array();
-            $hods = Sentry::findAllUsersWithAccess(array($this->hodPermission));
+            $hods = Sentry::findAllUsersWithAccess(array($this->HODPermission));
             if(count($hods))
             {
                 foreach($hods as $h)

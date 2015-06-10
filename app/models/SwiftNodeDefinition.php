@@ -129,4 +129,13 @@ class SwiftNodeDefinition extends Eloquent {
                     ->whereIn('type',array(SwiftNodeDefinition::$T_NODE_START,SwiftNodeDefinition::$T_NODE_END),'and',true)
                     ->get();
     }
+
+    public static function getByWorkflowTypeName($workflow_type_name)
+    {
+        return self::whereIn('type',array(SwiftNodeDefinition::$T_NODE_START,SwiftNodeDefinition::$T_NODE_END),'and',true)
+                    ->whereHas('workflow',function($q){
+                        return $q->where('name','=',$workflow_type_name);
+                    })
+                    ->get();
+    }
 }

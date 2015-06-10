@@ -35,16 +35,30 @@ App::after(function($request, $response)
 
 Route::filter('auth', function()
 {
-    if(!Sentry::check())
+    if(!\Sentry::check())
     {
-        Session::put('redirect_after_login',Request::Url());
-        if(Request::header('X-PJAX'))
+        if(\Request::isMethod('GET'))
         {
-            Session::flash('expired',true);
-            return Response::make('',302)->header('X-PJAX-URL','/login');
+            \Session::put('redirect_after_login',\URL::current());
         }
-        
-        return Redirect::to('/login');
+        else
+        {
+            \Session::put('redirect_after_login',\URL::previous());
+        }
+        if(\Request::header('X-PJAX'))
+        {
+            \Session::flash('expired',true);
+            return \Response::make('',302)->header('X-PJAX-URL','/login');
+        }
+
+        if(\Request::ajax())
+        {
+            return \Response::make('',302)->header('AJAX-REDIRECT','/login');
+        }
+        else
+        {
+            return \Redirect::to('/login');
+        }
     }
 });
 

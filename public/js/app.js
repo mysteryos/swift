@@ -131,6 +131,9 @@ function pusher_global()
     });
 }
 
+/*
+ * Loads page Js during PJAX loads
+ */
 function executePageScript()
 {
     if(typeof document.getElementById('content').getAttribute('data-js') !== null)
@@ -418,6 +421,9 @@ function avatarHTML(user)
     return '<i id="user_'+user.id+'" rel="tooltip" data-original-title="'+user.info.name+'" data-placement="bottom" class="avatar avatar-sm avatar-color-'+user.info.avatarColor+'">'+user.info.avatarLetter+'</i>';
 }
 
+/*
+ * Adds Recent project entries to the menu found on top.
+ */
 function maintainRecentProject()
 {
     //We have projects in the list
@@ -439,10 +445,28 @@ function maintainRecentProject()
     }
 }
 
+/*
+ * Clears the list of recent projects from the menu
+ */
 function clearRecentProject()
 {
     $('#project-context ul.dropdown-menu li.project').remove();
 }
+
+/*
+ * Handles redirects when they occur during an ajax call
+ */
+
+$.document_.ajaxComplete(function (event, xhr, ajaxOptions){
+if (xhr.readyState == 4)
+    {
+        if(xhr.getResponseHeader("AJAX-REDIRECT") != null && xhr.getResponseHeader("AJAX-REDIRECT").length)
+        {
+            alert('Your session has expired. Please login.');
+            window.location.href=xhr.getResponseHeader("AJAX-REDIRECT");
+        }
+    }    
+});
 
 /*
  * RESIZER WITH THROTTLE

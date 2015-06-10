@@ -7,7 +7,6 @@
 NameSpace Swift\APRequest;
 
 Use SwiftApproval;
-Use SwiftAPOrder;
 Use SwiftDelivery;
 
 Class NodeDefinition {
@@ -122,7 +121,7 @@ Class NodeDefinition {
             {
                 foreach($order as $o)
                 {
-                    if($o->ref != "" && $o->status == \SwiftAPOrder::FILLED)
+                    if($o->ref != "" && $o->status == \SwiftErpOrder::FILLED)
                     {
                         return true;
                     }

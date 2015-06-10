@@ -1,4 +1,9 @@
 <?php
+
+/*
+ * Name: JDE Purchase Order
+ * Description: Contains header information about purchase orders
+ */
 class JdePurchaseOrder extends Eloquent
 {
     protected $connection = 'sct_jde';
@@ -13,6 +18,13 @@ class JdePurchaseOrder extends Eloquent
 
     private static $cache_expiry_time = 240;
 
+    /*
+     * Get Purchase Order by Number & Type
+     *
+     * @param integer $number
+     * @param string $type
+     * @return \Illuminate\Database\Eloquent\Model
+     */
     public static function findByNumberAndType($number,$type)
     {
         return self::where('order_Number','=',$number)
@@ -21,11 +33,17 @@ class JdePurchaseOrder extends Eloquent
                 ->first();
     }
 
+    /*
+     * Accessor
+     */
     public function getNameAttribute()
     {
         return $this->order_number." ".$this->order_type;
     }
 
+    /*
+     * Relationships
+     */
     public function item()
     {
         return $this->hasMany('JdePurchaseOrderItem','order_id')->orderBy('line_number');

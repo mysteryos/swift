@@ -778,7 +778,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     theAwesomeDropZone.on("sending", function(file,xhr,formdata) {
-            uploadmsg = Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
+        var uploadmsg = Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
             message: 'Uploading "'+file.name+'" <div class="progress progress-sm progress-striped active"><div aria-valuetransitiongoal="25" class="progress-bar bg-color-blue" id="upload-progress" style="width: 0%;" aria-valuenow="25"></div> </div>',
             hideAfter: 0,
             showCloseButton: false,

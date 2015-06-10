@@ -1,23 +1,36 @@
 <?php
+/**
+ * Description: Utility class for comment
+ *
+ * @author kpudaruth
+ */
 
 Namespace Swift\Services;
 
 Use Sentry;
 Use Crypt;
 
-/**
- * Description of Comment
- *
- * @author kpudaruth
- */
 class Comment {
     
-    
+    /*
+     * Makes a key to uniquely identify a comment by its class and id
+     *
+     * @param \Illuminate\Database\Eloquent\Model
+     *
+     * @return string
+     */
     public function makeKey($commentable)
     {
         return \get_class($commentable) . '.' . $commentable->getKey();
     }
-    
+
+    /*
+     * Gets a key to uniquely identify a comment by its class and id
+     *
+     * @param \Illuminate\Database\Eloquent\Model
+     *
+     * @return array
+     */
     public function getKey($commentable)
     {
         if (empty($commentable))
@@ -37,7 +50,14 @@ class Comment {
         
         return $explodedArray;
     }
-    
+
+    /*
+     * When a user is mentionned in a comment, send a mail to the person with the comment
+     *
+     * @param \SwiftComment $comment
+     * @param array $user_array
+     *
+     */
     public function mailNotify($comment, $user_array)
     {
         $current_user = Sentry::getUser();

@@ -103,33 +103,33 @@ class ProductReturnsController extends UserController {
          */
 
         $this->filter['filter_start_date']  = ['name'=>'Start Date',
-                                                    'value' => Input::get('filter_start_date'),
-                                                    'enabled' => Input::has('filter_start_date')
+                                                    'value' => \Input::get('filter_start_date'),
+                                                    'enabled' => \Input::has('filter_start_date')
                                                 ];
 
         $this->filter['filter_end_date']    = ['name'=>'End Date',
-                                                    'value' => Input::get('filter_end_date'),
-                                                    'enabled' => Input::has('filter_end_date')
+                                                    'value' => \Input::get('filter_end_date'),
+                                                    'enabled' => \Input::has('filter_end_date')
                                                 ];
 
         $this->filter['filter_customer_code'] = ['name'=>'Customer',
-                                                'value' => Input::has('filter_customer_code') ? JdeCustomer::find(Input::get('filter_customer_code'))->getReadableName() : false,
-                                                'enabled' => Input::has('filter_customer_code')
+                                                'value' => \Input::has('filter_customer_code') ? \JdeCustomer::find(\Input::get('filter_customer_code'))->getReadableName() : false,
+                                                'enabled' => \Input::has('filter_customer_code')
                                                 ];
         
         $this->filter['filter_node_definition_id'] = ['name'=>'Current Step',
-                                                    'value' => Input::has('filter_node_definition_id') ? SwiftNodeDefinition::find(Input::get('filter_node_definition_id'))->label :false,
-                                                    'enabled' => Input::has('filter_node_definition_id')
+                                                    'value' => \Input::has('filter_node_definition_id') ? \SwiftNodeDefinition::find(\Input::get('filter_node_definition_id'))->label :false,
+                                                    'enabled' => \Input::has('filter_node_definition_id')
                                                     ];
 
         $this->filter['filter_owner_user_id'] = ['name' => 'Owner',
-                                                    'value' => Input::has('filter_owner_user_id') ? Sentry::findUserById(Input::get('filter_owner_user_id'))->first_name." ".Sentry::findUserById(Input::get('filter_owner_user_id'))->last_name : false,
-                                                    'enabled' => Input::has('filter_owner_user_id')
+                                                    'value' => \Input::has('filter_owner_user_id') ? \Sentry::findUserById(\Input::get('filter_owner_user_id'))->first_name." ".\Sentry::findUserById(\Input::get('filter_owner_user_id'))->last_name : false,
+                                                    'enabled' => \Input::has('filter_owner_user_id')
                                                 ];
 
         $this->filter['filter_driver_id'] = ['name' => 'Driver',
-                                                'value' => Input::has('filter_driver_id') ? SwiftDriver::find(Input::get('filter_driver_id'))->name : false,
-                                                'enabled' => Input::has('filter_driver_id')
+                                                'value' => \Input::has('filter_driver_id') ? \SwiftDriver::find(\Input::get('filter_driver_id'))->name : false,
+                                                'enabled' => \Input::has('filter_driver_id')
                                             ];
 
         /*
@@ -234,7 +234,7 @@ class ProductReturnsController extends UserController {
         {
             if($v['enabled'])
             {
-                $filterVal = Input::get($k);
+                $filterVal = \Input::get($k);
                 switch($k)
                 {
                     case 'filter_driver_id':
@@ -388,6 +388,7 @@ class ProductReturnsController extends UserController {
             $this->data['edit'] = $edit;
             $this->data['publishOwner'] = $this->data['publishPickup'] =
                                             $this->data['publishReception'] =
+                                            $this->data['publishStoreValidation'] =
                                             $this->data['publishCreditNote'] =
                                             $this->data['driverInfo'] =
                                             $this->data['addProduct'] = false;
@@ -438,6 +439,12 @@ class ProductReturnsController extends UserController {
                             {
                                 $this->data['publishReception'] = true;
                                 break;
+                            }
+
+                            //Store Validation
+                            if(isset($d->data->publishStoreValidation) && ($this->isAdmin || $this->isStoreValidation))
+                            {
+                                $this->data['publishStoreValidation'] = true;
                             }
 
                             //Credit Note
@@ -636,7 +643,7 @@ class ProductReturnsController extends UserController {
     }
 
     /*
-     * GET: Publish Owner
+     * POST: Publish Owner
      *
      * @param string $form_id
      * @return \Illuminate\Support\Facades\Response
@@ -652,108 +659,61 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        $form = \SwiftPR::with('product','product.discrepancy')->find(Crypt::decrypt($form_id));
-
-        if($form)
-        {
-            if(!$this->isAdmin && !$form->isOwner())
-            {
-                return \Response::make("You don't have permission to publish this form" ,500);
-            }
-
-            if(!count($form->product))
-            {
-                return \Response::make('Please add some products to your form',500);
-            }
-
-            //Validation
-
-            foreach($form->product as $p)
-            {
-                switch($form->type)
-                {
-                    case \SwiftPR::ON_DELIVERY:
-                        if($p->qty_pickup === null || $p->qty_pickup < 0)
-                        {
-                            return \Response::make("Please set a valid quantity at pickup for '$p->name' (ID: $p->id)",500);
-                        }
-
-                        if($p->qty_pickup !== ($p->qty_triage_pickup + $p->qty_triage_disposal))
-                        {
-                            return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
-                        }
-                    case \SwiftPR::SALESMAN:
-                        if($p->jde_itm === null)
-                        {
-                            return \Response::make("Please set a Product for (ID: $p->id)",500);
-                        }
-
-                        if($p->qty_client === null || $p->qty_client < 0)
-                        {
-                            return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
-                        }
-
-                        if($p->reason_id === null)
-                        {
-                            return \Response::make("Please set a reason for '$p->name' (ID: $p->id)",500);
-                        }
-                }
-            }
-
-            if($form->type === \SwiftPR::ON_DELIVERY)
-            {
-                if($form->paper_number === null)
-                {
-                    return \Response::make("Please enter an RFRF Paper number",500);
-                }
-            }
-
-            /*
-             * All Clear -  we process
-             */
-
-            //Add the Approval
-
-            $approval = $form->approval()
-                        ->where('type','=',SwiftApproval::PR_REQUESTER,'AND')
-                        ->where('approved','=',SwiftApproval::APPROVED)
-                        ->count();
-            if($approval)
-            {
-                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                /*
-                 * Check if form has already been approved
-                 */
-                return \Response::make('Form already approved. System is busy processing',200);
-            }
-            else
-            {
-                $approvalSaved = $form->approval()->save(
-                   new \SwiftApproval([
-                        'type' => \SwiftApproval::PR_REQUESTER,
-                        'approved' => \SwiftApproval::APPROVED,
-                        'approval_user_id' => $this->currentUser->id
-                   ])
-                );
-
-                if($approvalSaved)
-                {
-                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
-                    return \Response::make('success');
-                }
-                else
-                {
-                    return \Response::make('Failed to approve form',400);
-                }
-            }
-        }
-        else
-        {
-            return \Response::make("Form not found",500);
-        }
-
-        return \Response::make("Unable to complete action",500);
+        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_REQUESTER);
         
+    }
+
+    public function postPublishPickup($form_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_PICKUP);
+        
+    }
+
+    public function postPublishReception($form_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_RECEPTION);
+    }
+
+    public function postPublishStoreValidation($form_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_STOREVALIDATION);
+    }
+
+    public function postPublishCreditNote($form_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        {
+            return parent::forbidden();
+        }
+
+        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_CREDITNOTE);
     }
 
     /*

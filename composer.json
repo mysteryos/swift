@@ -34,7 +34,9 @@
 		"themonkeys/cachebuster": "dev-master",
                 "phpoffice/phpexcel": "1.8.0",
                 "tecnick.com/tcpdf": "6.*",
-                "maxxscho/laravel-tcpdf": "0.*"
+                "maxxscho/laravel-tcpdf": "0.*",
+		"analog/analog": "^1.0",
+		"greenlion/php-sql-parser": "^4.0"
 	},
         "repositories": [
             {

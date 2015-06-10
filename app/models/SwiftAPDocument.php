@@ -1,4 +1,7 @@
 <?php
+/*
+ * Description: A&P Request - Document
+ */
 
 class SwiftAPDocument extends SwiftDocument {
     public function __construct(array $attributes = array())

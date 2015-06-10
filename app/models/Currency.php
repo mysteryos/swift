@@ -1,6 +1,7 @@
 <?php
 /**
- * Description of Currency
+ * Name: Currency Eloquent Model
+ * Description: Table of currencies with their list of names and currency code
  *
  * @author kpudaruth
  */

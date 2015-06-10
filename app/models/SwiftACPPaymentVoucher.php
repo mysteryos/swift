@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Description of SwiftACPPaymentVoucher
+ * Description: Accounts Payable - Payment Voucher (aka Invoices on JDE)
  *
  * @author kpudaruth
  */

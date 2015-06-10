@@ -1,6 +1,6 @@
 <?php
 /*
- * Name: Swift A&P Request
+ * Name: A&P Request - Main
  * Description:
  */
 
@@ -128,7 +128,7 @@ class SwiftAPRequest extends Eloquent {
     
     public function requester()
     {
-        return $this->belongsTo('users','requester_user_id');
+        return $this->belongsTo('user','requester_user_id');
     }
     
     /*
@@ -296,6 +296,37 @@ class SwiftAPRequest extends Eloquent {
                         return $q->complete();
                     })
                     ->get();
+    }
+
+    public static function getInProgressResponsibleWithProducts($limit=0)
+    {
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+
+        return $query->orderBy('created_at','desc')
+                            ->with(['workflow','workflow.nodes','product','product.jdeproduct','requester','customer','product.approvalcatman','product.approvalexec'])->whereHas('workflow',function($q){
+                                return $q->inprogress()
+                                        ->whereHas('nodes',function($q){
+                                             return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                 if(!\Sentry::getUser()->isSuperUser())
+                                                 {
+                                                     //Normal User - We retrieve by nodes responsibility
+                                                    return $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND')
+                                                           ->whereIn('permission_name',(array)array_keys(\Sentry::getUser()->getMergedPermissions()));
+                                                 }
+                                                 else
+                                                 {
+                                                     //Super user - We give access to all nodes who fall under Cat mans and Execs
+                                                     return $q->where('permission_type','=',\SwiftNodePermission::ACCESS,'AND')
+                                                         ->whereIn('permission_name',['apr-catman','apr-exec']);
+                                                 }
+
+                                            });
+                                        });
+                            })->get();
     }
 
 }

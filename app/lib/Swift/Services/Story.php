@@ -1,12 +1,26 @@
 <?php
 
+/*
+ * Name: Story
+ * Description: Generates stories for timelines of each module on their overview page.
+ */
+
 Namespace Swift\Services;
 
 class Story {
     
     private $story;
     
-    //I.e Save function
+    /*
+     * Save Story
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param integer $action
+     * @param integer $type
+     * @param boolean|string $context_type
+     * @param integer $context_id
+     *
+     */
     public function relate($obj,$action,$type=1,$context_type=false,$context_id=0)
     {
         $this->story = new \SwiftStory;
@@ -39,11 +53,39 @@ class Story {
         }
         
         $this->story->action = $action;
-        
-        $obj->story()->save($this->story);
-        $this->push();
+
+        //Check if story already exists
+        if(!$this->checkExisting($obj))
+        {
+            $obj->story()->save($this->story);
+            $this->push();
+        }
     }
-    
+
+    /*
+     * Check if story already exists
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     *
+     * @return boolean
+     */
+    private function checkExisting(\Illuminate\Database\Eloquent\Model $obj)
+    {
+        return \SwiftStory::where('context_type','=',$this->story->context_type)
+                ->where('context_id','=',$this->story->context_id,'AND')
+                ->where('storyfiable_type','=',get_class($obj),'AND')
+                ->where('storyfiable_id','=',$obj->getKey(),'AND')
+                ->count();
+    }
+
+    /*
+     * Laravel Queue: Relate Task
+     *
+     * Retrieves information to generate a story
+     *
+     * @param mixed $job
+     * @param array $data
+     */
     public function relateTask($job,$data)
     {
         $obj = new $data['obj_class'];
@@ -72,7 +114,10 @@ class Story {
         $job->delete();
         
     }
-    
+
+    /*
+     * Send notification popup through Pusher (https://pusher.com/)
+     */
     public function push()
     {
         $context = array_search($this->story->context_type,\Config::get('context'));
@@ -97,7 +142,17 @@ class Story {
             }
         }
     }
-    
+
+    /*
+     * Get list of stories based on context
+     *
+     * @param boolean|array $context
+     * @param integer $take
+     * @param integer $offsetId
+     * @param array $filters
+     *
+     * @return \Illuminate\Support\Collection|array
+     */
     public function fetch($context=false,$take=10,$offsetId=0,$filters=array())
     {
         $contextArray = array();
@@ -153,12 +208,13 @@ class Story {
             return array();
         }
     }
-    
-    public function total($context=false)
-    {
-        
-    }
-    
+
+    /*
+     * Increments view count for each story
+     *
+     * @param mixed $job
+     * @param array $data
+     */
     public function viewIncrementTask($job,$data)
     {
         foreach($data['stories'] as $s)
@@ -173,7 +229,10 @@ class Story {
     }
     
     /*
-     * Returns: Array
+     * Generates a list of context that the user has access to.
+     * This list is used to filter stories to which the user can view, normally by their module access
+     *
+     * @return array
      */
     private function context()
     {

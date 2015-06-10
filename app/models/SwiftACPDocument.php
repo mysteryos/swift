@@ -1,4 +1,7 @@
 <?php
+/*
+ * Description: Accounts Payable - Document
+ */
 
 class SwiftACPDocument extends SwiftDocument {
     public function __construct(array $attributes = array())

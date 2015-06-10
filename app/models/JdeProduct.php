@@ -19,7 +19,15 @@ class JdeProduct extends Eloquent {
     {
         return str_pad(trim($val), 5, '0', STR_PAD_LEFT);
     }
-    
+
+    /*
+     * Find Product By Name
+     *
+     * @param string $term
+     * @param int $offset
+     * @param int $limit
+     * @return \Illuminate\Support\Collection
+     */
     public static function getByName($term,$offset,$limit)
     {
         return self::where('DSC1','LIKE',"%$term%")
@@ -28,7 +36,15 @@ class JdeProduct extends Eloquent {
                 ->orderBy('DSC1','ASC')
                 ->remember(self::$cache_expiry_time)->get();        
     }
-    
+
+    /*
+     * Find Product By Code
+     *
+     * @param string $term
+     * @param int $offset
+     * @param int $limit
+     * @return \Illuminate\Support\Collection
+     */
     public static function getByCode($term,$offset,$limit)
     {
         return self::where('AITM','LIKE',"%$term%")
@@ -38,20 +54,40 @@ class JdeProduct extends Eloquent {
                 ->orderBy('AITM','ASC')
                 ->remember(self::$cache_expiry_time)->get();        
     }
-    
+
+    /*
+     * Count Product By Product
+     *
+     * @param string $term
+     * @return integer
+     */
     public static function countByName($term)
     {
         return self::where('DSC1','LIKE',"%$term%")
                 ->remember(self::$cache_expiry_time)->count();        
     }
-    
+
+    /*
+     * Count Product By Code
+     *
+     * @param string $term
+     * @return integer
+     */
     public static function countByCode($term)
     {
         return self::where('AITM','LIKE',"%$term%")
                 ->distinct()
                 ->remember(self::$cache_expiry_time)->count();        
     }      
-    
+
+    /*
+     * Get Product By Name, Filtered by Nespresso Category Codes
+     *
+     * @param string $term
+     * @param int $offset
+     * @param int $limit
+     * @return \Illuminate\Support\Collection
+     */
     public static function getNespressoMachineByName($term,$offset,$limit)
     {
         return self::where('DSC1','LIKE',"%$term%")
@@ -62,7 +98,15 @@ class JdeProduct extends Eloquent {
                 ->orderBy('DSC1','ASC')
                 ->remember(self::$cache_expiry_time)->get();
     }
-    
+
+    /*
+     * Get Product By Code, Filtered by Nespresso Category Codes
+     *
+     * @param string $term
+     * @param int $offset
+     * @param int $limit
+     * @return \Illuminate\Support\Collection
+     */
     public static function getNespressoMachineByCode($term,$offset,$limit)
     {
         return self::where('LITM','LIKE',"%$term%")
@@ -74,7 +118,13 @@ class JdeProduct extends Eloquent {
                 ->orderBy('LITM','ASC')
                 ->remember(self::$cache_expiry_time)->get();
     }
-    
+
+    /*
+     * Count Product By Name, Filtered by Nespresso Category Codes
+     *
+     * @param string $term
+     * @return integer
+     */
     public static function countNespressoMachineByName($term)
     {
         return self::where('DSC1','LIKE',"%$term%")
@@ -82,7 +132,13 @@ class JdeProduct extends Eloquent {
                 ->where('SRP4','=','NEM','AND')
                 ->remember(self::$cache_expiry_time)->count();
     }
-    
+
+    /*
+     * Count Product By Code, Filtered by Nespresso Category Codes
+     *
+     * @param string $term
+     * @return integer
+     */
     public static function countNespressoMachineByCode($term)
     {
         return self::where('LITM','LIKE',"%$term%")

@@ -297,12 +297,12 @@ function editableElement($element)
             
             if(typeof filter !== "undefined")
             {
-                $('fieldset.fieldset-product').hide();
-                $('fieldset.fieldset-product[data-approvalstatus="'+filter+'"]').show();
+                $('tr.fieldset-product').hide();
+                $('tr.fieldset-product[data-approvalstatus="'+filter+'"]').show();
             }
             else
             {
-                $('fieldset.fieldset-product').show();
+                $('tr.fieldset-product').show();
             }
     });
     

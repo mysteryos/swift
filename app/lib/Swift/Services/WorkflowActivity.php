@@ -11,8 +11,12 @@ Use \Sentry;
 class WorkflowActivity {
     
     /*
-     * Create Workflow Activity
-     * 
+     * Create Workflow Activity In Database
+     *
+     * @param \Illuminate\Database\Eloquent\Model $relation_object
+     * @param string $workflow_name
+     *
+     * @return boolean
      */
     
     public function create($relation_object,$workflow_name)
@@ -52,7 +56,12 @@ class WorkflowActivity {
     }
     
     /*
-     * Update Workflow Activity & Node Activity
+     * Update Workflow Activity & Node Activity Tables
+     *
+     * @param \Illuminate\Database\Eloquent\Model $relation_object
+     * @param string|boolean $workflow_name
+     *
+     * @return boolean
      */
     
     public function update($relation_object,$workflow_name=false)
@@ -160,7 +169,14 @@ class WorkflowActivity {
         
         return true;
     }
-    
+
+    /*
+     * Update Task for Laravel Queue
+     *
+     * @param mixed $job
+     * @param array $data
+     *
+     */
     public function updateTask($job,$data)
     {
         if(isset($data['user_id']))
@@ -185,7 +201,11 @@ class WorkflowActivity {
     }
     
     /*
-     * Get Current Progress
+     * Get Current Progress - Checks on a workflow activity and builds a status string with an array of current pending nodes
+     *
+     * @param \Illuminate\Database\Model $relation_object
+     *
+     * @return array
      */
     
     public function progress($relation_object)
@@ -257,7 +277,12 @@ class WorkflowActivity {
     
     
     /*
-     * Provides useful information as to how to move the workflow to the next step
+     * Provides useful information as to how to move the workflow to the next step - Polls information from NodeDefinition classes most likely
+     *
+     * @param mixed $relation_object
+     * @param boolean $needPermission
+     *
+     * @return string
      */
     public function progressHelp($relation_object,$needPermission=true)
     {
@@ -312,7 +337,14 @@ class WorkflowActivity {
                 return "This workflow doesn't look good. Contact your administrator";
         }
     }
-    
+
+    /*
+     * Cancels a workflow activity. Sets its status to rejected in its table
+     *
+     * @param mixed $relation_object
+     *
+     * @return boolean
+     */
     public function cancel($relation_object)
     {
         //Check if relation is indeed an object
@@ -346,8 +378,11 @@ class WorkflowActivity {
     }
     
     /*
-     * @parameter workflowTypes: string | array
      * Returns list of all nodes pending of workflow type
+     *
+     * @param string|array $workflowTypes
+     * 
+     * @return boolean|\Illuminate\Support\Collection
      */
     public function statusByType($workflowTypes)
     {
@@ -386,7 +421,14 @@ class WorkflowActivity {
         
         return false;
     }
-    
+
+    /*
+     * Gets a list of node activities by workflow type which are late, according their ETA set in node definition table
+     *
+     * @param string|array $workflowTypes
+     *
+     * @return boolean|\Illuminate\Support\Collection
+     */
     public function lateNodeByForm($workflowTypes)
     {
         $nodeActivities = \SwiftNodeActivity::getLateNodes($workflowTypes);

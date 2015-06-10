@@ -26,7 +26,7 @@
         <th rowspan='2'>
             Reason Comment
         </th>
-        <th colspan='@if($form->type === \SwiftPR::SALESMAN && !$addProduct){{5}}@else{{1}}@endif' class="text-center">
+        <th colspan='@if(!$edit || ($form->type === \SwiftPR::SALESMAN && ($publishReception || $publishStoreValidation))){{5}}@else{{1}}@endif' class="text-center">
             Quantity
         </th>
         @if(($addProduct && $isOwner) || $isAdmin)
@@ -39,13 +39,15 @@
         <th>
             Client
         </th>
-        @if($form->type === \SwiftPR::SALESMAN && !$addProduct)
+        @if(!$edit || ($form->type === \SwiftPR::SALESMAN && ($publishReception || $publishStoreValidation)))
             <th>
                 Pickup
             </th>
+            @if(!$publishReception)
             <th>
                 Store
             </th>
+            @endif
             <th>
                 Picking
             </th>

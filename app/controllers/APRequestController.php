@@ -15,8 +15,12 @@ class APRequestController extends UserController {
         $this->ccarePermission = \Config::get("permission.{$this->context}.ccare");
         $this->storePermission = \Config::get("permission.{$this->context}.store");
         $this->createPermission = \Config::get("permission.{$this->context}.create");
+        $this->catManPermission = \Config::get("permission.{$this->context}.catman");
+        $this->execPermission = \Config::get("permission.{$this->context}.exec");
 
         $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
+        $this->isCatMan = $this->data['isCatMan'] = $this->currentUser->hasAccess($this->catManPermission);
+        $this->isExec = $this->data['isExec'] = $this->currentUser->hasAccess($this->execPermission);
     }
     
     public function getIndex()
@@ -42,11 +46,11 @@ class APRequestController extends UserController {
         
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
         
-        $aprequest_inprogress = SwiftAPRequest::getInProgress($this->data['inprogress_limit']);
-        $aprequest_inprogress_count = SwiftAPRequest::getInProgressCount();
-        $aprequest_inprogress_important = SwiftAPRequest::getInProgress(0,true);       
-        $aprequest_inprogress_responsible = SwiftAPRequest::getInProgressResponsible();
-        $aprequest_inprogress_important_responsible = SwiftAPRequest::getInProgressResponsible(0,true);
+        $aprequest_inprogress = \SwiftAPRequest::getInProgress($this->data['inprogress_limit']);
+        $aprequest_inprogress_count = \SwiftAPRequest::getInProgressCount();
+        $aprequest_inprogress_important = \SwiftAPRequest::getInProgress(0,true);
+        $aprequest_inprogress_responsible = \SwiftAPRequest::getInProgressResponsible();
+        $aprequest_inprogress_important_responsible = \SwiftAPRequest::getInProgressResponsible(0,true);
         
         $aprequest_inprogress = $aprequest_inprogress->diff($aprequest_inprogress_responsible);
         $aprequest_inprogress_important = $aprequest_inprogress_important->diff($aprequest_inprogress_important_responsible);
@@ -75,7 +79,6 @@ class APRequestController extends UserController {
             }
         }
         
-        $this->data['rootURL'] = $this->rootURL;
         $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
         $this->data['inprogress'] = $aprequest_inprogress;
         $this->data['inprogress_responsible'] = $aprequest_inprogress_responsible;
@@ -522,11 +525,59 @@ class APRequestController extends UserController {
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
-        $this->data['rootURL'] = $this->rootURL;
         
         return $this->makeView("$this->rootURL/forms");
     }
-    
+
+    /*
+     * Approvals
+     */
+
+    public function getApproval()
+    {
+        if(!$this->currentUser->hasAnyAccess(['apr-catman','apr-exec']))
+        {
+            return parent::forbidden();
+        }
+
+        $this->pageTitle = "Approval";
+
+        $forms = \SwiftAPRequest::getInProgressResponsibleWithProducts();
+        $this->data['hasForms'] = (boolean)count($forms);
+        $this->data['today_forms'] = $this->data['yesterday_forms'] = array();
+
+        foreach($forms as $key => &$f)
+        {
+            $f->current_activity = \WorkflowActivity::progress($f,$this->context);
+            $f->approval_level = \SwiftApproval::APR_CATMAN;
+            $f->encrypted_id = \Crypt::encrypt($f->id);
+            foreach($f->current_activity['definition_obj'] as $d)
+            {
+                if($d->name === "apr_execapproval")
+                {
+                    $f->approval_level = \SwiftApproval::APR_EXEC;
+                    break;
+                }
+            }
+
+            if($f->created_at->diffInDays(\Carbon::now()) === 0)
+            {
+                $this->data['today_forms'][] = $f;
+                unset($forms[$key]);
+            }
+
+            if($f->created_at->diffInDays(\Carbon::now()) === 1)
+            {
+                $this->data['yesterday_forms'][] = $f;
+                unset($forms[$key]);
+            }
+        }
+
+        $this->data['forms'] = $forms;
+
+        return $this->makeView("$this->rootURL/approval");
+    }
+
     /*
      * POST Create Form
      */
@@ -1033,71 +1084,71 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        $product = SwiftAPProduct::find(Crypt::decrypt($product_id));
+        $product = \SwiftAPProduct::find(\Crypt::decrypt($product_id));
         
         if(count($product))
         {
-            if(Input::get('name') == "approval_approved" && in_array(Input::get('value'),array(SwiftApproval::REJECTED,SwiftApproval::APPROVED,SwiftApproval::PENDING)))
+            if(\Input::get('name') == "approval_approved" && in_array(\Input::get('value'),array(\SwiftApproval::REJECTED,\SwiftApproval::APPROVED,\SwiftApproval::PENDING)))
             {
                 switch((int)$type)
                 {
-                    case SwiftApproval::APR_CATMAN:
-                    case SwiftApproval::APR_EXEC:
-                        if(is_numeric(Input::get('pk')))
+                    case \SwiftApproval::APR_CATMAN:
+                    case \SwiftApproval::APR_EXEC:
+                        if(is_numeric(\Input::get('pk')))
                         {
                             /*
                              * New Entry
                              */
                             //All Validation Passed, let's save
-                            $approval = new SwiftApproval(array('type'=>(int)$type,'approval_user_id'=>$this->currentUser->id, 'approved' => Input::get('value')));
+                            $approval = new \SwiftApproval(array('type'=>(int)$type,'approval_user_id'=>$this->currentUser->id, 'approved' => \Input::get('value')));
                             if($product->approval()->save($approval))
                             {
                                 $apr = $product->aprequest()->first();
-                                Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($apr),'id'=>$apr->id,'user_id'=>$this->currentUser->id));
-                                return Response::make(json_encode(['encrypted_id'=>Crypt::encrypt($approval->id),'id'=>$approval->id]));
+                                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($apr),'id'=>$apr->id,'user_id'=>$this->currentUser->id));
+                                return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($approval->id),'id'=>$approval->id]));
                             }
                             else
                             {
-                                return Response::make('Failed to save. Please retry',400);
+                                return \Response::make('Failed to save. Please retry',400);
                             }
 
                         }
                         else
                         {
-                            $approval = SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
+                            $approval = \SwiftApproval::find(\Crypt::decrypt(Input::get('pk')));
                             if(count($approval))
                             {
-                                $approval->approved = Input::get('value') == "" ? null : Input::get('value');
+                                $approval->approved = \Input::get('value') == "" ? null : \Input::get('value');
                                 if($approval->save())
                                 {
                                     $apr = $product->aprequest()->first();
-                                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($apr),'id'=>$apr->id,'user_id'=>$this->currentUser->id));
-                                    return Response::make('Success');
+                                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($apr),'id'=>$apr->id,'user_id'=>$this->currentUser->id));
+                                    return \Response::make('Success');
                                 }
                                 else
                                 {
-                                    return Response::make('Failed to save. Please retry',400);
+                                    return \Response::make('Failed to save. Please retry',400);
                                 }
                             }
                             else
                             {
-                                return Response::make('Error saving approval information: Invalid PK',400);
+                                return \Response::make('Error saving approval information: Invalid PK',400);
                             }
                         }
                         break;
                     default:
-                        return Response::make('Type of approval unknown',400);
+                        return \Response::make('Type of approval unknown',400);
                         break;
                 }
             }
             else
             {
-                return Response::make('Invalid Request',400);
+                return \Response::make('Invalid Request',400);
             }
         }
         else
         {
-            return Response::make('Product not found',404);
+            return \Response::make('Product not found',404);
         }        
     }
     
@@ -1114,28 +1165,28 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        $product = SwiftAPProduct::find(Crypt::decrypt($product_id));
+        $product = \SwiftAPProduct::find(\Crypt::decrypt($product_id));
         
         if(count($product))
         {
-            if(Input::get('name') == "approval_comment")
+            if(\Input::get('name') == "approval_comment")
             {
                 switch((int)$type)
                 {
-                    case SwiftApproval::APR_CATMAN:
-                    case SwiftApproval::APR_EXEC:
+                    case \SwiftApproval::APR_CATMAN:
+                    case \SwiftApproval::APR_EXEC:
                         if(is_numeric(Input::get('pk')))
                         {
-                            return Response::make('Please approve the product first',400);
+                            return \Response::make('Please approve the product first',400);
                         }
                         else
                         {
-                            $approval = SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
+                            $approval = \SwiftApproval::find(Crypt::decrypt(Input::get('pk')));
                             if(count($approval))
                             {
-                                if($approval->approved == SwiftApproval::REJECTED && trim(Input::get('value'))=="")
+                                if($approval->approved == \SwiftApproval::REJECTED && trim(\Input::get('value'))=="")
                                 {
-                                    return Response::make('Please enter a comment for rejected product',400);
+                                    return \Response::make('Please enter a comment for rejected product',400);
                                 }
                                 
                                 //Get Comments
@@ -1143,41 +1194,41 @@ class APRequestController extends UserController {
                                 
                                 if(count($comment))
                                 {
-                                    $comment->comment = trim(Input::get('value'));
+                                    $comment->comment = trim(\Input::get('value'));
                                     if($comment->save())
                                     {
-                                        return Response::make('Success');
+                                        return \Response::make('Success');
                                     }
                                 }
                                 else
                                 {
-                                    $newcomment = new SwiftComment(['comment'=>trim(Input::get('value')),'user_id'=>$this->currentUser->id]);
+                                    $newcomment = new \SwiftComment(['comment'=>trim(\Input::get('value')),'user_id'=>$this->currentUser->id]);
                                     if($approval->comments()->save($newcomment))
                                     {
-                                        return Response::make('Success');
+                                        return \Response::make('Success');
                                     }
                                 }
-                                return Response::make('Failed to save. Please retry',400);
+                                return \Response::make('Failed to save. Please retry',400);
                             }
                             else
                             {
-                                return Response::make('Error saving approval comment: Invalid PK',400);
+                                return \Response::make('Error saving approval comment: Invalid PK',400);
                             }
                         }
                         break;
                     default:
-                        return Response::make('Type of approval unknown',400);
+                        return \Response::make('Type of approval unknown',400);
                         break;
                 }
             }
             else
             {
-                return Response::make('Invalid Request',400);
+                return \Response::make('Invalid Request',400);
             }
         }
         else
         {
-            return Response::make('Product not found',404);
+            return \Response::make('Product not found',404);
         }        
     }
     
@@ -1567,9 +1618,9 @@ class APRequestController extends UserController {
         if($product_code !== "")
         {
             $price = JdeSales::getProductLatestCostPrice($product_code);
-                if(count($price))
+                if($price)
                 {
-                    echo round($price->UPRC,2);
+                    echo round(abs($price->ECST/$price->SOQS),4);
                     return;
                 }
             echo "";

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Description of SwiftACPInvoice: Account Payable Invoices
+ * Description: Account Payable - Invoices
  *
  * @author kpudaruth
  */

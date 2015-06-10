@@ -21,6 +21,7 @@ function addMulti($dummy,pk)
                 disabled: $(this).hasClass('editable-disabled'),
                 onblur: 'submit',                
                 placeholder: 'Select a product',
+                source: '/ajaxsearch/product',
                 select2: {
                     allowClear: false,
                     minimumInputLength: 3,
@@ -298,6 +299,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 disabled: $this.hasClass('editable-disabled'),
                 placeholder: 'Select a product',
                 onblur: 'submit',
+                source: '/ajaxsearch/product',
                 select2: {
                     allowClear: false,
                     minimumInputLength: 3,
@@ -374,6 +376,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 disabled: $this.hasClass('editable-disabled'),
                 placeholder: "Select a customer",
                 onblur: 'submit',
+                source: 'select2',
                 select2: {
                     allowClear: false,
                     minimumInputLength: 3,

@@ -199,7 +199,10 @@ class SwiftPR extends Process
             foreach($form_ids as $id)
             {
                 $this->form = $this->resource->with(['product'=>function($q){
-                    return $q->where('pickup','=',\SwiftPRProduct::PICKUP);
+                    return $q->where('pickup','=',\SwiftPRProduct::PICKUP)
+                            ->whereHas('approvalretailman',function($q){
+                                return $q->where('approved','=',\SwiftApproval::APPROVED);
+                            });
                 },'pickup'=>function($q){
                     return $q->has('driver')->orderBy('created_at','DESC');
                 },'pickup.driver'])->has('pickup')
@@ -228,5 +231,253 @@ class SwiftPR extends Process
 
     /*
      * Pickup PDF: End
+     */
+
+    /*
+     * Publishing: Start
+     */
+
+    /*
+     * Publish Form
+     * @param integer $form_id
+     * @param integer $approvalType
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function publish($form_id,$approvalType)
+    {
+        $this->pk = $form_id;
+        $this->approvalType = $approvalType;
+
+        $this->setPublishForm();
+
+        if($this->form)
+        {
+            $validation = $this->validatePublish();
+            if($validation === true)
+            {
+                return $this->saveApproval();
+            }
+            else
+            {
+                return $validation;
+            }
+        }
+        else
+        {
+            return \Response::make("Form not found",500);
+        }
+        
+        return \Response::make("Unable to complete action",500);
+    }
+
+    /*
+     * Sets the form to be published
+     */
+    private function setPublishForm()
+    {
+        switch($this->approvalType)
+        {
+            case \SwiftApproval::PR_REQUESTER:
+                $this->form = $this->resource->with('product','product.discrepancy')->find($this->pk);
+                break;
+            case \SwiftApproval::PR_PICKUP:
+                $this->form = $this->resource->with('pickup')->find($this->pk);
+                break;
+            case \SwiftApproval::PR_RECEPTION:
+            case \SwiftApproval::PR_STOREVALIDATION:
+                $this->form = $this->resource->with('productApproved')->find($this->pk);
+                break;
+            case \SwiftApproval::PR_CREDITNOTE:
+                $this->form = $this->resource->with('creditNote')->find($this->pk);
+                break;
+            default:
+                throw new \RuntimeException("This approval level is not supported.");
+                break;
+        }
+    }
+
+    /*
+     * Validate the form before publishing
+     * @return mixed
+     */
+    private function validatePublish()
+    {
+        switch($this->approvalType)
+        {
+            //Requester
+            case \SwiftApproval::PR_REQUESTER:
+                if(!$this->controller->isAdmin && !$this->form->isOwner())
+                {
+                    return \Response::make("You don't have permission to publish this form" ,500);
+                }
+
+                if(!count($this->form->product))
+                {
+                    return \Response::make('Please add some products to your form',500);
+                }
+
+                //Validation
+
+                foreach($this->form->product as $p)
+                {
+                    switch($this->form->type)
+                    {
+                        case \SwiftPR::ON_DELIVERY:
+                            if($p->qty_pickup === null || $p->qty_pickup < 0)
+                            {
+                                return \Response::make("Please set a valid quantity at pickup for '$p->name' (ID: $p->id)",500);
+                            }
+
+                            if($p->qty_pickup !== ($p->qty_triage_pickup + $p->qty_triage_disposal))
+                            {
+                                return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
+                            }
+                        case \SwiftPR::SALESMAN:
+                            if($p->jde_itm === null)
+                            {
+                                return \Response::make("Please set a Product for (ID: $p->id)",500);
+                            }
+
+                            if($p->qty_client === null || $p->qty_client < 0)
+                            {
+                                return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
+                            }
+
+                            if($p->reason_id === null)
+                            {
+                                return \Response::make("Please set a reason for '$p->name' (ID: $p->id)",500);
+                            }
+                    }
+                }
+
+                if($this->form->type === \SwiftPR::ON_DELIVERY)
+                {
+                    if($this->form->paper_number === null)
+                    {
+                        return \Response::make("Please enter an RFRF Paper number",500);
+                    }
+                }
+                break;
+            //Store Pickup
+            case \SwiftApproval::PR_PICKUP:
+                if(!$this->controller->isAdmin && !$this->controller->isStorePikcup)
+                {
+                    return \Response::make("You don't have permission to publish this form" ,500);
+                }
+
+                //If there is no records of pickup for this form
+                if(!count($this->form->pickup))
+                {
+                    return \Response::make("Please add your pickup details");
+                }
+
+                //Only forms of type salesman are allowed
+                if($this->form->type !== \SwiftPR::SALESMAN)
+                {
+                    return \Response::make("Only forms by salesman have pickup");
+                }
+                break;
+            //Store Reception
+            case \SwiftApproval::PR_RECEPTION:
+                if(!$this->controller->isAdmin && !$this->controller->isStoreReception)
+                {
+                    return \Response::make("You don't have permission to publish this form" ,500);
+                }
+
+                foreach($this->form->productApproved as $p)
+                {
+                    if($p->qty_pickup === null || $p->qty_pickup < 0)
+                    {
+                        return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
+                    }
+
+                    if($p->qty_pickup !== ($p->qty_triage_picking + $p->qty_triage_disposal))
+                    {
+                        return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
+                    }
+                }
+            //Store Validation
+            case \SwiftApproval::PR_STOREVALIDATION:
+                if(!$this->controller->isAdmin && !$this->controller->isStoreValidation)
+                {
+                    return \Response::make("You don't have permission to publish this form" ,500);
+                }
+
+                foreach($this->form->productApproved as $p)
+                {
+                    if($p->qty_store === null || $p->qty_store < 0)
+                    {
+                        return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
+                    }
+
+                    if($p->qty_store !== ($p->qty_triage_picking + $p->qty_triage_disposal))
+                    {
+                        return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
+                    }
+                }
+            //Accounting - Credit Note
+            case \SwiftApproval::PR_CREDITNOTE:
+                if(!$this->controller->isAdmin && !$this->controller->isCreditor)
+                {
+                    return \Response::make("You don't have permission to publish this form" ,500);
+                }
+
+                if(!count($this->form->creditNote))
+                {
+                    return \Response::make("Please enter a credit note for this form",500);
+                }
+                break;
+        }
+        
+        return true;
+    }
+
+    /*
+     * Save approvals for publishing forms
+     *
+     * @param integer $approvalType
+     * @return \Illuminate\Support\Facades\Response
+     */
+    private function saveApproval()
+    {
+        //Check if there is already an approval present
+        $approval = $this->form->approval()
+                    ->approvedBy($this->approvalType)
+                    ->count();
+
+        if($approval)
+        {
+            //Approval already present - System still processing form
+            \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($this->form),'id'=>$this->form->id,'user_id'=>$this->controller->currentUser->id));
+            /*
+             * Check if form has already been approved
+             */
+            return \Response::make('Form already approved. System is busy processing',200);
+        }
+        else
+        {
+            $approvalSaved = $this->form->approval()->save(
+               new \SwiftApproval([
+                    'type' => $this->approvalType,
+                    'approved' => \SwiftApproval::APPROVED,
+                    'approval_user_id' => $this->controller->currentUser->id
+               ])
+            );
+
+            if($approvalSaved)
+            {
+                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($this->form),'id'=>$this->form->id,'user_id'=>$this->controller->currentUser->id));
+                return \Response::make('success');
+            }
+            else
+            {
+                return \Response::make('Failed to approve form',400);
+            }
+        }
+    }
+
+    /*
+     * Publishing: End
      */
 }

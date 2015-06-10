@@ -1,6 +1,6 @@
 <?php
 /**
- * Description of ElasticSearchHelper: Helps with Indexing/Updating
+ * Description of ElasticSearchHelper: Helps with Indexing/Updating with Elastic Search Server (https://www.elastic.co)
  *
  * @author kpudaruth
  */
@@ -8,7 +8,12 @@
 Namespace Swift\Services;
 
 class ElasticSearchHelper {
-    
+
+    /*
+     * Laravel Queue - Index Task
+     * @param array $job
+     * @param array $data
+     */
     public function indexTask($job,$data)
     {
         if(\Config::get('website.elasticsearch') === true)
@@ -24,7 +29,12 @@ class ElasticSearchHelper {
         }
         $job->delete();
     }
-    
+
+    /*
+     * Laravel Queue - Update Task
+     * @param array $job
+     * @param array $data
+     */
     public function updateTask($job,$data)
     {
         if(\Config::get('website.elasticsearch') === true)
@@ -40,7 +50,11 @@ class ElasticSearchHelper {
         }
         $job->delete();        
     }
-    
+
+    /*
+     * Index Elastic Search Document
+     * @param array $data
+     */
     public function IndexEs($data)
     {
         $params = array();
@@ -59,7 +73,11 @@ class ElasticSearchHelper {
             \Es::index($params);
         }
     }
-    
+
+    /*
+     * Update Elastic Search
+     * @param array $data
+     */
     public function UpdateEs($data)
     {
         $params = array();
@@ -70,6 +88,9 @@ class ElasticSearchHelper {
         
         if(count($form))
         {
+            /*
+             * Main form is being updated
+             */
             if($data['info-context'] === $data['context'])
             {
                 $params['id'] = $data['id'];
@@ -81,14 +102,18 @@ class ElasticSearchHelper {
                 $parent = $form->esGetParent();
                 if(count($parent))
                 {
+                    //Id is always that of parent
                     $params['id'] = $parent->id;
+                    //fetch all children, given that we cannot save per children basis
                     $children = $parent->{$data['info-context']}()->get();
                     if(count($children))
                     {
+                        //Get data in a format that can be saved by Elastic Search
                         $params['body']['doc'][$data['info-context']] = $this->saveFormat($children);
                     }
                     else
                     {
+                        //Empty it is
                         $params['body']['doc'][$data['info-context']] = array();
                     }
                 }
@@ -98,17 +123,24 @@ class ElasticSearchHelper {
                     return false;
                 }
             }
-            //Check if Exists
-            $result = @\Es::get([
-                'id' => $data['id'],
-                'index' => $params['index'],
-                'type' => $data['context']
-            ]);
-            
-            if($result['found'] === false)
+            //Check if Parent Exists
+            try
             {
-                //Index Document, if its not found
-                $this->indexEs($data);
+                $result = @\Es::get([
+                    'id' => $params['id'],
+                    'index' => $params['index'],
+                    'type' => $data['context']
+                ]);
+            } catch (\Elasticsearch\Common\Exceptions\Missing404Exception $ex) {
+                //if not, we set it
+                if(isset($parent) && $parent)
+                {
+                    $this->indexEs([
+                        'context' => $data['context'],
+                        'class' => get_class($parent),
+                        'id' => $parent->id,
+                    ]);
+                }
             }
             
             \Es::update($params);
@@ -117,6 +149,7 @@ class ElasticSearchHelper {
     
     /*
      * Iterate through all Es accessors of the model.
+     * @param \Illuminate\Database\Eloquent\Model $object
      */
     public function esAccessor(&$object)
     {
@@ -139,19 +172,22 @@ class ElasticSearchHelper {
     
     /*
      * Iterates over a collection applying the getEsSaveFormat function
+     * @param mixed $object
+     * 
+     * @return array
      */
-    public function saveFormat($obj)
+    public function saveFormat($object)
     {
-        if($obj instanceof \Illuminate\Database\Eloquent\Model)
+        if($object instanceof \Illuminate\Database\Eloquent\Model)
         {
-            return $obj->getEsSaveFormat();
+            return $object->getEsSaveFormat();
         }
         else
         {
             return array_map(function($value)
             {
                 return $value->getEsSaveFormat();
-            }, $obj->all());
+            }, $object->all());
         }
     }
 }

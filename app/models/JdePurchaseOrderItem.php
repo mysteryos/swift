@@ -1,4 +1,10 @@
 <?php
+
+/*
+ * Name: JDE Purchase Order Items
+ * Description: Contains all items present in purchase orders
+ */
+
 class JdePurchaseOrderItem extends Eloquent {
     protected $connection = 'sct_jde';
 
@@ -8,6 +14,9 @@ class JdePurchaseOrderItem extends Eloquent {
 
     private static $cache_expiry_time = 240;
 
+    /*
+     * Relationships
+     */
     public function order()
     {
         return $this->hasOne('JdePurchaseOrder','order_id');

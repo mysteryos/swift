@@ -1,7 +1,7 @@
 <?php
 /**
- * Description of SwiftACPCreditNote
- *
+ * Description: Accounts Payable - Credit Note
+ * TODO: Change to SwiftCreditNote
  * @author kpudaruth
  */
 

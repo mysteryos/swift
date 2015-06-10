@@ -193,6 +193,13 @@ class SwiftPR extends Eloquent {
     {
         return $this->hasMany('SwiftPRProduct','pr_id');
     }
+
+    public function productApproved()
+    {
+        return $this->product()->whereHas('approvalretailman',function($q){
+            return $q->where('approved','=',\SwiftApproval::APPROVED);
+        });
+    }
     
     public function owner()
     {

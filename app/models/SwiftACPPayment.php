@@ -1,6 +1,6 @@
 <?php
 /**
- * Description of SwiftACPPayment
+ * Description: Accounts Payable - Payment Details
  *
  * @author kpudaruth
  */

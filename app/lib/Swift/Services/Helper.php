@@ -1,11 +1,11 @@
 <?php
 
-Namespace Swift\Services;
-
 /*
  * Name: Helper Classes
  * Description: Contain Useful Functions
  */
+
+Namespace Swift\Services;
 
 Use User;
 Use Crypt;
@@ -17,7 +17,12 @@ use Sentry;
 use Eloquent;
 
 class Helper {
-    
+    /*
+     * Finds system user and logs him in.
+     * Used mostly for laravel queue workers
+     *
+     * @return boolean
+     */
     public function loginSysUser()
     {
         $sysuser = Sentry::findUserByLogin(Config::get('website.system_mail'));
@@ -31,7 +36,14 @@ class Helper {
         }
         return false;
     }
-    
+
+    /*
+     * Saves history of a recently viewed form
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param \Sentry $user
+     *
+     */
     public function saveRecent($obj,$user)
     {
         $recent = $obj->recent()->where('user_id','=',$user->id)->first();
@@ -46,7 +58,16 @@ class Helper {
         }
  
     }
-    
+
+    /*
+     * Fetches product price and saves it for the product in question.
+     * Used in queues solely
+     *
+     * @param mixed $job
+     * @param array $data
+     *
+     * @return null
+     */
     public function getProductPrice($job,$data)
     {
         if(!self::loginSysUser())
@@ -63,7 +84,7 @@ class Helper {
                 $result = \JdeSales::getProductLatestCostPrice($prod->jde_itm);
                 if($result)
                 {
-                    $prod->price = round($result->UPRC,2);
+                    $prod->price = round(abs($result->ECST/$result->SOQS),4);
                 }
                 else
                 {
@@ -79,7 +100,14 @@ class Helper {
         }
         
     }
-    
+
+    /*
+     * Encodes an array into an array compatible format for use with X-editable's select lists as source of data
+     *
+     * @param array $array
+     *
+     * @return array
+     */
     public function jsonobject_encode(array $array)
     {
         foreach($array as $k=>$v)
@@ -89,14 +117,19 @@ class Helper {
         
         return $converted_array;
     }
-    
+
+    /*
+     * Helper Function: Fetches User Name of current logged in user
+     *
+     * @param integer $user
+     * @param \Sentry $current_user
+     * @param boolean $me
+     *
+     * @return string
+     */
     public function getUserName($user,$current_user,$me=true)
     {
-//        if(!$user  instanceof \Cartalyst)
-//        {
-            $user = User::find($user);
-//        }
-        
+        $user = User::find($user);
         if($user)
         {
             
@@ -114,7 +147,17 @@ class Helper {
             return "(Unknown)";
         }
     }
-    
+
+    /*
+     * Iterates through all objects which implements the trait `revisionable` and compiles a list of revision changes
+     * Param $only_relationships when set to true, returns only revisions for the relationships and omits the main forms' revisions.
+     *
+     * @param array $arrayClass
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param boolean $only_relationships
+     *
+     * @return array
+     */
     public function getMergedRevision(array $arrayClass,&$obj,$only_relationships=false)
     {
         $revision = array();
@@ -170,7 +213,15 @@ class Helper {
         return $revision;
         
     }
-    
+
+    /*
+     * Generates an order process link.
+     * Used in `freight company` form - the ticker widget
+     *
+     * @param \Illuminate\Database\Eloquent\Model $order
+     *
+     * @return string
+     */
     public function getOrderTrackingLink($order)
     {
         $html = "<a class=\"pjax\" href=\"/order-tracking/view/".(\Crypt::encrypt($order->id))."\" data-original-title=\"Click to view order process\" data-placement=\"placement\" rel=\"bottom\"><i class=\"fa fa-lg- fa-map-marker\"></i>&nbsp;";
@@ -179,7 +230,16 @@ class Helper {
         
         return $html;
     }
-    
+
+    /*
+     * Generates URL for viewing main forms.
+     * Used in many places
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param boolean $absoluteaddress
+     *
+     * @return string
+     */
     public function generateUrl($obj,$absoluteaddress=false)
     {
         $class = get_class($obj);
@@ -210,7 +270,16 @@ class Helper {
         }
         return $url;
     }
-    
+
+    /*
+     * Check if session has a filter value set
+     *
+     * @param string $session_variable
+     * @param string $filter_name
+     * @param mixed $filter_value
+     *
+     * @return boolean
+     */
     public function sessionHasFilter($session_variable,$filter_name,$filter_value='')
     {
         if($filter_value)
@@ -223,6 +292,14 @@ class Helper {
         }
     }
 
+    /*
+     * Calculates the number of storage days for a container
+     * Used for order-process
+     *
+     * @param \Carbon\Carbon $storagestart
+     *
+     * @return integer
+     */
     public function calculateStorageNumberOfDays(\Carbon\Carbon $storagestart)
     {
         $holidays = \Holidays::getAllDates();
@@ -246,6 +323,14 @@ class Helper {
         return $numberOfDays;
     }
 
+    /*
+     * Calculates the number of demurrage days for a container
+     * Not Used.
+     *
+     * @param \Carbon\Carbon $demurrageStart
+     *
+     * @return integer
+     */
     public function calculateDemurrageNumberOfDays(\Carbon\Carbon $demurrageStart)
     {
         return Carbon::now()->diffInDays($demurrageStart);
@@ -253,6 +338,11 @@ class Helper {
 
     /*
      * Calculate storage cost of containers in USD
+     *
+     * @param \Carbon\Carbon $storagestart
+     * @param integer $containers
+     *
+     * @return float
      */
     public function calculateStorageCost(\Carbon\Carbon $storagestart, $containers)
     {
@@ -317,6 +407,11 @@ class Helper {
 
     /*
      * Calculate demurrage cost of container in USD
+     *
+     * @param \Carbon\Carbon $demurrageStart
+     * @param integer $containers
+     *
+     * @return float
      */
     public function calculateDemurrageCost(\Carbon\Carbon $demurrageStart, $containers)
     {
@@ -407,7 +502,14 @@ class Helper {
         }
     }
     
-    //The function returns the no. of business days between two dates and it skips the holidays
+    /*
+     * Calculates the number of business days between two dates and it skips the holidays
+     *
+     * @param string $startDate
+     * @param strinng $endDate
+     *
+     * @return integer
+     */
     public function getWorkingDays($startDate,$endDate)
     {
         $holidays = \Config::get('holidays.days');

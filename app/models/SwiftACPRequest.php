@@ -1,6 +1,6 @@
 <?php
 /**
- * Description of SwiftACPRequest
+ * Description: Accounts Payable - Request (Main)
  *
  * @author kpudaruth
  */

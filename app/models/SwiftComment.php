@@ -1,7 +1,11 @@
 <?php
 
+/*
+ * Name: Comments for everything
+ */
+
 class SwiftComment extends Eloquent {
-        use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Venturecraft\Revisionable\RevisionableTrait;
 	/**
 	 * Name of the table to use for this model
 	 *

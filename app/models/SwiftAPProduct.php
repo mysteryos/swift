@@ -1,6 +1,6 @@
 <?php
 /*
- * Name: Swift A&P Product
+ * Name: A&P Request - Product
  * Description:
  */
 
@@ -15,7 +15,7 @@ class SwiftAPProduct extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $appends = array('name');
+    protected $appends = array('name','reason_text');
     
     public $timestamps = true;
     
@@ -57,10 +57,10 @@ class SwiftAPProduct extends Eloquent {
     const RC_TRAINING = 4;
     const RC_CONTRIBUTION = 5;
     const RC_LISTING = 6;
-    const RC_EXCHANGE = 7;
+    const RC_COMPLAINT = 7;
     
     public static $reason = array(self::RC_CONTRIBUTION => 'Contribution',
-                                  self::RC_EXCHANGE => 'Exchange',
+                                  self::RC_COMPLAINT => 'Customer Complaint',
                                   self::RC_EVENT => 'Event',
                                   self::RC_LISTING => 'Listing',
                                   self::RC_SPONSOR => 'Sponsorship',
@@ -92,7 +92,7 @@ class SwiftAPProduct extends Eloquent {
     //Context for Indexing
     public $esContext = "aprequest";
     public $esInfoContext = "product";
-    public $esRemove = ['aprequest_id'];
+    public $esRemove = ['aprequest_id','reason_text'];
     
     public function getReasonCodeEsAttribute($val)
     {
@@ -127,6 +127,19 @@ class SwiftAPProduct extends Eloquent {
         }
         
         return "";
+    }
+
+    public function getReasonTextAttribute()
+    {
+        if($this->reason_code !== null)
+        {
+            if(key_exists($this->reason_code,self::$reason))
+            {
+                return self::$reason[$this->reason_code];
+            }
+        }
+        
+        return "N/A";
     }
     
     public function totalprice()

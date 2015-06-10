@@ -18,13 +18,24 @@ class NodeActivity {
     
     /*
      * Fetches all nodes which are currently in progress
+     *
+     * @param integer $workflow_activity_id
+     *
+     * @return \Illuminate\Support\Collection
      */
     public function inProgress($workflow_activity_id)
     {
         $nodes = SwiftNodeActivity::inProgress($workflow_activity_id);
         return $nodes;
     }
-    
+
+    /*
+     * Checks if mail has been sent to resposible parties for current pending nodes.
+     * If it hasn't, send mail and flag `mailed` column in node activity table
+     *
+     * @param \SwiftWorkflowActivity $workflow_activity
+     *
+     */
     public function mail(\SwiftWorkflowActivity $workflow_activity)
     {
         $nodeActivityInProgress = SwiftNodeActivity::where('workflow_activity_id','=',$workflow_activity->id)
@@ -76,7 +87,12 @@ class NodeActivity {
     }
     
     /*
-     * Create node activity
+     * Insert node activity record in its table
+     *
+     * @param integer $workflow_activity_id
+     * @param \SwiftNodeDefinition $node_definition
+     *
+     * @return boolean|\Illuminate\Database\Eloquent\Model
      */
     public function create($workflow_activity_id,SwiftNodeDefinition $node_definition)
     {
@@ -97,7 +113,12 @@ class NodeActivity {
     }
     
     /*
-     * Joins activities
+     * Add a join record for a parent and its child by their IDs in a table
+     *
+     * @param integer $parent_id
+     * @param integer $child_id
+     *
+     * @return boolean
      */
     public function join($parent_id,$child_id)
     {
@@ -109,7 +130,11 @@ class NodeActivity {
     
     
     /*
-     * Save Current Node
+     * Saves a complete node into the table. A node is completed when its column `user_id` is not zero.
+     *
+     * @param \SwiftNodeActivity $node_activity
+     * @param integer $flow
+     *
      */
     public function save(SwiftNodeActivity $node_activity,$flow=1/*Forward Flow*/)
     {
@@ -120,6 +145,11 @@ class NodeActivity {
     
     /*
      * Return help text for current pending node
+     *
+     * @param \Illumminate\Database\Eloquent\Model $nodeActivity
+     * @param boolean $needPermission
+     *
+     * @return boolean|string
      */
     
     public function help($nodeActivity,$needPermission = true)
@@ -166,6 +196,11 @@ class NodeActivity {
     /*
      * Process Current Node - Evaluate Criteria and Conditions
      * Expects Node with user id = 0
+     *
+     * @param integer|\Illuminate\Database\Eloquent\Model $nodeActivity
+     * @param integer $flow
+     *
+     * @return boolean
      */
     public function process($nodeActivity,$flow)
     {
@@ -192,6 +227,7 @@ class NodeActivity {
         
         switch($nodeActivity->definition->type)
         {
+            //Start of a workflow. It always starts with a node definition of type $T_NODE_START
             case SwiftNodeDefinition::$T_NODE_START:
                 if($flow !=SwiftNodeActivity::$FLOW_BACKWARD)
                 {
@@ -234,6 +270,7 @@ class NodeActivity {
                     throw new \RuntimeException("Start node should not flow backwards.");
                 }
                 break;
+            //When a workflow ends, it always ends with a node with definition $T_NODE_END
             case SwiftNodeDefinition::$T_NODE_END:
                 /*
                  * Check if node activity has been processed
@@ -322,6 +359,10 @@ class NodeActivity {
     
     /*
      * Helper Function: Forward Flow Processing
+     *
+     * @param integer $node_activity_id
+     *
+     * @return boolean
      */
     public function processForward($node_activity_id)
     {
@@ -330,6 +371,11 @@ class NodeActivity {
     
     /*
      * Helper Function: Backward Flow Processing
+     * Note: Never used.
+     *
+     * @param integer $node_activity_id
+     *
+     * @return boolean
      */
     public function processBackward($node_activity_id)
     {
@@ -337,7 +383,14 @@ class NodeActivity {
     }
     
     /*
-     * Evaluates Branching & Creates next nodes
+     * Evaluates Branching Conditions & Creates next nodes (recursively if needed)
+     * All branching conditions for the switch statement are explained in \SwiftNodeDefinitionJoin
+     * Each branch will evaluate its conditions by calling the function of the class stated in the table swift_node_definition, column `php_function`.
+     * If evaluate to true, then we flag the node as complete by inserting the `user_id` column with the current user's id.
+     * Then we move to creating the next nodes in the workflow, if our branching allows us to.
+     *
+     * @param \SwiftNodeActivity $currentNodeActivity
+     *
      */
     
     public function goNext(SwiftNodeActivity $currentNodeActivity)
@@ -734,6 +787,8 @@ class NodeActivity {
     
     /*
      * Visits previous node in workflow
+     * Note: Never used, so never coded.
+     * Should be one heck of a headache :3, similar to goNext().
      */
     public function goPrevious($nodeName)
     {
@@ -741,7 +796,12 @@ class NodeActivity {
     }
     
     /*
-     * Verfiy if user has access to this node
+     * Verify if user has access to this node
+     * This is done by checking the flag column `permission_type` in the table swift_node_permission
+     *
+     * @param integer $node_definition_id
+     *
+     * @return boolean
      */
     public function hasAccess($node_definition_id,$permission_type=1)
     {
@@ -764,7 +824,11 @@ class NodeActivity {
     }
     
     /*
-     * Helper Function: has Start node Access
+     * Helper Function: Permission - has Start node Access
+     *
+     * @param string $workflow_name
+     *
+     * @return boolean
      */
     public function hasStartAccess($workflow_name)
     {
@@ -772,7 +836,7 @@ class NodeActivity {
         
         $nodeDefinition = NodeDefinition::getStartNodeDefinition($workflow_name);
         
-        if(count($nodeDefinition))
+        if($nodeDefinition)
         {
             return self::hasAccess($nodeDefinition->id);
         }
@@ -783,7 +847,11 @@ class NodeActivity {
     }
     
     /*
-     * Helper Function: has Kill node Access
+     * Helper Function: Permission - has Kill node Access
+     *
+     * @param string $workflow_name
+     *
+     * @return boolean
      */
     public function hasKillAccess($workflow_name)
     {
@@ -791,7 +859,7 @@ class NodeActivity {
         
         $workflow = SwiftWorkflowType::getByName($workflow_name);
         
-        if(count($workflow))
+        if($workflow)
         {
             $nodeDefinition = SwiftNodeDefinition::getByType($workflow->id,SwiftNodeDefinition::$T_NODE_KILL)->first();
 
@@ -805,7 +873,11 @@ class NodeActivity {
     }
     
     /*
-     * Helper Function: has End node Access
+     * Helper Function: Permission - has End node Access
+     *
+     * @param string $workflow_name
+     *
+     * @return boolean
      */
     public function hasEndAccess($workflow_name)
     {
@@ -813,7 +885,7 @@ class NodeActivity {
         
         $workflow = SwiftWorkflowType::getByName($workflow_name);
         
-        if(count($workflow))
+        if($workflow)
         {        
             $nodeDefinition = SwiftNodeDefinition::getByType($workflow->id,SwiftNodeDefinition::$T_NODE_END)->first();
 
@@ -827,12 +899,16 @@ class NodeActivity {
     
     /*
      * Helper Function: Fetches Start Node Activty
+     *
+     * @param string $workflow_name
+     *
+     * @return \Illuminate\Database\Eloquent\Model
      */
     public function getStartNodeActivity($workflow_name)
     {
         $workflow = SwiftWorkflowType::getByName($workflow_name);
         
-        if(count($workflow))
+        if($workflow)
         {
             return SwiftNodeActivity::getByWorkflowAndDefinition($workflow->id,SwiftNodeDefinition::$T_NODE_START)->first();
         }

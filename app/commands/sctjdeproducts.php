@@ -60,15 +60,15 @@ class sctjdeProducts extends ScheduledCommand {
             try
             {
                 //Parse products, 10 at a time
-                $productCount = JdeProduct::count();
+                $productCount = \JdeProduct::count();
                 for($i = 0;$i<=$productCount; $i=$i+$limit)
                 {
-                    $products = JdeProduct::take($limit)->offset($i)->get();
+                    $products = \JdeProduct::take($limit)->offset($i)->get();
                     foreach($products as $p)
                     {
                         //Get last sales item for product
-                        $sales = JdeSales::getProductLatestCostPrice($p->ITM);
-                        if(count($sales))
+                        $sales = \JdeSales::getProductLatestCostPrice($p->ITM);
+                        if($sales)
                         {
                            $cost = round(abs($sales->ECST/$sales->SOQS),4);
                            $p->cost_price = $cost;

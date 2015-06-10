@@ -3763,7 +3763,17 @@ $(function(){
            } else if(data) {
                text = that.formatSelection(data);  
            }
-
+           
+           //If text is still empty, default to select2's text method
+           if((text === '' || ($.isArray(text) && text.length === 0)) && typeof this.$input !== 'undefined')
+           {
+                var select2Data = this.$input.select2('data');
+                if(select2Data !== null)
+                {
+                    text = this.$input.select2('data').text;
+                }
+           }
+           
            text = $.isArray(text) ? text.join(this.options.viewseparator) : text;
 
            //$(element).text(text);

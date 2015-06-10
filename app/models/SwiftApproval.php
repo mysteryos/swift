@@ -1,7 +1,7 @@
 <?php
 /*
- * Name: Swift Validation
- * Description: 
+ * Name: Approval
+ * Description: Contains different kinds of approvals
  */
 
 class SwiftApproval extends Eloquent {

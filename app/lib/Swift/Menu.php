@@ -59,7 +59,7 @@ class Menu {
     {
         if(isset($menuItem['permission']))
         {
-            return Sentry::getUser()->hasAccess($menuItem['permission']);
+            return Sentry::getUser()->hasAnyAccess((array)$menuItem['permission']);
         }
         else
         {

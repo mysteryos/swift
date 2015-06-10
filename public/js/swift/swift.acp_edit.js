@@ -802,7 +802,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
         });        
         return false;
-    });        
+    });
     
     //Enable Commenting
     enableComments();

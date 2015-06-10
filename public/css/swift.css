@@ -28,6 +28,14 @@ div.FixedHeader_Cloned td {
 	background-color: white !important;
 }
 
+/*
+* Extend Bootstrap
+*/
+
+.panel>.list-group, .panel>.panel-collapse>.list-group {
+    margin-bottom: 0;
+}
+
 /**
  * ContextJS Styles
  * For use with Twitters Bootstrap CSS
@@ -1031,6 +1039,26 @@ p.totalprice.loading:after, a.loading:after {
     -o-animation:spin 2s infinite linear;
     animation:spin 2s infinite linear;    
 }
+
+/*
+* APRequest - Approvals
+*/
+
+.btn-approve.btn-accept {
+    color: #71843f;
+}
+.btn-approve.btn-reject {
+    color: #a90329;
+}
+.btn-approve.btn-accept.on {
+    color: #fff;
+    background-color: #71843f!important;
+}
+.btn-approve.btn-reject.on {
+    color: #fff;
+    background-color: #a90329!important;
+}
+
 
 /*
 *  Accounts Payable - Payment Voucher Process

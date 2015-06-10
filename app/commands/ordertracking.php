@@ -64,7 +64,7 @@ class ordertrackingweeklymail extends ScheduledCommand {
                 {
                     //Get last sales item for product
                     $sales = JdeSales::getProductLatestCostPrice($p->ITM);
-                    if(count($sales))
+                    if($sales)
                     {
                        $cost = round(abs($sales->ECST/$sales->SOQS),4);
                        $p->cost_price = $cost;

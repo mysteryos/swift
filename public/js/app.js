@@ -941,21 +941,25 @@ function enableComments()
         
         //Send Comment
         $commentForm.on('submit',function(e){
-            
+            //If comment present
             if($.trim($('#comment-textarea').text()) !== "")
             {
-                e.preventDefault();
                 
+                e.preventDefault();
+                //Serialize form data before sending
                 var $formdata = $commentForm.serialize();
+                //Find all user mentions
                 var $usermention = $('#comment-textarea').find('.usermention').map(function(){
                                         return $(this).attr('data-id');
                                     }).get();
+                //Add user mentions to formdata string
                 $formdata += "&usermention="+encodeURIComponent($usermention);
                 //Find all user tags and convert to text
                 var $comment = $('#comment-textarea').clone();
                 $comment.find('.usermention').each(function(){
                    $(this).append('<span>'+this.attributes.value.value+'</span>');
                 });
+                
                 //Append to formdata
                 $formdata += "&comment="+encodeURIComponent($comment.text());
                 
@@ -963,7 +967,7 @@ function enableComments()
                 $('#comment-textarea').attr('disabled','disabled');
                 $('#comment-submit').attr('disabled','disabled');
                 
-                //Send to server
+                //Display Sending Message
                 Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
                     id: 'notif-top',
                     errorMessage: 'Error posting comment',
@@ -972,6 +976,7 @@ function enableComments()
                     action: $.ajax,
                 },
                 {
+                    //Ajax Call
                     type:'POST',
                     url: $commentForm.attr('action'),
                     data: $formdata,
@@ -999,15 +1004,20 @@ function enableComments()
             }
             else
             {
+                //Comment is empty
                 alert('You cannot send an empty comment');
             }
             return false;
         });
         
+        //Pusher Events
         if(presenceChannelCurrent && document.getElementById('channel_name') !== null)
         {
+            //Bind pusher event for new comments
             presenceChannelCurrent.bind('client-new-chat',function(data){
+                //Reload comment container to display new comments
                 $('#chat-body').load('/comment/listcomment/'+document.getElementById('commentable_key').value,function(){
+                    //Show notification on new comment
                     Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
                         showCloseButton: true,
                         type: 'info',

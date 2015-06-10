@@ -1,11 +1,11 @@
 <?php
 
-Namespace Swift\Services;
-
 /*
  * Name: Flag
  * Description: Useful functions for use with flags
  */
+
+Namespace Swift\Services;
 
 Use SwiftFlag;
 Use Sentry;
@@ -14,7 +14,14 @@ Use Crypt;
 Use Response;
 
 class Flag {
-    
+
+    /*
+     * Checks if a flag is marked as important in its `type` column
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     *
+     * @return boolean
+     */
     public function isImportant($obj)
     {
         $obj->load('flag');
@@ -31,7 +38,14 @@ class Flag {
         
         return false;
     }
-    
+
+    /*
+     * Checks if a flag is marked as starred in its `type` column
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     *
+     * @return boolean
+     */
     public function isStarred($obj,$user=false)
     {
         $obj->load('flag');
@@ -53,7 +67,14 @@ class Flag {
 
         return false;
     }
-    
+
+    /*
+     * Checks if a flag is marked as read in its `type` column
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     *
+     * @return boolean
+     */
     public function isRead($obj,$user=false)
     {
         $obj->load('flag');
@@ -75,7 +96,15 @@ class Flag {
 
         return false;        
     }
-    
+
+    /*
+     * Toggles the 'Starred' flag in its `type` column
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param booleann $user
+     *
+     * @return boolean
+     */
     public function toggleStarred($obj,$user=false)
     {
         if($user === false)
@@ -112,7 +141,15 @@ class Flag {
         $obj->flag()->save($flag);
         return true;
     }
-    
+
+    /*
+     * Toggles the 'Important' flag in its `type` column
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param booleann $user
+     *
+     * @return boolean
+     */
     public function toggleImportant($obj,$user=false)
     {
         if($user === false)
@@ -148,7 +185,15 @@ class Flag {
         $obj->flag()->save($flag);
         return true;        
     }
-    
+
+    /*
+     * Toggles the 'Read' flag in its `type` column
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param booleann $user
+     *
+     * @return boolean
+     */
     public function toggleRead($obj,$user=false)
     {
         if($user === false)
@@ -188,7 +233,16 @@ class Flag {
         $obj->flag()->save($flag);
         return true;
     }
-    
+
+    /*
+     * Helper function which allows user to set toggles for starred, important and read flags
+     *
+     * @param integer $type
+     * @param string $class
+     * @param string $adminPermission
+     *
+     * @return \Illuminate\Facades\Response
+     */
     public function set($type,$class,$adminPermission)
     {
         if(Input::has('id'))

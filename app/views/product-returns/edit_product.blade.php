@@ -32,13 +32,15 @@
     <td>
         <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_qty_client_".$p->id."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$addProduct) editable-disabled @endif" data-type="text" data-context="product" data-name="qty_client" data-pk="{{ $p->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/product/{{$form->encrypted_id}}" data-value="{{ $p->qty_client or "" }}"></a>
     </td>
-    @if($form->type === \SwiftPR::SALESMAN && !$addProduct)
+    @if(!$edit || ($form->type === \SwiftPR::SALESMAN && ($publishReception || $publishStoreValidation)))
         <td>
             <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_qty_pickup_".$p->id."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isStoreReception && !$isAdmin) editable-disabled @endif" data-type="text" data-context="product" data-name="qty_pickup" data-pk="{{ $p->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/product/{{$form->encrypted_id}}" data-value="{{ $p->qty_pickup or "" }}"></a>
         </td>
+        @if(!$publishReception)
         <td>
             <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_qty_store_".$p->id."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isStoreValidation && !$isAdmin) editable-disabled @endif" data-type="text" data-context="product" data-name="qty_store" data-pk="{{ $p->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->qty_store or "" }}"></a>
         </td>
+        @endif
         <td>
             <a href="#" @if(isset($p->id)) {{ "id=\"purchaseorder_qty_triage_picking_".$p->id."\"" }} @endif class="editable product-editable @if(isset($dummy) && $dummy == true) dummy @endif @if((!$isStoreReception || !$isStoreValidation) && !$isAdmin) editable-disabled @endif" data-type="text" data-context="product" data-name="qty_triage_picking" data-pk="{{ $p->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/product/{{ Crypt::encrypt($form->id) }}" data-value="{{ $p->qty_triage_picking or "" }}"></a>
         </td>

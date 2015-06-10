@@ -242,12 +242,10 @@ class NodeDefinition
 
             //Else check products
 
-            $products = $pr->product()
+            $products = $pr->productApproved()
                             ->with('discrepancy')
                             ->where('pickup','=',\SwiftPRProduct::PICKUP)
-                            ->whereHas('approvalretailman',function($q){
-                                return $q->where('approved','=',\SwiftApproval::APPROVED);;
-                            })->get();
+                            ->get();
 
             /*
              * Got Products to Pickup
@@ -306,11 +304,9 @@ class NodeDefinition
         {
             //Else check products
 
-            $products = $pr->product()
+            $products = $pr->productApproved()
                             ->with('discrepancy')
-                            ->whereHas('approval',function($q){
-                                return $q->approvedBy(\SwiftApproval::PR_RETAILMAN);
-                            })->get();
+                            ->get();
 
             /*
              * Got Products to Store Validation
@@ -320,11 +316,13 @@ class NodeDefinition
                 //verify each product;
                 foreach($products as $p)
                 {
+                    /*
                     if($p->qty_pickup !== $p->qty_store && count($p->discrepancy) === 0)
                     {
                         $returnReasonList['discrepancy'] = "Please set a reason for discrepancy on product ID: ".$p->id;
                         break;
                     }
+                     */
 
                     if($p->qty_store !== ($p->qty_triage_picking + $p->qty_triage_disposal))
                     {

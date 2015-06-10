@@ -54,19 +54,19 @@
         </div>
     </div>
     <div class="row">
-	<div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
-		<h1 class="page-title txt-color-blueDark">
-			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-map-marker"></i> 
-				A&P Request
-			<span>&gt;  
-				Form ID: #{{ $form->id }}
-			</span>
-                        <span>
-                            &nbsp;By {{ $owner }}
-                        </span>
-		</h1>
-	</div>
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
+            <h1 class="page-title txt-color-blueDark">
+                <!-- PAGE HEADER -->
+                <i class="fa-fw fa fa-gift"></i>
+                    A&P Request
+                <span>&gt;
+                    Form ID: #{{ $form->id }}
+                </span>
+                            <span>
+                                &nbsp;By {{ $owner }}
+                            </span>
+            </h1>
+        </div>
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
             <h1 class="page-title txt-color-blueDark">
                 <span id="workflow_status">Current Step: <span class="{{$current_activity['status_class']}}">{{ $current_activity['label'] }}</span></span> <a href="/workflow/by-form/{{get_class($form)}}/{{Crypt::encrypt($form->id)}}" class="colorbox-ajax" rel="tooltip" data-placement="bottom" data-original-title="Workflow History"><i class="fa fa-history"></i></a>

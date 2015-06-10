@@ -1,6 +1,6 @@
 <?php
 /**
- * Description of CHCLLive
+ * Description: Table that stores information extracted from http://www.chcl.mu/info/?id=49
  *
  * @author kpudaruth
  */

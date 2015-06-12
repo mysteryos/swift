@@ -171,7 +171,7 @@ Class NodeDefinitionJoin {
         {
             $productcount = $apr->product()->count();
             $rejectedproductcount = $apr->product()->whereHas('approval',function($q){
-                return $q->where('type','=',SwiftApproval::APR_CATMAN,'AND')->where('approved','=',SwiftApproval::REJECTED);
+                return $q->where('type','=',\SwiftApproval::APR_CATMAN,'AND')->where('approved','=',\SwiftApproval::REJECTED);
             })->count();
             
             if($productcount == $rejectedproductcount)

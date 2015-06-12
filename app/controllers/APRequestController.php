@@ -1055,8 +1055,8 @@ class APRequestController extends UserController {
                 
                 if($form->approval()->save($approval))
                 {
-                    Queue::push('APRequestHelper@autoexecapproval',array('aprequest_id'=>$form->id));
-                    Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+//                    Queue::push('APRequestHelper@autoexecapproval',array('aprequest_id'=>$form->id));
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
                     return Response::make('success');
                 }
                 else
@@ -1096,6 +1096,18 @@ class APRequestController extends UserController {
                     case \SwiftApproval::APR_EXEC:
                         if(is_numeric(\Input::get('pk')))
                         {
+
+                            /*
+                             * Check if already has entry
+                             */
+
+                            $approvalCount = $product->approval()->where('type','=',$type)->count();
+
+                            if($approvalCount)
+                            {
+                                return \Response::make("This form is broken. Please refresh this page.",500);
+                            }
+
                             /*
                              * New Entry
                              */

@@ -68,17 +68,29 @@ class NodeActivity {
                         }
                     }
                     //send Notification
-                    if($n->notified === 0 && $n->definition->php_notification_function !== "")
+                    if($n->notified === 0)
                     {
-                        if(is_callable($n->definition->php_notification_function."::sendNotification"))
+                        if($n->definition->php_channel_name !== "")
                         {
-                            call_user_func_array($n->definition->php_notification_function."::sendNotification",array($workflow_activity,$permissionArray));
-                            $n->notified = 1;
+                            if(is_callable("\Channel\\{$workflow_activity->workflowable_type}::triggerByName"))
+                            {
+                                $channelClass = "\Channel\\".$workflow_activity->workflowable_type;
+                                $channel = new $channelClass($workflow_activity->workflowable,$n->definition->php_channel_name);
+                                $channel->triggerByName(['nodeActivity'=>$n]);
+                            }
                         }
-                        else
+                        if($n->definition->php_notification_function !== "")
                         {
-                            throw new \Exception("Notification php function '{$n->definition->php_notification_function}::sendNotification' is not callable");
-                        } 
+                            if(is_callable($n->definition->php_notification_function."::sendNotification"))
+                            {
+                                call_user_func_array($n->definition->php_notification_function."::sendNotification",array($workflow_activity,$permissionArray));
+                                $n->notified = 1;
+                            }
+                            else
+                            {
+                                throw new \Exception("Notification php function '{$n->definition->php_notification_function}::sendNotification' is not callable");
+                            }
+                        }
                     }
                     $n->save();
                 }

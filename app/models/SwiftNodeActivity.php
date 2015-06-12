@@ -253,4 +253,5 @@ class SwiftNodeActivity extends Eloquent
                     });
                 })->remember(30)->count();        
     }
+
 }

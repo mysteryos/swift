@@ -77,6 +77,8 @@ Class NodeDefinition {
             {
                 //Total count tallies
                 //All approvals are done and done
+                //Add Auto exec approval if needed
+                \APRequestHelper::autoExecApprovalBasedOnCatMan($apr);
                 return true;
             }
         }
@@ -90,11 +92,11 @@ Class NodeDefinition {
         
         if(count($apr))
         {
-            $products = $apr->product()->get();
+            $products = $apr->product()->count();
             $approvals = $apr->product()->whereHas('approval',function($q){
                 return $q->where('type','=',SwiftApproval::APR_EXEC,'AND')->where('approved','!=',SwiftApproval::PENDING);
-            })->get();
-            if(count($products) == count($approvals))
+            })->count();
+            if($products == $approvals)
             {
                 //Total count tallies
                 //All approvals are done and done

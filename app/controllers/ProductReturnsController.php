@@ -587,6 +587,18 @@ class ProductReturnsController extends UserController {
     }
 
     /*
+     * Display Pending Tasks
+     *
+     * @param string $type
+     */
+    public function getTasks($type='all')
+    {
+        $this->data['type'] = $type;
+
+        return $this->task()->tasker($type);
+    }
+
+    /*
      * Save new invoice cancelled Form
      *
      * @param int $type
@@ -723,9 +735,9 @@ class ProductReturnsController extends UserController {
      * @return \Illuminate\Support\Facades\Response
      */
 
-    public function putGeneralinfo($form_id)
+    public function putGeneralinfo()
     {
-        return $this->process()->save($form_id);
+        return $this->process()->save(\Input::get('pk'));
     }
 
     /*

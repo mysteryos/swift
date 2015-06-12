@@ -52,22 +52,33 @@ class UserController extends Controller {
     /*
      * Combine Assets and Sets Data
      */
-    public function makeView($view)
+    public function makeView($view,$data=false)
     {
-        $menu = new Swift\Menu();
-        $this->data['sidemenu'] =  $menu->generateHTML();
-        if (Request::header('X-PJAX')) {
-            $this->data['before_js'] = $this->data['js'];
+        if($data === false)
+        {
+            $data = $this->data;
+        }
+
+        $menu = new \Swift\Menu();
+        $data['sidemenu'] =  $menu->generateHTML();
+        if (\Request::header('X-PJAX')) {
+            $data['before_js'] = $data['js'];
         }
         else
         {
-            $this->data['assets'] = "\"".implode('", "', array_merge($this->data['css'],$this->data['js']))."\"";
+            $data['assets'] = "\"".implode('", "', array_merge($data['css'],$data['js']))."\"";
         }
-        $this->data['pageTitle'] = ($this->pageTitle != "" ? $this->pageTitle." - " : "").$this->pageName;
-        $this->data['notifications'] = SwiftNotification::getByUser($this->currentUser->id,10);
-//            dd($this->data['notifications']);
-        $this->data['notification_unread_count'] = SwiftNotification::getUnreadCountByUser($this->currentUser->id);
-        return View::make($view,$this->data);
+        if(isset($data['pageTitle']))
+        {
+            $data['pageTitle'] = $data['pageTitle']." - ".$this->pageName;
+        }
+        else
+        {
+            $data['pageTitle'] = ($this->pageTitle != "" ? $this->pageTitle." - " : "").$this->pageName;
+        }
+        $data['notifications'] = \SwiftNotification::getByUser($this->currentUser->id,10);
+        $data['notification_unread_count'] = \SwiftNotification::getUnreadCountByUser($this->currentUser->id);
+        return \View::make($view,$data);
     }
 
     /*
@@ -172,6 +183,33 @@ class UserController extends Controller {
             else
             {
                 throw new \RuntimeException("Process Class must be an instance of \Process\Process");
+            }
+        }
+        else
+        {
+            throw new \RuntimeException("Base class must be an instance of \Illuminate\Database\Eloquent\Model");
+        }
+    }
+
+    public function task($baseClass=false)
+    {
+        if($baseClass === false)
+        {
+            $baseClass = \Config::get("context.$this->context");
+        }
+
+        $class = new $baseClass;
+        if($class instanceof \Illuminate\Database\Eloquent\Model)
+        {
+            $taskClassName = "\Task\\$baseClass";
+            $taskClass = new $taskClassName($this);
+            if($taskClass instanceof \Task\Task)
+            {
+                return $taskClass;
+            }
+            else
+            {
+                throw new \RuntimeException("Task Class must be an instance of \Task\Task");
             }
         }
         else

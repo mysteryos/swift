@@ -333,7 +333,7 @@ class SwiftPR extends Eloquent {
     public static function getById($id)
     {
         return self::with(['product','document','approval','pickup','pickup.driver','creditNote','order','comments','workflow','owner','customer'])
-                ->first();
+                ->find($id);
     }
 }
 

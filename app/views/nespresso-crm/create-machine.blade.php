@@ -95,14 +95,14 @@
                                                                                                     <input type="text" class="form-control" name="serial_no"/>
                                                                                                 </div>
                                                                                             </div>-->
-                                                                                        <div class="row">
-                                                                                            <div class="form-group col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <div class="col-md-6">
                                                                                                 <label class="col-md-4 control-label">Serial Number</label>
                                                                                                 <div class="col-md-8">
                                                                                                     <input type="text" class="form-control" name="serial_no"/>
                                                                                                 </div>
                                                                                             </div>
-                                                                                            <div class="form-group col-md-6">
+                                                                                            <div class="col-md-6">
                                                                                                 <label class="col-md-4 control-label">Warranty Period</label>
                                                                                                 <div class="col-md-8">
                                                                                                     <div class="row">

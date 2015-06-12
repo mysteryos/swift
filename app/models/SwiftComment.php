@@ -24,20 +24,20 @@ class SwiftComment extends Eloquent {
 		'comment',
 		'user_id',
 	);
-        
-        protected $guarded = array('id');
 
-        /* Revisionable */
+    protected $guarded = array('id');
 
-        protected $revisionEnabled = true;
+    /* Revisionable */
 
-        protected $keepRevisionOf = array(
-            'comment'
-        );
-        
-        protected $revisionFormattedFieldNames = array(
-            'comment' => 'Comment',
-        ); 
+    protected $revisionEnabled = true;
+
+    protected $keepRevisionOf = array(
+        'comment'
+    );
+
+    protected $revisionFormattedFieldNames = array(
+        'comment' => 'Comment',
+    ); 
         
 	/**
 	 * Defines polymorphic relationship type
@@ -49,10 +49,10 @@ class SwiftComment extends Eloquent {
 		return $this->morphTo();
 	}
         
-        public function story()
-        {
-            return $this->morphMany('SwiftStory','storyfiable');
-        }        
+    public function story()
+    {
+        return $this->morphMany('SwiftStory','storyfiable');
+    }        
 
 	/**
 	 * Defines the belongsTo relationship

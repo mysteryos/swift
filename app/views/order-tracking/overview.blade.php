@@ -40,11 +40,11 @@
         </li>
         @foreach(SwiftOrder::$business_unit as $k => $bu)
             <li class="@if($business_unit == $k){{ "active" }}@endif">
-                    <a href="/order-tracking/overview/{{ $k }}" class="pjax">{{ $bu }}</a>
+                <a href="/order-tracking/overview/{{ $k }}" class="pjax">{{ $bu }}</a>
             </li>                                        
         @endforeach
-    </ul>    
-<!-- widget grid -->
+    </ul>
+    <!-- widget grid -->
     <section id="widget-grid">
 
         <!-- START ROW -->

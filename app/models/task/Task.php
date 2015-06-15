@@ -12,8 +12,6 @@ abstract class Task {
     //Controller attribute which inherits all attributes from our controllers
     protected $controller;
 
-    protected $controller_data;
-
     protected $resource;
 
     protected $data = array();
@@ -22,8 +20,8 @@ abstract class Task {
     {
         $this->controller = $controller;
 
-        $this->query = (new $this->resource)->query();
+        $this->query = new $this->resource;
 
-        $this->data = array_merge($this->data,$this->controller_data);
+        $this->data = array_merge($this->data,$this->controller->data);
     }
 }

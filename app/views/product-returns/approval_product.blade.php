@@ -8,7 +8,7 @@
                     {{\Crypt::encrypt($p->approvalretailman->id)}}
                 @else
                     {{'0'}}
-                @endif" url="{{"/$rootURL/productapproval/{\SwiftApproval::PR_RETAILMAN}/".\Crypt::encrypt($p->id)}}" data-name="approval_approved"><i class="fa fa-lg fa-check"></i></a>
+                @endif" url="{{"/$rootURL/product-approval/".\SwiftApproval::PR_RETAILMAN."/".Crypt::encrypt($p->id)}}" data-name="approval_approved"><i class="fa fa-lg fa-check"></i></a>
         <a class="btn btn-default btn-approve hover btn-reject
                 @if($p->approvalretailman && $p->approvalretailman->approved === \SwiftApproval::REJECTED)
                     {{'on'}}
@@ -17,7 +17,7 @@
                     {{\Crypt::encrypt($p->approvalretailman->id)}}
                 @else
                     {{'0'}}
-                @endif" url="{{"/$rootURL/productapproval/{\SwiftApproval::PR_RETAILMAN}/".\Crypt::encrypt($p->id)}}" data-name="approval_approved"><i class="fa fa-lg fa-times-circle"></i></a>
+                @endif" url="{{"/$rootURL/product-approval/".\SwiftApproval::PR_RETAILMAN."/".Crypt::encrypt($p->id)}}" data-name="approval_approved"><i class="fa fa-lg fa-times-circle"></i></a>
     </td>
     <td class="row-space-left-2 pointable">
         {{$p->qty_client}} <i class="fa fa-times"></i> {{$p->name}} ({{$p->jdeproduct->AITM}})

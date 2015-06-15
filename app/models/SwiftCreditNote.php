@@ -37,7 +37,7 @@ class SwiftCreditNote extends Eloquent
     //Indexing Enabled
     public $esEnabled = true;
     //Info Context
-    public $esInfoContext = "credit-note";
+    public $esInfoContext = "creditnote";
     public $esRemove = ['creditable_type','creditable_id'];
 
     public function esGetContext() {

@@ -8,7 +8,9 @@ class SwiftPR extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait; 
     use \Swift\ElasticSearchEventTrait;
-    
+
+    public $readableName = "Product Returns";
+
     protected $table = "scott_swift.swift_pr";
     
     protected $guarded = array('id');
@@ -57,7 +59,7 @@ class SwiftPR extends Eloquent {
     public $revisionPrimaryIdentifier = "id";
     public $keepCreateRevision = true;
     public $softDelete = true;
-    public $revisionRelations = ['product','order','pickup','approval','document','creditNote'];
+    public $revisionRelations = ['product','order','pickup','approval','document','creditnote'];
     
     
     /*
@@ -226,7 +228,7 @@ class SwiftPR extends Eloquent {
         return $this->morphMany('SwiftPickup','pickable');
     }
 
-    public function creditNote()
+    public function creditnote()
     {
         return $this->morphMany('SwiftCreditNote','creditable');
     }
@@ -332,7 +334,7 @@ class SwiftPR extends Eloquent {
 
     public static function getById($id)
     {
-        return self::with(['product','document','approval','pickup','pickup.driver','creditNote','order','comments','workflow','owner','customer'])
+        return self::with(['product','document','approval','pickup','pickup.driver','creditnote','order','comments','workflow','owner','customer'])
                 ->find($id);
     }
 }

@@ -130,7 +130,7 @@ Class NodeDefinition {
             /*
              * Credit Note Check
              */
-            $creditNoteCount = $acp->creditNote()->count();
+            $creditNoteCount = $acp->creditnote()->count();
             if($creditNoteCount === 0)
             {
                 $returnReasonList['creditnote_absent'] = "Input credit note for cancelled invoice";

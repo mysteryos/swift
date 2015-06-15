@@ -14,7 +14,7 @@
     </div>
     <div class="panel-group smart-accordion-default">
         @foreach($today_forms as $tf)
-            @include('product-returns.approval_form',['form'=>$tf])
+            @include('product-returns/approval_form',['form'=>$tf])
         @endforeach
     </div>
 </div>
@@ -27,7 +27,7 @@
     </div>
     <div class="panel-group smart-accordion-default">
         @foreach($yesterday_forms as $yf)
-            @include('product-returns.approval_form',['form'=>$yf])
+            @include('product-returns/approval_form',['form'=>$yf])
         @endforeach
     </div>
 </div>
@@ -40,7 +40,7 @@
     </div>
     <div class="panel-group smart-accordion-default">
         @foreach($forms as $of)
-            @include('product-returns.approval_form',['form'=>$of])
+            @include('product-returns/approval_form',['form'=>$of])
         @endforeach
     </div>
 </div>

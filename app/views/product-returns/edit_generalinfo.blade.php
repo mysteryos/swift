@@ -15,7 +15,7 @@
         </div>
         @if($form->type === \SwiftPR::ON_DELIVERY)
         <div class="form-group">
-            <label class="col-md-2 control-label">RFRF Paper Number</label>
+            <label class="col-md-2 control-label">RFRF Paper Number*</label>
             <div class="col-md-10">
                 <a href="#" id="generalinfo_paper_number_{{ $form->id }}" class="editable @if(!$isOwner && !$isAdmin) editable-disabled @endif" data-type="text" data-name="paper_number" data-pk="{{$form->encrypted_id}}" data-context="generalinfo" data-url="/{{ $rootURL }}/generalinfo" data-value="{{$form->paper_number or ""}}"></a>
             </div>

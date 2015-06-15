@@ -909,7 +909,7 @@ class Helper {
              * Add Approval by System
              */
 
-            $product->approval()->save($approval);
+            $product->approvalretailman()->save($approval);
         }
 
         if(\WorkflowActivity::update($pr,$data['context']))

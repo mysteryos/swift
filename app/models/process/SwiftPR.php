@@ -289,7 +289,7 @@ class SwiftPR extends Process
                 $this->form = $this->resource->with('productApproved')->find($this->pk);
                 break;
             case \SwiftApproval::PR_CREDITNOTE:
-                $this->form = $this->resource->with('creditNote')->find($this->pk);
+                $this->form = $this->resource->with('creditnote')->find($this->pk);
                 break;
             default:
                 throw new \RuntimeException("This approval level is not supported.");
@@ -321,6 +321,14 @@ class SwiftPR extends Process
 
                 foreach($this->form->product as $p)
                 {
+                    if($p->jde_itm === null)
+                    {
+                        return \Response::make("Please set a Product for (ID: $p->id)",500);
+                    }
+                    if($p->reason_id === null)
+                    {
+                        return \Response::make("Please set a reason for '$p->name' (ID: $p->id)",500);
+                    }
                     switch($this->form->type)
                     {
                         case \SwiftPR::ON_DELIVERY:
@@ -329,25 +337,17 @@ class SwiftPR extends Process
                                 return \Response::make("Please set a valid quantity at pickup for '$p->name' (ID: $p->id)",500);
                             }
 
-                            if($p->qty_pickup !== ($p->qty_triage_pickup + $p->qty_triage_disposal))
+                            if($p->qty_pickup !== ($p->qty_triage_picking + $p->qty_triage_disposal))
                             {
                                 return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
                             }
+                            break;
                         case \SwiftPR::SALESMAN:
-                            if($p->jde_itm === null)
-                            {
-                                return \Response::make("Please set a Product for (ID: $p->id)",500);
-                            }
-
                             if($p->qty_client === null || $p->qty_client < 0)
                             {
                                 return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
                             }
-
-                            if($p->reason_id === null)
-                            {
-                                return \Response::make("Please set a reason for '$p->name' (ID: $p->id)",500);
-                            }
+                            break;
                     }
                 }
 
@@ -356,6 +356,31 @@ class SwiftPR extends Process
                     if($this->form->paper_number === null)
                     {
                         return \Response::make("Please enter an RFRF Paper number",500);
+                    }
+
+                    if(!count($this->form->pickup))
+                    {
+                        return \Response::make("Please enter pickup details",500);
+                    }
+                    else
+                    {
+                        foreach($this->form->pickup as $pickup)
+                        {
+                            if(!$pickup->driver_id)
+                            {
+                                return \Response::make("Please select a driver in your pickup details",500);
+                            }
+
+                            if($pickup->pickup_date === null)
+                            {
+                                return \Response::make("Please set a date in your pickup details",500);
+                            }
+
+                            if($pickup->status !== \SwiftPickup::COLLECTION_COMPLETE)
+                            {
+                                return \Response::make("Please set your pickup status to 'collection complete",500);
+                            }
+                        }
                     }
                 }
                 break;
@@ -389,7 +414,7 @@ class SwiftPR extends Process
                 {
                     if($p->qty_pickup === null || $p->qty_pickup < 0)
                     {
-                        return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
+                        return \Response::make("Please set a valid quantity at pickup for '$p->name' (ID: $p->id)",500);
                     }
 
                     if($p->qty_pickup !== ($p->qty_triage_picking + $p->qty_triage_disposal))
@@ -397,6 +422,7 @@ class SwiftPR extends Process
                         return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
                     }
                 }
+                break;
             //Store Validation
             case \SwiftApproval::PR_STOREVALIDATION:
                 if(!$this->controller->isAdmin && !$this->controller->isStoreValidation)
@@ -408,14 +434,15 @@ class SwiftPR extends Process
                 {
                     if($p->qty_store === null || $p->qty_store < 0)
                     {
-                        return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
+                        return \Response::make("Please set a valid quantity at store for '$p->name' (ID: $p->id)",500);
                     }
 
                     if($p->qty_store !== ($p->qty_triage_picking + $p->qty_triage_disposal))
                     {
-                        return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
+                        return \Response::make("Please make sure that quantity store tallies with quantity triage for '$p->name' (ID: $p->id)",500);
                     }
                 }
+                break;
             //Accounting - Credit Note
             case \SwiftApproval::PR_CREDITNOTE:
                 if(!$this->controller->isAdmin && !$this->controller->isCreditor)
@@ -423,7 +450,7 @@ class SwiftPR extends Process
                     return \Response::make("You don't have permission to publish this form" ,500);
                 }
 
-                if(!count($this->form->creditNote))
+                if(!count($this->form->creditnote))
                 {
                     return \Response::make("Please enter a credit note for this form",500);
                 }

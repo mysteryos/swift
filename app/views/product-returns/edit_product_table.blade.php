@@ -26,7 +26,7 @@
         <th rowspan='2'>
             Reason Comment
         </th>
-        <th colspan='@if(!$edit || ($form->type === \SwiftPR::SALESMAN && ($publishReception || $publishStoreValidation))){{5}}@else{{1}}@endif' class="text-center">
+        <th colspan='@if(!$edit || $publishReception || $publishStoreValidation || $isAdmin){{5}}@elseif($form->type === \SwiftPR::ON_DELIVERY && $publishOwner){{4}}@else{{1}}@endif' class="text-center">
             Quantity
         </th>
         @if(($addProduct && $isOwner) || $isAdmin)
@@ -39,11 +39,11 @@
         <th>
             Client
         </th>
-        @if(!$edit || ($form->type === \SwiftPR::SALESMAN && ($publishReception || $publishStoreValidation)))
+        @if(!$edit || $publishReception || $publishStoreValidation || ($form->type === \SwiftPR::ON_DELIVERY && $publishOwner) || $isAdmin)
             <th>
                 Pickup
             </th>
-            @if(!$publishReception)
+            @if(!$publishReception && !($form->type === \SwiftPR::ON_DELIVERY && $publishOwner))
             <th>
                 Store
             </th>
@@ -58,7 +58,7 @@
     </tr>
     @if(count($form->product))
         @foreach($form->product as &$p)
-            <?php $p->encrypted_id = Crypt::encrypt($p->id); ?>
+            <?php $p->encrypted_id = \Crypt::encrypt($p->id); ?>
             @include('product-returns.edit_product',array('p'=>$p))
         @endforeach
     @else

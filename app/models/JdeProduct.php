@@ -31,6 +31,7 @@ class JdeProduct extends Eloquent {
     public static function getByName($term,$offset,$limit)
     {
         return self::where('DSC1','LIKE',"%$term%")
+                ->whereIn('GLPT',['FOOD','HHPC','WINE'])
                 ->limit($limit)
                 ->offset($offset)
                 ->orderBy('DSC1','ASC')

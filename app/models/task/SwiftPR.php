@@ -13,70 +13,70 @@ class SwiftPR extends Task{
 
     public function __construct($controller)
     {
+        parent::__construct($controller);
+
         $this->list = $this->data['taskList'] = [
             [
                 'name' => 'Approval',
-                'permission' =>[$this->controller->isRetailMan],
+                'permission' =>[$controller->isRetailMan],
                 'type' => 'approval',
                 'function' => $this->approvalTask(),
-                'view' => 'tasker.approval',
+                'view' => 'product-returns/tasker-approval',
                 'js' => 'pr_approval',
                 'urljs' => '/js/swift/swift.pr_approval.js',
                 'channel' => 'pr_approval'
             ],
             [
                 'name' => 'Customer Care',
-                'permission' => [$this->controller->isCcare],
+                'permission' => [$controller->isCcare],
                 'type' => 'customer-care',
-                'function' => $this->customerCareTask(),
-                'view' => 'tasker.customercare',
+                'function' => 'customerCareTask',
+                'view' => 'product-returns/tasker-customercare',
                 'js' => 'pr_customercare',
                 'urljs' => '/js/swift/swift.pr_customercare.js',
                 'channel' => 'pr_customercare'
             ],
             [
                 'name' => 'Store Pickup',
-                'permission' => [$this->controller->isStorePickup],
+                'permission' => [$controller->isStorePickup],
                 'type' => 'store-pickup',
-                'function' => $this->storePickupTask(),
-                'view' => 'tasker.store_pickup',
+                'function' => 'storePickupTask',
+                'view' => 'product-returns/tasker-store_pickup',
                 'js' => 'pr_store_pickup',
                 'urljs' => '/js/swift/swift.pr_store_pickup.js',
                 'channel' => 'pr_store_pickup'
             ],
             [
                 'name' => 'Store Reception',
-                'permission' => [$this->controller->isStoreReception],
+                'permission' => [$controller->isStoreReception],
                 'type' => 'store-reception',
-                'function' => $this->storeReceptionTask(),
-                'view' => 'tasker.store_reception',
+                'function' => 'storeReceptionTask',
+                'view' => 'product-returns/tasker-store_reception',
                 'js' => 'pr_store_reception',
                 'urljs' => '/js/swift/swift.pr_store_reception.js',
                 'channel' => 'pr_store_reception'
             ],
             [
                 'name' => 'Store Validation',
-                'permission' => [$this->controller->isStoreValidation],
+                'permission' => [$controller->isStoreValidation],
                 'type' => 'store-validation',
-                'function' => $this->storeValidationTask(),
-                'view' => 'tasker.store_validation',
+                'function' => 'storeValidationTask',
+                'view' => 'product-returns/tasker-store_validation',
                 'js' => 'pr_store_validation',
                 'urljs' => '/js/swift/swift.pr_store_validation.js',
                 'channel' => 'pr_store_validation'
             ],
             [
                 'name' => 'Credit Note',
-                'permission' => [$this->controller->isCreditor],
+                'permission' => [$controller->isCreditor],
                 'type' => 'credit-note',
-                'function' => $this->creditNoteTask(),
-                'function' => 'tasker.credit_note',
+                'function' => 'creditNoteTask',
+                'view' => 'product-returns/tasker-credit_note',
                 'js' => 'pr_credit_note',
                 'urljs' => '/js/swift/swift.pr_credit_note.js',
                 'channel' => 'pr_credit_note'
             ],
         ];
-
-        parent::__construct($controller);
     }
 
     /*
@@ -89,7 +89,7 @@ class SwiftPR extends Task{
         {
             if($type==='all')
             {
-                $this->data['task'] = $this->list[2];
+                $this->data['task'] = $this->list[0];
                 return $this->approvalTask();
             }
             else
@@ -99,7 +99,7 @@ class SwiftPR extends Task{
                     if($type===$l['type'])
                     {
                         $this->data['task'] = $l;
-                        return $l['function'];
+                        return $this->$l['function']();
                     }
                 }
             }
@@ -116,7 +116,7 @@ class SwiftPR extends Task{
                     if(in_array(true,$l->permission))
                     {
                         $this->data['task'] = $l;
-                        return $l['function'];
+                        return $this->$l['function']();
                     }
                 }
             }
@@ -127,7 +127,7 @@ class SwiftPR extends Task{
                     if(in_array(true,$l->permission) && $type===$l['type'])
                     {
                         $this->data['task'] = $l;
-                        return $l['function'];
+                        return $this->$l['function']();
                     }
                 }
             }
@@ -152,13 +152,25 @@ class SwiftPR extends Task{
                                         },'product.approvalretailman'])->whereHas('workflow',function($q){
                                             return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
                                                     ->whereHas('nodes',function($q){
-                                                         return $q->where('user_id','=',0)->whereHas('permission',function($q){
-                                                             return $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND')
-                                                                    ->whereIn('permission_name',(array)array_keys($this->controller->currentUser->getMergedPermissions()));
+                                                        return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                            $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND');
+                                                            if($this->controller->currentUser->isSuperUser())
+                                                            {
+                                                                $q->whereIn('permission_name',['pr-approval-others','pr-approval-key-account','pr-approval-hospitality','pr-approval-van']);
+                                                            }
+                                                            else
+                                                            {
+                                                                $q->whereIn('permission_name',(array)array_keys($this->controller->currentUser->getMergedPermissions()));
+                                                            }
+                                                            return $q;
                                                         });
                                                     });
                                     })
                                     ->get();
+
+        $this->data['edit'] = true;
+        $this->data['erporder_status'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$status));
+        $this->data['erporder_type'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$prType));
 
         $this->data['hasForms'] = (boolean)count($this->data['forms']);
         
@@ -167,9 +179,56 @@ class SwiftPR extends Task{
         return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
+    /*
+     * Customer Care Task: All Categories
+     *
+     * @return \Illuminate\Support\Facades\View
+     */
     private function customerCareTask()
     {
-        
+        $this->data['pageTitle'] = "Customer Care";
+
+        $this->data['forms'] = $this->query
+                                    ->orderBy('updated_at','desc')
+                                    ->with(['order','workflow','workflow.nodes','product'=>function($q){
+                                            return $q->orderBy('id','DESC')->whereHas('approvalretailman',function($q){
+                                                return $q->where('approved','=',\SwiftApproval::APPROVED);
+                                            });
+                                        },'product.approvalretailman'])->whereHas('workflow',function($q){
+                                            return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
+                                                    ->whereHas('nodes',function($q){
+                                                        return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                            $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND');
+                                                            if($this->controller->currentUser->isSuperUser())
+                                                            {
+                                                                $q->whereIn('permission_name',['pr-ccare-gm',
+                                                                                                'pr-ccare-ht',
+                                                                                                'pr-ccare-ho',
+                                                                                                'pr-ccare-hh',
+                                                                                                'pr-ccare-vs',
+                                                                                                'pr-ccare-co',
+                                                                                                'pr-ccare-s3',
+                                                                                                'pr-ccare-sp',
+                                                                                                'pr-ccare-s2',
+                                                                                                'pr-ccare-hu',
+                                                                                                'pr-ccare-he',
+                                                                                                'pr-ccare-ws']);
+                                                            }
+                                                            else
+                                                            {
+                                                                $q->whereIn('permission_name',(array)array_keys($this->controller->currentUser->getMergedPermissions()));
+                                                            }
+                                                            return $q;
+                                                        });
+                                                    });
+                                    })
+                                    ->get();
+
+        $this->data['hasForms'] = (boolean)count($this->data['forms']);
+
+        $this->sortForms();
+
+        return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
     private function storePickupTask()
@@ -203,13 +262,13 @@ class SwiftPR extends Task{
             if($f->created_at->diffInDays(\Carbon::now()) === 0)
             {
                 $this->data['today_forms'][] = $f;
-                unset($forms[$key]);
+                unset($this->data['forms'][$key]);
             }
 
             if($f->created_at->diffInDays(\Carbon::now()) === 1)
             {
                 $this->data['yesterday_forms'][] = $f;
-                unset($forms[$key]);
+                unset($this->data['forms'][$key]);
             }
         }
     }

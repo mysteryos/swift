@@ -9,7 +9,7 @@
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-owner/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishPickup)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
-            @if($publishPickup || $isAdmin)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
+            @if(($publishPickup || $isAdmin) && $form->type===\SwiftPR::SALESMAN)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
             @if($publishReception)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-reception/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishStoreValidation)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-store-validation/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishCreditNote)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-credit-note/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
@@ -30,7 +30,7 @@
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-owner/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishPickup)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
-            @if($publishPickup || $isAdmin)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
+            @if(($publishPickup || $isAdmin) && $form->type===\SwiftPR::SALESMAN)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
             @if($publishReception)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-reception/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishStoreValidation)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-store-validation/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishCreditNote)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-credit-note/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
@@ -354,8 +354,8 @@
                         <!-- widget content -->
                         <div class="widget-body">
                             <form class="form-horizontal">
-                                    @if(count($form->creditNote))
-                                        @foreach($form->creditNote as &$c)
+                                    @if(count($form->creditnote))
+                                        @foreach($form->creditnote as &$c)
                                             <?php $c->id = Crypt::encrypt($c->id); ?>
                                             @include('product-returns.edit_credit_note',array('c'=>$c))
                                         @endforeach

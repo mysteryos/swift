@@ -10,6 +10,7 @@ class SwiftACPRequest extends Eloquent
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
 
+    //Used with Context
     public $readableName = "Accounts Payable";
 
     protected $table = "scott_swift.swift_acp_request";

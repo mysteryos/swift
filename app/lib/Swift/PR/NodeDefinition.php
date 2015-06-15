@@ -225,10 +225,7 @@ class NodeDefinition
 
     public static function prReception($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($pr)
@@ -243,7 +240,6 @@ class NodeDefinition
             //Else check products
 
             $products = $pr->productApproved()
-                            ->with('discrepancy')
                             ->where('pickup','=',\SwiftPRProduct::PICKUP)
                             ->get();
 
@@ -255,11 +251,11 @@ class NodeDefinition
                 //verify each product;
                 foreach($products as $p)
                 {
-                    if($p->qty_client !== $p->qty_pickup && count($p->discrepancy) === 0)
-                    {
-                        $returnReasonList['discrepancy'] = "Please set a reason for discrepancy on product ID: ".$p->id;
-                        break;
-                    }
+//                    if($p->qty_client !== $p->qty_pickup && count($p->discrepancy) === 0)
+//                    {
+//                        $returnReasonList['discrepancy'] = "Please set a reason for discrepancy on product ID: ".$p->id;
+//                        break;
+//                    }
 
                     if($p->qty_pickup !== ($p->qty_triage_picking + $p->qty_triage_disposal))
                     {
@@ -292,12 +288,9 @@ class NodeDefinition
         return $returnReason ? $returnReasonList : false;
     }
 
-    public function prStoreValidation($nodeActivity,$returnReason=false)
+    public static function prStoreValidation($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($pr)
@@ -305,7 +298,6 @@ class NodeDefinition
             //Else check products
 
             $products = $pr->productApproved()
-                            ->with('discrepancy')
                             ->get();
 
             /*
@@ -356,23 +348,20 @@ class NodeDefinition
 
     }
 
-    public function prCreditNote($nodeActivity,$returnReason=false)
+    public static function prCreditNote($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($pr)
         {
-            $creditNote = $pr->creditNote()->get();
+            $creditNote = $pr->creditnote()->get();
 
             if(count($creditNote))
             {
                 foreach($creditNote as $c)
                 {
-                    if($c->number !== "")
+                    if($c->number === "")
                     {
                         $returnReasonList['nonumber'] = "Please add a credit note number";
                     }

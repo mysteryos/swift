@@ -47,18 +47,20 @@ class SwiftPickup extends Eloquent
      * Constants
      */
 
-    const COLLECTION = 1;
-    const RECEPTION = 2;
-    const DELIVERY = 3;
+    const COLLECTION_SENT = 1;
+    const DELIVERY_SENT = 2;
+    const COLLECTION_COMPLETE = 3;
+    const DELIVERY_COMPLETE = 4;
     const CANCELLED = -1;
 
-    public static $status = [self::COLLECTION => 'Collection Sent',
-                      self::DELIVERY => 'Delivery Completed',
-                      self::RECEPTION => 'Received Goods',
+    public static $status = [self::COLLECTION_SENT => 'Collection Sent',
+                      self::DELIVERY_SENT => 'Delivery Sent',
+                      self::COLLECTION_COMPLETE => 'Collection Complete',
+                      self::DELIVERY_COMPLETE => 'Delivery Complete',
                       self::CANCELLED => 'Cancelled'];
 
-    public static $pr_status = [self::COLLECTION => 'Collection Sent',
-                      self::DELIVERY => 'Delivery Completed',
+    public static $pr_status = [self::COLLECTION_SENT => 'Collection Sent',
+                      self::COLLECTION_COMPLETE => 'Collection Complete',
                       self::CANCELLED => 'Cancelled'];
 
     /*

@@ -55,7 +55,7 @@ class NodeActivity {
                                             return $v['permission_name'];
                                         },$n->definition->permission->toArray());
                     //send mail
-                    if($n->mailed === 0 && $n->definition->php_mail_function !== "")
+                    if($n->mailed === 0 && $n->definition->php_mail_function !== "" && $n->definition->php_mail_function !== null)
                     {
                         if(is_callable($n->definition->php_mail_function."::sendMail"))
                         {
@@ -64,7 +64,7 @@ class NodeActivity {
                         }
                         else
                         {
-                            throw new \Exception("Mail php function '{$n->definition->php_mail_function}::sendMail' is not callable");
+                            throw new \Exception("Mail php function '{$n->definition->php_mail_function}::sendMail' is not callable",E_USER_ERROR);
                         }
                     }
                     //send Notification
@@ -78,8 +78,12 @@ class NodeActivity {
                                 $channel = new $channelClass($workflow_activity->workflowable,$n->definition->php_channel_name);
                                 $channel->triggerByName(['nodeActivity'=>$n]);
                             }
+                            else
+                            {
+                                throw new \Exception("Channel php function '{$n->definition->php_channel_name}::triggerByName' is not callable",E_USER_ERROR);
+                            }
                         }
-                        if($n->definition->php_notification_function !== "")
+                        if($n->definition->php_notification_function !== "" && $n->definition->php_notification_function !== null)
                         {
                             if(is_callable($n->definition->php_notification_function."::sendNotification"))
                             {
@@ -88,7 +92,7 @@ class NodeActivity {
                             }
                             else
                             {
-                                throw new \Exception("Notification php function '{$n->definition->php_notification_function}::sendNotification' is not callable");
+                                throw new \Exception("Notification php function '{$n->definition->php_notification_function}::sendNotification' is not callable",E_USER_ERROR);
                             }
                         }
                     }

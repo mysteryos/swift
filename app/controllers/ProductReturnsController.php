@@ -539,7 +539,7 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        if(!in_array($type,[\SwiftPR::ON_DELIVERY,\SwiftPR::SALESMAN]))
+        if(!in_array($type,[\SwiftPR::ON_DELIVERY,\SwiftPR::SALESMAN,\SwiftPR::INVOICE_CANCELLED]))
         {
             return parent::notfound();
         }
@@ -790,6 +790,37 @@ class ProductReturnsController extends UserController {
     public function deleteErporder()
     {
         return $this->process('SwiftErpOrder')->delete();
+    }
+    
+    /*
+     * PUT: Credit Note
+     *
+     * @param string $pr_id
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function putCreditNote($pr_id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->isAdmin && !$this->isCreditor)
+        {
+            return parent::forbidden();
+        }
+
+        return $this->process('SwiftCreditNote')
+                    ->saveByParent(\Crypt::decrypt($pr_id));
+
+    }
+
+    /*
+     * DELETE: Credit Note
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function deleteCreditNote()
+    {
+        return $this->process('SwiftCreditNote')->delete();
     }
 
     /*

@@ -33,14 +33,14 @@
     </div>
     <ul class="nav nav-tabs row-space-4">
         @if($currentUser->isSuperUser())
-        <li class="@if($business_unit === false){{ "active" }}@endif">
+        <li class="@if($type === "all"){{ "active" }}@endif">
             <a href="/{{$rootURL}}/tasks/all" class="pjax">All</a>
         </li>
         @endif
-        @foreach($taskList as $task)
-            @if(in_array(true,$task['permissions']))
-                <li class="@if($task['type'] == $type){{ "active" }}@endif">
-                    <a href="/{{$rootURL}}/tasks/{{ $task['type'] }}" class="pjax">{{ $task['name'] }}</a>
+        @foreach($taskList as $t)
+            @if(in_array(true,$t['permission']))
+                <li class="@if($t['type'] == $type){{ "active" }}@endif">
+                    <a href="/{{$rootURL}}/tasks/{{ $t['type'] }}" class="pjax">{{ $t['name'] }}</a>
                 </li>
             @endif
         @endforeach

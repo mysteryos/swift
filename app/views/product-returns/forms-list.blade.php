@@ -2,24 +2,17 @@
 	<tbody>
         @if(count($forms) != 0)
             <tr>
-                <th colspan="3">&nbsp;</th>
+                <th colspan="2">&nbsp;</th>
                 <th>Owner</th>
+                <th>Type</th>
                 <th>Customer</th>
                 <th>Current Step</th>
-                <th>&nbsp;</th>
-                <th>Last Modified By</th>
-                <th>Last Modified On</th>
+                <th class="hidden-xs">&nbsp;</th>
+                <th class="visible-lg">Last Modified By</th>
+                <th class="visible-lg">Last Modified On</th>
             </tr>
             @foreach($forms as $f)
                 <tr class="orderform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}" data-view="/{{ $rootURL }}/@if($canEdit){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($f->id) }}">
-                        <td class="inbox-table-icon">
-                                <div class="checkbox">
-                                        <label>
-                                                <input type="checkbox" class="checkbox style-2" />
-                                                <span></span>
-                                        </label>
-                                </div>
-                        </td>
                         <td class="inbox-table-icon">
                             @if($f->flag_important)
                             <span>
@@ -36,25 +29,11 @@
                         </td>
                         <td class="inbox-data-message">
                                 <div>
-                                    <span><i class="fa <?php
-                                        switch($f->current_activity['status'])
-                                        {
-                                            case SwiftWorkflowActivity::COMPLETE:
-                                                echo "fa-check";
-                                                break;
-                                            case SwiftWorkflowActivity::REJECTED:
-                                                echo "fa-times";
-                                                break;
-                                            case SwiftWorkflowActivity::INPROGRESS:
-                                                echo "fa-clock-o";
-                                                break;
-                                            default:
-                                                echo "fa-question";
-                                                break;
-
-                                        }
-                                    ?>"></i></span> <i title="ID">#{{ $f->id }}.</i></span> <span>{{$f->owner_name}}</span>
+                                    <span> <i title="ID">#{{ $f->id }}.</i></span> <span>{{$f->owner_name}}</span>
                                 </div>
+                        </td>
+                        <td class="inbox-data-message">
+                            <span>{{$f->type_name}}</span>
                         </td>
                         <td class="inbox-data-message">
                             <span>{{$f->customer_name}}</span>
@@ -69,7 +48,7 @@
                                     </div>
                                 @endif                               
                         </td>
-                        <td class="inbox-data-from hidden-xs hidden-sm">
+                        <td class="inbox-data-from hidden-xs visible-lg">
                                 <div>
                                     <?php
                                          if(count($f->revision_latest))
@@ -99,7 +78,7 @@
                                     ?>
                                 </div>
                         </td>
-                        <td class="inbox-data-date hidden-xs">
+                        <td class="inbox-data-date visible-lg">
                                 <span title="{{$f->updated_at->toDayDateTimeString()}}">
                                         @if(date_format(new DateTime($f->updated_at->toDateTimeString()),'d/m/Y') == date('d/m/Y'))
                                             {{ $f->updated_at->format('g:i a') }}

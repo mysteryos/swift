@@ -26,7 +26,7 @@ class SwiftPRProduct extends Process
                     \Queue::push('Helper@getProductPrice',array('product_id'=>$this->resource->getKey(),'class'=>get_class($this->resource)));
                     break;
             }
-            return \Response::json(['encrypted_id'=>\Crypt::encrypt($this->resource->id),'id'=>$this->resource->id]);
+            return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($this->resource->id),'id'=>$this->resource->id]));
         }
         else
         {

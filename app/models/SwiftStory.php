@@ -34,6 +34,7 @@ class SwiftStory extends Eloquent {
     const APREQUEST = "SwiftAPRequest";
     const ACPAYABLE = "SwiftACPRequest";
     const COMMENT = "SwiftComment";
+    const PR = "SwiftPR";
     const VESSELLIVE = "CHCLLive";
     
     //Type
@@ -116,6 +117,7 @@ class SwiftStory extends Eloquent {
             case self::ORDER_TRACKING:
             case self::APREQUEST:
             case self::ACPAYABLE:
+            case self::PR:
                 $context = "<a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->getIcon()}\"></i> {$this->storyfiable->getReadableName()}</a>";
                 break;
             case self::COMMENT:
@@ -141,6 +143,8 @@ class SwiftStory extends Eloquent {
                 break;
             case self::ORDER_TRACKING:
             case self::APREQUEST:
+            case self::ACPAYABLE:
+            case self::PR:
                 $link = \Helper::generateUrl($this->storyfiable);
                 break;
             case self::COMMENT:

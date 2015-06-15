@@ -62,6 +62,7 @@
     });
     
     $.maindiv.on('click','tr.approval_product_row td.pointable',function(e){
+        e.stopPropagation();
         var $btn_accept = $(this).parents('tr').find('a.btn-accept');
         var $btn_reject = $(this).parents('tr').find('a.btn-reject');
         

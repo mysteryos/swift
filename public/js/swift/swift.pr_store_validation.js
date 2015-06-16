@@ -1,5 +1,5 @@
 /* 
- * Name: Product Returns - Customer Care
+ * Name: Product Returns - Store Validation
  */
 
 function addMulti($dummy,pk)
@@ -272,7 +272,7 @@ function editableElement($element)
     });    
 }
 
-(window.pr_customercare = function() {
+(window.pr_store_validation = function() {
     
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
@@ -362,7 +362,49 @@ function editableElement($element)
             }
         }
         return false;
-    });    
+    });
+    
+    //Publish button
+    $('#content').on('click','a.btn-publish',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $.SmartMessageBox({
+                title : "<span class='txt-color-greenDark'><i class='fa fa-share'></i> Publish Form?</span>",
+                content : "A notification will be sent to the responsible parties",
+                buttons : '[No][Yes]'
+
+        }, function(ButtonPressed) {
+            if (ButtonPressed == "Yes") {
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                    id: 'notif-top',
+                    errorMessage: 'Error: form not published',
+                    successMessage: 'Form has been published',
+                    progressMessage: 'Please Wait...',
+                    action: $.ajax,
+                },
+                {
+                    type:'POST',
+                    url: $this.attr('href'),
+                    success:function()
+                    {
+                        window.setTimeout(function(){
+                            $('a.btn-ribbon-refresh:first').click();
+                        },'2000');
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        return xhr.responseText;
+                    }
+                });                       
+            }
+            else
+            {
+                return false;
+            }
+
+        });        
+        return false;
+    });
     
     messenger_hidenotiftop();
 })();

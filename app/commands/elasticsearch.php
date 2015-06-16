@@ -99,7 +99,22 @@ class elasticsearch extends Command {
                         }
                         break;
                     case "product-returns":
-                        
+                        $prall = \SwiftPR::all();
+                        foreach($prall as $pr)
+                        {
+                            $params = array();
+                            $params['index'] = \App::environment();
+                            $params['type'] = 'product-returns';
+                            $params['id']= $pr->id;
+                            $params['timestamp'] = $pr->updated_at->toIso8601String();
+                            $params['body']['product-returns'] = \ElasticSearchHelper::saveFormat($pr);
+                            $params['body']['product'] = \ElasticSearchHelper::saveFormat($pr->product()->get());
+                            $params['body']['order'] = \ElasticSearchHelper::saveFormat($pr->order()->get());
+                            $params['body']['creditnote'] = \ElasticSearchHelper::saveFormat($pr->creditnote()->get());
+                            $params['body']['pickup'] = \ElasticSearchHelper::saveFormat($pr->pickup()->get());
+                            \Es::index($params);
+                            $this->info('PR Indexed ID:'.$pr->id);
+                        }
                         break;
                     default:
                         $this->error("We don't support this context!");

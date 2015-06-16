@@ -8,7 +8,6 @@ namespace Channel;
 
 class SwiftPR extends Channel
 {
-
     public function __construct(\SwiftPR $pr,$name="")
     {
         $this->name = $name;
@@ -25,10 +24,10 @@ class SwiftPR extends Channel
             case 'pr_customercare':
                 return $this->triggerNewCustomerCare($data);
                 break;
-            case 'pr_store_pickup':
+            case 'pr_pickup':
                 return $this->triggerNewStorePickup($data);
                 break;
-            case 'pr_store_reception':
+            case 'pr_reception':
                 return $this->triggerNewStoreReception($data);
                 break;
             case 'pr_store_validation':

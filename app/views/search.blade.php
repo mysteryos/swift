@@ -70,10 +70,12 @@
                                     @else
                                         @foreach($result as $r)
                                             <div class="search-results clearfix">
-                                                    <h4><a class="pjax" href="{{ $r['url'] }}">{{'<i class="fa fa-lg '.$r['icon'].'"></i>'}}&nbsp;{{ $r['value'] }}</a></h4>
+                                                    <h4>
+                                                        <a class="pjax" href="{{ $r['url'] }}">{{'<i class="fa fa-lg '.$r['icon'].'"></i>'}}&nbsp;{{ $r['value'] }}</a>
+                                                    </h4>
                                                     <div>
                                                             <div class="url text-success">
-                                                                Forms > {{ $r['title'] }}
+                                                                Forms > {{ $r['title'] }} > {{ "#".$r['id']}}
                                                             </div>
     <!--                                                        <p class="note">
                                                                 Last update By 

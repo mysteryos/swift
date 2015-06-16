@@ -5,7 +5,7 @@
                 #{{$form->id}}
             </a>
             <a class="collapsed" href="#pr_form_{{$form->id}}" data-toggle="collapse">
-                {{\Helper::getUserName($form->owner_user_id,$currentUser)}} : {{$form->customer->getReadableName()}}
+                {{$form->type_name}} - {{\Helper::getUserName($form->owner_user_id,$currentUser)}} : {{$form->customer->getReadableName()}}
                 <i class="fa fa-lg fa-angle-down pull-right"></i>
                 <i class="fa fa-lg fa-angle-up pull-right"></i>
             </a>
@@ -32,8 +32,8 @@
                         @endif
                     </div>
                 </div>
-                <div class="ro">
-                    <form class="form-horizontal">
+                <div class="row">
+                    <form class="form-horizontal col-xs-12">
                         @if(count($form->order))
                             @foreach($form->order as &$e)
                                 <?php $e->encrypted_id = \Crypt::encrypt($e->id); ?>

@@ -20,7 +20,7 @@ class SwiftPR extends Task{
                 'name' => 'Approval',
                 'permission' =>[$controller->isRetailMan],
                 'type' => 'approval',
-                'function' => $this->approvalTask(),
+                'function' => 'approvalTask',
                 'view' => 'product-returns/tasker-approval',
                 'js' => 'pr_approval',
                 'urljs' => '/js/swift/swift.pr_approval.js',
@@ -168,10 +168,6 @@ class SwiftPR extends Task{
                                     })
                                     ->get();
 
-        $this->data['edit'] = true;
-        $this->data['erporder_status'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$status));
-        $this->data['erporder_type'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$prType));
-
         $this->data['hasForms'] = (boolean)count($this->data['forms']);
         
         $this->sortForms();
@@ -226,24 +222,175 @@ class SwiftPR extends Task{
 
         $this->data['hasForms'] = (boolean)count($this->data['forms']);
 
+        $this->data['edit'] = true;
+        $this->data['erporder_status'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$status));
+        $this->data['erporder_type'] = json_encode(\Helper::jsonobject_encode(\SwiftErpOrder::$prType));
+
         $this->sortForms();
 
         return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
+    /*
+     * Store Pickup: Salesman Workflow Only
+     *
+     * @return \Illuminate\Support\Facades\View
+     */
     private function storePickupTask()
     {
+        $this->data['pageTitle'] = "Store Pickup";
 
+        $this->data['forms'] = $this->query
+                                    ->orderBy('updated_at','desc')
+                                    ->with(['pickup','workflow','workflow.nodes','product'=>function($q){
+                                            return $q->orderBy('id','DESC')
+                                                    ->whereHas('approvalretailman',function($q){
+                                                        return $q->where('approved','=',\SwiftApproval::APPROVED);
+                                                    })
+                                                    ->where('pickup','=',\SwiftPRProduct::PICKUP,'AND');
+                                        },'product.approvalretailman'])
+                                    ->whereHas('product',function($q) {
+                                        return $q->whereHas('approvalretailman',function($q){
+                                                    return $q->where('approved','=',\SwiftApproval::APPROVED);
+                                                })
+                                                ->where('pickup','=',\SwiftPRProduct::PICKUP,'AND');
+                                    })
+                                    ->whereHas('workflow',function($q){
+                                            return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
+                                                    ->whereHas('nodes',function($q){
+                                                        return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                            $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND');
+                                                            if($this->controller->currentUser->isSuperUser())
+                                                            {
+                                                                $q->whereIn('permission_name',['pr-pickup']);
+                                                            }
+                                                            else
+                                                            {
+                                                                $q->whereIn('permission_name',(array)array_keys($this->controller->currentUser->getMergedPermissions()));
+                                                            }
+                                                            return $q;
+                                                        });
+                                                    });
+                                    })
+                                    ->get();
+
+        $this->data['hasForms'] = (boolean)count($this->data['forms']);
+
+        $this->data['edit'] = true;
+
+        $this->data['pickup_status'] = json_encode(\Helper::jsonobject_encode(\SwiftPickup::$pr_status));
+        $this->data['drivers'] = json_encode(\Helper::jsonobject_encode(\SwiftDriver::getAll()));
+
+        $this->sortForms();
+
+        return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
+    /*
+     * Store Reception
+     *
+     * @return \Illuminate\Support\Facades\View
+     */
     private function storeReceptionTask()
     {
+        $this->data['pageTitle'] = "Store Reception";
 
+        $this->data['forms'] = $this->query
+                                    ->orderBy('updated_at','desc')
+                                    ->with(['pickup','workflow','workflow.nodes','product'=>function($q){
+                                            return $q->orderBy('id','DESC')
+                                                    ->whereHas('approvalretailman',function($q){
+                                                        return $q->where('approved','=',\SwiftApproval::APPROVED);
+                                                    })
+                                                    ->where('pickup','=',\SwiftPRProduct::PICKUP,'AND');
+                                        },'product.approvalretailman'])
+                                    ->whereHas('product',function($q) {
+                                        return $q->whereHas('approvalretailman',function($q){
+                                                    return $q->where('approved','=',\SwiftApproval::APPROVED);
+                                                })
+                                                ->where('pickup','=',\SwiftPRProduct::PICKUP,'AND');
+                                    })
+                                    ->whereHas('workflow',function($q){
+                                            return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
+                                                    ->whereHas('nodes',function($q){
+                                                        return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                            $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND');
+                                                            if($this->controller->currentUser->isSuperUser())
+                                                            {
+                                                                $q->whereIn('permission_name',['pr-reception']);
+                                                            }
+                                                            else
+                                                            {
+                                                                $q->whereIn('permission_name',(array)array_keys($this->controller->currentUser->getMergedPermissions()));
+                                                            }
+                                                            return $q;
+                                                        });
+                                                    });
+                                    })
+                                    ->get();
+
+        $this->data['hasForms'] = (boolean)count($this->data['forms']);
+        $this->data['publishReception'] = true;
+        $this->data['addProduct'] = false;
+        $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(\SwiftApproval::$approved));
+        $this->data['product_reason_codes'] = json_encode(\Helper::jsonobject_encode(\SwiftPRReason::getAll()));
+
+        $this->data['edit'] = true;
+
+        $this->sortForms();
+
+        return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
     private function storeValidationTask()
     {
-        
+        $this->data['pageTitle'] = "Store Reception";
+
+        $this->data['forms'] = $this->query
+                                    ->orderBy('updated_at','desc')
+                                    ->with(['pickup','workflow','workflow.nodes','product'=>function($q){
+                                            return $q->orderBy('id','DESC')
+                                                    ->whereHas('approvalretailman',function($q){
+                                                        return $q->where('approved','=',\SwiftApproval::APPROVED);
+                                                    })
+                                                    ->where('pickup','=',\SwiftPRProduct::PICKUP,'AND');
+                                        },'product.approvalretailman'])
+                                    ->whereHas('product',function($q) {
+                                        return $q->whereHas('approvalretailman',function($q){
+                                                    return $q->where('approved','=',\SwiftApproval::APPROVED);
+                                                })
+                                                ->where('pickup','=',\SwiftPRProduct::PICKUP,'AND');
+                                    })
+                                    ->whereHas('workflow',function($q){
+                                            return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
+                                                    ->whereHas('nodes',function($q){
+                                                        return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                            $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND');
+                                                            if($this->controller->currentUser->isSuperUser())
+                                                            {
+                                                                $q->whereIn('permission_name',['pr-store-validation']);
+                                                            }
+                                                            else
+                                                            {
+                                                                $q->whereIn('permission_name',(array)array_keys($this->controller->currentUser->getMergedPermissions()));
+                                                            }
+                                                            return $q;
+                                                        });
+                                                    });
+                                    })
+                                    ->get();
+
+        $this->data['hasForms'] = (boolean)count($this->data['forms']);
+        $this->data['publishStoreValidation'] = true;
+        $this->data['addProduct'] = false;
+        $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(\SwiftApproval::$approved));
+        $this->data['product_reason_codes'] = json_encode(\Helper::jsonobject_encode(\SwiftPRReason::getAll()));
+
+        $this->data['edit'] = true;
+
+        $this->sortForms();
+
+        return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
     private function creditNoteTask()

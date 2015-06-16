@@ -15,7 +15,7 @@ class SwiftPR extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $appends = array('customer_name','owner_name','company_name','type_name');
+    protected $appends = array('customer_name','owner_name','company_name','type_name','name');
     
     protected $fillable = array('description','customer_code','company_code','owner_user_id','paper_number','type');
 
@@ -104,6 +104,11 @@ class SwiftPR extends Eloquent {
     /*
      * Accessors
      */
+
+    public function getNameAttribute()
+    {
+        return $this->type_name." - ".$this->customer_name;
+    }
 
     public function getOwnerNameAttribute()
     {

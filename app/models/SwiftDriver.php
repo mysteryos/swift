@@ -107,7 +107,7 @@ class SwiftDriver extends Eloquent
         $result = [];
         foreach($all as $row)
         {
-            $result[$row->id] = $row->type_name." ".$row->name." ".$row->vehicle_number;
+            $result[$row->id] = "(".$row->type_name.") ".$row->name." - ".$row->vehicle_number;
         }
 
         return $result;

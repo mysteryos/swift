@@ -72,7 +72,7 @@ class NodeActivity {
                     {
                         if($n->definition->php_channel_name !== "")
                         {
-                            if(is_callable("\Channel\\{$workflow_activity->workflowable_type}::triggerByName"))
+                            if(is_callable("\Channel\\{$workflow_activity->workflowable_type}::triggerByName") && $n->definition->php_channel_name)
                             {
                                 $channelClass = "\Channel\\".$workflow_activity->workflowable_type;
                                 $channel = new $channelClass($workflow_activity->workflowable,$n->definition->php_channel_name);

@@ -331,7 +331,7 @@ class ProductReturnsController extends UserController {
                                         return $v['enabled'];
                                     }));
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
-        $this->data['pageTitle'] = "Cheque Issue - ".ucfirst($type);
+        $this->data['pageTitle'] = "Forms - ".ucfirst($type);
         $this->data['canEdit'] = $this->canEdit;
         
         return $this->makeView('product-returns/forms');

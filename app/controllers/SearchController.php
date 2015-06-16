@@ -9,13 +9,15 @@ class SearchController extends UserController {
                                         'order-tracking'=>array('ot-view','ot-admin'),
                                         'aprequest'=>array('apr-view','apr-admin'),
                                         'acpayable'=>array('acp-admin','acp-edit'),
-                                        'supplier'=>array('acp-view')
+                                        'supplier'=>array('acp-view'),
+                                        'product-returns'=>['pr-view']
                                    );
         $this->searchCategory = array(
                                     'order-tracking' => 'Order Process',
                                     'aprequest' => 'A&P Request',
                                     'acpayable' => 'Accounts Payable',
-                                    'supplier' => 'JDE Supplier'
+                                    'supplier' => 'JDE Supplier',
+                                    'product-returns' => 'Product Returns'
                                 );
     }
     
@@ -51,6 +53,15 @@ class SearchController extends UserController {
                                           'id' => $line['_id'],
                                           'value'=>$line['_source'][$line['_type']]['name']." (Code: ".$line['_id'].")",
                                           'url'=>Helper::generateUrl(JdeSupplierMaster::whereSupplierCode($line['_id'])->get()),
+                                          'highlight'=>$highlight);
+                        break;
+                    case "product-returns":
+                        $contextClass = \Config::get('context.'.$line['_type']);
+                        $result[] = array('icon'=>(new $contextClass)->getIcon(),
+                                          'title'=> (new $contextClass)->readableName,
+                                          'id' => $line['_id'],
+                                          'value'=>$line['_source'][$line['_type']]['name'],
+                                          'url'=>Helper::generateUrl($contextClass::find($line['_id'])),
                                           'highlight'=>$highlight);
                         break;
                     default:

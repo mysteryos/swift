@@ -11,7 +11,9 @@ class SwiftErpOrder extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('ref','status','type','orderable_type','orderable_id');
+    protected $fillable = array('ref','status','status_name','type','type_name','orderable_type','orderable_id');
+
+    protected $appends = ['status_name','type_name'];
     
     protected $dates = ['deleted_at'];
     
@@ -98,7 +100,7 @@ class SwiftErpOrder extends Eloquent {
     //Indexing Enabled
     public $esEnabled = true;
     public $esInfoContext = "order";
-    public $esRemove = ['status','orderable_type','orderable_id'];
+    public $esRemove = ['status','orderable_type','orderable_id','status_name','type'];
 
     public function esGetContext() {
         return array_search($this->orderable_type,Config::get('context'));
@@ -113,7 +115,37 @@ class SwiftErpOrder extends Eloquent {
     {
         return $this->orderable;
     }
-    
+
+    /*
+     * Accessors
+     */
+
+    public function getTypeNameAttribute()
+    {
+        if($this->type)
+        {
+            if(key_exists($this->type,self::$status))
+            {
+                return self::$type[$this->type];
+            }
+        }
+        
+        return "";
+    }
+
+    public function getStatusNameAttribute()
+    {
+        if($this->status)
+        {
+            if(key_exists($this->status,self::$type))
+            {
+                return self::$status[$this->status];
+            }
+        }
+
+        return "";
+    }
+
     /*
      * Event Observers
      */

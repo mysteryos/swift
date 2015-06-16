@@ -147,7 +147,7 @@ class SwiftPR extends Task{
 
         $this->data['forms'] = $this->query
                                     ->orderBy('updated_at','desc')
-                                    ->with(['workflow','workflow.nodes','product'=>function($q){
+                                    ->with(['product'=>function($q){
                                             return $q->orderBy('id','DESC');
                                         },'product.approvalretailman'])->whereHas('workflow',function($q){
                                             return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
@@ -186,7 +186,7 @@ class SwiftPR extends Task{
 
         $this->data['forms'] = $this->query
                                     ->orderBy('updated_at','desc')
-                                    ->with(['order','workflow','workflow.nodes','product'=>function($q){
+                                    ->with(['order','product'=>function($q){
                                             return $q->orderBy('id','DESC')->whereHas('approvalretailman',function($q){
                                                 return $q->where('approved','=',\SwiftApproval::APPROVED);
                                             });
@@ -242,7 +242,7 @@ class SwiftPR extends Task{
 
         $this->data['forms'] = $this->query
                                     ->orderBy('updated_at','desc')
-                                    ->with(['pickup','workflow','workflow.nodes','product'=>function($q){
+                                    ->with(['pickup','product'=>function($q){
                                             return $q->orderBy('id','DESC')
                                                     ->whereHas('approvalretailman',function($q){
                                                         return $q->where('approved','=',\SwiftApproval::APPROVED);
@@ -297,7 +297,7 @@ class SwiftPR extends Task{
 
         $this->data['forms'] = $this->query
                                     ->orderBy('updated_at','desc')
-                                    ->with(['pickup','workflow','workflow.nodes','product'=>function($q){
+                                    ->with(['pickup','product'=>function($q){
                                             return $q->orderBy('id','DESC')
                                                     ->whereHas('approvalretailman',function($q){
                                                         return $q->where('approved','=',\SwiftApproval::APPROVED);
@@ -342,13 +342,18 @@ class SwiftPR extends Task{
         return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
+    /*
+     * Store Validation Task
+     *
+     * @return \Illuminate\Support\Facades\View
+     */
     private function storeValidationTask()
     {
-        $this->data['pageTitle'] = "Store Reception";
+        $this->data['pageTitle'] = "Store Validation";
 
         $this->data['forms'] = $this->query
                                     ->orderBy('updated_at','desc')
-                                    ->with(['pickup','workflow','workflow.nodes','product'=>function($q){
+                                    ->with(['pickup','product'=>function($q){
                                             return $q->orderBy('id','DESC')
                                                     ->whereHas('approvalretailman',function($q){
                                                         return $q->where('approved','=',\SwiftApproval::APPROVED);
@@ -382,6 +387,7 @@ class SwiftPR extends Task{
 
         $this->data['hasForms'] = (boolean)count($this->data['forms']);
         $this->data['publishStoreValidation'] = true;
+        $this->data['publishReception'] = false;
         $this->data['addProduct'] = false;
         $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(\SwiftApproval::$approved));
         $this->data['product_reason_codes'] = json_encode(\Helper::jsonobject_encode(\SwiftPRReason::getAll()));
@@ -393,9 +399,46 @@ class SwiftPR extends Task{
         return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
+    /*
+     * Credit Note Issue
+     *
+     * @return \Illuminate\Support\Facades\View
+     */
     private function creditNoteTask()
     {
-        
+        $this->data['pageTitle'] = "Credit Note";
+
+        $this->data['forms'] = $this->query
+                                    ->orderBy('updated_at','desc')
+                                    ->with(['order'])
+                                    ->whereHas('workflow',function($q){
+                                        return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
+                                                ->whereHas('nodes',function($q){
+                                                    return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                                                        $q->where('permission_type','=',\SwiftNodePermission::RESPONSIBLE,'AND');
+                                                        if($this->controller->currentUser->isSuperUser())
+                                                        {
+                                                            $q->whereIn('permission_name',['pr-credit-note']);
+                                                        }
+                                                        else
+                                                        {
+                                                            $q->whereIn('permission_name',(array)array_keys($this->controller->currentUser->getMergedPermissions()));
+                                                        }
+                                                        return $q;
+                                                    });
+                                                });
+                                    })
+                                    ->get();
+
+        $this->data['hasForms'] = (boolean)count($this->data['forms']);
+
+        $this->data['publishCreditNote'] = true;
+
+        $this->data['edit'] = true;
+
+        $this->sortForms();
+
+        return $this->controller->makeView('product-returns.tasker',$this->data);
     }
 
     private function sortForms()

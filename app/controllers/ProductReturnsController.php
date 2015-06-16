@@ -1234,6 +1234,20 @@ class ProductReturnsController extends UserController {
         return $this->process()->generatePdf([\Crypt::decrypt($form_id)]);
     }
 
+    public function getCreditNoteExcel()
+    {
+        /*
+         * Check Permissions
+         */
+
+        if(!$this->isCreditor && !$this->isAdmin)
+        {
+            return parent::forbidden();
+        }
+
+        return $this->process()->generateCreditNoteExcel();
+    }
+
     /*
      * AJAX CALLS: Start
      */
@@ -1340,6 +1354,7 @@ class ProductReturnsController extends UserController {
             $this->data['edit'] = true;
             $this->data['publishOwner'] = $this->data['publishPickup'] =
                                             $this->data['publishReception'] =
+                                            $this->data['publishStoreValidation'] =
                                             $this->data['publishCreditNote'] =
                                             $this->data['driverInfo'] =
                                             $this->data['addProduct'] = false;
@@ -1382,12 +1397,20 @@ class ProductReturnsController extends UserController {
                             break;
                         }
 
+                        //Store Validation
+                        if(isset($d->data->publishStoreValidation) && ($this->isAdmin || $this->isStoreValidation))
+                        {
+                            $this->data['publishStoreValidation'] = true;
+                        }
+
+                        //Credit Note
                         if(isset($d->data->publishCreditNote) && ($this->isAdmin || $this->isCreditor))
                         {
                             $this->data['publishCreditNote'] = true;
                             break;
                         }
 
+                        //Driver Information
                         if(isset($d->data->driverInfo) && ($this->isAdmin || $this->isStorePickup))
                         {
                             $this->data['driverInfo'] = true;

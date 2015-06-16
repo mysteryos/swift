@@ -375,6 +375,7 @@ function editableElement($element)
 
         }, function(ButtonPressed) {
             if (ButtonPressed == "Yes") {
+                $this.attr('disabled','disabled');
                 Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
                     id: 'notif-top',
                     errorMessage: 'Error: form not published',
@@ -387,12 +388,10 @@ function editableElement($element)
                     url: $this.attr('href'),
                     success:function()
                     {
-                        window.setTimeout(function(){
-                            $('a.btn-ribbon-refresh:first').click();
-                        },'2000');
                     },
                     error:function(xhr, status, error)
                     {
+                        $this.removeAttr('disabled');
                         return xhr.responseText;
                     }
                 });                       

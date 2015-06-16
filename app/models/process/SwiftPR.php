@@ -507,4 +507,89 @@ class SwiftPR extends Process
     /*
      * Publishing: End
      */
+
+    /*
+     * Outputs an Excelsheet for download, containing all pending forms awaiting credit note issue.
+     *
+     * @return Illuminate\Support\Facades\Response
+     */
+    public function generateCreditNoteExcel()
+    {
+        $forms = $this->resource->orderBy('updated_at','desc')
+                                    ->with(['order'])
+                                    ->whereHas('workflow',function($q){
+                                        return $q->where('status','=',\SwiftWorkflowActivity::INPROGRESS,'AND')
+                                                ->whereHas('nodes',function($q){
+                                                    return $q->where('user_id','=',0)
+                                                             ->whereHas('definition',function($q){
+                                                                return $q->where('name','=','pr_credit_note');
+                                                            });
+                                                });
+                                    })
+                                    ->get();
+        if(count($forms))
+        {
+            // Create new PHPExcel object
+            $objPHPExcel = new \PHPExcel();
+
+            // Set document properties
+            $objPHPExcel->getProperties()
+                        ->setCreator("Scott Swift")
+                        ->setLastModifiedBy("Scott Swift")
+                        ->setTitle("Scott Swift - Product Returns ".date('Y-m-d h.m'))
+                        ->setSubject("Scott Swift - Product Returns ".date('Y-m-d h.m'))
+                        ->setDescription("Scott Swift - Pending Product Returns For Accounting Department")
+                        ->setKeywords("scott swift pending product returns accounting")
+                        ->setCategory("Scott Swift - Pending Product Returns");
+
+            //Add Header Data
+            $headers = array('A'=>'Date','B'=>'Form ID','C'=>'Order Number','D'=>'RFRF Reference','E'=>'Workflow Type','F'=>'Customer Name','G'=>'Customer Code');
+            foreach($headers as $key => $header)
+            {
+                $objPHPExcel->setActiveSheetIndex(0)->setCellValue($key.'1',$header);
+            }
+
+            //Print Rows of Data
+            $count = 2;
+            foreach($forms as $f)
+            {
+                $objPHPExcel->setActiveSheetIndex(0)
+                        ->setCellValue('A'.$count,$f->updated_at->toDateString())
+                        ->setCellValue('B'.$count,$f->id)
+                        ->setCellValue('C'.$count,implode(',',array_map(function($v){
+                            return $v['ref']."/".$v['type_name'];
+                        },$f->order->toArray())))
+                        ->setCellValue('D'.$count,$f->paper_number)
+                        ->setCellValue('E'.$count,$f->type_name)
+                        ->setCellValue('F'.$count,$f->customer_name)
+                        ->setCellValue('G'.$count,$f->customer_code);
+                $count++;
+            }
+
+            // Rename worksheet
+            $objPHPExcel->getActiveSheet()->setTitle('Product Returns');
+
+
+            // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+            $objPHPExcel->setActiveSheetIndex(0);
+
+            $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+            ob_start();
+            $objWriter->save('php://output');
+            $excelOutput = ob_get_clean();
+            return \Response::make($excelOutput,200,[
+                'Content-Disposition' => 'inline; filename="Scott Swift - Pending Product Returns '.date('Y-m-d h.m').'.xls"',
+                'Content-Type' => "application/vnd.ms-excel",
+                'Content-Transfer-Encoding' => 'binary',
+                'Cache-Control' => "max-age=0",
+                'Expires' => "Mon, 26 Jul 1997 05:00:00 GMT",
+                'Last-Modified' => gmdate('D, d M Y H:i:s').' GMT',
+                'Pragma' => 'public'
+            ]);
+        }
+        else
+        {
+            return \Response::make("No forms pending",400);
+        }
+    }
 }

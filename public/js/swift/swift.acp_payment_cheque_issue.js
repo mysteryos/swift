@@ -29,9 +29,9 @@
     }
 
     //Gets tooltips activated
-    $("#inbox-table [rel=tooltip]").tooltip();
+    $("#cheque-issue-table [rel=tooltip]").tooltip();
 
-    $("#inbox-table input[type='checkbox']").change(function(e) {
+    $("#cheque-issue-table input[type='checkbox']").change(function(e) {
            $(this).closest('tr').toggleClass("highlight", this.checked);
            toggleHighlightBar();
     });
@@ -176,10 +176,13 @@
     
     function setpaymentnum()
     {
-        var paymentnum = prompt('Set payment number for '+$('.pvform.highlight').length+' forms');
+        var paymentnum = prompt('Set payment number for '+$('.pvform.highlight').length+($('.pvform.highlight').length === 1 ? ' form' : ' forms'));
         if($.isNumeric(paymentnum))
         {
             $('tr.pvform.highlight').find('input.input-paymentnumber').val(paymentnum);
+            $('tr.pvform.highlight').find('input.input-paymentnumber').each(function(){
+                saveNumber($(this));
+            });
         }
         else
         {
@@ -192,10 +195,13 @@
     
     function setbatchnum()
     {
-        var batchnum = prompt('Set batch number for '+$('.pvform.highlight').length+' forms');
+        var batchnum = prompt('Set batch number for '+$('.pvform.highlight').length+($('.pvform.highlight').length === 1 ? ' form' : ' forms'));
         if($.isNumeric(batchnum))
         {
             $('tr.pvform.highlight').find('input.input-batchnumber').val(batchnum);
+            $('tr.pvform.highlight').find('input.input-batchnumber').each(function(){
+                saveNumber($(this));
+            });            
         }
         else
         {
@@ -203,8 +209,83 @@
             {
                 messenger_notiftop("Batch number should be numeric.","error");
             }
-        }        
+        }
     }
+    
+    function saveNumber($this)
+    {
+        if($this.length)
+        {
+            if($this.val() !== $this.attr('data-prev-value'))
+            {
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                    id: 'notif-top',
+                    errorMessage: 'Error: save unsuccessful',
+                    successMessage: 'Save Complete',
+                    progressMessage: 'Please Wait...',
+                    action: $.ajax,
+                },
+                {
+                    type:'PUT',
+                    url: $this.attr('data-url'),
+                    data: {"pk":$this.attr('data-pk'),"value":$this.val()},
+                    success:function(result)
+                    {
+                        $this.attr("data-prev-value",$this.val());
+                        if($this.attr('data-pk') === "0")
+                        {
+                            $this.parents('.pvform').find('.input-paymentnumber,.input-batchnumber').attr('data-pk',result.encrypted_id);
+                        }
+                        $this.removeClass('bg-color-redLight');
+                        $this.removeClass('bg-color-light-orange');                        
+                        $this.addClass('bg-color-light-green');
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        $this.removeClass('bg-color-light-green');
+                        $this.removeClass('bg-color-light-orange');
+                        $this.addClass('bg-color-redLight');
+                        return xhr.responseText;
+                    }
+                });
+            }
+        }
+    }
+    
+    $('#cheque-issue-table').on('keypress','.input-paymentnumber,.input-batchnumber',function(e){
+        if(e.keyCode == 13) {
+            saveNumber($(this));
+        }
+    });
+    
+    $('#cheque-issue-table').on('keyup','.input-paymentnumber,.input-batchnumber',function(e){
+        switch(e.keyCode)
+        {
+            case 8:  // Backspace
+                //console.log('backspace');
+            case 9:  // Tab
+            case 13: // Enter
+            case 37: // Left
+            case 38: // Up
+            case 39: // Right
+            case 40: // Down
+                break;
+            default:
+                if(this.getAttribute('data-pk') !== "0")
+                {
+                    if(this.value !== this.getAttribute('data-prev-value'))
+                    {
+                        $(this).removeClass('bg-color-redLight').removeClass('bg-color-light-green').addClass('bg-color-light-orange');   
+                    }
+                    else
+                    {
+                        $(this).removeClass('bg-color-redLight').removeClass('bg-color-light-orange').addClass('bg-color-light-green');
+                    }
+                }            
+        }
+    });
+    
+    
 
     //Hide Loading Message
     messenger_hidenotiftop();

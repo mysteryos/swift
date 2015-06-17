@@ -195,6 +195,45 @@ class SwiftPRProduct extends Eloquent {
 
         return \SwiftApproval::PENDING;
     }
+
+    /*
+     * Query
+     */
+
+    public static function statsByProductsAccepted($startDate,$endDate)
+    {
+        $productWithTotal = self::query()->whereHas('pr',function($q){
+            return $q->whereHas('workflow',function($q){
+                return $q->complete();
+            })
+            ->where('created_at','>=',$startDate,'AND')
+            ->where('updated_at','<=',$endDate,'AND');
+        })
+        ->whereHas('approvalretailman',function($q){
+            return $q->approved();
+        })
+        ->where('price','>',0)
+        ->select(\DB::raw('qty_client*price as total_price'));
+        
+        return \DB::table(\DB::raw("({$productWithTotal->toSql()}) as prod"))
+                ->mergeBindings($productWithTotal->getQuery())
+                ->sum('prod.total_price');
+    }
+
+    public static function statsByQtyAccepted($startDate,$endDate)
+    {
+
+    }
+
+    public static function statsByProductsRejected($startDate,$endDate)
+    {
+
+    }
+
+    public static function statsByQtyRejected($startDate,$endDate)
+    {
+        
+    }
     
     
 }

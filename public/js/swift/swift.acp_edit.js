@@ -452,6 +452,34 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             url: $(this).parent('tr').attr('data-url'),
             container: '#main'
        });
+    });
+    
+    $('a.btn-force-update').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $this.attr('disabled','disabled');
+        $this.addClass('loading-animation');
+        $.ajax({
+            url: $this.attr('data-href'),
+            type: 'GET',
+            success:function(text)
+            {
+                $.smallBox({
+			title : "Workflow information",
+			content : text,
+			color : "#26A65B",
+			icon : "fa fa-check"
+		});
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');                
+            },
+            error:function(xhr, status, error)
+            {
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');
+                return xhr.responseText;
+            }
+        });
     });    
 
     /*
@@ -722,7 +750,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     /*
      * Google Doc Viewer
      */
-    $('a.file-view').on('click',function(e){
+    $('#acp-docs').on('click','a.file-view',function(e){
         e.preventDefault();
         var $this = $(this);
         //For Images

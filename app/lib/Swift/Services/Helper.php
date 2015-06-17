@@ -930,5 +930,49 @@ class Helper {
         
         $job->delete();
     }
+
+    /*
+     * Generates Current Financial Year Start Based on Today's Date
+     *
+     * @return \Carbon\Carbon
+     */
+    public function getFinancialYearStart()
+    {
+        $financial_year_start = explode('-',\Config::get('company.financial_year_start'));
+        $financial_year_end = explode('-',\Config::get('company.financial_year_end'));
+
+        if((int)date("m") <= (int)$financial_year_end[1])
+        {
+             $startdate = date((date('Y')-1).'-'.$financial_year_start[1].'-'.$financial_year_start[0]);
+        }
+        else
+        {
+            $startdate = date('Y-'.$financial_year_start[1].'-'.$financial_year_start[0]);
+        }
+
+        return \Carbon::createFromFormat('Y-m-d H:i',$startdate." 00:00");
+    }
+
+    /*
+     * Generates Current Financial Year End Based on Today's Date
+     *
+     * @return \Carbon\Carbon
+     */
+    public function getFinancialYearEnd()
+    {
+        $financial_year_start = explode('-',\Config::get('company.financial_year_start'));
+        $financial_year_end = explode('-',\Config::get('company.financial_year_end'));
+
+        if((int)date("m")>=(int)$financial_year_start)
+        {
+            $enddate = date((date('Y')+1).'-'.$financial_year_end[1].'-'.$financial_year_end[0]);
+        }
+        else
+        {
+            $enddate = date('Y-'.$financial_year_end[1].'-'.$financial_year_end[0]);
+        }
+
+        return \Carbon::createFromFormat('Y-m-d H:i',$enddate." 00:00");
+    }
     
 }

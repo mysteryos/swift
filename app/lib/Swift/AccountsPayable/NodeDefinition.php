@@ -17,7 +17,7 @@ Class NodeDefinition {
         $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
             /*
              * Approvals
@@ -40,7 +40,7 @@ Class NodeDefinition {
             $approvalRequesterCount = $acp->approval()->where('type','=',\SwiftApproval::APC_REQUESTER)->count();
             if($approvalRequesterCount === 0)
             {
-                $returnReasonList['requester_absent'] = "Publish form";
+                $returnReasonList['requester_absent'] = "Please publish the form";
             }
             
             if(count($returnReasonList) === 0 && !$returnReason)
@@ -85,13 +85,10 @@ Class NodeDefinition {
 
     public static function acpCreditnote($nodeActivity,$returnReason=false)
     {
-        if($returnReason)
-        {
-            $returnReasonList = array();
-        }
+        $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
             /*
              * invoice check
@@ -150,7 +147,7 @@ Class NodeDefinition {
         $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
             $paymentVoucherCount = $acp->paymentVoucher()->count();
             if($paymentVoucherCount === 0)
@@ -172,7 +169,7 @@ Class NodeDefinition {
         $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
             $acp->load('payment');
             if(count($acp->payment) === 0)
@@ -184,7 +181,7 @@ Class NodeDefinition {
                 //all payments should have an amount
                 foreach($acp->payment as $p)
                 {
-                    if((float)$p->amount === 0 || $p->amount === null)
+                    if($p->amount === "0.0000" || $p->amount === null)
                     {
                         $returnReasonList['payment_amount_absent'] = "Input amount for payment ID: ".$p->id;
                         break;
@@ -310,7 +307,7 @@ Class NodeDefinition {
         $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
             $bankNoJournalEntryCount = $acp
                                         ->payment()

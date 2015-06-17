@@ -171,7 +171,7 @@ class APRequestController extends UserController {
             
             if($edit === true)
             {
-                if($this->data['current_activity']['status'] == SwiftWorkflowActivity::INPROGRESS)
+                if($this->data['current_activity']['status'] == \SwiftWorkflowActivity::INPROGRESS)
                 {
                     if(!array_key_exists('definition_obj',$this->data['current_activity']))
                     {
@@ -179,30 +179,30 @@ class APRequestController extends UserController {
                          * Detect buggy workflows
                          * Update on the spot
                          */
-                        WorkflowActivity::update($apr);
+                        \WorkflowActivity::update($apr);
                     }
                     else
                     {
                         foreach($this->data['current_activity']['definition_obj'] as $d)
                         {
-                            if($d->data != "")
+                            if($d->data !== "" || $this->data['isAdmin'] === true)
                             {
                                 /*
                                  * Check permissions based on current nodes in workflow
                                  */
-                                if(isset($d->data->addproduct))
+                                if($this->data['isAdmin'] === true || isset($d->data->addproduct))
                                 {
                                     $this->data['canAddProduct'] = true;
                                 }
 
-                                if((isset($d->data->modifyproduct) && $this->data['isCreator'] == true) || $this->data['isAdmin'] == true)
+                                if($this->data['isAdmin'] === true || (isset($d->data->modifyproduct) && $this->data['isCreator'] === true))
                                 {
                                     $this->data['canModifyProduct'] = true;
                                 }
 
                                 if(isset($d->data->manualpublish) && 
                                     !$apr->approval()->where('type','=',\SwiftApproval::APR_REQUESTER)->count() &&
-                                    ($this->data['isAdmin'] || $apr->revisionHistory()->orderBy('created_at','ASC')->first()->user_id == $this->currentUser->id))
+                                    ($this->data['isAdmin'] || $apr->requester_user_id === $this->currentUser->id))
                                 {
                                     $this->data['canPublish'] = true;
                                     break;
@@ -224,7 +224,7 @@ class APRequestController extends UserController {
                     /*
                      * Check if approved
                      */
-                    $p->approvalstatus = SwiftApproval::PENDING;
+                    $p->approvalstatus = \SwiftApproval::PENDING;
                     if(count($p->approvalcatman) && $p->approvalcatman->approved != SwiftApproval::PENDING)
                     {
                         $p->approvalstatus = $p->approvalcatman->approved;

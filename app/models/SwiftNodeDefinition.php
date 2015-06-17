@@ -133,7 +133,7 @@ class SwiftNodeDefinition extends Eloquent {
     public static function getByWorkflowTypeName($workflow_type_name)
     {
         return self::whereIn('type',array(SwiftNodeDefinition::$T_NODE_START,SwiftNodeDefinition::$T_NODE_END),'and',true)
-                    ->whereHas('workflow',function($q){
+                    ->whereHas('workflow',function($q) use ($workflow_type_name){
                         return $q->where('name','=',$workflow_type_name);
                     })
                     ->get();

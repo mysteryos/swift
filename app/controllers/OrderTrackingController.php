@@ -940,7 +940,7 @@ class OrderTrackingController extends UserController {
         /*
          * Let's Start Order Query
          */
-        $orderquery = SwiftOrder::query();
+        $orderquery = \SwiftOrder::query();
         
         if($type != 'inprogress')
         {

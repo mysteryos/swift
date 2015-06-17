@@ -162,4 +162,41 @@ class SwiftApproval extends Eloquent {
             return $q->where('type','=',$typeOfApprover,'AND')->where('approved','=',self::REJECTED,$operator);
         }
     }
+
+    public function approved($query,$operator=false)
+    {
+        if($operator === false)
+        {
+            return $query->where('approved','=',self::APPROVED);
+        }
+        else
+        {
+            return $query->where('approved','=',self::APPROVED,$operator);
+        }
+    }
+    
+    public function rejected($query,$operator=false)
+    {
+        if($operator === false)
+        {
+            return $query->where('approved','=',self::REJECTED);
+        }
+        else
+        {
+            return $query->where('approved','=',self::REJECTED,$operator);
+        }
+    }
+    public function pending($query,$operator=false)
+    {
+        if($operator === false)
+        {
+            return $query->where('approved','=',self::PENDING);
+        }
+        else
+        {
+            return $query->where('approved','=',self::PENDING,$operator);
+        }
+    }
+
+
 }

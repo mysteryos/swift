@@ -1,7 +1,7 @@
 <?php
 /*
- * Name: Product Price Updater
- * Description: Scourges the SCT JDE database for prices
+ * Name: Accounts Payable - Jde Reconciliation - Payment Vouchers
+ * Description: Scourges the SCT JDE database for payment vouchers
  */
 
 use Indatus\Dispatcher\Scheduling\ScheduledCommand;
@@ -10,21 +10,21 @@ use Indatus\Dispatcher\Drivers\Cron\Scheduler;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class productprice extends ScheduledCommand {
-    
+class acppvjde extends ScheduledCommand {
+
     /**
 	 * The console command name.
 	 *
 	 * @var string
 	 */
-	protected $name = 'productprice:update';
+	protected $name = 'acppvjde:start';
 
 	/**
 	 * The console command description.
 	 *
 	 * @var string
 	 */
-	protected $description = 'Searches SCT JDE sales for product prices and updates the swift DB';
+	protected $description = 'Searches SCT JDE for Payment Voucher';
 
 	/**
 	 * Create a new command instance.
@@ -34,23 +34,22 @@ class productprice extends ScheduledCommand {
 	public function __construct()
 	{
 		parent::__construct();
-        if ( ! Sentry::check())
+        if (!\Sentry::check())
         {
-            $user = Sentry::findUserById(0);
-            // Login system user
-            Sentry::login($user, false);
+            \Helper::loginSysUser();
         }
 	}
-        
+
     public function getName()
     {
         return $this->$name;
     }
 
-    public function isEnabled() {
-        return true;
+    public function isEnabled()
+    {
+        return false;
     }
-        
+
 	/**
 	 * Execute the console command.
 	 *
@@ -59,20 +58,30 @@ class productprice extends ScheduledCommand {
 	public function fire()
 	{
         /*
-         * Check AP Table for products without prices and update accordingly
+         * Get all payment voucher that aren't validated
          */
+
+        $paymentVoucherList = \SwiftACPPaymentVoucher::with('acp','acp.invoice')
+                                ->where('validated','!=',\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                ->get();
+
+        foreach($paymentVoucherList as $pv)
+        {
+            \Swift\AccountsPayable\JdeReconcialiation::reconcialiatePaymentVoucher($pv);
             
-    }        
+        }
         
+    }
+
     /*
     * Add Schedule
     */
    public function schedule(Schedulable $scheduler)
    {
        //Every Day at 4a.m
-       return $scheduler->daily()->hours(4)->minutes(30);
+       return $scheduler->daily()->hours(4)->minutes(40);
    }
-        
+
 	/**
 	 * Get the console command arguments.
 	 *
@@ -91,6 +100,5 @@ class productprice extends ScheduledCommand {
 	protected function getOptions()
 	{
 		return [];
-	}        
+	}
 }
-

@@ -1,4 +1,4 @@
-<table id="inbox-table" class="table table-striped table-hover table-condensed">
+<table id="cheque-issue-table" class="table table-striped table-hover table-condensed">
 	<tbody>
         @if(count($forms) != 0)
             <tr>
@@ -13,14 +13,14 @@
                 <th>Batch Number</th>
             </tr>
             @foreach($forms as $f)
-                <tr class="pvform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}">
+                <tr class="pvform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ \Crypt::encrypt($f->id) }}">
                     <td class="inbox-table-icon">
-                            <div class="checkbox">
-                                    <label>
-                                            <input type="checkbox" class="checkbox style-2" />
-                                            <span></span>
-                                    </label>
-                            </div>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" class="checkbox style-2" />
+                                <span></span>
+                            </label>
+                        </div>
                     </td>
                     <td class="inbox-table-icon">
                         @if($f->flag_important)
@@ -33,10 +33,32 @@
                         <a href="{{Helper::generateURL($f)}}" class="pjax">#{{ $f->id }}</a>
                     </td>
                     <td>
-                        {{ucfirst(\Helper::dueInDays($f->paymentVoucher->first()->invoice->due_date))}}
+                        @if($f->paymentVoucher->invoice)
+                            @if($f->paymentVoucher->invoice->due_date !== null)
+                                {{ucfirst(\Helper::dueInDays($f->paymentVoucher->invoice->due_date))}}
+                            @else
+                                {{"(No Due Date)"}}
+                            @endif
+                        @else
+                            {{"(No Invoice Match)"}}
+                        @endif
                     </td>
                     <td>
-                        {{$f->paymentVoucher->first()->number}}
+                        <?php
+                        switch($f->paymentVoucher->validated)
+                        {
+                            case \SwiftACPPaymentVoucher::VALIDATION_PENDING:
+                                echo '<i class="fa fa-question" title="Validation Pending"></i> ';
+                                break;
+                            case \SwiftACPPaymentVoucher::VALIDATION_ERROR:
+                                echo '<i class="fa fa-times" title="Validation Error"></i> ';
+                                break;
+                            case \SwiftACPPaymentVoucher::VALIDATION_COMPLETE:
+                                echo '<i class="fa fa-check" title="Validation Complete"></i> ';
+                                break;
+                        }
+                        ?>
+                        {{$f->paymentVoucher->number}}
                     </td>
                     <td>
                         <div>
@@ -50,10 +72,10 @@
                         <span>{{number_format($f->due_amount,2)}}</span>
                     </td>
                     <td>
-                        <input type="text" class="form-control input-block-level input-paymentnumber" name="payment_number" value="" />
+                        <input type="text" class="form-control input-block-level input-paymentnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-number/{{ \Crypt::encrypt($f->id) }}" name="payment_number" value="" />
                     </td>
                     <td>
-                        <input type="text" class="form-control input-block-level input-batchnumber" name="batch_number" value="" />
+                        <input type="text" class="form-control input-block-level input-batchnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/batch-number/{{ \Crypt::encrypt($f->id) }}" name="batch_number" value="" />
                     </td>
                 </tr>
             @endforeach

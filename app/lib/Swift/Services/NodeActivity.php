@@ -78,10 +78,6 @@ class NodeActivity {
                                 $channel = new $channelClass($workflow_activity->workflowable,$n->definition->php_channel_name);
                                 $channel->triggerByName(['nodeActivity'=>$n]);
                             }
-                            else
-                            {
-                                throw new \Exception("Channel php function '{$n->definition->php_channel_name}::triggerByName' is not callable",E_USER_ERROR);
-                            }
                         }
                         if($n->definition->php_notification_function !== "" && $n->definition->php_notification_function !== null)
                         {
@@ -89,10 +85,6 @@ class NodeActivity {
                             {
                                 call_user_func_array($n->definition->php_notification_function."::sendNotification",array($workflow_activity,$permissionArray));
                                 $n->notified = 1;
-                            }
-                            else
-                            {
-                                throw new \Exception("Notification php function '{$n->definition->php_notification_function}::sendNotification' is not callable",E_USER_ERROR);
                             }
                         }
                     }

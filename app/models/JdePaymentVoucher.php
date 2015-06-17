@@ -1,0 +1,19 @@
+<?php
+/*
+ * Name: JDE Payment Voucher
+ * Description:
+ */
+
+class JdePaymentVoucher extends Eloquent {
+    protected $connection = 'sct_jde';
+
+    protected $table = "jdepaymvouchersmaster";
+
+    public function getKcoAttribute()
+    {
+        return (int)$this->kco;
+    }
+
+    
+}
+

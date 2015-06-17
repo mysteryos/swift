@@ -66,10 +66,19 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            $approval = new \SwiftApproval([
-                'type' => \SwiftApproval::APC_PAYMENT
-            ]);
-            $acp->approval()->save($approval);
+            //Check if approval entry already present
+
+            $pendingApproval = $acp->approval()
+                                ->where('type','=',\SwiftApproval::APC_PAYMENT)
+                                ->where('approved','=',\SwiftApproval::PENDING)
+                                ->count();
+            if(!$pendingApproval)
+            {
+                $approval = new \SwiftApproval([
+                    'type' => \SwiftApproval::APC_PAYMENT
+                ]);
+                $acp->approval()->save($approval);
+            }
         }
         
         return true;

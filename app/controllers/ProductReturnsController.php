@@ -82,7 +82,57 @@ class ProductReturnsController extends UserController {
      */
     public function getOverview()
     {
+        $this->pageTitle = 'Overview';
+        $this->data['inprogress_limit'] = 15;
+        $this->data['late_node_forms_count'] = \SwiftNodeActivity::countLateNodes($this->context);
+        $this->data['pending_node_count'] = \SwiftNodeActivity::countPendingNodesWithEta($this->context);
+
+        /*
+         * Fetch all data for 'Workspot' box
+         */
+
+        $pr_inprogress = $pr_inprogress_important = $pr_inprogress_responsible = $pr_inprogress_important_responsible = array();
+
+        $pr_inprogress = \SwiftPR::getInProgress($this->data['inprogress_limit']);
+        $pr_inprogress_count = \SwiftPR::getInProgressCount();
+        $pr_inprogress_important = \SwiftPR::getInProgress(0,true);
+        $pr_inprogress_responsible = \SwiftPR::getInProgressResponsible();
+        $pr_inprogress_important_responsible = \SwiftPR::getInProgressResponsible(0,true);
+
+        $pr_inprogress = $pr_inprogress->diff($pr_inprogress_responsible);
+        $pr_inprogress_important = $pr_inprogress_important->diff($pr_inprogress_important_responsible);
+
+        /*
+         * Check if we have in progress data
+         */
+        if(count($pr_inprogress) == 0 || count($pr_inprogress_important) == 0 || count($pr_inprogress_responsible) == 0 || count($pr_inprogress_important_responsible) == 0)
+        {
+            $this->data['in_progress_present'] = true;
+        }
+        else
+        {
+            $this->data['in_progress_present'] = false;
+        }
+
+        /*
+         * Add workflowactivity and audit to each record.
+         */
+        foreach(array($pr_inprogress,$pr_inprogress_responsible,$pr_inprogress_important,$pr_inprogress_important_responsible) as $prarray)
+        {
+            foreach($prarray as &$pr)
+            {
+                $pr->current_activity = \WorkflowActivity::progress($pr);
+                $pr->activity = \Helper::getMergedRevision($pr->revisionRelations,$pr);
+            }
+        }
+
+        $this->data['inprogress'] = $pr_inprogress;
+        $this->data['inprogress_responsible'] = $pr_inprogress_responsible;
+        $this->data['inprogress_important'] = $pr_inprogress_important;
+        $this->data['inprogress_important_responsible'] = $pr_inprogress_important_responsible;
         $this->adminList();
+
+        return $this->makeView('aprequest/overview');
     }
 
     /*
@@ -590,12 +640,29 @@ class ProductReturnsController extends UserController {
      * Display Pending Tasks
      *
      * @param string $type
+     * @return \Illuminate\Support\Facades\Response
      */
     public function getTasks($type='all')
     {
         $this->data['type'] = $type;
 
         return $this->task()->tasker($type);
+    }
+
+    /*
+     * Statistics
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
+    public function getStatistics()
+    {
+        $startDate = \Helper::getFinancialYearStart();
+        $endDate = \Helper::getFinancialYearEnd();
+
+        $this->data['accepted_sum_selling_price'] = \SwiftPRProduct::statsByProductsAccepted($startDate,$endDate);
+//        $this->data['accepted_sum_qty'] = ;
+//        $this->data['rejected_sum_selling_price'] =;
+//        $this->data['rejected_sum_qty'] = ;
     }
 
     /*
@@ -1424,6 +1491,83 @@ class ProductReturnsController extends UserController {
         }
 
         return \Response::make("An error occured fetching the products. Please refresh the page.",500);
+    }
+
+    /*
+     * Get List of my Product return Requests - HTML
+     *
+     */
+    public function getMyrequests()
+    {
+        $this->data['pending_requests'] = \SwiftPR::getMyPending();
+        $this->data['complete_requests'] = \SwiftPR::getMyCompleted(5);
+
+        if(!$this->data['pending_requests']->isEmpty() || !$this->data['complete_requests']->isEmpty())
+        {
+            $this->data['requests_present'] = true;
+            foreach(array($this->data['pending_requests'],$this->data['complete_requests']) as $prsource)
+            {
+                foreach($prsource as &$pr)
+                {
+                    $pr->current_activity = \WorkflowActivity::progress($pr,$this->context);
+                    $pr->activity = \Helper::getMergedRevision($pr->revisionRelations,$pr);
+                }
+            }
+        }
+        else
+        {
+            $this->data['requests_present'] = false;
+        }
+
+        echo View::make('product-returns/overview_myrequests',$this->data)->render();
+    }
+
+    /*
+     * Overview: AJAX Widgets
+     */
+    public function getLateNodes()
+    {
+        if($isAdmin)
+        {
+            $this->data['late_node_forms'] = \WorkflowActivity::lateNodeByForm($this->context);
+            $this->data['late_node_forms_count'] = \SwiftNodeActivity::countLateNodes($this->context);
+
+            echo View::make('workflow/overview_latenodes',$this->data)->render();
+        }
+        else
+        {
+            return parent::forbidden();
+        }
+    }
+
+    public function getPendingNodes()
+    {
+
+        if($isAdmin)
+        {
+            $this->data['pending_node_activity'] = \WorkflowActivity::statusByType($this->context);
+
+            echo View::make('workflow/overview_pendingnodes',$this->data)->render();
+        }
+        else
+        {
+            return parent::forbidden();
+        }
+    }
+
+    public function getStories()
+    {
+        if($isAdmin)
+        {
+            $this->data['stories'] = \Story::fetch(\Config::get('context')[$this->context]);
+            $this->data['dynamicStory'] = false;
+
+            echo View::make('story/chapter',$this->data)->render();
+        }
+        else
+        {
+            return parent::forbidden();
+        }
     }
 
     /*

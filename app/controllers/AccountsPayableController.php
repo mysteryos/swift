@@ -5,7 +5,7 @@ class AccountsPayableController extends UserController {
     public function __construct(){
         parent::__construct();
         $this->pageName = "Accounts Payable";
-        $this->context = "acpayable";
+        $this->context = $this->data['context'] = "acpayable";
         $this->rootURL = $this->data['rootURL'] = "accounts-payable";
         $this->adminPermission = "acp-admin";
         $this->viewPermission = "acp-view";
@@ -14,6 +14,9 @@ class AccountsPayableController extends UserController {
         $this->HODPermission = "acp-hod";
         $this->accountingPaymentVoucherPermission = "acp-paymentvoucher";
         $this->accountingPaymentIssuePermission = "acp-paymentissue";
+
+        $this->canWhat();
+        $this->isWho();
 
     }
 
@@ -45,8 +48,8 @@ class AccountsPayableController extends UserController {
     {
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
-        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
-        $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta($this->context);
+        $this->data['late_node_forms_count'] = \SwiftNodeActivity::countLateNodes($this->context);
+        $this->data['pending_node_count'] = \SwiftNodeActivity::countPendingNodesWithEta($this->context);
         
         $inprogress = $inprogress_important = $inprogress_responsible = $inprogress_important_responsible = array();
 
@@ -55,9 +58,9 @@ class AccountsPayableController extends UserController {
          */
         if($this->data['isAdmin'])
         {
-            $inprogress = SwiftACPRequest::getInProgress($this->data['inprogress_limit']);
-            $inprogress_count = SwiftACPRequest::getInProgressCount();
-            $inprogress_important = SwiftACPRequest::getInProgress(0,true);
+            $inprogress = \SwiftACPRequest::getInProgress($this->data['inprogress_limit']);
+            $inprogress_count = \SwiftACPRequest::getInProgressCount();
+            $inprogress_important = \SwiftACPRequest::getInProgress(0,true);
             $inprogress = $inprogress->diff($inprogress_responsible);
             $inprogress_important = $inprogress_important->diff($inprogress_important_responsible);
         }
@@ -94,6 +97,12 @@ class AccountsPayableController extends UserController {
         return $this->makeView('acpayable/overview');
     }
 
+    /*
+     * Forms
+     *
+     * @param boolean|string $type
+     * @integer $page
+     */
     public function getForms($type=false,$page=1)
     {
         $limitPerPage = 15;
@@ -310,6 +319,10 @@ class AccountsPayableController extends UserController {
         return $this->makeView("acpayable/forms");
     }
 
+    /*
+     * Payment Voucher Process - Utility Page
+     *
+     */
     public function getPaymentVoucherProcess()
     {
         if(!$this->isAccountingDept && !$this->isAdmin)
@@ -333,7 +346,8 @@ class AccountsPayableController extends UserController {
             return $q->inprogress()->whereHas('nodes',function($q){
                 return $q->whereHas('definition',function($q){
                    return $q->where('name','=','acp_paymentvoucher');
-                });
+                })
+                ->where('user_id','=',0);
             });
         });
 
@@ -342,12 +356,12 @@ class AccountsPayableController extends UserController {
 
         //Filters
         
-        if(Input::has('billable_company'))
+        if(\Input::has('billable_company'))
         {
-            $query->where('billable_company','=',Input::get('billable_company'));
+            $query->where('billable_company','=',\Input::get('billable_company'));
         }
 
-        if(Input::has('supplier_code'))
+        if(\Input::has('supplier_code'))
         {
             $query->where('supplier_code','=',\Input::get('supplier_code'));
         }
@@ -378,6 +392,12 @@ class AccountsPayableController extends UserController {
         return $this->makeView('acpayable/payment-voucher-process');
     }
 
+    /*
+     * Cheque Issue Utility Page
+     *
+     * @param string $type
+     * @param integer $page
+     */
     public function getChequeIssue($type='all',$page=1)
     {
         if(!$this->isAccountingDept && !$this->isAdmin)
@@ -409,7 +429,7 @@ class AccountsPayableController extends UserController {
         /*
          * Get forms
          */
-        $query = SwiftACPRequest::query();
+        $query = \SwiftACPRequest::query();
         $activeSuppliers = \SwiftACPRequest::query();
 
         //With
@@ -438,14 +458,13 @@ class AccountsPayableController extends UserController {
         switch($type)
         {
             case 'all':
-                if(Input::has('filter_end_date') || Input::has('filter_end_date'))
+                if(\Input::has('filter_end_date') || \Input::has('filter_end_date'))
                 {
-                    $filter_end_date = Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
-                    $filter_start_date = Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
+                    $filter_end_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
+                    $filter_start_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
 
                     $query->whereHas('paymentVoucher',function($q) use ($filter_end_date,$filter_start_date){
-                        return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                  ->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
+                        return $q->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
                                       if($filter_start_date !== false)
                                       {
                                           $q->where('due_date','>=',$filter_start_date->format('Y-m-d'),'AND');
@@ -465,8 +484,7 @@ class AccountsPayableController extends UserController {
                 else
                 {
                     $query->whereHas('paymentVoucher',function($q){
-                        return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                  ->whereHas('invoice',function($q){
+                        return $q->whereHas('invoice',function($q){
                                       return $q->whereNotNull('due_date');
                                 });
                     });
@@ -474,16 +492,14 @@ class AccountsPayableController extends UserController {
                 break;
             case 'overdue':
                 $query->whereHas('paymentVoucher',function($q){
-                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                              ->whereHas('invoice',function($q){
+                    return $q->whereHas('invoice',function($q){
                                   return $q->whereNotNull('due_date')
                                         ->where('due_date','<',Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
                                 });
                 });
                 
                 $activeSuppliers->whereHas('paymentVoucher',function($q){
-                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                              ->whereHas('invoice',function($q){
+                    return $q->whereHas('invoice',function($q){
                                   return $q->whereNotNull('due_date')
                                         ->where('due_date','<',Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
                                 });
@@ -492,8 +508,7 @@ class AccountsPayableController extends UserController {
                 break;
             case 'today':
                 $query->whereHas('paymentVoucher',function($q){
-                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                              ->whereHas('invoice',function($q){
+                    return $q->whereHas('invoice',function($q){
                                   return $q->whereNotNull('due_date')
                                         ->where('due_date','=',Carbon::now()->format('Y-m-d'),'AND');
                                 });
@@ -501,8 +516,7 @@ class AccountsPayableController extends UserController {
                 ->orderBy('swift_acp_request.supplier_code','ASC');
 
                 $activeSuppliers->whereHas('paymentVoucher',function($q){
-                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                              ->whereHas('invoice',function($q){
+                    return $q->whereHas('invoice',function($q){
                                   return $q->whereNotNull('due_date')
                                         ->where('due_date','=',Carbon::now()->format('Y-m-d'),'AND');
                                 });
@@ -511,8 +525,7 @@ class AccountsPayableController extends UserController {
                 break;
             case 'tomorrow':
                 $query->whereHas('paymentVoucher',function($q){
-                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                              ->whereHas('invoice',function($q){
+                    return $q->whereHas('invoice',function($q){
                                   return $q->whereNotNull('due_date')
                                         ->where('due_date','=',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
                                 });
@@ -520,8 +533,7 @@ class AccountsPayableController extends UserController {
                 ->orderBy('swift_acp_request.supplier_code','ASC');
 
                 $activeSuppliers->whereHas('paymentVoucher',function($q){
-                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                              ->whereHas('invoice',function($q){
+                    return $q->whereHas('invoice',function($q){
                                   return $q->whereNotNull('due_date')
                                         ->where('due_date','=',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
                                 });
@@ -533,8 +545,7 @@ class AccountsPayableController extends UserController {
                 if(Input::has('filter_end_date') && Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date')))
                 {
                     $query->whereHas('paymentVoucher',function($q){
-                        return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                  ->whereHas('invoice',function($q){
+                        return $q->whereHas('invoice',function($q){
                                       return $q->whereNotNull('due_date')
                                             ->where('due_date','>',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND')
                                             ->where('due_date','>',Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'))->format('Y-m-d'));
@@ -544,8 +555,7 @@ class AccountsPayableController extends UserController {
                 else
                 {
                     $query->whereHas('paymentVoucher',function($q){
-                        return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                  ->whereHas('invoice',function($q){
+                        return $q->whereHas('invoice',function($q){
                                       return $q->whereNotNull('due_date')
                                             ->where('due_date','>',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'));
                                     });
@@ -553,13 +563,25 @@ class AccountsPayableController extends UserController {
                 }
 
                 $activeSuppliers->whereHas('paymentVoucher',function($q){
-                    return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                              ->whereHas('invoice',function($q){
+                    return $q->whereHas('invoice',function($q){
                                   return $q->whereNotNull('due_date')
                                         ->where('due_date','>',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'));
                                 });
                 });
-                
+            
+                break;
+            case 'nodate':
+                $query->whereHas('paymentVoucher',function($q){
+                    return $q->whereHas('invoice',function($q){
+                                  return $q->whereNull('due_date');
+                                });
+                });
+
+                $activeSuppliers->whereHas('paymentVoucher',function($q){
+                    return $q->whereHas('invoice',function($q){
+                                    return $q->whereNull('due_date');
+                                });
+                });
                 break;
         }
 
@@ -569,7 +591,7 @@ class AccountsPayableController extends UserController {
 
         //Overdue
 
-        $this->data['overdue_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+        $this->data['overdue_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
                                             return $q->inprogress()->whereHas('nodes',function($q){
                                                 return $q->whereHas('definition',function($q){
                                                    return $q->where('name','=','acp_paymentissue');
@@ -577,8 +599,7 @@ class AccountsPayableController extends UserController {
                                             });
                                         })
                                         ->whereHas('paymentVoucher',function($q){
-                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                                      ->whereHas('invoice',function($q){
+                                            return $q->whereHas('invoice',function($q){
                                                           return $q->whereNotNull('due_date')
                                                                 ->where('due_date','<',Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
                                                         });
@@ -586,7 +607,7 @@ class AccountsPayableController extends UserController {
 
         //Today
 
-        $this->data['today_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+        $this->data['today_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
                                             return $q->inprogress()->whereHas('nodes',function($q){
                                                 return $q->whereHas('definition',function($q){
                                                    return $q->where('name','=','acp_paymentissue');
@@ -594,8 +615,7 @@ class AccountsPayableController extends UserController {
                                             });
                                         })
                                         ->whereHas('paymentVoucher',function($q){
-                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                                      ->whereHas('invoice',function($q){
+                                            return $q->whereHas('invoice',function($q){
                                                           return $q->whereNotNull('due_date')
                                                                 ->where('due_date','=',Carbon::now()->format('Y-m-d'),'AND');
                                                         });
@@ -603,15 +623,14 @@ class AccountsPayableController extends UserController {
 
         //Tomorrow
 
-        $this->data['tomorrow_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+        $this->data['tomorrow_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
                                             return $q->inprogress()->whereHas('nodes',function($q){
                                                 return $q->whereHas('definition',function($q){
                                                    return $q->where('name','=','acp_paymentissue');
                                                 });
                                             });
                                         })->whereHas('paymentVoucher',function($q){
-                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                                      ->whereHas('invoice',function($q){
+                                            return $q->whereHas('invoice',function($q){
                                                           return $q->whereNotNull('due_date')
                                                                 ->where('due_date','=',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
                                                         });
@@ -619,7 +638,7 @@ class AccountsPayableController extends UserController {
 
         //Future
 
-        $this->data['future_count'] = SwiftACPRequest::whereHas('workflow',function($q){
+        $this->data['future_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
                                             return $q->inprogress()->whereHas('nodes',function($q){
                                                 return $q->whereHas('definition',function($q){
                                                    return $q->where('name','=','acp_paymentissue');
@@ -627,19 +646,32 @@ class AccountsPayableController extends UserController {
                                             });
                                         })
                                         ->whereHas('paymentVoucher',function($q){
-                                            return $q->whereValidated(\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                                      ->whereHas('invoice',function($q){
+                                            return $q->whereHas('invoice',function($q){
                                                           return $q->whereNotNull('due_date')
                                                                 ->where('due_date','>',Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'));
                                                         });
                                         })->count();
 
+        $this->data['nodate_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('nodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_paymentissue');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('paymentVoucher',function($q){
+                                            return $q->whereHas('invoice',function($q){
+                                                          return $q->whereNull('due_date');
+                                                        });
+                                        })
+                                        ->count();
+
 
         //The Filters
 
-        if(Input::has('filter_supplier') && is_numeric(Input::get('filter_supplier')))
+        if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
         {
-            $query->where('supplier_code','=',Input::get('filter_supplier'));
+            $query->where('supplier_code','=',\Input::get('filter_supplier'));
         }
 
         //Form for Display and Count
@@ -704,7 +736,7 @@ class AccountsPayableController extends UserController {
             return parent::forbidden();
         }
 
-        $validator = Validator::make(Input::all(),
+        $validator = \Validator::make(\Input::all(),
                     [   'billable_company_code'=>['required','numeric'],
                         'supplier_code'=>['required','numeric'],
                         'po_number'=>['numeric'],
@@ -714,11 +746,11 @@ class AccountsPayableController extends UserController {
 
         if($validator->fails())
         {
-            return Response::make($validator->errors(),400);
+            return \Response::make($validator->errors(),400);
         }
         else
         {
-            $inputData = Input::all();
+            $inputData = \Input::all();
             $invoiceExist = new \Illuminate\Database\Eloquent\Collection();
             if($inputData['invoice_number'] !== "")
             {
@@ -734,37 +766,38 @@ class AccountsPayableController extends UserController {
             
             if(count($invoiceExist))
             {
-                return Response::make("Invoice already exists for supplier: <a href='".Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
+                return \Response::make("Invoice already exists for supplier: <a href='".Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
             }
             else
             {
-                $acp = new SwiftACPRequest();
+                $acp = new \SwiftACPRequest();
                 $acp->fill($inputData);
                 if($acp->save())
                 {
                     if($inputData['invoice_number'] !== "")
                     {
-                        $invoice = new SwiftACPInvoice([
+                        $invoice = new \SwiftACPInvoice([
                             'number' => $inputData['invoice_number']
                         ]);
                         $acp->invoice()->save($invoice);
                     }
+                    
                     //Start the Workflow
                     if(\WorkflowActivity::update($acp,$this->context))
                     {
                         //Story Relate
-                        Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
+                        \Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
                                                              'obj_id'=>$acp->id,
-                                                             'action'=>SwiftStory::ACTION_CREATE,
+                                                             'action'=>\SwiftStory::ACTION_CREATE,
                                                              'user_id'=>$this->currentUser->id,
                                                              'context'=>get_class($acp)));
-                        $id = Crypt::encrypt($acp->id);
+                        $id = \Crypt::encrypt($acp->id);
                         //Success
                         echo json_encode(['success'=>1,'url'=>"/{$this->rootURL}/edit/$id"]);
                     }
                     else
                     {
-                        return Response::make("Failed to save workflow",400);
+                        return \Response::make("Failed to save workflow",400);
                     }
                 }
                 else
@@ -805,7 +838,7 @@ class AccountsPayableController extends UserController {
         }
         elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
         {
-            return Redirect::action('AccountsPayableController@getView',array('id'=>$id));
+            return \Redirect::action('AccountsPayableController@getView',array('id'=>$id));
         }
         else
         {
@@ -848,20 +881,22 @@ class AccountsPayableController extends UserController {
 
     private function form($id,$edit=false)
     {
-        $acp_id = Crypt::decrypt($id);
-        $acp = SwiftACPRequest::getById($acp_id);
+        $acp_id = \Crypt::decrypt($id);
+        $acp = \SwiftACPRequest::getById($acp_id);
 
         if($acp)
         {
+
+            $acp->encrypted_id = \Crypt::encrypt($acp->id);
 
             //\Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
             /*
              * Set Read
              */
 
-            if(!Flag::isRead($acp))
+            if(!\Flag::isRead($acp))
             {
-                Flag::toggleRead($acp);
+                \Flag::toggleRead($acp);
             }
 
             /*
@@ -877,7 +912,7 @@ class AccountsPayableController extends UserController {
 
             //Find HoDs;
             $this->data['approval_hod'] = array();
-            $hods = Sentry::findAllUsersWithAccess(array($this->HODPermission));
+            $hods = \Sentry::findAllUsersWithAccess(array($this->HODPermission));
             if(count($hods))
             {
                 foreach($hods as $h)
@@ -905,16 +940,16 @@ class AccountsPayableController extends UserController {
             $this->data['payment_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$type));
             $this->data['cheque_dispatch'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$dispatch));
             $this->data['payment_term'] = json_encode(\Helper::jsonobject_encode(\SwiftACPInvoice::$paymentTerm));
-            $this->data['pv_validation'] = json_encode(\Helper::jsonobject_encode(SwiftACPPaymentVoucher::$validationArray));
+            $this->data['pv_validation'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPaymentVoucher::$validationArray));
             $this->data['approval_hod'] = json_encode(\Helper::jsonobject_encode($this->data['approval_hod']));
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
             $this->data['flag_important'] = \Flag::isImportant($acp);
             $this->data['flag_starred'] = \Flag::isStarred($acp);
             $this->data['type_order'] = json_encode(\Helper::jsonobject_encode(\SwiftACPRequest::$order));
-            $this->data['po_type'] = json_encode(Helper::jsonobject_encode(\SwiftPurchaseOrder::$types));
-            $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
+            $this->data['po_type'] = json_encode(\Helper::jsonobject_encode(\SwiftPurchaseOrder::$types));
+            $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(\SwiftApproval::$approved));
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
-            $this->data['owner'] = Helper::getUserName($acp->owner_user_id,$this->currentUser);
+            $this->data['owner'] = \Helper::getUserName($acp->owner_user_id,$this->currentUser);
             $this->data['edit'] = $edit;
             $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = false;
             $this->data['isCreator'] = $acp->owner_user_id == $this->currentUser->id;
@@ -1764,7 +1799,7 @@ class AccountsPayableController extends UserController {
 
                                 if(count($returnReasonList) !== 0)
                                 {
-                                    return Response::make(implode(", ",$returnReasonList),400);
+                                    return \Response::make(implode(", ",$returnReasonList),400);
                                 }
 
                                 /*
@@ -1807,6 +1842,102 @@ class AccountsPayableController extends UserController {
         }
     }
 
+    public function putPaymentNumber($form_id)
+    {
+        $form = \SwiftACPRequest::find(\Crypt::decrypt($form_id));
+        if($form)
+        {
+            if(!is_numeric(\Input::get('value')))
+            {
+                return \Response::make("Batch number should be numeric",400);
+            }
+
+            if(is_numeric(\Input::get('pk')))
+            {
+                $payment = new \SwiftACPPayment([
+                    'payment_number' => \Input::get('value'),
+                    'type' => \SwiftACPPayment::TYPE_CHEQUE
+                ]);
+
+                if($form->payment()->save($payment))
+                {
+                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                }
+            }
+            else
+            {
+                $payment = \SwiftACPPayment::find(\Crypt::decrypt(\Input::get('pk')));
+                if($payment)
+                {
+                    $payment->payment_number = \Input::get('value');
+                    if($payment->save())
+                    {
+                        return \Response::make("Success");
+                    }
+
+                }
+                else
+                {
+                    return \Response::make("Payment Entry Not Found",400);
+                }
+            }
+        }
+        else
+        {
+            return \Response::make("Account Payable Form Not Found",404);
+        }
+
+        return \Response::make("Unable to process your request",500);
+    }
+
+    public function putBatchNumber($form_id)
+    {
+        $form = \SwiftACPRequest::find(\Crypt::decrypt($form_id));
+        if($form)
+        {
+            if(!is_numeric(\Input::get('value')))
+            {
+                return \Response::make("Batch number should be numeric",400);
+            }
+
+            if(is_numeric(\Input::get('pk')))
+            {
+                $payment = new \SwiftACPPayment([
+                    'batch_number' => \Input::get('value'),
+                    'type' => \SwiftACPPayment::TYPE_CHEQUE
+                ]);
+
+                if($form->payment()->save($payment))
+                {
+                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                }
+            }
+            else
+            {
+                $payment = \SwiftACPPayment::find(\Crypt::decrypt(\Input::get('pk')));
+                if($payment)
+                {
+                    $payment->batch_number = \Input::get('value');
+                    if($payment->save())
+                    {
+                        return \Response::make("Success");
+                    }
+
+                }
+                else
+                {
+                    return \Response::make("Payment Entry Not Found",400);
+                }
+            }
+        }
+        else
+        {
+            return \Response::make("Account Payable Form Not Found",404);
+        }
+
+        return \Response::make("Unable to process your request",500);
+    }
+
     public function postUpload($id)
     {
 
@@ -1818,15 +1949,15 @@ class AccountsPayableController extends UserController {
             return parent::forbidden();
         }
 
-        $acp = SwiftACPRequest::find(Crypt::decrypt($id));
+        $acp = \SwiftACPRequest::find(Crypt::decrypt($id));
         /*
          * Manual Validation
          */
         if(count($acp))
         {
-            if(Input::file('file'))
+            if(\Input::file('file'))
             {
-                $doc = new SwiftACPDocument();
+                $doc = new \SwiftACPDocument();
                 $doc->document = Input::file('file');
                 if($acp->document()->save($doc))
                 {
@@ -2142,22 +2273,22 @@ class AccountsPayableController extends UserController {
             return parent::forbidden();
         }
 
-        $acp = SwiftACPRequest::find(Crypt::decrypt($id));
+        $acp = \SwiftACPRequest::find(Crypt::decrypt($id));
 
         if(count($acp))
         {
-            if(WorkflowActivity::cancel($acp))
+            if(\WorkflowActivity::cancel($acp))
             {
-                return Response::make('Workflow has been cancelled',200);
+                return \Response::make('Workflow has been cancelled',200);
             }
             else
             {
-                return Response::make('Unable to cancel workflow: Save failed',400);
+                return \Response::make('Unable to cancel workflow: Save failed',400);
             }
         }
         else
         {
-            return Response::make('Accounts payable form not found',404);
+            return \Response::make('Accounts payable form not found',404);
         }
     }
 
@@ -2166,7 +2297,7 @@ class AccountsPayableController extends UserController {
      */
     public function putMark($type)
     {
-        return Flag::set($type,'SwiftACPRequest',$this->adminPermission);
+        return \Flag::set($type,'SwiftACPRequest',$this->adminPermission);
     }
 
     /*
@@ -2310,22 +2441,22 @@ class AccountsPayableController extends UserController {
 
     public function postSavePv()
     {
-        if(Input::has('id') || Input::has('pv-id'))
+        if(\Input::has('id') || \Input::has('pv-id'))
         {
-            if(Input::get('pv-number',"") === "")
+            if(\Input::get('pv-number',"") === "")
             {
-                return Response::make('Please input a PV number',400);
+                return \Response::make('Please input a PV number',400);
             }
 
             //Save PV directly
-            if(Input::has('pv-id'))
+            if(\Input::has('pv-id'))
             {
-                $pv = \SwiftACPPaymentVoucher::find(\Crypt::decrypt(Input::get('pv-id')));
+                $pv = \SwiftACPPaymentVoucher::find(\Crypt::decrypt(\Input::get('pv-id')));
                 if($pv)
                 {
-                    $pv->number = Input::get('pv-number');
+                    $pv->number = \Input::get('pv-number');
                     $pv->save();
-                    return Response::json(['id'=>Crypt::encrypt($pv->id)]);
+                    return \Response::json(['id'=>\Crypt::encrypt($pv->id)]);
                 }
             }
             
@@ -2334,11 +2465,11 @@ class AccountsPayableController extends UserController {
             if($acp)
             {
                 $pv = new \SwiftACPPaymentVoucher([
-                   'number' => Input::get('pv-number')
+                   'number' => \Input::get('pv-number')
                 ]);
                 $acp->paymentVoucher()->save($pv);
 
-                return Response::json(['id'=>Crypt::encrypt($pv->id)]);
+                return \Response::json(['id'=>\Crypt::encrypt($pv->id)]);
             }
             else
             {
@@ -2396,8 +2527,8 @@ class AccountsPayableController extends UserController {
         /*
          * TBD: Missing Billable Company Code
          */
-        $type = Input::get('payable_type');
-        $id = Crypt::decrypt(Input::get('payable_id'));
+        $type = \Input::get('payable_type');
+        $id = \Crypt::decrypt(Input::get('payable_id'));
 
         /*
          * @todo
@@ -2415,7 +2546,7 @@ class AccountsPayableController extends UserController {
         $acp->save();
 
         $paymentVoucher = new \SwiftACPPaymentVoucher([
-           'number' => Input::get('pv_number')
+           'number' => \Input::get('pv_number')
         ]);
         $acp->paymentVoucher()->save($paymentVoucher);
 
@@ -2427,17 +2558,17 @@ class AccountsPayableController extends UserController {
         if(\WorkflowActivity::update($acp,$this->context))
         {
             //Story Relate
-            Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
+            \Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
                                                  'obj_id'=>$acp->id,
-                                                 'action'=>SwiftStory::ACTION_CREATE,
+                                                 'action'=>\SwiftStory::ACTION_CREATE,
                                                  'user_id'=>$this->currentUser->id,
                                                  'context'=>get_class($acp)));
 
-            return Response::json(['msg'=>"Form saved successfully, <a class='pjax' href='".Helper::generateUrl($acp)."'>click here to view</a>"]);
+            return \Response::json(['msg'=>"Form saved successfully, <a class='pjax' href='".\Helper::generateUrl($acp)."'>click here to view</a>"]);
         }
         else
         {
-            return Response::json(['msg'=>"A critical error occured. Contact your administrator. Id: {$acp->getKey()}"],500);
+            return \Response::json(['msg'=>"A critical error occured. Contact your administrator. Id: {$acp->getKey()}"],500);
         }
         
     }

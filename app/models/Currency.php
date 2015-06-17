@@ -8,7 +8,7 @@
 
 class Currency extends Eloquent
 {
-    protected $table = "currency";
+    protected $table = "scott_swift.currency";
     
     protected $fillable = ['code','name'];
 

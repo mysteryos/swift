@@ -337,6 +337,41 @@ class SwiftPR extends Eloquent {
                             },'=',0)->count();
     }
 
+    public static function getMyPending($limit=0)
+    {
+
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+
+        return $query->orderBy('updated_at','desc')
+                    ->with('workflow','workflow.nodes')
+                    ->where('owner_user_id','=',Sentry::getUser()->id)
+                    ->whereHas('workflow',function($q){
+                        return $q->inprogress();
+                    })
+                    ->get();
+    }
+
+    public static function getMyCompleted($limit=0)
+    {
+        $query = self::query();
+        if($limit > 0)
+        {
+            $query->take($limit);
+        }
+
+        return $query->orderBy('updated_at','desc')
+                    ->with('workflow','workflow.nodes')
+                    ->where('owner_user_id','=',Sentry::getUser()->id)
+                    ->whereHas('workflow',function($q){
+                        return $q->complete();
+                    })
+                    ->get();
+    }
+
     public static function getById($id)
     {
         return self::with(['product','document','approval','pickup','pickup.driver','creditnote','order','comments','workflow','owner','customer'])

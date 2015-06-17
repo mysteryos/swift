@@ -30,14 +30,14 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#order_inprogress_responsible" class="txt-color-orangeDark">
+                            <a data-toggle="collapse" href="#pr_inprogress_responsible" class="txt-color-orangeDark">
                                 <i class="fa fa-lg fa-angle-down pull-right"></i>
                                 <i class="fa fa-lg fa-angle-up pull-right"></i>
                                 <i class="fa fa-clock-o"></i> In Progress (<small class="num-of-tasks">{{ count($inprogress_responsible) }}</small>)
                             </a>
                         </h4>
                 </div>
-                <div class="panel-collapse collapse in" id="order_inprogress_responsible">
+                <div class="panel-collapse collapse in" id="pr_inprogress_responsible">
                     <div class="panel-body no-padding">
                         <table class="table table-striped table-hover table-responsive">        
                         @foreach($inprogress_responsible as $or)
@@ -56,14 +56,14 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#order_inprogress_important" class="txt-color-purple">
+                            <a data-toggle="collapse" href="#pr_inprogress_important" class="txt-color-purple">
                                 <i class="fa fa-lg fa-angle-down pull-right"></i>
                                 <i class="fa fa-lg fa-angle-up pull-right"></i>
                                 <i class="fa fa-exclamation"></i> Other Important (<small class="num-of-tasks">{{ count($inprogress_important) }}</small>)
                             </a>
                         </h4>
                 </div>
-                <div class="panel-collapse collapse in" id="order_inprogress_important">
+                <div class="panel-collapse collapse in" id="pr_inprogress_important">
                     <div class="panel-body no-padding">
                         <table class="table table-striped table-hover table-responsive">        
                         @foreach($inprogress_important as $oi)
@@ -82,14 +82,14 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#order_inprogress">
+                            <a data-toggle="collapse" href="#pr_inprogress">
                                 <i class="fa fa-lg fa-angle-down pull-right"></i>
                                 <i class="fa fa-lg fa-angle-up pull-right"></i>
                                 <i class="fa fa-map-marker"></i> Other
                             </a>
                         </h4>
                 </div>
-                <div class="panel-collapse collapse in" id="order_inprogress">
+                <div class="panel-collapse collapse in" id="pr_inprogress">
                     <div class="panel-body no-padding">
                         <table class="table table-striped table-hover table-responsive">        
                         @foreach($inprogress as $o)
@@ -106,5 +106,5 @@
         @endif
     </div>
 @else
-    <h1 class="text-align-center"><i class="fa fa-smile-o"></i> No a&p request in progress right now.</h1>
+    <h1 class="text-align-center"><i class="fa fa-smile-o"></i> No product returns in progress right now.</h1>
 @endif

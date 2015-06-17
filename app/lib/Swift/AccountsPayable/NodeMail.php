@@ -61,4 +61,47 @@ class NodeMail {
             });            
         }
     }
+
+    public static function sendApprovalMail($workflowActivity,$permissions)
+    {
+        if(count($workflowActivity))
+        {
+            $aprequest = $workflowActivity->workflowable;
+            $aprequest->load(['approvalHod'=>function($q){
+                return $q->pending();
+            },'approvalHod.approver']);
+            
+
+            if(count($aprequest->approvalHod))
+            {
+                $aprequest->current_activity = \WorkflowActivity::progress($workflowActivity);
+                $mailData = [
+                            'name'=>$aprequest->name,
+                            'id'=>$aprequest->id,
+                            'current_activity'=>$aprequest->current_activity,
+                            'url'=>\Helper::generateUrl($aprequest,true),
+                        ];
+
+                foreach($aprequest->approvalHod as $approval)
+                {
+                    if($approval->approver->activated)
+                    {
+                        try
+                        {
+                            //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
+                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$approval->approver),function($message) use ($approval,$aprequest){
+                                $message->from('swift@scott.mu','Scott Swift');
+                                $message->subject(\Config::get('website.name').' - Approval Pending on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
+                                $message->to($approval->approver->email);
+                            });
+                        }
+                        catch (Exception $e)
+                        {
+                            \Log::error(get_class().': Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

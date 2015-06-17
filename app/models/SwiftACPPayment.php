@@ -72,6 +72,7 @@ class SwiftACPPayment extends Eloquent
     protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number');
     
     protected $revisionFormattedFieldNames = array(
+        'id' => 'Id',
         'status' => 'Status',
         'type'  => 'Type',
         'date' => 'Date Due',

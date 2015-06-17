@@ -15,9 +15,9 @@ class SwiftACPRequest extends Eloquent
 
     protected $table = "scott_swift.swift_acp_request";
     
-    protected $fillable = ['name','description','billable_company_code','owner_user_id','supplier_code','payable_id','payable_type','type'];
+    protected $fillable = ['description','billable_company_code','owner_user_id','supplier_code','payable_id','payable_type','type'];
 
-    protected $appends = ['company_name','supplier_name','amount_due'];
+    protected $appends = ['company_name','supplier_name','amount_due','name'];
 
     protected $with = ['invoice','payment'];
     
@@ -65,7 +65,7 @@ class SwiftACPRequest extends Eloquent
     public $esMain = true;
     //Info Context
     public $esInfoContext = "acpayable";
-    public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due','payable_id','payable_type','type'];
+    public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due','payable_id','payable_type','type','name'];
     
     /* Revisionable */
     
@@ -109,6 +109,11 @@ class SwiftACPRequest extends Eloquent
     /*
      * Accessors
      */
+
+    public function getNameAttribute()
+    {
+        return $this->company_name." | ".$this->supplier_name;
+    }
 
     public function getSupplierNameAttribute()
     {
@@ -210,14 +215,7 @@ class SwiftACPRequest extends Eloquent
     
     public function getReadableName()
     {
-        if($this->name !== "")
-        {
-            return $this->company_name." | ".$this->supplier_name." - ".$this->name." (Id:".$this->id.")";
-        }
-        else
-        {
-            return $this->company_name." | ".$this->supplier_name." - (Id:".$this->id.")";
-        }
+        return $this->name;
     }
     
     public function getIcon()
@@ -270,7 +268,7 @@ class SwiftACPRequest extends Eloquent
 
     public function paymentVoucher()
     {
-        return $this->hasMany('SwiftACPPaymentVoucher','acp_id');
+        return $this->hasOne('SwiftACPPaymentVoucher','acp_id');
     }
 
     public function creditNote()

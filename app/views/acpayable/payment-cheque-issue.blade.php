@@ -116,6 +116,9 @@
                             <li @if($type=="future"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/cheque-issue/future" class="form-pjax-filter pjax"><i class="fa fa-calendar"></i>Future @if($future_count){{"(".$future_count.")"}} @endif</a>
                             </li>
+                            <li @if($type=="nodate"){{"class=\"active\""}}@endif >
+                                    <a href="/{{ $rootURL }}/cheque-issue/nodate" class="form-pjax-filter pjax"><i class="fa fa-question"></i>No Due Date @if($nodate_count){{"(".$nodate_count.")"}} @endif</a>
+                            </li>
                     </ul>
                 </div>
             </div>

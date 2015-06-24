@@ -27,12 +27,12 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group">
+<!--                    <div class="form-group">
                         <label class="col-md-2 control-label">Payment Voucher number*</label>
                         <div class="col-md-10">
                              <input type="text" autocomplete="off" class="form-control" name="pv_number" placeholder="Type in a payment voucher number" />
                         </div>
-                    </div>
+                    </div>-->
                     <div class="form-group">
                         <label class="col-md-2 control-label">Supplier*</label>
                         <div class="col-md-10">
@@ -42,7 +42,7 @@
                     <div class="form-group">
                         <label class="col-md-2 control-label">Billable Company*</label>
                         <div class="col-md-10">
-                            <input type="hidden" class="full-width" id="companycode" name="company_code" placeholder="Type in billable company code/name" />
+                            <input type="hidden" class="full-width" id="companycode" name="billable_company_code" placeholder="Type in billable company code/name" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -54,7 +54,7 @@
                     <div class="form-group">
                         <label class="col-xs-2 control-label">Purchase Order number</label>
                         <div class="col-xs-8">
-                                <input type="text" autocomplete="off" class="form-control" name="po_number" placeholder="Type in a purchase order number" />
+                            <input type="text" autocomplete="off" class="form-control" name="po_number" placeholder="Type in a purchase order number" />
                         </div>
                         <div class="col-xs-2">
                             <select name="po_type" class="form-control">
@@ -62,6 +62,13 @@
                                     <option value="{{$k}}" @if($v==="ON")selected @endif>{{$v}}</option>
                                 @endforeach
                             </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">Due Date</label>
+                        <div class="col-md-10 input-group">
+                            <input type="text" data-dateformat="dd/mm/yy" placeholder="Select a date" name="due_date" class="form-control datepicker" style="z-index:9998;" />
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
                         </div>
                     </div>
                 </div>

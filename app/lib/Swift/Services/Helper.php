@@ -974,5 +974,19 @@ class Helper {
 
         return \Carbon::createFromFormat('Y-m-d H:i',$enddate." 00:00");
     }
+
+    /*
+     * Resolve Context From class name
+     *
+     * @param string $className
+     * @return string|boolean
+     */
+
+    public function resolveContext($className)
+    {
+        $allContext = \Config::get('context');
+
+        return array_search($className,$allContext);
+    }
     
 }

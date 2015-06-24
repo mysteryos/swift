@@ -94,6 +94,67 @@ class JdeReconcialiation {
      */
     public static function reconcialiatePayment(\SwiftACPPayment $pay)
     {
+        if($pay->validated === \SwiftACPPayment::VALIDATION_COMPLETE)
+        {
+            return true;
+        }
+
+        if(trim($pay->payment_number) === "")
+        {
+            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
+            $pay->validated_msg = "Please input a payment number";
+            $pay->save();
+            return false;
+        }
+
+        $jdePay = \JdePaymentHeader::where('docm','=',$pay->payment_number)
+                  ->first();
+
+        if(!$jdePay)
+        {
+            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
+            $pay->validated_msg = "Payment number not found in JDE database";
+            $pay->save();
+            return false;
+        }
+
+        if($pay->amount !== "0.00" && $pay->amount !== abs($jdePay->paap))
+        {
+            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
+            $pay->validated_msg = "Payment amount(".abs($jdePay->paap).") doesn't match";
+            $pay->save();
+            return false;
+        }
+
+        if(($pay->batch_number !== null && $pay->batch_number !== "") && $pay->batch_number !== $jdePay->icu)
+        {
+            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
+            $pay->validated_msg = "Batch number(".$jdePay->icu.") doesn't match";
+            $pay->save();
+            return false;
+        }
+
+        if($pay->currency !== null && $pay->currency->code !== $jdePay->crrd)
+        {
+            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
+            $pay->validated_msg = "Currency(".$jdePay->crrd.") doesn't match";
+            $pay->save();
+            return false;
+        }
+
+        $pay->validated = \SwiftACPPAyment::VALIDATION_COMPLETE;
+        $pay->validated_msg = null;
+        $pay->save();
+        return true;
+    }
+
+    public static function autofillPaymentVoucher(\SwiftACPPaymentVoucher &$pv)
+    {
+        
+    }
+
+    public static function autofillPayment(\SwiftACPPayment & $pay)
+    {
         
     }
 }

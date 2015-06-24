@@ -271,7 +271,7 @@
                     </div>
                     <!-- end widget div -->
                 </div>
-
+                @if(!$edit || $currentUser->isSuperUser() || $savePaymentVoucher)
                 <div class="jarviswidget" id="acp-paymentvoucher" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file-archive-o"></i> </span>
@@ -295,7 +295,9 @@
                     </div>
                     <!-- end widget div -->
                 </div>
+                @endif
 
+                @if(!$edit || $currentUser->isSuperUser() || $publishAccounting)
                 <div class="jarviswidget" id="acp-payment" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-money"></i> </span>
@@ -327,7 +329,8 @@
                     <!-- end widget div -->
                 </div>
                 <!-- end widget -->
-
+                @endif
+                
             </article>
             <!-- NEW COL END -->
 

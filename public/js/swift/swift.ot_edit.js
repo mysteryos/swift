@@ -77,6 +77,11 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
 (window.ot_edit = function () {
     
+    /*
+     * Clean previous instances of select2
+     */
+    $('.select2-container').remove();    
+    
     //Ribbon Buttons
     $('a.btn-ribbon-cancel').on('click',function(e){
         e.preventDefault();            
@@ -122,48 +127,48 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         var $this = $(this);
         var $important = $this.children('i').hasClass('fa-exclamation-triangle');
         $.SmartMessageBox({
-                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($important? "unmark" : "mark")+" this order process as important?</strong></span> ?",
-                content : "All order process users will receive a notice",
-                buttons : '[No][Yes]'
+            title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($important? "unmark" : "mark")+" this order process as important?</strong></span> ?",
+            content : "All order process users will receive a notice",
+            buttons : '[No][Yes]'
 
         }, function(ButtonPressed) {
-                if (ButtonPressed == "Yes") {
-                    $this.attr('disabled');
-                    Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
-                        id: 'notif-top',
-                        errorMessage: 'Error marking order process',
-                        successMessage: 'Order process has been '+($important? "unmarked" : "marked")+' as important',
-                        progressMessage: 'Please Wait...',
-                        action: $.ajax,
-                    },
+            if (ButtonPressed == "Yes") {
+                $this.attr('disabled');
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                    id: 'notif-top',
+                    errorMessage: 'Error marking order process',
+                    successMessage: 'Order process has been '+($important? "unmarked" : "marked")+' as important',
+                    progressMessage: 'Please Wait...',
+                    action: $.ajax,
+                },
+                {
+                    type:'PUT',
+                    url: $this.attr('href'),
+                    success:function()
                     {
-                        type:'PUT',
-                        url: $this.attr('href'),
-                        success:function()
+                        if($important)
                         {
-                            if($important)
-                            {
-                                $this.attr('data-original-title',"Mark as important");
-                                $this.children('i').removeClass('fa-exclamation-triangle');
-                                $this.children('i').addClass('fa-exclamation');
-                                $this.tooltip();
-                            }
-                            else
-                            {
-                                $this.attr('data-original-title',"Unmark as important");                                
-                                $this.children('i').addClass('fa-exclamation-triangle');
-                                $this.children('i').removeClass('fa-exclamation');
-                                $this.tooltip();
-                            }
-                            $this.removeAttr('disabled');
-                        },
-                        error:function(xhr, status, error)
-                        {
-                            $this.removeAttr('disabled');
-                            return xhr.responseText;
+                            $this.attr('data-original-title',"Mark as important");
+                            $this.children('i').removeClass('fa-exclamation-triangle');
+                            $this.children('i').addClass('fa-exclamation');
+                            $this.tooltip();
                         }
-                    });                        
-                }
+                        else
+                        {
+                            $this.attr('data-original-title',"Unmark as important");                                
+                            $this.children('i').addClass('fa-exclamation-triangle');
+                            $this.children('i').removeClass('fa-exclamation');
+                            $this.tooltip();
+                        }
+                        $this.removeAttr('disabled');
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        $this.removeAttr('disabled');
+                        return xhr.responseText;
+                    }
+                });                        
+            }
 
         });
         return false;        
@@ -280,72 +285,79 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     var $payableForm = $('#payableForm').validate({
         ignore: '',
         rules : {
-            pv_number: {
-                required: true,
-                number:true
-            },
+//            pv_number: {
+//                required: true,
+//                number:true
+//            },
             supplier_code: {
                 required: true
             },
             po_number: {
                 number: true
             },
-            company_code: {
+            billable_company_code: {
                 required: true
             },
             type: {
+                required: true
+            },
+            invoice_number: {
                 required: true
             }
         },
         messages: {
-            pv_number: {
-                required: 'Please enter a payment voucher number'
-            },
+//            pv_number: {
+//                required: 'Please enter a payment voucher number'
+//            },
             supplier_code: {
                 required: 'Please select a supplier'
             },
-            company_code: {
+            billable_company_code: {
                 required: 'Please select a billable company'
             },
             type: {
                 required: 'Please select a type'
+            },
+            invoice_number: {
+                required: 'Please enter an invoice number'
             }
         },
         
         // Ajax form submition
         submitHandler : function(form) {
-                var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
-                                message: 'Saving Accounts Payable form',
-                                type: 'info',
-                                id: 'notif-top'
-                              });
-                $('#btn-savePayableForm').attr('disabled','disabled').addClass('disable');
-                $(form).ajaxSubmit({
-                        dataType: 'json',
-                        success : function(data) {
-                            $('<div/>',{
-                                'class':'loading-overlay'
-                            }).appendTo('#acp-list');
-                            $('#acp-list').load(document.getElementById('acp-list').getAttribute('data-load'),null,function(){
-                                $(this).find('div.loading-overlay').remove();
-                            });                            
-                            savemsg.update({
-                                type: 'success',
-                                message: data.msg
-                            });
-                            $('#payableFormModal').modal('hide');
-                        },
-                        error: function (xhr, status, error) {
-                            $('#btn-savePayableForm').removeAttr('disabled').removeClass('disable');
-                            savemsg.update({
-                                type: 'error',
-                                message: xhr.responseText,
-                                hideAfter: 5
-                            });
-                        }
-                });
+            var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
+                            message: 'Saving Accounts Payable form',
+                            type: 'info',
+                            id: 'notif-top'
+                          });
+            $('#btn-savePayableForm').attr('disabled','disabled').addClass('disable');
+            $(form).ajaxSubmit({
+                    dataType: 'json',
+                    success : function(data) {
+                        $('<div/>',{
+                            'class':'loading-overlay'
+                        }).appendTo('#acp-list');
+                        $('#acp-list').load(document.getElementById('acp-list').getAttribute('data-load'),null,function(){
+                            $(this).find('div.loading-overlay').remove();
+                        });                            
+                        savemsg.update({
+                            type: 'success',
+                            message: data.msg
+                        });
+                        $('#payableFormModal').modal('hide');
+                        $('#btn-savePayableForm').removeAttr('disabled').removeClass('disable');
+                    },
+                    error: function (xhr, status, error) {
+                        $('#btn-savePayableForm').removeAttr('disabled').removeClass('disable');
+                        savemsg.update({
+                            type: 'error',
+                            message: xhr.responseText,
+                            hideAfter: 5
+                        });
+                    }
+            });
 
-                return false;
+            return false;
         }
     });
     
@@ -353,6 +365,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         $payableForm.resetForm();
         $('#suppliercode').select2('data', null);
         $('#companycode').select2('data',null);
+        var $filterBtnDatePicker = $('#payableForm').find('.datepicker');
+        $filterBtnDatePicker.datepicker('destroy');        
+        $filterBtnDatePicker.removeClass('hasDatePicker');
+        $filterBtnDatePicker.datepicker({
+            dateFormat : 'dd/mm/yy',
+            prevText : '<i class="fa fa-chevron-left"></i>',
+            nextText : '<i class="fa fa-chevron-right"></i>',
+        });        
     });
     
     $('#suppliercode').select2({

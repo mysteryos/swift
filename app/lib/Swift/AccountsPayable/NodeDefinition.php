@@ -181,7 +181,7 @@ Class NodeDefinition {
                 //all payments should have an amount
                 foreach($acp->payment as $p)
                 {
-                    if($p->amount === "0.0000" || $p->amount === null)
+                    if($p->amount === "0.00" || $p->amount === null)
                     {
                         $returnReasonList['payment_amount_absent'] = "Input amount for payment ID: ".$p->id;
                         break;

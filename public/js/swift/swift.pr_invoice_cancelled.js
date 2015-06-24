@@ -3,6 +3,11 @@
     var $btnPublish = $('#btn-publish');
     var $productContainer = $('#product-container');
     
+    /*
+     * Clean previous instances of select2
+     */
+    $('.select2-container').remove();    
+    
     $('#invoice_cancelled_form').validate({
         ignore: '',
         rules : {

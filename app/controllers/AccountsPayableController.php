@@ -37,7 +37,7 @@ class AccountsPayableController extends UserController {
 
     public function getIndex()
     {
-        return Redirect::to('/'.$this->context.'/overview');
+        return \Redirect::to('/'.$this->context.'/overview');
     }
 
     /*
@@ -333,7 +333,7 @@ class AccountsPayableController extends UserController {
         /*
          * Get forms
          */
-        $query = SwiftACPRequest::query();
+        $query = \SwiftACPRequest::query();
 
         //With
         $query->with(['supplier','company','document','purchaseOrder','paymentVoucher','invoice','approvalHod','comments'=>function($q){
@@ -766,7 +766,7 @@ class AccountsPayableController extends UserController {
             
             if(count($invoiceExist))
             {
-                return \Response::make("Invoice already exists for supplier: <a href='".Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
+                return \Response::make("Invoice already exists for supplier: <a href='".\Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
             }
             else
             {
@@ -774,12 +774,31 @@ class AccountsPayableController extends UserController {
                 $acp->fill($inputData);
                 if($acp->save())
                 {
-                    if($inputData['invoice_number'] !== "")
+                    /*
+                     * Has invoice number
+                     */
+                    if(\Input::has('invoice_number') && $inputData['invoice_number'] !== "")
                     {
                         $invoice = new \SwiftACPInvoice([
                             'number' => $inputData['invoice_number']
                         ]);
                         $acp->invoice()->save($invoice);
+                    }
+
+                    /*
+                     * Has Purchase Order
+                     */
+
+                    if(\Input::has('po_number') && $inputData['po_number'] !== "")
+                    {
+                        if(\Input::has('po_type') && in_array(\Input::get('po_type'),array_keys(\SwiftPurchaseOrder::$types)))
+                        {
+                            $purchaseOrder = new \SwiftPurchaseOrder([
+                                'reference' => $inputData['po_number'],
+                                'type' => $inputData['po_type']
+                            ]);
+                            $acp->purchaseOrder()->save($purchaseOrder);
+                        }
                     }
                     
                     //Start the Workflow
@@ -951,7 +970,7 @@ class AccountsPayableController extends UserController {
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
             $this->data['owner'] = \Helper::getUserName($acp->owner_user_id,$this->currentUser);
             $this->data['edit'] = $edit;
-            $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = false;
+            $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = $this->data['savePaymentVoucher'] = false;
             $this->data['isCreator'] = $acp->owner_user_id == $this->currentUser->id;
             
             if($edit === true)
@@ -987,6 +1006,12 @@ class AccountsPayableController extends UserController {
                                 if(isset($d->data->addCreditNote))
                                 {
                                     $this->data['addCreditNote'] = true;
+                                    break;
+                                }
+
+                                if(isset($d->data->savePaymentVoucher) && ($this->data['isAdmin'] || $this->isAccountingDepartment))
+                                {
+                                    $this->data['savePaymentVoucher'] = true;
                                     break;
                                 }
                             }
@@ -2525,36 +2550,79 @@ class AccountsPayableController extends UserController {
     public function postSaveByForm()
     {
         /*
-         * TBD: Missing Billable Company Code
+         * Basic Validation
          */
-        $type = \Input::get('payable_type');
-        $id = \Crypt::decrypt(Input::get('payable_id'));
+
+        $validator = \Validator::make(
+            \Input::all(),
+            [
+//                'pv_number' => 'required|numeric',
+                'payable_type' => 'required',
+                'payable_id' => 'required',
+                'billable_company_code' => 'required|numeric',
+                'supplier_code' => 'required|numeric',
+                'due_date' => 'date_format:d/m/Y',
+                'type' => 'required|in:'.implode(",",array_keys(\SwiftACPRequest::$order)),
+                'invoice_number' => 'required'
+            ]
+        );
+        if($validator->fails())
+        {
+            return \Response::make("The following errors were found: ".$validator->errors(),400);
+        }
 
         /*
-         * @todo
-         * Insert check for duplicate PVs - On Top
+         * Check for duplicate PVs
          */
 
-        $acp = new \SwiftACPRequest ([
+        /*$acpWithPVCount = \SwiftACPRequest::whereHas('paymentVoucher',function($q){
+                            return $q->where('number','=',\Input::get('pv_number'));
+                        })
+                        ->whereHas('workflow',function($q){
+                            return $q->where('status','!=',\SwiftWorkflowActivity::REJECTED);
+                        })
+                        ->where('billable_company_code','=',\Input::get('billable_company_code'))
+                        ->get();
+
+        if(count($acpWithPVCount))
+        {
+            return \Response::make("Payment voucher '".\Input::get('pv_number')."' already used. <a href='".\Helper::generateURL($acpWithPVCount->first())."' class='pjax'>Click here to view form.</a>",400);
+        }*/
+
+        /*
+         * Validation Passed - We Save
+         */
+
+        $type = \Input::get('payable_type');
+        $id = \Crypt::decrypt(\Input::get('payable_id'));
+
+        //Save Accounts Payable
+        $acp = new \SwiftACPRequest([
             'payable_type' => $type,
             'payable_id' => $id,
             'owner_user_id' => $this->currentUser->id,
-            'billable_company_code' => Input::get('company_code'),
-            'supplier_code' => Input::get('supplier_code')
+            'billable_company_code' => \Input::get('billable_company_code'),
+            'supplier_code' => \Input::get('supplier_code'),
+            'type' => \Input::get('type')
         ]);
 
         $acp->save();
 
-        $paymentVoucher = new \SwiftACPPaymentVoucher([
+        //Save Payment Voucher
+        /*$paymentVoucher = new \SwiftACPPaymentVoucher([
            'number' => \Input::get('pv_number')
         ]);
-        $acp->paymentVoucher()->save($paymentVoucher);
+        $acp->paymentVoucher()->save($paymentVoucher);*/
 
+        //Save Invoice
         $invoice = new \SwiftACPInvoice([
-           'number' => Input::get('invoice_number')
+           'number' => \Input::get('invoice_number'),
+           'due_date' => \Carbon::createFromFormat('d/m/Y',\Input::get('due_date'))
         ]);
+        
         $acp->invoice()->save($invoice);
 
+        //Create Workflow
         if(\WorkflowActivity::update($acp,$this->context))
         {
             //Story Relate
@@ -2564,7 +2632,7 @@ class AccountsPayableController extends UserController {
                                                  'user_id'=>$this->currentUser->id,
                                                  'context'=>get_class($acp)));
 
-            return \Response::json(['msg'=>"Form saved successfully, <a class='pjax' href='".\Helper::generateUrl($acp)."'>click here to view</a>"]);
+            return \Response::json(['msg'=>"Form saved successfully, <a class='pjax' href='".\Helper::generateUrl($acp)."'>click here to view & publish</a>"]);
         }
         else
         {
@@ -2577,20 +2645,20 @@ class AccountsPayableController extends UserController {
     {
         if(in_array($class,\Config::get("context")))
         {
-            $form = $class::with('payable')->find(Crypt::decrypt($id));
+            $form = $class::with('payable')->find(\Crypt::decrypt($id));
 
             if($form)
             {
                 foreach($form->payable as &$acp)
                 {
-                    $acp->current_activity = WorkflowActivity::progress($acp,'acpayable');
+                    $acp->current_activity = \WorkflowActivity::progress($acp,'acpayable');
                 }
 
-                return View::make("$type.edit_payable-list",['acp'=>$form->payable])->render();
+                return \View::make(\Helper::resolveContext($class).".edit_payable_list",['acp'=>$form->payable])->render();
             }
             else
             {
-                return Response::make("Unable to find form",500);
+                return \Response::make("Unable to find form",500);
             }
         }
         else

@@ -83,8 +83,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 if (ButtonPressed == "Yes") {
                     Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
                         id: 'notif-top',
-                        errorMessage: 'Error cancelling order process',
-                        successMessage: 'Order process has been cancelled',
+                        errorMessage: 'Error cancelling accounts payable',
+                        successMessage: 'Accounts payable has been cancelled',
                         progressMessage: 'Please Wait...',
                         action: $.ajax,
                     },
@@ -115,8 +115,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         var $this = $(this);
         var $important = $this.children('i').hasClass('fa-exclamation-triangle');
         $.SmartMessageBox({
-                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($important? "unmark" : "mark")+" this order process as important?</strong></span> ?",
-                content : "All order process users will receive a notice",
+                title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to "+($important? "unmark" : "mark")+" this accounts payable as important?</strong></span> ?",
+                content : "All accounts payable users will receive a notice",
                 buttons : '[No][Yes]'
 
         }, function(ButtonPressed) {
@@ -124,8 +124,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     $this.attr('disabled');
                     Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
                         id: 'notif-top',
-                        errorMessage: 'Error marking order process',
-                        successMessage: 'Order process has been '+($important? "unmarked" : "marked")+' as important',
+                        errorMessage: 'Error marking accounts payable',
+                        successMessage: 'Accounts Payable has been '+($important? "unmarked" : "marked")+' as important',
                         progressMessage: 'Please Wait...',
                         action: $.ajax,
                     },

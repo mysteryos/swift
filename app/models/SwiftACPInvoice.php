@@ -14,31 +14,24 @@ class SwiftACPInvoice extends Eloquent
     
     protected $table = "scott_swift.swift_acp_invoice";
     
-    protected $fillable = ['number','date','date_received','due_date','due_amount','payment_term','currency','gl_code'];
+    protected $fillable = ['number','date','date_received','due_date','due_amount','currency','gl_code'];
     
     protected $dates = ['deleted_at','date','due_date','date_received'];
 
     protected $touches = array('acp');
+
+    protected $appends = ['due_amount_formatted'];
 
     protected $attributes = [
         'currency' => '96',
         'due_amount' => 0
     ];
 
-    //Payment Term
-    const PAYMENT_DIRECTDEBIT = 1;
-    const PAYMENT_CHEQUE = 2;
-
-    public static $paymentTerm = [
-        self::PAYMENT_CHEQUE => 'Cheque',
-        self::PAYMENT_DIRECTDEBIT => 'Direct Debit',
-    ];
-
     /* Revisionable */
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('date_received','date','due_date','due_amount','payment_term','currency','gl_code');
+    protected $keepRevisionOf = array('date_received','date','due_date','due_amount','currency','gl_code');
     
     protected $revisionFormattedFieldNames = array(
         'id' => 'ID',
@@ -46,7 +39,6 @@ class SwiftACPInvoice extends Eloquent
         'date' => 'Invoice Date',
         'due_date' => 'Date Due',
         'due_amount' => 'Amount Due',
-        'payment_term' => 'Payment Term',
         'currency' => 'Currency',
         'gl_code' => 'GL Code'
     );
@@ -64,7 +56,7 @@ class SwiftACPInvoice extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "invoice";
-    public $esRemove = ["acp_id"];
+    public $esRemove = ["acp_id","due_amount_formatted"];
 
     public function esGetParent()
     {
@@ -75,7 +67,8 @@ class SwiftACPInvoice extends Eloquent
      * Event Observers
      */
     
-    public static function boot() {
+    public static function boot()
+    {
         parent:: boot();
         
         static::bootElasticSearchEvent();
@@ -110,21 +103,14 @@ class SwiftACPInvoice extends Eloquent
         return $this->getCurrencyRevisionAttribute($val);
     }
 
-    public function getPaymentTermRevisionAttribute($val)
+    public function getDueAmountFormattedAttribute()
     {
-        if(key_exists($val,self::$paymentTerm))
+        if($this->currencyRelation)
         {
-            return self::$paymentTerm[$val];
+            return $this->currencyRelation->code." ".number_format($this->due_amount);
         }
-        else
-        {
-            return "";
-        }
-    }
 
-    public function getPaymentTermEsAttribute($val)
-    {
-        return $this->getPaymentTermRevisionAttribute($val);
+        return number_format($this->due_amount);
     }
     
     /*
@@ -140,7 +126,7 @@ class SwiftACPInvoice extends Eloquent
         return $this->belongsTo('SwiftACPRequest','acp_id');
     }
     
-    public function currency()
+    public function currencyRelation()
     {
         return $this->belongsTo('Currency','currency');
     }

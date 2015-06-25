@@ -77,8 +77,8 @@
                 </table>
                 <div class="row">
                     <div class="col-xs-12">
-                        <button class="btn btn-default btn-publish btn-sm col-xs-5 col-xs-offset-1" tabindex="-1" type="submit"><i class="fa fa-check hide"></i> Publish</button>
-                        <a class="btn btn-default btn-sm col-xs-5 col-xs-offset-1" tabindex="-1" href="{{\Helper::generateURL($f)}}" target="_blank">View Form</a>
+                        <!--<button class="btn btn-default btn-publish btn-sm col-xs-5 col-xs-offset-1" tabindex="-1" type="submit"><i class="fa fa-check hide"></i> Publish</button>-->
+                        <a class="btn btn-default btn-sm col-xs-5 col-xs-offset-2" tabindex="-1" href="{{\Helper::generateURL($f)}}" target="_blank">View Form</a>
                     </div>
                 </div>
             </div>

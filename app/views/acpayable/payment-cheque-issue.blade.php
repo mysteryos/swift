@@ -91,6 +91,9 @@
                     <button class="btn btn-default" id="btn-setbatch" data-original-title="Set Batch Number" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-list"></i>
                     </button>
+                    <button class="btn btn-default" id="btn-setpublish" data-original-title="Publish Forms" data-placement="bottom" rel="tooltip">
+                        <i class="fa fa-check"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -102,7 +105,7 @@
                     <h6> Filters </h6>
                     <ul class="inbox-menu-lg">
                             <li @if($type=="all"){{"class=\"active\""}}@endif >
-                                    <a href="/{{ $rootURL }}/cheque-issue/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All</a>
+                                    <a href="/{{ $rootURL }}/cheque-issue/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All @if($all_count > 0 ){{"(".$all_count.")"}} @endif</a>
                             </li>
                             <li @if($type=="overdue"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/cheque-issue/overdue" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>Overdue @if($overdue_count > 0 ){{"(".$overdue_count.")"}} @endif</a>

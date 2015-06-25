@@ -110,6 +110,8 @@ class Helper {
      */
     public function jsonobject_encode(array $array)
     {
+        $converted_array = array();
+        
         foreach($array as $k=>$v)
         {
             $converted_array[] = array('value'=>$k,'text'=>$v);

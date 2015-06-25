@@ -21,4 +21,22 @@ class Helper
     {
         
     }
+
+    public static function getChequeSignUserList(array $permissions)
+    {
+        $chequesign_users = array();
+        $signChequeUsers = \Sentry::findAllUsersWithAccess($permissions);
+        if(count($signChequeUsers))
+        {
+            foreach($signChequeUsers as $cu)
+            {
+                if(!$cu->isSuperUser() && $cu->activated)
+                {
+                    $chequesign_users[$cu->id] = $cu->first_name." ".$cu->last_name;
+                }
+            }
+        }
+
+        return $chequesign_users;
+    }
 }

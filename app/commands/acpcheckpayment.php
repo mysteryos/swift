@@ -1,7 +1,7 @@
 <?php
 /*
- * Name: Accounts Payable - Jde Reconciliation - Payment Vouchers
- * Description: Scourges the SCT JDE database for payment vouchers
+ * Name: Accounts Payable - Check Payment
+ * Description: Retries to update the workflow
  */
 
 use Indatus\Dispatcher\Scheduling\ScheduledCommand;
@@ -10,21 +10,21 @@ use Indatus\Dispatcher\Drivers\Cron\Scheduler;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class acppvjde extends ScheduledCommand {
+class acpcheckpayment extends ScheduledCommand {
 
     /**
 	 * The console command name.
 	 *
 	 * @var string
 	 */
-	protected $name = 'acppvjde:start';
+	protected $name = 'acpcheckpayment:start';
 
 	/**
 	 * The console command description.
 	 *
 	 * @var string
 	 */
-	protected $description = 'Searches SCT JDE for Payment Voucher';
+	protected $description = 'Updates ACP workflows when they are at check payment stage';
 
 	/**
 	 * Create a new command instance.
@@ -58,19 +58,23 @@ class acppvjde extends ScheduledCommand {
 	public function fire()
 	{
         /*
-         * Get all payment voucher that aren't validated
+         * Workflow with check payment
          */
 
-        $paymentVoucherList = \SwiftACPPaymentVoucher::with('acp','acp.invoice')
-                                ->where('validated','!=',\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                ->get();
+        $forms = \SwiftAPRequest::whereHas('workflow',function($q){
+                    return $q->inprogress()->whereHas('pendingNodes',function($q){
+                        return $q->whereHas('definition',function($q){
+                            return $q->where('name','=','acp_checkpayment');
+                        });
+                    });
+                })
+                ->get();
 
-        foreach($paymentVoucherList as $pv)
+        foreach($forms as $f)
         {
-            \Swift\AccountsPayable\JdeReconcialiation::reconcialiatePaymentVoucher($pv);
-            
+            \Workflow::update($f,'acpayable');
         }
-        
+
     }
 
     /*
@@ -101,4 +105,6 @@ class acppvjde extends ScheduledCommand {
 	{
 		return [];
 	}
+
 }
+

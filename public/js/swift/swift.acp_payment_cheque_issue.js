@@ -152,6 +152,14 @@
             $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');            
             setbatchnum();
         }
+    },
+    {
+        text: 'Publish Form',
+        action: function(e,obj)
+        {
+            $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');            
+            publishForm();
+        }
     }
     ]);
     $content.find('tr.pvform').on('contextmenu',function(){
@@ -174,6 +182,19 @@
         return false;
     });
     
+    $('#btn-setpublish').on('click',function(){
+        publishForm();
+        return false;
+    });
+    
+    $('#cheque-issue-table').on('click','a.btn-single-publish',function(e){
+        e.preventDefault();
+        savePublish($(this));
+        return false;
+    });
+    
+    
+    
     function setpaymentnum()
     {
         var paymentnum = prompt('Set payment number for '+$('.pvform.highlight').length+($('.pvform.highlight').length === 1 ? ' form' : ' forms'));
@@ -190,7 +211,7 @@
             {
                 messenger_notiftop("Payment number should be numeric.","error");
             }
-        }        
+        }
     }
     
     function setbatchnum()
@@ -212,30 +233,72 @@
         }
     }
     
+    function publishForm()
+    {
+        if(confirm('Do you want to publish these form(s)?'))
+        {
+            messenger_notiftop('Publishing Forms',5);
+            $('tr.pvform.highlight').find('a.btn-single-publish').each(function(){
+                savePublish($(this));
+            });
+        }
+    }
+    
+    function savePublish($this)
+    {
+        $this.attr('disabled','disabled');
+        $this.addClass('disabled');
+        $.ajaxq("pvform"+$this.parents('.pv-form').attr('data-id'), {
+            url: $this.attr('href'),
+            type: 'POST',
+            success:function(){
+                $this.removeClass('btn-default');
+                $this.removeClass('btn-error');
+                $this.addClass('btn-success');
+                $.smallBox({
+                        title : "Form published",
+                        content : "Success",
+                        color : "#26A65B",
+                        icon : "fa fa-check",
+                        timeout: 2000
+                });
+                $this.removeClass('disabled');
+                $this.removeAttr('disabled');                
+            },
+            error: function() {
+                $this.removeClass('btn-default');
+                $this.removeClass('btn-success');
+                $this.addClass('btn-error');
+                $.smallBox({
+                        title : "Form failed to publish",
+                        content : "Look for the red tick button",
+                        color : "#a65858",
+                        icon : "fa fa-times",
+                        timeout: 2000
+                });
+                $this.removeClass('disabled');
+                $this.removeAttr('disabled');
+            }
+        })
+    }
+    
     function saveNumber($this)
     {
         if($this.length)
         {
             if($this.val() !== $this.attr('data-prev-value'))
             {
-                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
-                    id: 'notif-top',
-                    errorMessage: 'Error: save unsuccessful',
-                    successMessage: 'Save Complete',
-                    progressMessage: 'Please Wait...',
-                    action: $.ajax,
-                },
-                {
+                $.ajaxq("pvform"+$this.parents('.pv-form').attr('data-id'),{
                     type:'PUT',
                     url: $this.attr('data-url'),
                     data: {"pk":$this.attr('data-pk'),"value":$this.val()},
                     success:function(result)
                     {
-                        $this.attr("data-prev-value",$this.val());
                         if($this.attr('data-pk') === "0")
                         {
-                            $this.parents('.pvform').find('.input-paymentnumber,.input-batchnumber').attr('data-pk',result.encrypted_id);
-                        }
+                            $this.parents('.pvform').find('.input-paymentnumber,.input-batchnumber,.input-cheque-signator-id').attr('data-pk',result.encrypted_id);
+                        }                        
+                        $this.attr("data-prev-value",$this.val());
                         $this.removeClass('bg-color-redLight');
                         $this.removeClass('bg-color-light-orange');                        
                         $this.addClass('bg-color-light-green');
@@ -252,24 +315,86 @@
         }
     }
     
+    function saveSignator($this)
+    {
+        if($this.length)
+        {
+            if($this.val() !== $this.attr('data-prev-value'))
+            {
+                $.ajaxq("pvform"+$this.parents('.pv-form').attr('data-id'),{
+                    type:'PUT',
+                    url: $this.attr('data-url'),
+                    data: {"pk":$this.attr('data-pk'),"value":$this.val()},
+                    success:function(result)
+                    {
+                        if($this.attr('data-pk') === "0")
+                        {
+                            $this.parents('.pvform').find('.input-paymentnumber,.input-batchnumber,.input-cheque-signator-id').attr('data-pk',result.encrypted_id);
+                        }                        
+                        $this.attr("data-prev-value",$this.val());
+                        $this.removeClass('bg-color-redLight');
+                        $this.removeClass('bg-color-light-orange');                        
+                        $this.addClass('bg-color-light-green');
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        $this.removeClass('bg-color-light-green');
+                        $this.removeClass('bg-color-light-orange');
+                        $this.addClass('bg-color-redLight');
+                        return xhr.responseText;
+                    }
+                });                
+            }            
+        }
+    }
+    
     $('#cheque-issue-table').on('keypress','.input-paymentnumber,.input-batchnumber',function(e){
         if(e.keyCode == 13) {
             saveNumber($(this));
         }
     });
     
+    $('#cheque-issue-table').on('change','.input-cheque-signator-id',function(e){
+        saveSignator($(this));
+    });
+    
     $('#cheque-issue-table').on('keyup','.input-paymentnumber,.input-batchnumber',function(e){
         switch(e.keyCode)
         {
-            case 8:  // Backspace
-                //console.log('backspace');
+            case 38: // Up
+                var $prev = $(this).parents('tr.pvform').prev();
+                if($prev.length)
+                {
+                    if($(this).hasClass('input-paymentnumber'))
+                    {
+                        $prev.find('.input-paymentnumber').first().focus();
+                    }
+                    else if($(this).hasClass('input-batchnumber'))
+                    {
+                        $prev.find('.input-batchnumber').first().focus();
+                    }
+                }
+                break;
+            case 40: // Down
+                var $next = $(this).parents('tr.pvform').next();
+                if($next.length)
+                {
+                    if($(this).hasClass('input-paymentnumber'))
+                    {
+                        $next.find('.input-paymentnumber').first().focus();
+                    }
+                    else if($(this).hasClass('input-batchnumber'))
+                    {
+                        $next.find('.input-batchnumber').first().focus();
+                    }
+                }                
+                break;
             case 9:  // Tab
             case 13: // Enter
             case 37: // Left
-            case 38: // Up
             case 39: // Right
-            case 40: // Down
                 break;
+            case 8:
             default:
                 if(this.getAttribute('data-pk') !== "0")
                 {

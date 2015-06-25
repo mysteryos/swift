@@ -54,7 +54,7 @@ class WorkflowController extends UserController {
 
         $this->data['workflow'] = $workflow;
         
-        echo View::make('workflow-history',$this->data)->render();
+        echo \View::make('workflow-history',$this->data)->render();
     }
 
     public function getForceUpdate($context,$encrypted_id)
@@ -64,8 +64,18 @@ class WorkflowController extends UserController {
         if($class)
         {
             $form = $class::find($id);
+            $workflow = $form->workflow()->get();
             \WorkflowActivity::update($form,$context);
-            return \Response::make("Workflow has been updated");
+            $workflowUpdated = $form->workflow()->get();
+            if($workflowUpdated->updated_at->diffInSeconds($workflow->updated_at))
+            {
+                return \Response::make("Workflow has been updated");
+            }
+            else
+            {
+                return \Response::make("No update performed on workflow. See help",500);
+            }
+            
         }
         else
         {

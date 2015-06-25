@@ -49,7 +49,13 @@
         <div class="form-group col-md-6">
             <label class="col-md-4 control-label">Cheque Status*</label>
             <div class="col-md-8">
-                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_journal_status_".$pay->id."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="status" data-pk="{{ $pay->encrypted_id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ $form->encrypted_id }}" data-source='{{ $cheque_status }}' data-value="{{ $pay->status or \SwiftACPPayment::STATUS_ISSUED }}"></a>
+                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_journal_status_".$pay->id."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="status" data-pk="{{ $pay->encrypted_id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ $form->encrypted_id }}" data-source='{{ $cheque_status }}' data-value="{{ $pay->status or \SwiftACPPayment::STATUS_INPROGRESS }}"></a>
+            </div>
+        </div>
+        <div class="form-group col-md-6">
+            <label class="col-md-4 control-label">Cheque Signator*</label>
+            <div class="col-md-8">
+                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_cheque_signator_id_".$pay->id."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="cheque_signator_id" data-pk="{{ $pay->encrypted_id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ $form->encrypted_id }}" data-source='{{ $chequesign_users }}' data-value="{{ $pay->cheque_signator_id or "" }}"></a>
             </div>
         </div>
         <div class="form-group col-md-6">

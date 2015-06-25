@@ -9,15 +9,18 @@
                 <th>Supplier</th>
                 <th>Billable Company</th>
                 <th>Amount Due</th>
+                <th>Entries</th>
                 <th>Payment Number</th>
                 <th>Batch Number</th>
+                <th>Signator</th>
+                <th>&nbsp;</th>
             </tr>
             @foreach($forms as $f)
-                <tr class="pvform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ \Crypt::encrypt($f->id) }}">
+                <tr class="pvform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ \Crypt::encrypt($f->id) }}" data-id="{{$f->id}}">
                     <td class="inbox-table-icon">
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" class="checkbox style-2" />
+                                <input type="checkbox" class="checkbox style-2" tabindex="-1" />
                                 <span></span>
                             </label>
                         </div>
@@ -30,17 +33,17 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{Helper::generateURL($f)}}" class="pjax">#{{ $f->id }}</a>
+                        <a href="{{Helper::generateURL($f)}}" class="pjax" tabindex="-1">#{{ $f->id }}</a>
                     </td>
                     <td>
-                        @if($f->paymentVoucher->invoice)
-                            @if($f->paymentVoucher->invoice->due_date !== null)
-                                {{ucfirst(\Helper::dueInDays($f->paymentVoucher->invoice->due_date))}}
+                        @if($f->invoice)
+                            @if($f->invoice->due_date !== null)
+                                {{ucfirst(\Helper::dueInDays($f->invoice->due_date))}}
                             @else
                                 {{"(No Due Date)"}}
                             @endif
                         @else
-                            {{"(No Invoice Match)"}}
+                            {{"(No Invoice)"}}
                         @endif
                     </td>
                     <td>
@@ -72,10 +75,24 @@
                         <span>{{number_format($f->due_amount,2)}}</span>
                     </td>
                     <td>
+                        {{count($f->payment)}}
+                    </td>
+                    <td>
                         <input type="text" class="form-control input-block-level input-paymentnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-number/{{ \Crypt::encrypt($f->id) }}" name="payment_number" value="" />
                     </td>
                     <td>
                         <input type="text" class="form-control input-block-level input-batchnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/batch-number/{{ \Crypt::encrypt($f->id) }}" name="batch_number" value="" />
+                    </td>
+                    <td>
+                        <select name="cheque_signator_id" class="form-control input-block-level input-cheque-signator-id" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/cheque-signator-id/{{ \Crypt::encrypt($f->id) }}">
+                            <option selected disabled>Select a User</option>
+                                @foreach($chequesign_users as $user_id => $user_name)
+                                    <option value="{{$user_id}}">{{$user_name}}</option>
+                                @endforeach
+                        </select>
+                    </td>
+                    <td>
+                        <a href="/{{ $rootURL }}/formapprovalaccounting/{{\Crypt::encrypt($f->id)}}" class="btn btn-default btn-single-publish" title="Publish Form" tabindex="-1"><i class="fa fa-check"></i></a>
                     </td>
                 </tr>
             @endforeach

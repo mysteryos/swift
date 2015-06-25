@@ -1860,7 +1860,7 @@ var main = {
     acp_payment_cheque_issue: function() {
         if(typeof window['acp_payment_cheque_issue'] === "undefined")
         {
-            jsLoader(["/js/plugin/context/context.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {

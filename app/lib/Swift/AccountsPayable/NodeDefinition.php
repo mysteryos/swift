@@ -113,11 +113,6 @@ Class NodeDefinition {
                 {
                     $returnReasonList['invoice_due_amount'] = "Enter invoice due amount";
                 }
-
-                if($invoice->payment_term <= 0)
-                {
-                    $returnReasonList['payment_term'] = "Enter invoice payment term";
-                }
             }
             else
             {
@@ -181,10 +176,25 @@ Class NodeDefinition {
                 //all payments should have an amount
                 foreach($acp->payment as $p)
                 {
-                    if($p->amount === "0.00" || $p->amount === null)
+                    if($p->payment_number === null || $p->payment_number < 0)
                     {
-                        $returnReasonList['payment_amount_absent'] = "Input amount for payment ID: ".$p->id;
+                        $returnReasonList['payment_number_absent'] = "Input payment number for payment ID: ".$p->id;
                         break;
+                    }
+
+                    if($p->type === \SwiftACPPayment::TYPE_CHEQUE)
+                    {
+                        if($p->cheque_signator_id === null)
+                        {
+                            $returnReasonList['cheque_signator_absent'] = "Please select a user to sign the cheque on Payment ID: ".$p->id;
+                            break;
+                        }
+
+                        if($p->status <= \SwiftACPPayment::STATUS_INPROGRESS)
+                        {
+                            $returnReasonList['cheque_status_wrong'] = "Please set cheque status to 'issued' on Payment ID: ".$p->id;
+                            break;
+                        }
                     }
                 }
             }
@@ -214,10 +224,11 @@ Class NodeDefinition {
         $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
             $chequeNotSignedCount = $acp
                                     ->payment()
+                                    ->whereNotNull('status')
                                     ->where('status','<',\SwiftACPPayment::STATUS_SIGNED)
                                     ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE)
                                     ->count();
@@ -241,10 +252,11 @@ Class NodeDefinition {
         $returnReasonList = array();
 
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-        if(count($acp))
+        if($acp)
         {
             $chequeNotReadyCount = $acp
                                     ->payment()
+                                    ->whereNotNull('status')
                                     ->where('status','<',\SwiftACPPayment::STATUS_DISPATCHED)
                                     ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE)
                                     ->count();

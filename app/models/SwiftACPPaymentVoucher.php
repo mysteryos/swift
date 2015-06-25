@@ -97,11 +97,6 @@ class SwiftACPPaymentVoucher extends Eloquent
     {
         return $this->belongsTo('SwiftACPRequest','acp_id');
     }
-
-    public function invoice()
-    {
-        return $this->hasOne('SwiftACPInvoice','payment_voucher_id');
-    }
     
     /*
      * Query

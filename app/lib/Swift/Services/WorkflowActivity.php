@@ -295,16 +295,16 @@ class WorkflowActivity {
         $workflow = $relation_object->workflow()->first();
         if(!count($workflow))
         {
-            return "No workflow found :( Contact your administrator";
+            return \Response::make("No workflow found :( Contact your administrator",500);
         }
         
         switch($workflow->status)
         {
             case SwiftWorkflowActivity::COMPLETE:
-                return "Workflow is complete :)";
+                return \Response::make("Workflow is complete :)");
                 break;
             case SwiftWorkflowActivity::REJECTED:
-                return "Workflow has been rejected";
+                return \Response::make("Workflow has been rejected");
                 break;
             case SwiftWorkflowActivity::INPROGRESS:
                 $nodeInProgress = \NodeActivity::inProgress($workflow->id);
@@ -321,20 +321,20 @@ class WorkflowActivity {
                     }
                     if(!empty($reasonList))
                     {
-                        return implode(", ",$reasonList);
+                        return \Response::make(implode(", ",$reasonList),400);
                     }
                     else
                     {
-                        return "We have no advice for you at the moment";
+                        return \Response::make("We have no advice for you at the moment");
                     }
                 }
                 else
                 {
-                    return "Something's not right here. Contact your administrator";
+                    return \Response::make("Something's not right here. Contact your administrator",500);
                 }
                 break;
             default:
-                return "This workflow doesn't look good. Contact your administrator";
+                return \Response::make("This workflow doesn't look good. Contact your administrator",500);
         }
     }
 

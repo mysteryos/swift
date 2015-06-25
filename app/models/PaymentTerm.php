@@ -36,7 +36,7 @@ class PaymentTerm extends Eloquent
 
     public static function getAll()
     {
-        $results = self::orderBy('jde_code','ASC')->remember(1440)->get();
+        $results = self::orderBy('id','ASC')->remember(1440)->get();
         $resultArray = [];
         foreach($results as $r)
         {

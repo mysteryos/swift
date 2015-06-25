@@ -15,7 +15,7 @@ class SwiftACPPayment extends Eloquent
 
     protected $table = "swift_acp_payment";
     
-    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number'];
+    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id'];
     
     protected $dates = ['deleted_at','date','validated_on'];
 
@@ -25,7 +25,8 @@ class SwiftACPPayment extends Eloquent
         'currency' => '96',
         'amount' => 0,
         'cheque_dispatch' => 0,
-        'validated'=>0
+        'validated'=>0,
+        'status' => self::STATUS_INPROGRESS
     ];
 
     //Status
@@ -69,7 +70,7 @@ class SwiftACPPayment extends Eloquent
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number');
+    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id');
     
     protected $revisionFormattedFieldNames = array(
         'id' => 'Id',
@@ -80,7 +81,8 @@ class SwiftACPPayment extends Eloquent
         'cheque_dispatch' => 'Cheque Dispatch',
         'cheque_dispatch_comment' => 'Cheque Comment',
         'payment_number' => 'Payment Number',
-        'batch_number' => 'Batch Number'
+        'batch_number' => 'Batch Number',
+        'cheque_signator_id' => 'Cheque Signator'
     );
     
     public $saveCreateRevision = true;
@@ -96,7 +98,7 @@ class SwiftACPPayment extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "payment";
-    public $esRemove = ['cheque_dispatch_comment','acp_id','validated','validated_msg'];
+    public $esRemove = ['cheque_dispatch_comment','acp_id','validated','validated_msg','cheque_signator_id'];
 
     public function esGetParent()
     {
@@ -155,6 +157,16 @@ class SwiftACPPayment extends Eloquent
         }
     }
 
+    public function getChequeSignatorIdRevisionAttribute($val)
+    {
+        if($this->chequeSignator)
+        {
+            return $this->chequeSignator->first_name." ".$this->chequeSignator->last_name;
+        }
+
+        return "";
+    }
+
     public function getChequeDispatchEsAttribute($val)
     {
         return $this->getChequeDispatchRevisionAttribute($val);
@@ -196,6 +208,16 @@ class SwiftACPPayment extends Eloquent
     public function currency()
     {
         return $this->belongsTo('Currency','currency');
+    }
+
+    public function chequeSignator()
+    {
+        return $this->belongsTo('User','cheque_signator_id');
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne('SwiftACPInvoice','acp_id','acp_id');
     }
 
     /*

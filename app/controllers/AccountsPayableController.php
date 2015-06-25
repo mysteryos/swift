@@ -453,7 +453,7 @@ class AccountsPayableController extends UserController {
                 ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
                 ->orderBy('swift_acp_invoice.due_date','ASC');
 
-        $activeSuppliers->distinct('supplier_code')
+        $activeSuppliers->groupBy('supplier_code')
                         ->orderBy('supplier_code','ASC')
                         ->with(['supplier'])
                         ->whereHas('workflow',function($q){
@@ -738,6 +738,268 @@ class AccountsPayableController extends UserController {
         $this->data['pageTitle'] = "Cheque Sign";
 
         return $this->makeView('acpayable/cheque-sign');
+    }
+
+    public function getPaymentDue($type='all',$page=1)
+    {
+        if(!$this->isAccountingDept && !$this->isAdmin)
+        {
+            return parent::forbidden();
+        }
+
+        /*
+         * Register Filters
+         */
+
+        $this->filter['filter_start_date'] = ['name'=>'Start Date',
+                                                'value' => Input::get('filter_start_date'),
+                                                'enabled' => Input::has('filter_start_date')
+                                            ];
+
+        $this->filter['filter_end_date'] = ['name'=>'End Date',
+                                                'value' => Input::get('filter_end_date'),
+                                                'enabled' => Input::has('filter_end_date')
+                                            ];
+
+        $this->filter['filter_supplier'] = ['name'=>'Supplier',
+                                            'value' => Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
+                                            'enabled' => Input::has('filter_supplier')
+                                            ];
+
+        $this->data['filterActive'] = (boolean)count(
+                                            array_filter($this->filter,function($v){
+                                                return $v['enabled'] === true;
+                                            })
+                                        );
+
+        $limitPerPage = 30;
+
+        /*
+         * Get forms
+         */
+        $query = \SwiftACPRequest::query();
+        $activeSuppliers = \SwiftACPRequest::query();
+
+        //With
+        $query->with(['supplier','company','payment','invoice'])
+                ->whereHas('workflow',function($q){
+                    return $q->inprogress();
+                })
+                ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
+                ->orderBy('swift_acp_invoice.due_date','ASC');
+
+        $activeSuppliers->groupBy('supplier_code')
+                        ->orderBy('supplier_code','ASC')
+                        ->with(['supplier'])
+                        ->whereHas('workflow',function($q){
+                            return $q->inprogress();
+                        });
+
+        switch($type)
+        {
+            case 'all':
+                if(\Input::has('filter_end_date') || \Input::has('filter_end_date'))
+                {
+                    $filter_end_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
+                    $filter_start_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
+
+                    $query->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
+                        if($filter_start_date !== false)
+                        {
+                            $q->where('due_date','>=',$filter_start_date->format('Y-m-d'),'AND');
+                        }
+                        if($filter_end_date !== false)
+                        {
+                            $q->where('due_date','<=',$filter_end_date->format('Y-m-d'),'AND');
+                        }
+
+                        $q->whereNotNull('due_date');
+
+                        return $q;
+                    });
+
+                }
+                else
+                {
+                    $query->has('invoice');
+                }
+                break;
+            case 'overdue':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                });
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'today':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
+                })
+                ->orderBy('swift_acp_request.supplier_code','ASC');
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'tomorrow':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                })
+                ->orderBy('swift_acp_request.supplier_code','ASC');
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'future':
+                //Filter by date end
+                if(\Input::has('filter_end_date') && \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date')))
+                {
+                    $query->whereHas('invoice',function($q){
+                        return $q->whereNotNull('due_date')
+                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND')
+                              ->where('due_date','>',\Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date'))->format('Y-m-d'),'AND');
+                    });
+                }
+                else
+                {
+                    $query->whereHas('invoice',function($q){
+                        return $q->whereNotNull('due_date')
+                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                    });
+                }
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'nodate':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNull('due_date');
+                });
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNull('due_date');
+                });
+                break;
+        }
+
+        /*
+         * Counts
+         */
+
+        $this->data['all_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress();
+                                        })
+                                        ->has('invoice')
+                                        ->count();
+
+        //Overdue
+
+        $this->data['overdue_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress();
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
+                                        })->count();
+
+        //Today
+
+        $this->data['today_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress();
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
+                                        })->count();
+
+        //Tomorrow
+
+        $this->data['tomorrow_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress();
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                                        })->count();
+
+        //Future
+
+        $this->data['future_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress();
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','>',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                                        })->count();
+
+        $this->data['nodate_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress();
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNull('due_date');
+                                        })
+                                        ->count();
+
+
+        //The Filters
+
+        if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
+        {
+            $query->where('supplier_code','=',\Input::get('filter_supplier'));
+        }
+
+        //Form for Display and Count
+
+        $form_count = $query->count();
+
+        //If no Filter - We limit the results
+        if(!$this->data['filterActive'])
+        {
+            $query->take($limitPerPage);
+            if($page > 1)
+            {
+                $query->offset(($page-1)*$limitPerPage);
+            }
+        }
+        
+        $forms = $query->get();
+
+        foreach($forms as &$f)
+        {
+            $f->current_activity = \WorkflowActivity::progress($f);
+        }
+
+        $activeSupplierResult = $activeSuppliers->get();
+
+        $this->data['activeSuppliers'] = $activeSupplierResult;
+        $this->data['forms'] = $forms;
+        $this->data['count'] = $form_count;
+        $this->data['type'] = $type;
+        $this->data['page'] = $page;
+        $this->data['limit_per_page'] = $limitPerPage;
+        $this->data['filter_string'] = "?".$_SERVER['QUERY_STRING'];
+        $this->data['filter'] = $this->filter;
+        $this->data['filter_on'] = (boolean)count(array_filter($this->filter,function($v){
+                                        return $v['enabled'];
+                                    }));
+        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
+        $this->data['pageTitle'] = "Payment Due - ".ucfirst($type);
+        return $this->makeView('acpayable/payment-due');
     }
 
     public function getCreate()

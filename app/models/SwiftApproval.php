@@ -28,14 +28,16 @@ class SwiftApproval extends Eloquent {
     protected $revisionEnabled = true;
     
     protected $keepRevisionOf = array(
-        'approved'
+        'approved', 'approval_user_id'
     );
     
     protected $revisionFormattedFieldNames = array(
-        'approved' => 'approval'
+        'id' => 'Id',
+        'approved' => 'Approval Status',
+        'approval_user_id' => 'Approval User'
     );    
     
-    public $revisionClassName = "A&P Order";
+    public $revisionClassName = "Approval";
     public $revisionPrimaryIdentifier = "id";
     public $revisionPolymorphicIdentifier = "approvable";
     public $keepCreateRevision = true;
@@ -43,7 +45,7 @@ class SwiftApproval extends Eloquent {
     
     
     /*
-     * Approval Types for AP Request
+     * Approval Types
      */
     const APR_REQUESTER = 1;
     const APR_CATMAN = 2;
@@ -57,6 +59,7 @@ class SwiftApproval extends Eloquent {
     const PR_RECEPTION = 10;
     const PR_STOREVALIDATION = 11;
     const PR_CREDITNOTE = 12;
+    
     /*
      * Approved Constants
      */
@@ -99,6 +102,17 @@ class SwiftApproval extends Eloquent {
         {
             return "";
         }        
+    }
+
+    public function getApprovalUserIdRevisionAttribute($val)
+    {
+        if((int)$val > 0)
+        {
+            $user = \User::find($val);
+            return $user->first_name." ".$user->last_name;
+        }
+
+        return "";
     }
     
     /*

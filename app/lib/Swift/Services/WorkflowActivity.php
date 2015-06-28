@@ -277,7 +277,7 @@ class WorkflowActivity {
     
     
     /*
-     * Provides useful information as to how to move the workflow to the next step - Polls information from NodeDefinition classes most likely
+     * Provides useful information as to how to move the workflow to the next step - Polls information from NodeDefinition classes mostly
      *
      * @param mixed $relation_object
      * @param boolean $needPermission
@@ -335,6 +335,68 @@ class WorkflowActivity {
                 break;
             default:
                 return \Response::make("This workflow doesn't look good. Contact your administrator",500);
+        }
+    }
+
+    /*
+     * Loops through nodes in progress and returns reasons list if any
+     *
+     * @param mixed $relation_object
+     * @param boolean $needPermission
+     *
+     * @return array|boolean
+     */
+    public function checkProgress($relation_object)
+    {
+        //Check if relation is indeed an object
+        if(!is_object($relation_object))
+        {
+            throw new \RuntimeException("Data type 'object' expected.");
+        }
+
+        $workflow = $relation_object->workflow()->first();
+        if(!count($workflow))
+        {
+            return false;
+        }
+
+        switch($workflow->status)
+        {
+            case SwiftWorkflowActivity::COMPLETE:
+                return true;
+                break;
+            case SwiftWorkflowActivity::REJECTED:
+                return true;
+                break;
+            case SwiftWorkflowActivity::INPROGRESS:
+                $nodeInProgress = \NodeActivity::inProgress($workflow->id);
+                $reasonList = array();
+                if(count($nodeInProgress))
+                {
+                    foreach($nodeInProgress as $n)
+                    {
+                        $reason = \NodeActivity::help($n,true);
+                        if(!is_bool($reason))
+                        {
+                            $reasonList = array_merge($reasonList,$reason);
+                        }
+                    }
+                    if(!empty($reasonList))
+                    {
+                        return $reasonList;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+                break;
+            default:
+                return false;
         }
     }
 

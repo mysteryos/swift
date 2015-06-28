@@ -9,11 +9,9 @@ class JdePaymentVoucher extends Eloquent {
 
     protected $table = "jdepaymvouchersmaster";
 
-    public function getKcoAttribute()
+    public function getKcoAttribute($value)
     {
-        return (int)$this->kco;
+        return (int)$value;
     }
-
-    
 }
 

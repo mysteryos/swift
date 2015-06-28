@@ -13,6 +13,8 @@ class Currency extends Eloquent
     protected $fillable = ['code','name'];
 
     protected $appends = ['fullname'];
+
+    protected $primaryKey = "code";
     
     /*
      * Accessors
@@ -37,7 +39,7 @@ class Currency extends Eloquent
 
     public static function getAll()
     {
-        $all = self::select(DB::raw('id, CONCAT(code," - ",name) as currency'))
+        $all = self::select(DB::raw('code, CONCAT(code," - ",name) as currency'))
                 ->orderBy('code','ASC')
                 ->get();
 
@@ -45,7 +47,7 @@ class Currency extends Eloquent
 
         foreach($all as $c)
         {
-            $currencyArray[$c->id] = $c->currency;
+            $currencyArray[$c->code] = $c->currency;
         }
 
         return $currencyArray;

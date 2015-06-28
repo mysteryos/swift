@@ -66,15 +66,15 @@ class WorkflowController extends UserController {
             $form = $class::find($id);
             $workflow = $form->workflow()->get();
             \WorkflowActivity::update($form,$context);
-            $workflowUpdated = $form->workflow()->get();
-            if($workflowUpdated->updated_at->diffInSeconds($workflow->updated_at))
-            {
+            $workflowUpdated = $form->workflow()->first();
+//            if($workflowUpdated->updated_at->diffInSeconds($workflow->updated_at))
+//            {
                 return \Response::make("Workflow has been updated");
-            }
-            else
-            {
-                return \Response::make("No update performed on workflow. See help",500);
-            }
+//            }
+//            else
+//            {
+//                return \Response::make("No update performed on workflow. See help",500);
+//            }
             
         }
         else

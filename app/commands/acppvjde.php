@@ -67,8 +67,10 @@ class acppvjde extends ScheduledCommand {
 
         foreach($paymentVoucherList as $pv)
         {
-            \Swift\AccountsPayable\JdeReconcialiation::reconcialiatePaymentVoucher($pv);
-            
+            if(\Swift\AccountsPayable\JdeReconcialiation::reconcialiatePaymentVoucher($pv))
+            {
+                \Swift\AccountsPayable\JdeReconcialiation::autofillPaymentVoucher($pv);
+            }
         }
         
     }

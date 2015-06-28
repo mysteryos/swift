@@ -61,13 +61,16 @@ class acppayjde extends ScheduledCommand {
          * Get all payment voucher that aren't validated
          */
 
-        $paymentVoucherList = \SwiftACPPaymentVoucher::with('acp','acp.invoice')
-                                ->where('validated','!=',\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+        $paymentList = \SwiftACPPayment::with('acp')
+                                ->where('validated','!=',\SwiftACPPayment::VALIDATION_COMPLETE)
                                 ->get();
 
-        foreach($paymentVoucherList as $pv)
+        foreach($paymentList as $pay)
         {
-            \Swift\AccountsPayable\JdeReconcialiation::reconcialiatePaymentVoucher($pv);
+            if(\Swift\AccountsPayable\JdeReconcialiation::reconcialiatePayment($pay))
+            {
+                \Swift\AccountsPayable\JdeReconcialiation::autofillPayment($pay);
+            }
         }
         
     }

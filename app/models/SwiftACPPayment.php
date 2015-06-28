@@ -15,14 +15,14 @@ class SwiftACPPayment extends Eloquent
 
     protected $table = "swift_acp_payment";
     
-    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id'];
+    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id','currency_code'];
     
     protected $dates = ['deleted_at','date','validated_on'];
 
     protected $touches = array('acp');
 
     protected $attributes = [
-        'currency' => '96',
+        'currency_code' => 'MUR',
         'amount' => 0,
         'cheque_dispatch' => 0,
         'validated'=>0,
@@ -33,12 +33,14 @@ class SwiftACPPayment extends Eloquent
     const STATUS_INPROGRESS = 1;
     const STATUS_ISSUED = 2;
     const STATUS_SIGNED = 3;
-    const STATUS_DISPATCHED = 4;
+    const STATUS_SIGNED_BY_EXEC = 4;
+    const STATUS_DISPATCHED = 5;
     
     public static $status = [
         self::STATUS_INPROGRESS => 'In Progress',
         self::STATUS_ISSUED => 'Issued',
-        self::STATUS_SIGNED => 'Signed',
+        self::STATUS_SIGNED => 'Signed by Accounting',
+        self::STATUS_SIGNED_BY_EXEC=> 'Signed by Executive',
         self::STATUS_DISPATCHED => 'Dispatched'
     ];
 
@@ -56,6 +58,12 @@ class SwiftACPPayment extends Eloquent
     const VALIDATION_COMPLETE = 1;
     const VALIDATION_ERROR = -1;
 
+    public static $validationArray = [
+        self::VALIDATION_PENDING => 'Pending',
+        self::VALIDATION_COMPLETE => 'Complete',
+        self::VALIDATION_ERROR => 'Error'
+    ];
+
     //Dispatch
 
     const DISPATCH_PICKUP = 1;
@@ -70,7 +78,7 @@ class SwiftACPPayment extends Eloquent
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('status','type','date','amount','currency','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id');
+    protected $keepRevisionOf = array('status','type','date','amount','currency_code','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id');
     
     protected $revisionFormattedFieldNames = array(
         'id' => 'Id',
@@ -82,7 +90,8 @@ class SwiftACPPayment extends Eloquent
         'cheque_dispatch_comment' => 'Cheque Comment',
         'payment_number' => 'Payment Number',
         'batch_number' => 'Batch Number',
-        'cheque_signator_id' => 'Cheque Signator'
+        'cheque_signator_id' => 'Cheque Signator',
+        'currency_code' => 'Currency'
     );
     
     public $saveCreateRevision = true;
@@ -159,9 +168,10 @@ class SwiftACPPayment extends Eloquent
 
     public function getChequeSignatorIdRevisionAttribute($val)
     {
-        if($this->chequeSignator)
+        if((int)$val > 0)
         {
-            return $this->chequeSignator->first_name." ".$this->chequeSignator->last_name;
+            $user = \User::find($val);
+            return $user->first_name." ".$user->last_name;
         }
 
         return "";
@@ -207,7 +217,7 @@ class SwiftACPPayment extends Eloquent
 
     public function currency()
     {
-        return $this->belongsTo('Currency','currency');
+        return $this->belongsTo('Currency','currency_code');
     }
 
     public function chequeSignator()

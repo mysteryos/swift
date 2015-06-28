@@ -14,7 +14,7 @@ class SwiftACPPaymentVoucher extends Eloquent
     
     protected $table = "scott_swift.swift_acp_payment_voucher";
     
-    protected $fillable = ['number'];
+    protected $fillable = ['number','validated'];
     
     protected $dates = ['deleted_at'];
 
@@ -96,6 +96,33 @@ class SwiftACPPaymentVoucher extends Eloquent
     public function acp()
     {
         return $this->belongsTo('SwiftACPRequest','acp_id');
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne('SwiftACPInvoice','acp_id','acp_id');
+    }
+
+    /*
+     * Checks if amount is still due
+     *
+     * @return boolean
+     */
+    public function jdeAmountDue()
+    {
+        if($this->validated === self::VALIDATION_COMPLETE)
+        {
+            $sumAmountDue = \JdePaymentVoucher::where('doc','=',number)
+                            ->groupBy('doc')
+                            ->sum('aap');
+
+            if(round($sumAmountDue,0) === 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     /*

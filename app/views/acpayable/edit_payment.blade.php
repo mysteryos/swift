@@ -39,7 +39,7 @@
         <div class="form-group col-md-6">
             <label class="col-md-4 control-label">Currency</label>
             <div class="col-md-8">
-                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_currency_".$pay->id."\"" }} @endif class="payment-editable editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="currency" data-pk="{{ $pay->encrypted_id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ $form->encrypted_id }}" data-source='{{ $currency }}' data-value="{{ $pay->currency or "96" }}"></a>
+                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_currency_code_".$pay->id."\"" }} @endif class="payment-editable editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="currency_code" data-pk="{{ $pay->encrypted_id or 0 }}" data-context="payment" data-url="/{{ $rootURL }}/payment/{{ $form->encrypted_id }}" data-source='{{ $currency }}' data-value="{{ $pay->currency_code or "MUR" }}"></a>
             </div>
         </div>
     </div>
@@ -71,6 +71,22 @@
             </div>
         </div>
     </div>
+    @if($currentUser->isSuperUser())
+    <div class="row">
+        <div class="form-group col-xs-6">
+            <label class="col-md-4 control-label">Validated</label>
+            <div class="col-md-8">
+                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_validated_".$pay->id."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="select" data-context="payment" data-name="validated" data-pk="{{ $pay->encrypted_id or 0 }}" data-source='{{$pay_validation}}' data-url="/{{ $rootURL }}/payment/{{ $form->encrypted_id }}" data-value="{{ $pay->validated or "" }}"></a>
+            </div>
+        </div>
+        <div class="form-group col-xs-6">
+            <label class="col-md-4 control-label">Validated Msg</label>
+            <div class="col-md-8">
+                <a href="#" @if(isset($pay->id)) {{ "id=\"payment_validated_msg_".$pay->id."\"" }} @endif class="editable payment-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="textarea" data-context="payment" data-name="validated_msg" data-pk="{{ $pay->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/payment/{{ $form->encrypted_id }}" data-value="{{ $pay->validated_msg or "" }}"></a>
+            </div>
+        </div>
+    </div>
+    @endif
     <legend class="top"></legend>
     @if($edit && ($isAdmin || $isAccountingDept))<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/payment" title="Delete Payment"><i class="fa fa-trash-o"></i></a>@endif
     @if(!isset($dummy) && isset($pay))<span class="float-id">ID: {{ $pay->id }}</span> @endif

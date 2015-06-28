@@ -14,6 +14,45 @@ class JdeReconcialiation {
      * @param \SwiftACPPaymentVoucher $pv
      * @return boolean
      */
+
+    /*
+     * Reconciliate Payment Voucher Task for Laravel Queue
+     *
+     * @param mixed $job
+     * @param array $data
+     *
+     */
+    public static function reconcialiatePaymentVoucherTask($job,$data)
+    {
+        if(isset($data['user_id']))
+        {
+            $user = \Sentry::findUserById($data['user_id']);
+
+            // Log the user in
+            \Sentry::login($user, false);
+        }
+
+        if(isset($data['class']) && isset($data['id']))
+        {
+            $eloqentClass = new $data['class'];
+            $eloquentObject = $eloqentClass::find($data['id']);
+            //Get payment voucher records
+            $pvs = $eloquentObject->paymentVoucher->where('validated','!=',\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)->get();
+            foreach($pvs as $pv)
+            {
+                if(self::reconcialiatePaymentVoucher($pv))
+                {
+                    self::autofillPaymentVoucher($pv);
+                }
+            }
+        }
+        else
+        {
+            throw new \RuntimeException('Eloquent class or object ID missing');
+        }
+        $job->delete();
+    }
+
     public static function reconcialiatePaymentVoucher(\SwiftACPPaymentVoucher &$pv)
     {
         if($pv->validated === \SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
@@ -42,37 +81,27 @@ class JdeReconcialiation {
 
         //Billable Company MisMatch
 
-        if($jdePV->kco !== $pv->acp->billable_company_code)
+        if($jdePV->kco !==  $pv->acp->billable_company_code)
         {
-            $pv->validated_msg = "Billable company code mismatch: {$jdePV->kco}";
-            $pv->validated = \SwiftACPPaymentVoucher::VALIDATION_ERROR;
-            $pv->save();
-            return false;
+            $pv->load('acp');
+            $comment = new \SwiftComment([
+                'comment' => "Billable company code mismatch: {$jdePV->kco} for PV no: {$pv->number}",
+                'user_id' => \Sentry::getUser()->id
+            ]);
+
+            $pv->acp->comments()->save($comment);
         }
 
         //Supplier Code
-        if($jdePV->an8 !== $pv->acp->supplier_code)
+        if((int)$jdePV->an8 !== $pv->acp->supplier_code)
         {
-            $pv->validated_msg = "Supplier code mismatch: {$jdePV->AN8}";
-            $pv->validated = \SwiftACPPaymentVoucher::VALIDATION_ERROR;
-            $pv->save();
-            return false;
-        }
+            $pv->load('acp');
+            $comment = new \SwiftComment([
+                'comment' => "Supplier code mismatch: {$jdePV->AN8} for PV no: {$pv->number}",
+                'user_id' => \Sentry::getUser()->id
+            ]);
 
-        //Invoice Number Mismatch
-        if($pv->acp->invoice)
-        {
-            if($pv->acp->invoice->number !== null && trim($pv->acp->invoice->number) !== trim($jdePV->vinv))
-            {
-                $pv->validated_msg = "Supplier code mismatch: {$jdePV->AN8}";
-                $error = true;
-                return false;
-            }
-        }
-        else
-        {
-            //No Invoices Present
-            return false;
+            $pv->acp->comments()->save($comment);
         }
 
         /*
@@ -84,6 +113,45 @@ class JdeReconcialiation {
         $pv->save();
         
         return true;
+    }
+
+    /*
+     * Reconciliate Payment Task for Laravel Queue
+     *
+     * @param mixed $job
+     * @param array $data
+     *
+     */
+    public static function reconcialiatePaymentTask($job,$data)
+    {
+        if(isset($data['user_id']))
+        {
+            $user = \Sentry::findUserById($data['user_id']);
+
+            // Log the user in
+            \Sentry::login($user, false);
+        }
+
+        if(isset($data['class']) && isset($data['id']))
+        {
+            $eloqentClass = new $data['class'];
+            $eloquentObject = $eloqentClass::find($data['id']);
+            //Get Payment Records
+            $pays = $eloquentObject->payment()->where('validated','!=',\SwiftACPPayment::VALIDATION_COMPLETE)->get();
+            foreach($pays as $pay)
+            {
+                if(self::reconcialiatePayment($pay))
+                {
+                    self::autofillPayment($pay);
+                }
+            }
+        }
+        else
+        {
+            throw new \RuntimeException('Eloquent class or object ID missing');
+        }
+        
+        $job->delete();
     }
 
     /*
@@ -118,44 +186,88 @@ class JdeReconcialiation {
             return false;
         }
 
-        if($pay->amount !== "0.00" && $pay->amount !== abs($jdePay->paap))
-        {
-            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
-            $pay->validated_msg = "Payment amount(".abs($jdePay->paap).") doesn't match";
-            $pay->save();
-            return false;
-        }
-
-        if(($pay->batch_number !== null && $pay->batch_number !== "") && $pay->batch_number !== $jdePay->icu)
-        {
-            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
-            $pay->validated_msg = "Batch number(".$jdePay->icu.") doesn't match";
-            $pay->save();
-            return false;
-        }
-
-        if($pay->currency !== null && $pay->currency->code !== $jdePay->crrd)
-        {
-            $pay->validated = \SwiftACPPayment::VALIDATION_ERROR;
-            $pay->validated_msg = "Currency(".$jdePay->crrd.") doesn't match";
-            $pay->save();
-            return false;
-        }
-
         $pay->validated = \SwiftACPPAyment::VALIDATION_COMPLETE;
         $pay->validated_msg = null;
         $pay->save();
         return true;
     }
 
+    /*
+     * Autofill Invoice details based on Payment Voucher Info
+     *
+     * @param \SwiftACPPaymentVoucher $pv
+     *
+     * @return boolean
+     */
     public static function autofillPaymentVoucher(\SwiftACPPaymentVoucher &$pv)
     {
-        
+        $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)->first();
+        if($jdePV && $pv->validated === \SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+        {
+            $pv->load('invoice');
+            $mapping = [
+                'number' => 'vinv',
+                'date'  => 'divj',
+                'due_amount' => 'ag',
+                'currency_code' => 'crcd',
+                'gl_code' => 'glc'
+            ];
+
+            foreach($mapping as $col => $jdeCol)
+            {
+                if($jdeCol === 'ag')
+                {
+                    $pv->invoice->$col = abs($jdePV->$jdeCol);
+                }
+                else
+                {
+                    $pv->invoice->$col = $jdePV->$jdeCol;
+                }
+            }
+
+            return $pv->invoice->save();
+        }
+
+        return false;
     }
 
-    public static function autofillPayment(\SwiftACPPayment & $pay)
+    /*
+     * Auto Fill Payment based on payment Number
+     *
+     * @param \SwiftACPPayment $pay
+     *
+     * @return boolean
+     */
+    public static function autofillPayment(\SwiftACPPayment &$pay)
     {
-        
+        $jdePay = \JdePaymentHeader::where('docm','=',$pay->payment_number)
+                  ->first();
+
+        if($jdePay && $pay->validated === \SwiftACPPAyment::VALIDATION_COMPLETE)
+        {
+            $mapping = [
+                'batch_number' => 'icu',
+                'currency_code' => 'crcd',
+                'date' => 'dmtj',
+                'amount' => 'paap',
+            ];
+
+            foreach($mapping as $col => $jdeCol)
+            {
+                if($jdeCol === 'paap')
+                {
+                    $pay->$col = abs($jdePay->$jdeCol);
+                }
+                else
+                {
+                    $pay->$col = $jdePay->$jdeCol;
+                }
+            }
+
+            return $pay->save();
+        }
+
+        return false;
     }
 }
 

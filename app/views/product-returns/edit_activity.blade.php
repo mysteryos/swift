@@ -35,7 +35,7 @@
                     ?>
                     <?php 
                     $related_model = new $a->revisionable_type;
-                    if(isset($related_model->revisionDisplayId) && isset($related_model->revisionDisplayId))
+                    if(isset($related_model->revisionDisplayId))
                     {
                         echo "[Id: $a->revisionable_id]";
                     }

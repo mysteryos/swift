@@ -19,7 +19,7 @@
         <div class="form-group col-md-6">
             <label class="col-md-4 control-label">Currency</label>
             <div class="col-md-8">
-                <a href="#" @if(isset($i->id)) {{ "id=\"invoice_currency_".$i->id."\"" }} @endif class="editable invoice-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="currency"  data-pk="{{ $i->encrypted_id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice/{{ Crypt::encrypt($form->id) }}" data-source='{{ $currency }}' data-value="{{ $i->currency or 96 }}"></a>
+                <a href="#" @if(isset($i->id)) {{ "id=\"invoice_currency_code_".$i->id."\"" }} @endif class="editable invoice-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="select" data-name="currency_code"  data-pk="{{ $i->encrypted_id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice/{{ Crypt::encrypt($form->id) }}" data-source='{{ $currency }}' data-value="{{ $i->currency_code or "MUR" }}"></a>
             </div>
         </div>
         <div class="form-group col-md-6">

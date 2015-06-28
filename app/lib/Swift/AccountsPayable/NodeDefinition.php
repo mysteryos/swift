@@ -211,6 +211,7 @@ Class NodeDefinition {
 
             if(count($returnReasonList) === 0 && !$returnReason)
             {
+                \Queue::push('Swift\AccountsPayable\JdeReconcialiation@reconcialiatePaymentTask',['class'=>get_class($acp),'id'=>$acp->id,'user_id'=>\Sentry::getUser()->id]);
                 return true;
             }
             
@@ -238,6 +239,34 @@ Class NodeDefinition {
                 $returnReasonList['chequenot_signed'] = "Please set cheque status to signed where necessary";
             }
             
+            if(count($returnReasonList) === 0 && !$returnReason)
+            {
+                return true;
+            }
+        }
+
+        return $returnReason ? $returnReasonList : false;
+    }
+    
+    public static function acpChequeSignByExec($nodeActivity,$returnReason=false)
+    {
+        $returnReasonList = array();
+
+        $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+        if($acp)
+        {
+            $chequeNotSignedCount = $acp
+                                    ->payment()
+                                    ->whereNotNull('status')
+                                    ->where('status','<',\SwiftACPPayment::STATUS_SIGNED_BY_EXEC)
+                                    ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE)
+                                    ->count();
+
+            if($chequeNotSignedCount > 0)
+            {
+                $returnReasonList['chequenot_signed'] = "Please set cheque status to signed by executive where necessary";
+            }
+
             if(count($returnReasonList) === 0 && !$returnReason)
             {
                 return true;
@@ -308,6 +337,12 @@ Class NodeDefinition {
             if($paymentError > 0)
             {
                 $returnReasonList['payment_error'] = "Payment errors have been found. See payment section";
+            }
+
+            //No errors at all, mark as complete
+            if(count($returnReasonList) === 0 && !$returnReason)
+            {
+                return true;
             }
             
         }

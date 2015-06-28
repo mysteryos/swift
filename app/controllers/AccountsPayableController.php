@@ -15,7 +15,7 @@ class AccountsPayableController extends UserController {
         $this->accountingPaymentVoucherPermission = "acp-paymentvoucher";
         $this->accountingPaymentIssuePermission = "acp-paymentissue";
         $this->accountingChequeSignPermission = "acp-chequesign";
-
+        $this->accountingChequeSignExecPermission = "acp-exec";
         $this->canWhat();
         $this->isWho();
 
@@ -27,6 +27,7 @@ class AccountsPayableController extends UserController {
         $this->canEdit = $this->data['canEdit'] = $this->currentUser->hasAccess($this->editPermission);
         $this->canView = $this->data['canView'] = $this->currentUser->hasAccess($this->viewPermission);
         $this->canSignCheque = $this->data['canSignCheque'] = $this->currentUser->hasAccess($this->accountingChequeSignPermission);
+        $this->canSignChequeExec = $this->data['canSignChequeExec'] = $this->currentUser->hasAccess($this->accountingChequeSignExecPermission);
     }
 
     private function isWho()
@@ -41,6 +42,18 @@ class AccountsPayableController extends UserController {
 
     public function getIndex()
     {
+        $paymentList = \SwiftACPPayment::with('acp')
+                                ->where('validated','!=',\SwiftACPPayment::VALIDATION_COMPLETE)
+                                ->get();
+
+        foreach($paymentList as $pay)
+        {
+            if(\Swift\AccountsPayable\JdeReconcialiation::reconcialiatePayment($pay))
+            {
+                \Swift\AccountsPayable\JdeReconcialiation::autofillPayment($pay);
+            }
+        }
+
         return \Redirect::to('/'.$this->context.'/overview');
     }
 
@@ -739,6 +752,50 @@ class AccountsPayableController extends UserController {
 
         return $this->makeView('acpayable/cheque-sign');
     }
+    
+    /*
+     * Cheque Sign By Executive - Utility Page
+     *
+     */
+    public function getChequeSignExec()
+    {
+        if(!$this->canSignChequeExec && !$this->isAdmin)
+        {
+            return parent::forbidden();
+        }
+
+        /*
+         * Get forms
+         */
+        $query = \SwiftACPPayment::query();
+
+        //With
+        $query->with(['acp','invoice','acp.supplier','acp.company','acp.document','acp.approvalHod']);
+
+        //Filter by workflow, at payment voucher
+
+        $query->whereHas('acp',function($q){
+            return $q->whereHas('workflow',function($q){
+                return $q->inprogress()->whereHas('pendingNodes',function($q){
+                    return $q->whereHas('definition',function($q){
+                       return $q->where('name','=','acp_cheque_sign_by_exec');
+                    });
+                });
+            });
+        });
+
+        //order By
+        $query->orderBy('payment_number','ASC');
+
+        $payments = $query->get();
+        $payment_count = count($payments);
+
+        $this->data['payments'] = $payments;
+        $this->data['payment_count'] = $payment_count;
+        $this->data['pageTitle'] = "Cheque Sign By Executive";
+
+        return $this->makeView('acpayable/cheque-sign-exec');
+    }
 
     public function getPaymentDue($type='all',$page=1)
     {
@@ -1258,6 +1315,7 @@ class AccountsPayableController extends UserController {
             $this->data['payment_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$type));
             $this->data['cheque_dispatch'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$dispatch));
             $this->data['pv_validation'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPaymentVoucher::$validationArray));
+            $this->data['pay_validation'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$validationArray));
             $this->data['approval_hod'] = json_encode(\Helper::jsonobject_encode($this->data['approval_hod']));
             $this->data['chequesign_users'] = json_encode(\Helper::jsonobject_encode(
                                                 \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignPermission])
@@ -1271,7 +1329,7 @@ class AccountsPayableController extends UserController {
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
             $this->data['owner'] = \Helper::getUserName($acp->owner_user_id,$this->currentUser);
             $this->data['edit'] = $edit;
-            $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = $this->data['savePaymentVoucher'] = false;
+            $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = $this->data['savePaymentVoucher'] = $this->data['checkPayment'] = false;
             $this->data['isCreator'] = $acp->owner_user_id == $this->currentUser->id;
             
             if($edit === true)
@@ -1315,6 +1373,12 @@ class AccountsPayableController extends UserController {
                                     $this->data['savePaymentVoucher'] = true;
                                     break;
                                 }
+
+                                if(isset($d->data->checkPayment) && ($this->isAdmin || $this->isAccountingDept))
+                                {
+                                    $this->data['checkPayment'] = true;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1329,11 +1393,22 @@ class AccountsPayableController extends UserController {
                                                      'msg' => "This supplier doesn't have any payment terms. <a href=\"".Helper::generateURL($acp->supplier)."\" class=\"pjax\">Please provide one.</a>"
                                                     ];
                     }
+
+                    if($this->data['checkPayment'] === true)
+                    {
+                        $checkProgress = \WorkflowActivity::checkProgress($acp);
+                        if(is_array($checkProgress))
+                        {
+                            $this->data['message'][] = [ 'type' => 'warning',
+                                                         'msg' => 'Validation: '. implode(", ",$checkProgress)
+                                                        ];
+                        }
+                    }
                 }
             }
             
             //Save recently viewed form
-            Helper::saveRecent($acp,$this->currentUser);
+            \Helper::saveRecent($acp,$this->currentUser);
 
             return $this->makeView("$this->context/edit");
         }
@@ -1574,8 +1649,8 @@ class AccountsPayableController extends UserController {
                         return \Response::make('Please enter a valid amount',400);
                     }
                     break;
-                case "currency":
-                    if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')))
+                case "currency_code":
+                    if(\Input::get('value') === "")
                     {
                         return \Response::make('Please select a valid currency.',400);
                     }
@@ -1651,7 +1726,6 @@ class AccountsPayableController extends UserController {
                     break;
                 case "date":
                 case "cheque_dispatch_comment":
-                case "currency":
                     break;
                 case "cheque_signator_id":
                     if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')) && (int)\Input::get('value') <= 0)
@@ -1679,18 +1753,19 @@ class AccountsPayableController extends UserController {
                         return \Response::make('Please enter a valid dispatch method.',400);
                     }
                     break;
-                case "currency":
-                    if(!is_numeric(\Input::get('value')) || \Input::get('value') === "")
+                case "currency_code":
+                    if(\Input::get('value') === "")
                     {
                         return \Response::make('Please select a valid currency code',400);
                     }
-                    else
+                    break;
+                case "validated":
+                case "validated_msg":
+                    if(!$this->currentUser->isSuperUser())
                     {
-                        if(\Input::get('value') <= 0)
-                        {
-                            return \Response::make('Please select a valid currency code',400);
-                        }
+                        return \Response::make('You don\'t have permission for this action',400);
                     }
+                    break;
                 default:
                     return \Response::make('Unknown Field',400);
                     break;
@@ -1785,7 +1860,7 @@ class AccountsPayableController extends UserController {
 
     public function putPaymentvoucher($acp_id)
     {
-        $acp = SwiftACPRequest::find(Crypt::decrypt($acp_id));
+        $acp = \SwiftACPRequest::find(Crypt::decrypt($acp_id));
 
         if($acp)
         {
@@ -1798,37 +1873,37 @@ class AccountsPayableController extends UserController {
             }
 
             //Validation
-            switch(Input::get('name'))
+            switch(\Input::get('name'))
             {
                 case "number":
-                    if(Input::get('value') !== "" && !is_numeric(Input::get('value')))
+                    if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')))
                     {
-                        return Response::make("Please input a numeric value.");
+                        return \Response::make("Please input a numeric value.",400);
                     }
                     break;
                 case "validated":
                     if(!$this->currentUser->isSuperUser())
                     {
-                        return \Response::make("You don't have access to this feature.");
+                        return \Response::make("You don't have access to this feature.",400);
                     }
                     
-                    if(Input::get('value') !== "" && !in_array((int)Input::get('value'),\SwiftACPPaymentVoucher::$validationArray))
+                    if(\Input::get('value') !== "" && !array_key_exists((int)\Input::get('value'),\SwiftACPPaymentVoucher::$validationArray))
                     {
-                        return Response::make("Please enter a valid value.");
+                        return \Response::make("Please enter a valid value.",400);
                     }
                     break;
                 case "validated_msg":
                     if(!$this->currentUser->isSuperUser())
                     {
-                        return \Response::make("You don't have access to this feature.");
+                        return \Response::make("You don't have access to this feature.",400);
                     }
                     break;
                 default:
-                    return Response::make('Unknown Field',400);
+                    return \Response::make('Unknown Field',400);
                     break;
             }
 
-            return Helper::saveChildModel($acp,"\SwiftACPPaymentVoucher","paymentVoucher",$this->currentUser,true);
+            return \Helper::saveChildModel($acp,"\SwiftACPPaymentVoucher","paymentVoucher",$this->currentUser,true);
 
         }
         else
@@ -2100,29 +2175,34 @@ class AccountsPayableController extends UserController {
                             }
                             else
                             {
-                                $response = \WorkflowActivity::progressHelp($acp,false);
+                                $progress = \WorkflowActivity::checkProgress($acp);
 
-                                if($response->getStatusCode() !== Symfony\Component\HttpFoundation\Response::HTTP_OK)
-                                {
-                                    return $response;
-                                }
-                                
                                 /*
-                                 * All great we proceed on
+                                 * Only approval remains
                                  */
-                                $paymentApprovals = $acp->approvalPayment()
-                                                    ->where('approved','=',\SwiftApproval::PENDING)
-                                                    ->get();
-                                
-                                foreach($paymentApprovals as $a)
+                                if(is_array($progress) && count($progress) === 1 && array_key_exists("approval_absent",$progress))
                                 {
-                                    $a->approved = \SwiftApproval::APPROVED;
-                                    $a->approval_user_id = $this->currentUser->id;
-                                    $a->save();
-                                }
+                                    /*
+                                     * All great we proceed on
+                                     */
+                                    $paymentApprovals = $acp->approvalPayment()
+                                                        ->where('approved','=',\SwiftApproval::PENDING)
+                                                        ->get();
 
-                                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
-                                return \Response::make('Success');
+                                    foreach($paymentApprovals as $a)
+                                    {
+                                        $a->approved = \SwiftApproval::APPROVED;
+                                        $a->approval_user_id = $this->currentUser->id;
+                                        $a->save();
+                                    }
+
+                                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
+                                    return \Response::make('Success');
+                                }
+                                else
+                                {
+                                    return \WorkflowActivity::progressHelp($acp,false);
+                                }
                             }
                             break;
                         }
@@ -2329,6 +2409,39 @@ class AccountsPayableController extends UserController {
                 if($payment && $payment->acp)
                 {
                     $payment->status = \SwiftACPPayment::STATUS_SIGNED;
+                    $payment->save();
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($payment->acp),'id'=>$payment->acp->id,'user_id'=>$this->currentUser->id));
+                }
+            }
+
+            return \Response::make("Success");
+        }
+        else
+        {
+            return \Response::make("Unable to process your request",400);
+        }
+    }
+    
+    public function postSaveChequeSignExec()
+    {
+        if(!$this->isAdmin && !$this->canSignChequeExec)
+        {
+            return parent::forbidden();
+        }
+
+        if(\Input::has('pv_id'))
+        {
+            foreach(\Input::get('pv_id') as $pv_id)
+            {
+                $paymentId = \Crypt::decrypt($pv_id);
+
+                $payment = \SwiftACPPayment::with('acp')
+                            ->where('id','=',$paymentId)
+                            ->first();
+
+                if($payment && $payment->acp)
+                {
+                    $payment->status = \SwiftACPPayment::STATUS_SIGNED_BY_EXEC;
                     $payment->save();
                     \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($payment->acp),'id'=>$payment->acp->id,'user_id'=>$this->currentUser->id));
                 }

@@ -88,7 +88,7 @@ class SwiftACPRequest extends Eloquent
     public $revisionClassName =  "Accounts Payable";
     public $revisionPrimaryIdentifier = "id";
 
-    public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','creditNote','approval','document'];
+    public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','creditNote','approvalHod','document'];
     
     /*
      * Event Observers

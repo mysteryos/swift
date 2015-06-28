@@ -42,7 +42,7 @@
                         <span>{{$f->supplier_name}}</span>
                     </td>
                     <td>
-                        <span>{{$f->invoice->currencyRelation->code}} {{number_format($f->due_amount,2)}}</span>
+                        <span>{{$f->invoice->currency->code}} {{number_format($f->due_amount,2)}}</span>
                     </td>
                     <td>
                         <span class="{{ $f->current_activity['status_class'] }}">{{ $f->current_activity['label'] }}</span>

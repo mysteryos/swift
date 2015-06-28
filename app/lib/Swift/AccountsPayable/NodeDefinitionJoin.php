@@ -79,6 +79,9 @@ Class NodeDefinitionJoin {
                 ]);
                 $acp->approval()->save($approval);
             }
+
+            //Reconciliate Payment Voucher With JDE
+            \Queue::push('Swift\AccountsPayable\JdeReconcialiation@reconcialiatePaymentVoucherTask',['class'=>get_class($acp),'id'=>$acp->id,'user_id'=>\Sentry::getUser()->id]);
         }
         
         return true;
@@ -120,7 +123,11 @@ Class NodeDefinitionJoin {
         return false;
     }
 
-    public static function chequesignToChequeready($nodeActivity)
+    public static function chequesignToChequesignbyexec($nodeActivity)
+    {
+        return true;
+    }
+    public static function chequesignbyexecToChequeready($nodeActivity)
     {
         return true;
     }
@@ -140,6 +147,18 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
+            /*
+             * If we have a payment voucher, we check amount on JDE records
+             */
+//            if($acp->paymentVoucher)
+//            {
+//                if($acp->paymentVoucher->jdeAmountDue())
+//                {
+//                    return true;
+//                }
+//            }
+            
+
             $amountDue = $acp->invoice->due_amount;
             $amountPaid = \SwiftACPPayment::sumTotalAmountPaid($acp->id);
 
@@ -164,6 +183,17 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
+            /*
+             * If we have a payment voucher, we check amount on JDE records
+             */
+//            if($acp->paymentVoucher)
+//            {
+//                if($acp->paymentVoucher->jdeAmountDue())
+//                {
+//                    return true;
+//                }
+//            }
+
             $amountDue = $acp->invoice->due_amount;
             $amountPaid = \SwiftACPPayment::sumTotalAmountPaid($acp->id);
 

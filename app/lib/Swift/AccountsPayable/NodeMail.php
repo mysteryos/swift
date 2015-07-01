@@ -16,14 +16,22 @@ class NodeMail {
             if(count($users))
             {
                 $aprequest = $workflowActivity->workflowable;
-                $aprequest->current_activity = \WorkflowActivity::progress($workflowActivity);                
+                $aprequest->current_activity = \WorkflowActivity::progress($workflowActivity);
+                if(isset($aprequest->current_activity['definition_name']) && in_array('acp_hodapproval',$aprequest->current_activity['definition_name']))
+                {
+                    //If HOD Approval Node
+                    self::sendApprovalMail($workflowActivity, $permissions);
+                    return;
+                }
+
+                //IfNormal Node
                 $mailData = [
                         'name'=>$aprequest->name,
                         'id'=>$aprequest->id,
                         'current_activity'=>$aprequest->current_activity,
                         'url'=>\Helper::generateUrl($aprequest,true),
                         ];
-                
+
                 foreach($users as $u)
                 {
                     if($u->activated && !$u->isSuperUser())
@@ -42,7 +50,7 @@ class NodeMail {
                             \Log::error(get_class().': Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
                         }
                     }
-                }   
+                }
             }
         }
     }
@@ -97,7 +105,7 @@ class NodeMail {
                         }
                         catch (Exception $e)
                         {
-                            \Log::error(get_class().': Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
+                            \Log::error(get_class().': Approval Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
                         }
                     }
                 }

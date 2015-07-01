@@ -47,7 +47,7 @@ class acppvjde extends ScheduledCommand {
 
     public function isEnabled()
     {
-        return false;
+        return true;
     }
 
 	/**

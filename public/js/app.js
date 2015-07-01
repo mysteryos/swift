@@ -462,9 +462,8 @@ if (xhr.readyState == 4)
     {
         if(xhr.getResponseHeader("AJAX-REDIRECT") != null && xhr.getResponseHeader("AJAX-REDIRECT").length)
         {
-            //@TBD
-//            alert('Your session has expired. Please login.');
-//            window.location.href=xhr.getResponseHeader("AJAX-REDIRECT");
+            alert('Your session has expired. Please login.');
+            window.location.href=xhr.getResponseHeader("AJAX-REDIRECT");
         }
     }    
 });

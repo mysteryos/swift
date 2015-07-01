@@ -251,9 +251,9 @@ class WorkflowActivity {
                 foreach($nodesCompleted as $n)
                 {
                     $n->load('definition');
-                    if($n->definition->type == SwiftNodeDefinition::$T_NODE_END && $n->user_id != 0)
+                    if($n->definition->type == SwiftNodeDefinition::$T_NODE_END && $n->user_id !== 0)
                     {
-                        return array('label'=>$n->definition->label,'status'=>SwiftWorkflowActivity::COMPLETE,'status_class'=>'color-green','definition'=>array($n->definition->id),'definition_obj'=>$n->definition);
+                        return array('label'=>$n->definition->label,'status'=>SwiftWorkflowActivity::COMPLETE,'status_class'=>'color-green','definition'=>array($n->definition->id),'definition_obj'=>$n->definition ,'definition_name'=>[$n->definition->name]);
                     }
                 }
                 //Something's wrong with the workflow. Rerun WorkflowActivity Update
@@ -262,14 +262,21 @@ class WorkflowActivity {
         }
         else
         {
-            $label = $definition_array = $definition_array_id = array();
+            $label = $definition_array = $definition_array_id = $definition_name_array = array();
             foreach($nodeInProgress as $n)
             {
                 $label[] = $n->definition->label;
                 $definition_array_id[] = $n->definition->id;
                 $definition_array[] = $n->definition;
+                $definition_name_array[] = $n->definition->name;
             }
-            return array('label'=>implode(" / ",$label),'status'=>SwiftWorkflowActivity::INPROGRESS,'status_class'=>'color-orange', 'definition'=>$definition_array_id, 'definition_obj'=>$definition_array);
+            
+            return array('label'=>implode(" / ",$label),
+                        'status'=>SwiftWorkflowActivity::INPROGRESS,
+                        'status_class'=>'color-orange',
+                        'definition'=>$definition_array_id,
+                        'definition_obj'=>$definition_array,
+                        'definition_name' => $definition_name_array);
         }
         
         return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');        

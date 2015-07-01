@@ -851,7 +851,7 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        return (new \Process\SwiftErpOrder($this))->put(\Config::get("context.$this->context"),$apr_id);
+        return $this->process('SwiftErpOrder')->saveByParent(\Crypt::decrypt($apr_id));
         
     }
     
@@ -865,7 +865,7 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
         
-        return \Helper::deleteChildModel('SwiftErpOrder');
+        return $this->process('SwiftErpOrder')->delete();
     }
     
     public function putDelivery($apr_id)

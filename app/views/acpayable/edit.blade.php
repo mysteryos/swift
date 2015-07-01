@@ -245,7 +245,7 @@
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file"></i> </span>
                         <h2>Credit Note </h2>
-                        @if($edit && ($isAccountingDept || $isAdmin || $isOwner || $isHOD))
+                        @if($edit && ($isAccountingDept || $isAdmin || $form->isOwner() || $isHOD))
                             <div class="widget-toolbar" role="menu">
                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                             </div>

@@ -47,7 +47,7 @@ class acpcheckpayment extends ScheduledCommand {
 
     public function isEnabled()
     {
-        return false;
+        return true;
     }
 
 	/**
@@ -83,7 +83,7 @@ class acpcheckpayment extends ScheduledCommand {
    public function schedule(Schedulable $scheduler)
    {
        //Every Day at 4a.m
-       return $scheduler->daily()->hours(4)->minutes(0);
+       return $scheduler->daily()->hours(4)->minutes(30);
    }
 
 	/**

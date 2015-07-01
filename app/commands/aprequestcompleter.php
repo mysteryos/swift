@@ -39,14 +39,14 @@ class aprequestCompleter extends ScheduledCommand {
         }
 	}
 
-        public function getName()
-        {
-            return $this->name;
-        }
+    public function getName()
+    {
+        return $this->name;
+    }
 
-        public function isEnabled() {
-            return true;
-        }
+    public function isEnabled() {
+        return true;
+    }
 
 	/**
 	 * Execute the console command.
@@ -55,47 +55,47 @@ class aprequestCompleter extends ScheduledCommand {
 	 */
 	public function fire()
 	{
-            try
-            {
-                $lateApRequest = SwiftAPRequest::whereHas('workflow',function($q){
-                                    $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')->where('updated_at','<',new Datetime('today -1 month'))
-                                    ->whereHas('nodes',function($q){
-                                        return $q->where('user_id','=',0)->whereHas('definition',function($q){
-                                            return $q->where('name','=','apr_delivery');
-                                        });
+        try
+        {
+            $lateApRequest = SwiftAPRequest::whereHas('workflow',function($q){
+                                $q->where('status','=',SwiftWorkflowActivity::INPROGRESS,'AND')->where('updated_at','<',new Datetime('today -1 month'))
+                                ->whereHas('nodes',function($q){
+                                    return $q->where('user_id','=',0)->whereHas('definition',function($q){
+                                        return $q->where('name','=','apr_delivery');
                                     });
-                                })
-                                ->whereHas('order',function($q){
-                                    return $q->whereNotNull('ref')->whereNotNull('type')->where('status','=',\SwiftErpOrder::FILLED,'AND');
-                                })
-                                ->with('order')
-                                ->get();
+                                });
+                            })
+                            ->whereHas('order',function($q){
+                                return $q->whereNotNull('ref')->whereNotNull('type')->where('status','=',\SwiftErpOrder::FILLED,'AND');
+                            })
+                            ->with('order')
+                            ->get();
 
-                foreach($lateApRequest as $apr)
+            foreach($lateApRequest as $apr)
+            {
+                foreach($apr->order as $order)
                 {
-                    foreach($apr->order as $order)
-                    {
-                        //Check if order has JDE sales row
-                        //Therefore Invoice has already been published for that order, we mark it as complete.
-                        
-                    }
+                    //Check if order has JDE sales row
+                    //Therefore Invoice has already been published for that order, we mark it as complete.
+
                 }
             }
-            catch(Exception $e)
-            {
-                $this->error($e->getMessage());
-                Log::error($e);
-            }
+        }
+        catch(Exception $e)
+        {
+            $this->error($e->getMessage());
+            Log::error($e);
+        }
 	}
 
-        /*
-         * Add Schedule
-         */
-        public function schedule(Schedulable $scheduler)
-        {
-            //Every Day at 4a.m
-            return $scheduler->daily()->hours(5);
-        }
+    /*
+     * Add Schedule
+     */
+    public function schedule(Schedulable $scheduler)
+    {
+        //Every Day at 4a.m
+        return $scheduler->daily()->hours(5);
+    }
 
 	/**
 	 * Get the console command arguments.

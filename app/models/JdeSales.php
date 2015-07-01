@@ -61,7 +61,7 @@ class JdeSales extends Eloquent {
             ->orderBy('DOC','ASC')
             ->groupBy('DOC')
             ->join('jdecustomers','jdecustomers.AN8','=','jdesales.AN8')
-            ->select('DOC','IVD','JdeSales.AN8','DCTO','jdecustomers.ALPH')
+            ->select('DOC','IVD','jdesales.AN8','DCTO','jdecustomers.ALPH')
             ->get();
     }
 

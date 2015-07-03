@@ -15,9 +15,9 @@ class NodeMail {
             $users = \Sentry::findAllUsersWithAnyAccess($permissions);
             if(count($users))
             {
-                $aprequest = $workflowActivity->workflowable;
-                $aprequest->current_activity = \WorkflowActivity::progress($workflowActivity);
-                if(isset($aprequest->current_activity['definition_name']) && in_array('acp_hodapproval',$aprequest->current_activity['definition_name']))
+                $acp = $workflowActivity->workflowable;
+                $acp->current_activity = \WorkflowActivity::progress($workflowActivity);
+                if(isset($acp->current_activity['definition_name']) && in_array('acp_hodapproval',$acp->current_activity['definition_name']))
                 {
                     //If HOD Approval Node
                     self::sendApprovalMail($workflowActivity, $permissions);
@@ -26,10 +26,10 @@ class NodeMail {
 
                 //IfNormal Node
                 $mailData = [
-                        'name'=>$aprequest->name,
-                        'id'=>$aprequest->id,
-                        'current_activity'=>$aprequest->current_activity,
-                        'url'=>\Helper::generateUrl($aprequest,true),
+                        'name'=>$acp->name,
+                        'id'=>$acp->id,
+                        'current_activity'=>$acp->current_activity,
+                        'url'=>\Helper::generateUrl($acp,true),
                         ];
 
                 foreach($users as $u)
@@ -38,10 +38,10 @@ class NodeMail {
                     {
                         try
                         {
-                            //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
-                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$u),function($message) use ($u,$aprequest){
+                            //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$acp,'user'=>$u))->render());
+                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.acpayable.pending',array('form'=>$mailData,'user'=>$u),function($message) use ($u,$acp){
                                 $message->from('swift@scott.mu','Scott Swift');
-                                $message->subject(\Config::get('website.name').' - Status update on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
+                                $message->subject(\Config::get('website.name').' - Status update on Accounts Payable "'.$acp->name.'" ID: '.$acp->id);
                                 $message->to($u->email);
                             });
                         }
@@ -55,16 +55,16 @@ class NodeMail {
         }
     }
     
-    public static function sendCancelledMail($aprequest)
+    public static function sendCancelledMail($acp)
     {
         //Get owner of AP Request
-        $owner_user = \Sentry::find($aprequest->requester_user_id);
+        $owner_user = \Sentry::find($acp->requester_user_id);
         
         if($owner_user->activated)
         {
-            \Mail::queueOn('sqs-mail','emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$owner_user),function($message) use ($owner_user,$aprequest){
+            \Mail::queueOn('sqs-mail','emails.acpayable.pending',array('form'=>$acp,'user'=>$owner_user),function($message) use ($owner_user,$acp){
                 $message->from('swift@scott.mu','Scott Swift');
-                $message->subject(\Config::get('website.name').' - A&P Request Cancelled"'.$aprequest->name.'" ID: '.$aprequest->id);
+                $message->subject(\Config::get('website.name').' - Accounts Payable Cancelled"'.$acp->name.'" ID: '.$acp->id);
                 $message->to($owner_user->email);
             });            
         }
@@ -74,32 +74,32 @@ class NodeMail {
     {
         if(count($workflowActivity))
         {
-            $aprequest = $workflowActivity->workflowable;
-            $aprequest->load(['approvalHod'=>function($q){
-                return $q->pending();
+            $acp = $workflowActivity->workflowable;
+            $acp->load(['approvalHod'=>function($q){
+                return $q->where('approved','=',\SwiftApproval::PENDING);
             },'approvalHod.approver']);
             
 
-            if(count($aprequest->approvalHod))
+            if(count($acp->approvalHod))
             {
-                $aprequest->current_activity = \WorkflowActivity::progress($workflowActivity);
+                $acp->current_activity = \WorkflowActivity::progress($workflowActivity);
                 $mailData = [
-                            'name'=>$aprequest->name,
-                            'id'=>$aprequest->id,
-                            'current_activity'=>$aprequest->current_activity,
-                            'url'=>\Helper::generateUrl($aprequest,true),
+                            'name'=>$acp->name,
+                            'id'=>$acp->id,
+                            'current_activity'=>$acp->current_activity,
+                            'url'=>\Helper::generateUrl($acp,true),
                         ];
 
-                foreach($aprequest->approvalHod as $approval)
+                foreach($acp->approvalHod as $approval)
                 {
                     if($approval->approver->activated)
                     {
                         try
                         {
-                            //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$aprequest,'user'=>$u))->render());
-                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.aprequest.pending',array('aprequest'=>$mailData,'user'=>$approval->approver),function($message) use ($approval,$aprequest){
+                            //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$acp,'user'=>$u))->render());
+                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.acpayable.pending',array('form'=>$mailData,'user'=>$approval->approver),function($message) use ($approval,$acp){
                                 $message->from('swift@scott.mu','Scott Swift');
-                                $message->subject(\Config::get('website.name').' - Approval Pending on A&P Request "'.$aprequest->name.'" ID: '.$aprequest->id);
+                                $message->subject(\Config::get('website.name').' - Approval Pending on Accounts Payable "'.$acp->name.'" ID: '.$acp->id);
                                 $message->to($approval->approver->email);
                             });
                         }

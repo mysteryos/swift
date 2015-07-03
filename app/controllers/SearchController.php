@@ -45,35 +45,49 @@ class SearchController extends UserController {
                     $highlight = implode(" · ",$highlight);
                 }
 
-                switch($line['_type'])
+                $obj = $contextClass::find($line['_id']);
+
+                if($obj)
                 {
-                    case "supplier":
-                        $result[] = array('icon'=>'fa-truck',
-                                          'title'=> 'JDE Supplier',
-                                          'id' => $line['_id'],
-                                          'value'=>$line['_source'][$line['_type']]['name']." (Code: ".$line['_id'].")",
-                                          'url'=>Helper::generateUrl(JdeSupplierMaster::whereSupplierCode($line['_id'])->get()),
-                                          'highlight'=>$highlight);
-                        break;
-                    case "product-returns":
-                        $contextClass = \Config::get('context.'.$line['_type']);
-                        $result[] = array('icon'=>(new $contextClass)->getIcon(),
-                                          'title'=> (new $contextClass)->readableName,
-                                          'id' => $line['_id'],
-                                          'value'=>$line['_source'][$line['_type']]['name'],
-                                          'url'=>Helper::generateUrl($contextClass::find($line['_id'])),
-                                          'highlight'=>$highlight);
-                        break;
-                    default:
-                        //order-tracking, acpayable, aprequest
-                        $contextClass = \Config::get('context.'.$line['_type']);
-                        $result[] = array('icon'=>(new $contextClass)->getIcon(),
-                                          'title'=> (new $contextClass)->readableName,
-                                          'id' => $line['_id'],
-                                          'value'=>$line['_source'][$line['_type']]['name'],
-                                          'url'=>Helper::generateUrl($contextClass::find($line['_id'])),
-                                          'highlight'=>$highlight);
-                        break;
+                    switch($line['_type'])
+                    {
+                        case "supplier":
+                            $result[] = array('icon'=>'fa-truck',
+                                              'title'=> 'JDE Supplier',
+                                              'id' => $line['_id'],
+                                              'value'=>$line['_source'][$line['_type']]['name']." (Code: ".$line['_id'].")",
+                                              'url'=>Helper::generateUrl(JdeSupplierMaster::whereSupplierCode($line['_id'])->get()),
+                                              'highlight'=>$highlight);
+                            break;
+                        case "product-returns":
+                            $contextClass = \Config::get('context.'.$line['_type']);
+                            $result[] = array('icon'=>(new $contextClass)->getIcon(),
+                                              'title'=> (new $contextClass)->readableName,
+                                              'id' => $line['_id'],
+                                              'value'=>$obj->name,
+                                              'url'=>Helper::generateUrl($contextClass::find($line['_id'])),
+                                              'highlight'=>$highlight);
+                            break;
+                        case "acpayable":
+                            $contextClass = \Config::get('context.'.$line['_type']);
+                            $result[] = array('icon'=>(new $contextClass)->getIcon(),
+                                              'title'=> (new $contextClass)->readableName,
+                                              'id' => $line['_id'],
+                                              'value'=>$obj->name,
+                                              'url'=>\Helper::generateUrl($contextClass::find($line['_id'])),
+                                              'highlight'=>$highlight);
+                            break;
+                        default:
+                            //order-tracking, acpayable, aprequest
+                            $contextClass = \Config::get('context.'.$line['_type']);
+                            $result[] = array('icon'=>(new $contextClass)->getIcon(),
+                                              'title'=> (new $contextClass)->readableName,
+                                              'id' => $line['_id'],
+                                              'value'=>$line['_source'][$line['_type']]['name'],
+                                              'url'=>\Helper::generateUrl($contextClass::find($line['_id'])),
+                                              'highlight'=>$highlight);
+                            break;
+                    }
                 }
 
             }

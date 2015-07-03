@@ -73,7 +73,7 @@ class SwiftPR extends Eloquent {
     public $esInfoContext = "product-returns";
     //Main Document
     public $esMain = true;
-    public $esRemove = ['owner_user_id','type'];
+    public $esRemove = ['owner_user_id','type','name'];
     
     
     /*

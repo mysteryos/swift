@@ -159,13 +159,12 @@ Class NodeDefinitionJoin {
 //            }
             
 
-            $amountDue = $acp->invoice->due_amount;
-            $amountPaid = \SwiftACPPayment::sumTotalAmountPaid($acp->id);
+            $amountOpen = $acp->invoice->open_amount;
 
             /*
              * Amount is still due
              */
-            if(round($amountPaid,0) < round($amountDue,0))
+            if(intval($amountOpen) !== 0)
             {
                 //Create new pending approval for payment
                 $approval = new \SwiftApproval([
@@ -194,13 +193,12 @@ Class NodeDefinitionJoin {
 //                }
 //            }
 
-            $amountDue = $acp->invoice->due_amount;
-            $amountPaid = \SwiftACPPayment::sumTotalAmountPaid($acp->id);
+            $amountOpen = $acp->invoice->open_amount;
 
             /*
              * No amount due
              */
-            if(round($amountPaid,0) >= round($amountDue,0))
+            if(intval($amountOpen)===0)
             {
                 return true;
             }

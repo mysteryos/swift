@@ -208,9 +208,9 @@ class JdeReconcialiation {
             $mapping = [
                 'number' => 'vinv',
                 'date'  => 'divj',
-                'due_amount' => 'ag',
                 'currency_code' => 'crcd',
-                'gl_code' => 'glc'
+                'gl_code' => 'glc',
+                'due_date' => 'ddj'
             ];
 
             foreach($mapping as $col => $jdeCol)
@@ -224,6 +224,14 @@ class JdeReconcialiation {
                     $pv->invoice->$col = $jdePV->$jdeCol;
                 }
             }
+
+            //Total Amounts
+
+            $dueAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)->groupBy('DOC')->sum('ag');
+            $pv->invoice->due_amount = $dueAmountTotal;
+
+            $openAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)->groupBy('DOC')->sum('aap');
+            $pv->invoice->open_amount = $dueAmountTotal;
 
             return $pv->invoice->save();
         }

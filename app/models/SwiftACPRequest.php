@@ -170,29 +170,7 @@ class SwiftACPRequest extends Eloquent
     {
         if($this->invoice)
         {
-            if(count($this->payment))
-            {
-                $amountDue = \SwiftACPPayment::sumTotalAmountPaid($this->id);
-                if($this->invoice->due_amount <= 0)
-                {
-                    return 0;
-                }
-                else
-                {
-                    if($this->invoice->due_amount-$amountDue > 0)
-                    {
-                        return $this->invoice->due_amount-$amountDue;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                return $this->invoice->due_amount;
-            }
+            return $this->invoice->due_amount;
         }
         else
         {

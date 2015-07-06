@@ -31,7 +31,7 @@ class SwiftACPInvoice extends Eloquent
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('date_received','date','due_date','due_amount','currency_code','gl_code');
+    protected $keepRevisionOf = array('date_received','date','due_date','due_amount','currency_code','gl_code','open_amount');
     
     protected $revisionFormattedFieldNames = array(
         'id' => 'ID',
@@ -40,7 +40,8 @@ class SwiftACPInvoice extends Eloquent
         'due_date' => 'Date Due',
         'due_amount' => 'Amount Due',
         'currency_code' => 'Currency',
-        'gl_code' => 'GL Code'
+        'gl_code' => 'GL Code',
+        'open_amount' => 'Open Amount'
     );
     
     public $saveCreateRevision = true;
@@ -56,7 +57,7 @@ class SwiftACPInvoice extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "invoice";
-    public $esRemove = ["acp_id","due_amount_formatted"];
+    public $esRemove = ["acp_id","due_amount_formatted",'open_amount_formatted'];
 
     public function esGetParent()
     {
@@ -111,6 +112,16 @@ class SwiftACPInvoice extends Eloquent
         }
 
         return number_format($this->due_amount);
+    }
+
+    public function getOpenAmountFormattedAttribute()
+    {
+        if($this->currency)
+        {
+            return $this->currency->code." ".number_format($this->open_amount);
+        }
+
+        return number_format($this->open_amount);
     }
     
     /*

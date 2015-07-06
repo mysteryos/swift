@@ -1640,13 +1640,10 @@ class AccountsPayableController extends UserController {
                 case "gl_code":
                     break;
                 case "due_amount":
+                case "open_amount":
                     if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')))
                     {
                         return \Response::make('Please enter a numeric value.',400);
-                    }
-                    if((is_numeric(\Input::get('value')) && (int)\Input::get('value') <= 0) || Input::get('value')==="")
-                    {
-                        return \Response::make('Please enter a valid amount',400);
                     }
                     break;
                 case "currency_code":

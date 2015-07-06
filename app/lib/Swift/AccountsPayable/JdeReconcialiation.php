@@ -70,26 +70,15 @@ class JdeReconcialiation {
         }
 
         //Payment voucher number not found in database
-        $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)->first();
+        $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)
+                ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
+                ->first();
         if(!$jdePV)
         {
             $pv->validated_msg = "Payment Voucher Number not found in JDE Database";
             $pv->validated = \SwiftACPPaymentVoucher::VALIDATION_ERROR;
             $pv->save();
             return false;
-        }
-
-        //Billable Company MisMatch
-
-        if($jdePV->kco !==  $pv->acp->billable_company_code)
-        {
-            $pv->load('acp');
-            $comment = new \SwiftComment([
-                'comment' => "Billable company code mismatch: {$jdePV->kco} for PV no: {$pv->number}",
-                'user_id' => \Sentry::getUser()->id
-            ]);
-
-            $pv->acp->comments()->save($comment);
         }
 
         //Supplier Code
@@ -201,7 +190,8 @@ class JdeReconcialiation {
      */
     public static function autofillPaymentVoucher(\SwiftACPPaymentVoucher &$pv)
     {
-        $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)->first();
+        $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)
+                 ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')->first();
         if($jdePV && $pv->validated === \SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
         {
             $pv->load('invoice');
@@ -227,10 +217,16 @@ class JdeReconcialiation {
 
             //Total Amounts
 
-            $dueAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)->groupBy('DOC')->sum('ag');
+            $dueAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)
+                                ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
+                                ->groupBy('DOC')
+                                ->sum('ag');
             $pv->invoice->due_amount = $dueAmountTotal;
 
-            $openAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)->groupBy('DOC')->sum('aap');
+            $openAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)
+                                ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
+                                ->groupBy('DOC')
+                                ->sum('aap');
             $pv->invoice->open_amount = $dueAmountTotal;
 
             return $pv->invoice->save();

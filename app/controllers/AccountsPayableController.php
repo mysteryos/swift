@@ -1294,6 +1294,8 @@ class AccountsPayableController extends UserController {
                         $this->data['approval_hod'][$h->id] = $h->first_name." ".$h->last_name;
                     }
                 }
+
+                asort($this->data['approval_hod']);
             }
 
             //Is Related

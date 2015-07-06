@@ -102,28 +102,6 @@ class SwiftACPPaymentVoucher extends Eloquent
     {
         return $this->hasOne('SwiftACPInvoice','acp_id','acp_id');
     }
-
-    /*
-     * Checks if amount is still due
-     *
-     * @return boolean
-     */
-    public function jdeAmountDue()
-    {
-        if($this->validated === self::VALIDATION_COMPLETE)
-        {
-            $sumAmountDue = \JdePaymentVoucher::where('doc','=',number)
-                            ->groupBy('doc')
-                            ->sum('aap');
-
-            if(round($sumAmountDue,0) === 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
     
     /*
      * Query

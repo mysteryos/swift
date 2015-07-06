@@ -17,10 +17,18 @@ class NodeMail {
             {
                 $acp = $workflowActivity->workflowable;
                 $acp->current_activity = \WorkflowActivity::progress($workflowActivity);
+
+                //HOD Approval
                 if(isset($acp->current_activity['definition_name']) && in_array('acp_hodapproval',$acp->current_activity['definition_name']))
                 {
-                    //If HOD Approval Node
-                    self::sendApprovalMail($workflowActivity, $permissions);
+                    self::sendApprovalMail($workflowActivity);
+                    return;
+                }
+
+                //Cheque Sign: Accounting Dept
+                if(isset($acp->current_activity['definition_name']) && in_array('acp_cheque_sign',$acp->current_activity['definition_name']))
+                {
+                    self::sendChequeSign($workflowActivity);
                     return;
                 }
 
@@ -70,15 +78,57 @@ class NodeMail {
         }
     }
 
-    public static function sendApprovalMail($workflowActivity,$permissions)
+    public static function sendApprovalMail($workflowActivity)
     {
         if(count($workflowActivity))
         {
             $acp = $workflowActivity->workflowable;
-            $acp->load(['approvalHod'=>function($q){
+            $acp->load(['payment'=>function($q){
+                return $q->where('status','<',\SwiftACPPayment::STATUS_SIGNED)
+                        ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE);
+            },'payment.chequeSignator']);
+
+            if(count($acp->payment))
+            {
+                $acp->current_activity = \WorkflowActivity::progress($workflowActivity);
+                $mailData = [
+                            'name'=>$acp->name,
+                            'id'=>$acp->id,
+                            'current_activity'=>$acp->current_activity,
+                            'url'=>\Helper::generateUrl($acp,true),
+                        ];
+
+                foreach($acp->payment as $payment)
+                {
+                    if($payment->chequeSignator && $payment->chequeSignator->activated)
+                    {
+                        try
+                        {
+                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.acpayable.pending',array('form'=>$mailData,'user'=>$payment->approver),function($message) use ($payment,$acp){
+                                $message->from('swift@scott.mu','Scott Swift');
+                                $message->subject(\Config::get('website.name').' - Cheque Sign Pending on Accounts Payable "'.$acp->name.'" ID: '.$acp->id);
+                                $message->to($payment->approver->email);
+                            });
+                        }
+                        catch (Exception $e)
+                        {
+                            \Log::error(get_class().': Cheque Sign Mail sending failed with message: '.$e->getMessage().'\n Variable Dump: '.var_dump(get_defined_vars()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function sendChequeSign($workflowActivity)
+    {
+        if(count($workflowActivity))
+        {
+            $acp = $workflowActivity->workflowable;
+            $acp->load(['payment'=>function($q){
                 return $q->where('approved','=',\SwiftApproval::PENDING);
             },'approvalHod.approver']);
-            
+
 
             if(count($acp->approvalHod))
             {

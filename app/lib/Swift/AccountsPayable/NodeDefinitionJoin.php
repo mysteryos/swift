@@ -147,17 +147,6 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            /*
-             * If we have a payment voucher, we check amount on JDE records
-             */
-//            if($acp->paymentVoucher)
-//            {
-//                if($acp->paymentVoucher->jdeAmountDue())
-//                {
-//                    return true;
-//                }
-//            }
-            
 
             $amountOpen = $acp->invoice->open_amount;
 
@@ -182,16 +171,6 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            /*
-             * If we have a payment voucher, we check amount on JDE records
-             */
-//            if($acp->paymentVoucher)
-//            {
-//                if($acp->paymentVoucher->jdeAmountDue())
-//                {
-//                    return true;
-//                }
-//            }
 
             $amountOpen = $acp->invoice->open_amount;
 

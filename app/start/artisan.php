@@ -22,3 +22,6 @@ Artisan::add(new commission);
 Artisan::add(new chclberth);
 Artisan::add(new jdetablefix);
 Artisan::add(new jdeporeconcialiation);
+Artisan::add(new acpcheckpayment);
+Artisan::add(new acppayjde);
+Artisan::add(new acppvjde);

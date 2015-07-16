@@ -17,7 +17,7 @@ class acppvjde extends ScheduledCommand {
 	 *
 	 * @var string
 	 */
-	protected $name = 'acppvjde:start';
+	protected $name = 'acp:pv';
 
 	/**
 	 * The console command description.
@@ -42,7 +42,7 @@ class acppvjde extends ScheduledCommand {
 
     public function getName()
     {
-        return $this->$name;
+        return $this->name;
     }
 
     public function isEnabled()
@@ -57,21 +57,30 @@ class acppvjde extends ScheduledCommand {
 	 */
 	public function fire()
 	{
-        /*
-         * Get all payment voucher that aren't validated
-         */
-
-        $paymentVoucherList = \SwiftACPPaymentVoucher::with('acp','acp.invoice')
-                                ->where('validated','!=',\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
-                                ->get();
-
-        foreach($paymentVoucherList as $pv)
+        try
         {
-            if(\Swift\AccountsPayable\JdeReconcialiation::reconcialiatePaymentVoucher($pv))
+            /*
+             * Get all payment voucher that aren't validated
+             */
+
+            $paymentVoucherList = \SwiftACPPaymentVoucher::with('acp','acp.invoice')
+                                    ->where('validated','!=',\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                                    ->get();
+
+            foreach($paymentVoucherList as $pv)
             {
-                \Swift\AccountsPayable\JdeReconcialiation::autofillPaymentVoucher($pv);
+                if(\Swift\AccountsPayable\JdeReconcialiation::reconcialiatePaymentVoucher($pv))
+                {
+                    \Swift\AccountsPayable\JdeReconcialiation::autofillPaymentVoucher($pv);
+                }
             }
+        } 
+        catch (Exception $ex)
+        {
+            $this->error($e->getMessage());
+            Log::error($e);
         }
+
         
     }
 
@@ -81,7 +90,7 @@ class acppvjde extends ScheduledCommand {
    public function schedule(Schedulable $scheduler)
    {
        //Every Day at 4a.m
-       return $scheduler->daily()->hours(4)->minutes(0);
+       return $scheduler->daily()->hours(4);
    }
 
 	/**

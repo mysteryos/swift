@@ -36,7 +36,8 @@ class Helper
                 }
             }
         }
-
+        asort($chequesign_users);
+        
         return $chequesign_users;
     }
 }

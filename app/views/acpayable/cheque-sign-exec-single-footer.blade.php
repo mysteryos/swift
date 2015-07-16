@@ -1,5 +1,5 @@
             <tr>
-                <td colspan='2'><b>Total: </b><td>
+                <td colspan='3'><b>Total: </b><td>
                 <td>{{$pay->invoice->currency->code}} {{number_format($total)}}</td>
             </tr>
         </table>

@@ -17,7 +17,7 @@
                         @foreach($inprogress_important_responsible as $ori)
                             <tr>
                                 <td>
-                                    <p><a href="/aprequest/view/{{ Crypt::encrypt($ori->id) }}" class="pjax"><strong>{{ $ori->name." (ID: ".$ori->id.")" }}</strong></a> - <span class="{{ $ori->current_activity['status_class'] }}">{{ $ori->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($ori->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($ori->activity[0]->created_at))}}" data-livestamp="{{strtotime($ori->activity[0]->created_at)}}"></abbr></span></p>
+                                    <p><a href="/product-returns/view/{{ Crypt::encrypt($ori->id) }}" class="pjax"><strong>{{ $ori->name." (ID: ".$ori->id.")" }}</strong></a> - <span class="{{ $ori->current_activity['status_class'] }}">{{ $ori->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($ori->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($ori->activity[0]->created_at))}}" data-livestamp="{{strtotime($ori->activity[0]->created_at)}}"></abbr></span></p>
                                 </td>
                             </tr>            
                         @endforeach
@@ -43,7 +43,7 @@
                         @foreach($inprogress_responsible as $or)
                             <tr>
                                 <td>
-                                    <p><a href="/aprequest/view/{{ Crypt::encrypt($or->id) }}" class="pjax"><strong>{{ $or->name." (ID: ".$or->id.")" }}</strong></a> - <span class="{{ $or->current_activity['status_class'] }}">{{ $or->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($or->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($or->activity[0]->created_at))}}" data-livestamp="{{strtotime($or->activity[0]->created_at)}}"></abbr></span></p>
+                                    <p><a href="/product-returns/view/{{ Crypt::encrypt($or->id) }}" class="pjax"><strong>{{ $or->name." (ID: ".$or->id.")" }}</strong></a> - <span class="{{ $or->current_activity['status_class'] }}">{{ $or->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($or->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($or->activity[0]->created_at))}}" data-livestamp="{{strtotime($or->activity[0]->created_at)}}"></abbr></span></p>
                                 </td>
                             </tr>            
                         @endforeach
@@ -69,7 +69,7 @@
                         @foreach($inprogress_important as $oi)
                             <tr>
                                 <td>
-                                    <p><a href="/aprequest/view/{{ Crypt::encrypt($oi->id) }}" class="pjax"><strong>{{ $oi->name." (ID: ".$oi->id.")" }}</strong></a> - <span class="{{ $oi->current_activity['status_class'] }}">{{ $oi->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($oi->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($oi->activity[0]->created_at))}}" data-livestamp="{{strtotime($oi->activity[0]->created_at)}}"></abbr></span></p>
+                                    <p><a href="/product-returns/view/{{ Crypt::encrypt($oi->id) }}" class="pjax"><strong>{{ $oi->name." (ID: ".$oi->id.")" }}</strong></a> - <span class="{{ $oi->current_activity['status_class'] }}">{{ $oi->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($oi->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($oi->activity[0]->created_at))}}" data-livestamp="{{strtotime($oi->activity[0]->created_at)}}"></abbr></span></p>
                                 </td>
                             </tr>            
                         @endforeach
@@ -95,7 +95,7 @@
                         @foreach($inprogress as $o)
                             <tr>
                                 <td>
-                                    <p><a href="/aprequest/view/{{ Crypt::encrypt($o->id) }}" class="pjax"><strong>{{ $o->name." (ID: ".$o->id.")" }}</strong></a> - <span class="{{ $o->current_activity['status_class'] }}">{{ $o->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($o->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($o->activity[0]->created_at))}}" data-livestamp="{{strtotime($o->activity[0]->created_at)}}"></abbr></span></p>
+                                    <p><a href="/product-returns/view/{{ Crypt::encrypt($o->id) }}" class="pjax"><strong>{{ $o->name." (ID: ".$o->id.")" }}</strong></a> - <span class="{{ $o->current_activity['status_class'] }}">{{ $o->current_activity['label'] }}</span> - Last update by <?php echo Helper::getUserName($o->activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($o->activity[0]->created_at))}}" data-livestamp="{{strtotime($o->activity[0]->created_at)}}"></abbr></span></p>
                                 </td>
                             </tr>            
                         @endforeach  

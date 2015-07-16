@@ -32,7 +32,7 @@ class NodeMail {
                     return;
                 }
 
-                //IfNormal Node
+                //If Normal Node
                 $mailData = [
                         'name'=>$acp->name,
                         'id'=>$acp->id,

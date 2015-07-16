@@ -95,31 +95,33 @@
                         </div>
                     </div>
                 </div>
-                <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="ap-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/aprequest/pending-nodes">
-                    <header>
-                            <span class="widget-icon"> <i class="fa fa-refresh"></i> </span>
-                            <h2>Pending Tasks (Refreshed every 30 mins)</h2>
-                    </header>
-                    <div class="no-padding">
-                            <div class="widget-body widget-body-compressed">
-                                <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
-                            </div>
+                @if($isAdmin)
+                    <!-- Widget ID (each widget will need unique ID)-->
+                    <div class="jarviswidget" id="ap-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/aprequest/pending-nodes">
+                        <header>
+                                <span class="widget-icon"> <i class="fa fa-refresh"></i> </span>
+                                <h2>Pending Tasks (Refreshed every 30 mins)</h2>
+                        </header>
+                        <div class="no-padding">
+                                <div class="widget-body widget-body-compressed">
+                                    <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
+                                </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="ap-overview-latetasks" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/aprequest/late-nodes">
-                    <header>
-                            <span class="widget-icon"> <i class="fa fa-bell"></i> </span>
-                            <h2>Late Tasks (Refreshed every 30 mins)</h2>
-                    </header>
-                    <div class="no-padding">
-                            <div class="widget-body widget-body-compressed">
-                                <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
-                            </div>
+                    <!-- Widget ID (each widget will need unique ID)-->
+                    <div class="jarviswidget" id="ap-overview-latetasks" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/aprequest/late-nodes">
+                        <header>
+                                <span class="widget-icon"> <i class="fa fa-bell"></i> </span>
+                                <h2>Late Tasks (Refreshed every 30 mins)</h2>
+                        </header>
+                        <div class="no-padding">
+                                <div class="widget-body widget-body-compressed">
+                                    <p class="text-center h3"><i class="fa fa-lg fa-spin fa-refresh"></i> Loading</p>
+                                </div>
+                        </div>
                     </div>
-                </div>
+                @endif
             </article>
             <!-- NEW COL END -->
         </div>

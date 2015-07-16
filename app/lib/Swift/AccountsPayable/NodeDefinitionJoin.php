@@ -123,10 +123,16 @@ Class NodeDefinitionJoin {
         return false;
     }
 
-    public static function chequesignToChequesignbyexec($nodeActivity)
+    public static function chequesignToAssignsignbyexec($nodeActivity)
     {
         return true;
     }
+    
+    public static function assignsignbyexecToChequesignbyexec($nodeActivity)
+    {
+        return true;
+    }
+
     public static function chequesignbyexecToChequeready($nodeActivity)
     {
         return true;

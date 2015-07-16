@@ -17,7 +17,7 @@ class acpcheckpayment extends ScheduledCommand {
 	 *
 	 * @var string
 	 */
-	protected $name = 'acpcheckpayment:start';
+	protected $name = 'acp:checkpay';
 
 	/**
 	 * The console command description.
@@ -42,7 +42,7 @@ class acpcheckpayment extends ScheduledCommand {
 
     public function getName()
     {
-        return $this->$name;
+        return $this->name;
     }
 
     public function isEnabled()

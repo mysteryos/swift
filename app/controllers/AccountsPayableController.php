@@ -770,7 +770,7 @@ class AccountsPayableController extends UserController {
         $query = \SwiftACPPayment::query();
 
         //With
-        $query->with(['acp','invoice','acp.supplier','acp.company','acp.document','acp.approvalHod']);
+        $query->with(['acp','invoice','acp.supplier','acp.company','acp.document','acp.approvalHod','acp.paymentVoucher']);
 
         //Filter by workflow, at payment voucher
 
@@ -809,18 +809,18 @@ class AccountsPayableController extends UserController {
          */
 
         $this->filter['filter_start_date'] = ['name'=>'Start Date',
-                                                'value' => Input::get('filter_start_date'),
-                                                'enabled' => Input::has('filter_start_date')
+                                                'value' => \Input::get('filter_start_date'),
+                                                'enabled' => \Input::has('filter_start_date')
                                             ];
 
         $this->filter['filter_end_date'] = ['name'=>'End Date',
-                                                'value' => Input::get('filter_end_date'),
-                                                'enabled' => Input::has('filter_end_date')
+                                                'value' => \Input::get('filter_end_date'),
+                                                'enabled' => \Input::has('filter_end_date')
                                             ];
 
         $this->filter['filter_supplier'] = ['name'=>'Supplier',
-                                            'value' => Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
-                                            'enabled' => Input::has('filter_supplier')
+                                            'value' => \Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
+                                            'enabled' => \Input::has('filter_supplier')
                                             ];
 
         $this->data['filterActive'] = (boolean)count(
@@ -1322,6 +1322,9 @@ class AccountsPayableController extends UserController {
             $this->data['chequesign_users'] = json_encode(\Helper::jsonobject_encode(
                                                 \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignPermission])
                                             ));
+            $this->data['chequesign_exec_users'] = json_encode(\Helper::jsonobject_encode(
+                                                        \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignExecPermission])
+                                                    ));
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
             $this->data['flag_important'] = \Flag::isImportant($acp);
             $this->data['flag_starred'] = \Flag::isStarred($acp);
@@ -1367,6 +1370,12 @@ class AccountsPayableController extends UserController {
                                 if(isset($d->data->addCreditNote))
                                 {
                                     $this->data['addCreditNote'] = true;
+                                    break;
+                                }
+
+                                if(isset($d->data->signCheque))
+                                {
+                                    $this->data['signCheque'] = true;
                                     break;
                                 }
 
@@ -1727,6 +1736,7 @@ class AccountsPayableController extends UserController {
                 case "cheque_dispatch_comment":
                     break;
                 case "cheque_signator_id":
+                case "cheque_exec_signator_id":
                     if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')) && (int)\Input::get('value') <= 0)
                     {
                         return \Response::make("Please select a valid user",400);
@@ -3156,6 +3166,43 @@ class AccountsPayableController extends UserController {
         else
         {
             return \Response::make("Cannot find form: context undefined",500);
+        }
+    }
+
+    /*
+     * View Payment
+     * @param integer $payment_id
+     */
+    public function getViewPayment($payment_id)
+    {
+        //Check Access
+        if($this->canSignChequeExec || $this->isAdmin || $this->isAccountingDept)
+        {
+            if(is_numeric($payment_id))
+            {
+                $payment = \JdePaymentHeader::where('docm','=',$payment_id)
+                            ->with(['supplier','detail'=>function($q){
+                                return $q->orderBy('rc5','ASC');
+                            }])->first();
+                
+                if($payment)
+                {
+                    echo \View::make('jdepayment.payment-single',['pay'=>$payment])->render();
+                    return;
+                }
+                else
+                {
+                    return \Response::make('<div class="well"><h3>Payment record has not been found. Please check again tomorrow.</h3></div>');
+                }
+            }
+            else
+            {
+                return \Response::make('<div class="well"><h3>Payment number should be numeric</h3></div>');
+            }
+        }
+        else
+        {
+            return \Response::make('<div class="well"><h3>You don\'t have access to this feature.</h3></div>');
         }
     }
 }

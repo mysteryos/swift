@@ -58,11 +58,13 @@ class SwiftAPProduct extends Eloquent {
     const RC_CONTRIBUTION = 5;
     const RC_LISTING = 6;
     const RC_COMPLAINT = 7;
+    const RC_PLACEMENT = 8;
     
     public static $reason = array(self::RC_CONTRIBUTION => 'Contribution',
                                   self::RC_COMPLAINT => 'Customer Complaint',
                                   self::RC_EVENT => 'Event',
                                   self::RC_LISTING => 'Listing',
+                                  self::RC_PLACEMENT => 'Placement',
                                   self::RC_SPONSOR => 'Sponsorship',
                                   self::RC_TESTING => 'Testing/Tasting',        
                                   self::RC_TRAINING => 'Training');

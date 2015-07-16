@@ -7,7 +7,7 @@
             </div>
         </div>
         <div class="form-group col-md-6">
-            <label class="col-md-4 control-label">Date Issued</label>
+            <label class="col-md-4 control-label">Invoice Date</label>
             <div class="col-md-8">
                 <div class="input-group">
                     <a href="#" @if(isset($i->id)) {{ "id=\"invoice_date_".$i->id."\"" }} @endif class="editable invoice-editable @if(isset($dummy) && $dummy == true) dummy @endif @if(!$owner && !$isAdmin && !$isAccountingDept) editable-disabled @endif" data-type="date" data-viewformat="dd/mm/yyyy" data-name="date" data-date="@if(isset($i->date)){{$i->date->format('d/m/Y')}}@endif" data-pk="{{ $i->encrypted_id or 0 }}" data-context="invoice" data-url="/{{ $rootURL }}/invoice/{{ $form->encrypted_id }}">@if(isset($i->date)){{$i->date->format('d/m/Y')}}@endif</a>

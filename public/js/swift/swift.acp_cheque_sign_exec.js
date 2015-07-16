@@ -7,6 +7,19 @@
     var $noDoc = $('#no-doc');
     var $docBrowser = $('#doc-browser');
     
+    $('.colobox-ajax-custom').on('click',function(){
+        $.colorbox({
+            href:$(this).attr('href'),
+            open:true,
+            maxHeight:"100%",
+            maxWidth:"100%",
+            initialWidth:"64px",
+            initialHeight:"84px",
+            closeButton:false,
+            transition:"fade"
+        });        
+    });
+    
     //var search
     $('#search-pv').keyup(function(e){
         //ESC Key

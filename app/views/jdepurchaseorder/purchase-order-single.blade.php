@@ -68,7 +68,7 @@
         <div class="row row-space-top-1">
             <div class="col-xs-12 h4">
                 <b>Ship To:</b>&nbsp;<span>{{$form->shipto->getReadableName()}}, {{$form->shipto->Supplier_Add1}}, {{$form->shipto->Supplier_City}}</span>
-            </div>
+    </div>
         </div>
     </div>
     <div class="row row-space-top-2">

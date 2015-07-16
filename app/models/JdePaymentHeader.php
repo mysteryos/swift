@@ -17,9 +17,9 @@ class JdePaymentHeader extends Eloquent {
     /*
      * Accessors
      */
-    public function getBankAccountNoAttribute()
+    public function getBankAccountNoAttribute($value)
     {
-        return trim($this->bank_account_no);
+        return trim($value);
     }
 
     /*
@@ -33,6 +33,11 @@ class JdePaymentHeader extends Eloquent {
     public function currency()
     {
         return $this->belongsTo('Currency','crrd');
+    }
+
+    public function supplier()
+    {
+        return $this->hasOne('JdeSupplierMaster','Supplier_Code','pye');
     }
 
     

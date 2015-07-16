@@ -247,6 +247,42 @@ Class NodeDefinition {
 
         return $returnReason ? $returnReasonList : false;
     }
+
+    public static function acpChequeAssignExec($nodeActivity,$returnReason=false)
+    {
+        $returnReasonList = array();
+
+        $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+
+        if($acp)
+        {
+            $chequeNotSigned = $acp
+                                ->payment()
+                                ->whereNotNull('status')
+                                ->where('status','<',\SwiftACPPayment::STATUS_SIGNED_BY_EXEC)
+                                ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE)
+                                ->get();
+
+            if(count($chequeNotSigned) != 0)
+            {
+                foreach($chequeNotSigned as $c)
+                {
+                    if($c->cheque_exec_signator_id === null)
+                    {
+                        $returnReasonList['cheque_exec_signator_absent'] = "Please select an executive to sign the cheque on Payment ID: ".$c->id;
+                        break;
+                    }
+                }
+            }
+
+            if(count($returnReasonList) === 0 && !$returnReason)
+            {
+                return true;
+            }
+        }
+
+        return $returnReason ? $returnReasonList : false;
+    }
     
     public static function acpChequeSignByExec($nodeActivity,$returnReason=false)
     {

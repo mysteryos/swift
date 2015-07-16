@@ -34,20 +34,20 @@ class sctjdeProducts extends ScheduledCommand {
 	public function __construct()
 	{
 		parent::__construct();
-                if ( ! Sentry::check())
-                {
-                    Helper::loginSysUser();
-                }
+        if ( ! Sentry::check())
+        {
+            Helper::loginSysUser();
+        }
 	}
         
-        public function getName()
-        {
-            return $this->name;
-        }
-        
-        public function isEnabled() {
-            return true;
-        }
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function isEnabled() {
+        return true;
+    }
 
 	/**
 	 * Execute the console command.
@@ -56,47 +56,47 @@ class sctjdeProducts extends ScheduledCommand {
 	 */
 	public function fire()
 	{
-            $limit = 10;
-            try
+        $limit = 10;
+        try
+        {
+            //Parse products, 10 at a time
+            $productCount = \JdeProduct::count();
+            for($i = 0;$i<=$productCount; $i=$i+$limit)
             {
-                //Parse products, 10 at a time
-                $productCount = \JdeProduct::count();
-                for($i = 0;$i<=$productCount; $i=$i+$limit)
+                $products = \JdeProduct::take($limit)->offset($i)->get();
+                foreach($products as $p)
                 {
-                    $products = \JdeProduct::take($limit)->offset($i)->get();
-                    foreach($products as $p)
+                    //Get last sales item for product
+                    $sales = \JdeSales::getProductLatestCostPrice($p->ITM);
+                    if($sales)
                     {
-                        //Get last sales item for product
-                        $sales = \JdeSales::getProductLatestCostPrice($p->ITM);
-                        if($sales)
-                        {
-                           $cost = round(abs($sales->ECST/$sales->SOQS),4);
-                           $p->cost_price = $cost;
-                           $p->save();
-                           $this->info("Save: ".trim($p->DSC1)." - Rs. ".$cost);
-                        }
-                        else
-                        {
-                            $this->info("Skipped: ".trim($p->DSC1));
-                        }
+                       $cost = round(abs($sales->ECST/$sales->SOQS),4);
+                       $p->cost_price = $cost;
+                       $p->save();
+                       $this->info("Save: ".trim($p->DSC1)." - Rs. ".$cost);
+                    }
+                    else
+                    {
+                        $this->info("Skipped: ".trim($p->DSC1));
                     }
                 }
             }
-            catch(Exception $e)
-            {
-                $this->error($e->getMessage());
-                Log::error($e);
-            }
+        }
+        catch(Exception $e)
+        {
+            $this->error($e->getMessage());
+            Log::error($e);
+        }
 	}
         
-        /*
-         * Add Schedule
-         */
-        public function schedule(Schedulable $scheduler)
-        {
-            //Every Day at 4a.m
-            return $scheduler->weekly()->hours(4);
-        }        
+    /*
+     * Add Schedule
+     */
+    public function schedule(Schedulable $scheduler)
+    {
+        //Every Day at 4a.m
+        return $scheduler->weekly()->hours(4);
+    }        
         
 	/**
 	 * Get the console command arguments.

@@ -71,6 +71,12 @@ class WorkflowActivity {
         {
             throw new \RuntimeException("Data type 'object' expected.");
         }
+
+        //Control Updates of workflows
+        if(!\Config::get('website.workflow_update',true))
+        {
+            return false;
+        }
         
         //Go Fetch!
         $workflow = $relation_object->workflow()->first();
@@ -179,6 +185,12 @@ class WorkflowActivity {
      */
     public function updateTask($job,$data)
     {
+        //Control Updates of workflows
+        if(!\Config::get('website.workflow_update',true))
+        {
+            return false;
+        }
+
         if(isset($data['user_id']))
         {
             $user = Sentry::findUserById($data['user_id']);

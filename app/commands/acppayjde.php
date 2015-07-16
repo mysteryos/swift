@@ -17,7 +17,7 @@ class acppayjde extends ScheduledCommand {
 	 *
 	 * @var string
 	 */
-	protected $name = 'acppayjde:start';
+	protected $name = 'acp:pay';
 
 	/**
 	 * The console command description.
@@ -42,7 +42,7 @@ class acppayjde extends ScheduledCommand {
 
     public function getName()
     {
-        return $this->$name;
+        return $this->name;
     }
 
     public function isEnabled()

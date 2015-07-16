@@ -70,9 +70,10 @@ class JdeReconcialiation {
         }
 
         //Payment voucher number not found in database
-        $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)
+        $jdePV = \JdePaymentVoucher::where('doc','=',$pv->number)
                 ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
                 ->first();
+        
         if(!$jdePV)
         {
             $pv->validated_msg = "Payment Voucher Number not found in JDE Database";
@@ -199,7 +200,6 @@ class JdeReconcialiation {
                 'number' => 'vinv',
                 'date'  => 'divj',
                 'currency_code' => 'crcd',
-                'gl_code' => 'glc',
                 'due_date' => 'ddj'
             ];
 

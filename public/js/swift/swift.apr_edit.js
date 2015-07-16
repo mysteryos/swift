@@ -282,6 +282,34 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         });
         return false;        
     });
+    
+    $('a.btn-force-update').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $this.attr('disabled','disabled');
+        $this.addClass('loading-animation');
+        $.ajax({
+            url: $this.attr('data-href'),
+            type: 'GET',
+            success:function(text)
+            {
+                $.smallBox({
+			title : "Workflow information",
+			content : text,
+			color : "#26A65B",
+			icon : "fa fa-check"
+		});
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');                
+            },
+            error:function(xhr, status, error)
+            {
+                $this.removeAttr('disabled');
+                $this.removeClass('loading-animation');
+                return xhr.responseText;
+            }
+        });
+    });    
 
     //Bind pusher channel & events
     pusherSubscribeCurrentPresenceChannel(true,true);

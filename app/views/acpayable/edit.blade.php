@@ -214,7 +214,7 @@
                     <header>
                         <span class="widget-icon"> <i class="fa fa-check"></i> </span>
                         <h2>Approval HOD</h2>
-                        @if($edit && $isAdmin)
+                        @if($edit)
                             <div class="widget-toolbar" role="menu">
                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                             </div>
@@ -271,7 +271,7 @@
                     </div>
                     <!-- end widget div -->
                 </div>
-                @if(!$edit || $currentUser->isSuperUser() || $savePaymentVoucher)
+                @if(!$edit || $currentUser->isSuperUser() || ($savePaymentVoucher || $signCheque || $publishAccounting || $checkPayment) || $isAdmin)
                 <div class="jarviswidget" id="acp-paymentvoucher" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file-archive-o"></i> </span>
@@ -295,9 +295,6 @@
                     </div>
                     <!-- end widget div -->
                 </div>
-                @endif
-
-                @if(!$edit || $currentUser->isSuperUser() || $publishAccounting)
                 <div class="jarviswidget" id="acp-payment" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-money"></i> </span>

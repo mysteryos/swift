@@ -13,9 +13,9 @@ class JdePaymentDetail extends Eloquent {
      * Accessors
      */
 
-    public function getCoAttribute()
+    public function getCoAttribute($value)
     {
-        return (int)$this->co;
+        return (int)$value;
     }
 
 

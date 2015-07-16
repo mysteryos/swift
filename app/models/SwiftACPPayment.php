@@ -15,7 +15,7 @@ class SwiftACPPayment extends Eloquent
 
     protected $table = "swift_acp_payment";
     
-    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id','currency_code'];
+    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id','cheque_exec_signator_id','currency_code'];
     
     protected $dates = ['deleted_at','date','validated_on'];
 
@@ -78,7 +78,7 @@ class SwiftACPPayment extends Eloquent
     
     protected $revisionEnabled = true;
     
-    protected $keepRevisionOf = array('status','type','date','amount','currency_code','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id');
+    protected $keepRevisionOf = array('status','type','date','amount','currency_code','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id','cheque_exec_signator_id');
     
     protected $revisionFormattedFieldNames = array(
         'id' => 'Id',
@@ -91,6 +91,7 @@ class SwiftACPPayment extends Eloquent
         'payment_number' => 'Payment Number',
         'batch_number' => 'Batch Number',
         'cheque_signator_id' => 'Cheque Signator',
+        'cheque_exec_signator_id' => 'Executive Cheque Signator',
         'currency_code' => 'Currency'
     );
     
@@ -107,7 +108,7 @@ class SwiftACPPayment extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "payment";
-    public $esRemove = ['cheque_dispatch_comment','acp_id','validated','validated_msg','cheque_signator_id'];
+    public $esRemove = ['cheque_dispatch_comment','acp_id','validated','validated_msg','cheque_signator_id','cheque_exec_signator_id'];
 
     public function esGetParent()
     {
@@ -167,6 +168,17 @@ class SwiftACPPayment extends Eloquent
     }
 
     public function getChequeSignatorIdRevisionAttribute($val)
+    {
+        if((int)$val > 0)
+        {
+            $user = \User::find($val);
+            return $user->first_name." ".$user->last_name;
+        }
+
+        return "";
+    }
+    
+    public function getChequeExecSignatorIdRevisionAttribute($val)
     {
         if((int)$val > 0)
         {

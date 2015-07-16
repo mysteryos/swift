@@ -40,8 +40,11 @@
                 </div>
             @else
                 <div class="panel-group smart-accordion-default">
-                    <?php $current_payment_number = 0;
-                        $total = $payments->first()->invoice->due_amount;
+                    <?php $current_payment_number = $total = 0;
+                        if($payments->first()->invoice)
+                        {
+                            $total = $payments->first()->invoice->due_amount;
+                        }
                         ?>
                         @foreach($payments as $pay)
                             <?php
@@ -56,7 +59,10 @@
                                     <?php
                                     }
                                     //Reset total
-                                    $total = $pay->invoice->due_amount;
+                                    if($pay->invoice)
+                                    {
+                                        $total = $pay->invoice->due_amount;
+                                    }
                                     ?>
                                     @include('acpayable.cheque-sign-exec-single-header')
                             <?php
@@ -64,7 +70,10 @@
                                 }
                                 else
                                 {
-                                    $total += $pay->invoice->due_amount;
+                                    if($pay->invoice)
+                                    {
+                                        $total += $pay->invoice->due_amount;
+                                    }
                                 }
                             ?>
                             @include('acpayable.cheque-sign-exec-single')

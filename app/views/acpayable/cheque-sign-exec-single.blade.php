@@ -43,4 +43,11 @@
                     <td>{{$pay->invoice->number}}</td>
                     <td>@if($pay->invoice->date){{$pay->invoice->date->format('d/m/Y')}}@endif</td>
                     <td>{{$pay->invoice->due_amount_formatted}}</td>
+                    <td>
+                        @foreach($pay->acp->approvalHod as $approval)
+                            @if($approval->approved === \SwiftApproval::APPROVED)
+                                {{\Swift\Avatar::getHTML($approval->approval_user_id,true)}}&nbsp;
+                            @endif
+                        @endforeach
+                    </td>
                 </tr>

@@ -409,12 +409,12 @@ class AccountsPayableController extends UserController {
     }
 
     /*
-     * Cheque Issue Utility Page
+     * Payment Issue Utility Page
      *
      * @param string $type
      * @param integer $page
      */
-    public function getChequeIssue($type='all',$page=1)
+    public function getPaymentIssue($type='all',$page=1)
     {
         if(!$this->isAccountingDept && !$this->isAdmin)
         {
@@ -684,6 +684,25 @@ class AccountsPayableController extends UserController {
         }
         $forms = $query->get();
 
+        foreach($forms as &$f)
+        {
+            if($f->invoice && $f->currency_code !== "")
+            {
+                if($f->currency_code === "MUR")
+                {
+                    $f->payment_type = \SwiftACPPayment::TYPE_CHEQUE;
+                    continue;
+                }
+                else
+                {
+                    $f->payment_type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                    continue;
+                }
+            }
+            
+            $f->payment_type = -1;
+        }
+
         $activeSupplierResult = $activeSuppliers->get();
 
 //        $this->data['overdue'] = $overdue;
@@ -692,6 +711,7 @@ class AccountsPayableController extends UserController {
 //        $this->data['dueFuture'] = $dueFuture;
 //        $this->data['tomorrowDate'] = $this->data['futureStartDate'] = $tomorrowDate;
 //        $this->data['futureEndDate'] = $futureEndDate;
+        $this->data['payment_type'] = \SwiftACPPayment::$type;
         $this->data['chequesign_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignPermission]);
         $this->data['activeSuppliers'] = $activeSupplierResult;
         $this->data['forms'] = $forms;
@@ -705,8 +725,9 @@ class AccountsPayableController extends UserController {
                                         return $v['enabled'];
                                     }));
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
-        $this->data['pageTitle'] = "Cheque Issue - ".ucfirst($type);
-        return $this->makeView('acpayable/payment-cheque-issue');
+        $this->data['pageTitle'] = "Payment Issue - ".ucfirst($type);
+        
+        return $this->makeView('acpayable/payment-issue');
     }
 
     /*
@@ -1122,16 +1143,18 @@ class AccountsPayableController extends UserController {
                 $acp->fill($inputData);
                 if($acp->save())
                 {
+                    $invoice = new \SwiftACPInvoice([
+                        'date_received' => \Carbon::now()
+                    ]);
                     /*
                      * Has invoice number
                      */
                     if(\Input::has('invoice_number') && $inputData['invoice_number'] !== "")
                     {
-                        $invoice = new \SwiftACPInvoice([
-                            'number' => $inputData['invoice_number']
-                        ]);
-                        $acp->invoice()->save($invoice);
+                        $invoice->number = $inputData['invoice_number'];
                     }
+
+                    $acp->invoice()->save($invoice);
 
                     /*
                      * Has Purchase Order

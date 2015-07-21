@@ -63,6 +63,7 @@ class UserController extends Controller {
         $data['sidemenu'] =  $menu->generateHTML();
         if (\Request::header('X-PJAX')) {
             $data['before_js'] = $data['js'];
+            $data['assets'] = "";
         }
         else
         {

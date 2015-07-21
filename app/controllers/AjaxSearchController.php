@@ -172,11 +172,11 @@ Class AjaxSearchController extends UserController {
                             ->limit($limit)
                             ->offset($offset)
                             ->orderBy('count','DESC')
-                            ->join('SCT_JDE.jdecustomers','swift_acp_request.billable_company_code','=','jdecustomers.an8')
+                            ->join('sct_jde.jdecustomers','swift_acp_request.billable_company_code','=','jdecustomers.an8')
                             ->remember(5)->get();
 
             $total = \SwiftACPRequest::distinct('billable_company_code')
-                    ->join('SCT_JDE.jdecustomers','swift_acp_request.billable_company_code','=','jdecustomers.an8')
+                    ->join('sct_jde.jdecustomers','swift_acp_request.billable_company_code','=','jdecustomers.an8')
                     ->remember(5)->count('billable_company_code');
         }
         else
@@ -221,10 +221,10 @@ Class AjaxSearchController extends UserController {
                             ->limit($limit)
                             ->offset($offset)
                             ->orderBy('count','DESC')
-                            ->join('SCT_JDE.jdesuppliermaster','swift_acp_request.supplier_code','=','jdesuppliermaster.Supplier_Code')
+                            ->join('sct_jde.jdesuppliermaster','swift_acp_request.supplier_code','=','jdesuppliermaster.Supplier_Code')
                             ->remember(5)->get();
 
-            $total = \SwiftACPRequest::join('SCT_JDE.jdesuppliermaster','swift_acp_request.supplier_code','=','jdesuppliermaster.Supplier_Code')
+            $total = \SwiftACPRequest::join('sct_jde.jdesuppliermaster','swift_acp_request.supplier_code','=','jdesuppliermaster.Supplier_Code')
                     ->select(array(\DB::raw('DISTINCT(swift_acp_request.supplier_code)')))
                     ->remember(5)->count('swift_acp_request.supplier_code');
         }

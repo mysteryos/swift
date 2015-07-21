@@ -10,6 +10,7 @@
                 <th>Billable Company</th>
                 <th>Amount Due</th>
                 <th>Entries</th>
+                <th>Type</th>
                 <th>Payment Number</th>
                 <th>Batch Number</th>
                 <th>Signator</th>
@@ -76,6 +77,14 @@
                     </td>
                     <td>
                         {{count($f->payment)}}
+                    </td>
+                    <td>
+                        <select name="payment_type" class="form-control input-block-level input-payment-type" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-type/{{\Crypt::encrypt($f->id)}}">
+                            <option @if($f->payment_type === 0){{"selected"}}@endif disabled>Select a type</option>
+                            @foreach($payment_type as $type_key => $type_val)
+                                <option value="{{$type_key}}" @if($f->payment_type === $type_key){{"selected"}}@endif >{{$type_val}}</option>
+                            @endforeach
+                        </select>
                     </td>
                     <td>
                         <input type="text" class="form-control input-block-level input-paymentnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-number/{{ \Crypt::encrypt($f->id) }}" name="payment_number" value="" />

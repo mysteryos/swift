@@ -136,32 +136,45 @@
         compress: false
     });
     
-    context.attach('tr.pvform',[
-    {
-        text: 'Set Payment Number',
-        action: function(e,obj)
+    context.attach('tr.pvform',
+    [
         {
-            $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
-            setpaymentnum();
-        }
-    },
-    {
-        text: 'Set Batch Number',
-        action: function(e,obj)
+            text: 'Set Payment Number',
+            action: function(e,obj)
+            {
+                $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
+                setpaymentnum();
+            }
+        },
         {
-            $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');            
-            setbatchnum();
-        }
-    },
-    {
-        text: 'Publish Form',
-        action: function(e,obj)
+            text: 'Set Batch Number',
+            action: function(e,obj)
+            {
+                $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
+                setbatchnum();
+            }
+        },
         {
-            $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');            
-            publishForm();
+            text: 'Set Cheque Signator',
+            action: function(e,obj)
+            {
+                $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
+                $('#chequeSignatorModal').modal({
+                    backdrop: false
+                });
+            }
+        },
+        {
+            text: 'Publish Form',
+            action: function(e,obj)
+            {
+                $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');            
+                publishForm();
+            }
         }
-    }
-    ]);
+    ]
+    );
+    
     $content.find('tr.pvform').on('contextmenu',function(){
         var $this = $(this);
         if(!$this.hasClass('highlight'))
@@ -184,6 +197,13 @@
     
     $('#btn-setpublish').on('click',function(){
         publishForm();
+        return false;
+    });
+    
+    $('#btn-setbatchchequesignator').on('click',function(){
+        $('#chequeSignatorModal').modal({
+            backdrop: false
+        });
         return false;
     });
     
@@ -231,6 +251,14 @@
                 messenger_notiftop("Batch number should be numeric.","error");
             }
         }
+    }
+    
+    function setbatchchequesignator()
+    {
+        $('tr.pvform.highlight').find('.input-cheque-signator-id').val($('#batchSelectChequeSignator').val());
+        $('tr.pvform.highlight').find('.input-cheque-signator-id').each(function(){
+            saveSignator($(this));
+        });         
     }
     
     function publishForm()
@@ -343,7 +371,7 @@
                         $this.addClass('bg-color-redLight');
                         return xhr.responseText;
                     }
-                });                
+                });
             }            
         }
     }
@@ -410,7 +438,26 @@
         }
     });
     
+    /*
+     * Batch Cheque Signator
+     */
     
+    $('#chequeSignatorModal').on('shown.bs.modal', function(){
+        //Reset Inputs
+        $('#batchSelectChequeSignator')[0].selectedIndex = 0;       
+    });
+    
+    $('#btn-saveChequeSignator').on('click',function(){
+       if($('#batchSelectChequeSignator')[0].selectedIndex === 0)
+       {
+           alert('Please select a user');
+           return;
+       }
+       
+       setbatchchequesignator();
+       $('#chequeSignatorModal').modal('hide');
+       return false;
+    });
 
     //Hide Loading Message
     messenger_hidenotiftop();

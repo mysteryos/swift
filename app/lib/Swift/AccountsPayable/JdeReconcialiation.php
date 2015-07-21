@@ -205,13 +205,19 @@ class JdeReconcialiation {
 
             foreach($mapping as $col => $jdeCol)
             {
-                if($jdeCol === 'ag')
+                switch($jdeCol)
                 {
-                    $pv->invoice->$col = abs($jdePV->$jdeCol);
-                }
-                else
-                {
-                    $pv->invoice->$col = $jdePV->$jdeCol;
+                    case 'ag':
+                        $pv->invoice->$col = abs($jdePV->$jdeCol);
+                        break;
+                    case 'ddj':
+                        if($pv->invoice->due_date === null)
+                        {
+                            $pv->invoice->$col = $jdePV->$jdeCol;
+                        }
+                    default:
+                        $pv->invoice->$col = $jdePV->$jdeCol;
+                        break;
                 }
             }
 

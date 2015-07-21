@@ -14,7 +14,7 @@
 <div id="content" data-js="acp_payment_cheque_issue" data-urljs="{{Bust::url('/js/swift/swift.acp_payment_cheque_issue.js')}}">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-print"></i> Cheque Issue &nbsp;</h1>
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-print"></i> Payment Issue &nbsp;</h1>
         </div>
         <div class="col-md-8 col-lg-10 hidden-mobile">
             <div class="ribbon-button-alignment page-title">
@@ -91,6 +91,9 @@
                     <button class="btn btn-default" id="btn-setbatch" data-original-title="Set Batch Number" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-list"></i>
                     </button>
+                    <button class="btn btn-default" id="btn-setbatchchequesignator" data-original-title="Set Cheque Signator" data-placement="bottom" rel="tooltip">
+                        <i class="fa fa-user"></i>
+                    </button>
                     <button class="btn btn-default" id="btn-setpublish" data-original-title="Publish Forms" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-check"></i>
                     </button>
@@ -158,7 +161,8 @@
             </div>
             <div class="row">
                 <div class="col-xs-12 table-wrap custom-scroll animated fast fadeInRight">
-                    @include('acpayable.payment-cheque-issue-list')
+                    @include('acpayable.payment-issue-list')
+                    @include('acpayable.cheque-select-signator')
                 </div>
             </div>
         </div>

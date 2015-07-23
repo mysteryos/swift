@@ -1857,7 +1857,7 @@ var main = {
             salesman_budget();
         }
     },
-    acp_payment_cheque_issue: function() {
+    acp_payment_issue: function() {
         if(typeof window['acp_payment_cheque_issue'] === "undefined")
         {
             jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
@@ -1867,5 +1867,16 @@ var main = {
             pageSetUp();
             acp_payment_cheque_issue();
         }        
+    },
+    acp_cheque_assign_exec: function() {
+        if(typeof window['acp_cheque_assign_exec'] === "undefined")
+        {
+            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+        }
+        else
+        {
+            pageSetUp();
+            acp_cheque_assign_exec();
+        }          
     }
 }

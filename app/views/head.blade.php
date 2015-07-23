@@ -20,18 +20,18 @@
         <link rel="stylesheet" type="text/css" href="{{ Bust::url('/css/all.css') }}"/>
                 
 	</head>
-        <body class="fixed-header fixed-ribbon smart-style-3 minified" style="overflow:hidden;position:relative;" data-version="{{\Config::get('website.version')}}">
-            <!-- PRE-LOADER -->
-            @include('preloader')
-            <!-- END PRE-LOADER -->
-            
-            <!-- HEADER -->
-            @include('header')
-            <!-- END HEADER -->
-            
-            <!-- Left panel : Navigation area -->
-            @include('navigation')
-            <!-- END NAVIGATION -->
+    <body class="fixed-header fixed-ribbon smart-style-3 minified" style="overflow:hidden;position:relative;" data-version="{{\Config::get('website.version')}}">
+        <!-- PRE-LOADER -->
+        @include('preloader')
+        <!-- END PRE-LOADER -->
 
-            <!-- MAIN PANEL -->
-            <div id="main" role="main">
+        <!-- HEADER -->
+        @include('header')
+        <!-- END HEADER -->
+
+        <!-- Left panel : Navigation area -->
+        @include('navigation')
+        <!-- END NAVIGATION -->
+
+        <!-- MAIN PANEL -->
+        <div id="main" role="main">

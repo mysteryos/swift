@@ -75,6 +75,9 @@ Route::group(array('before' => array('auth')), function()
 
     //Product Returns
     Route::controller('product-returns','ProductReturnsController');
+
+    //Document Viewer
+    Route::controller('document-viewer','DocumentViewerController');
     
 });
 

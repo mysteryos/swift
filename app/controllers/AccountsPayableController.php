@@ -684,11 +684,16 @@ class AccountsPayableController extends UserController {
         }
         $forms = $query->get();
 
+        /*
+         * Add Payment Type
+         */
         foreach($forms as &$f)
         {
-            if($f->invoice && $f->currency_code !== "")
+            $f->payment_type = 0;
+            
+            if($f->invoice && $f->invoice->currency_code !== "")
             {
-                if($f->currency_code === "MUR")
+                if($f->invoice->currency_code === "MUR")
                 {
                     $f->payment_type = \SwiftACPPayment::TYPE_CHEQUE;
                     continue;
@@ -699,8 +704,6 @@ class AccountsPayableController extends UserController {
                     continue;
                 }
             }
-            
-            $f->payment_type = -1;
         }
 
         $activeSupplierResult = $activeSuppliers->get();
@@ -728,6 +731,310 @@ class AccountsPayableController extends UserController {
         $this->data['pageTitle'] = "Payment Issue - ".ucfirst($type);
         
         return $this->makeView('acpayable/payment-issue');
+    }
+
+    /*
+     * Assign Executive for Cheque Sign Utility Page
+     *
+     * @param string $type
+     * @param integer $page
+     */
+    public function getChequeAssignExec($type='all',$page=1)
+    {
+        if(!$this->isAccountingDept && !$this->isAdmin)
+        {
+            return parent::forbidden();
+        }
+
+        /*
+         * Register Filters
+         */
+
+        $this->filter['filter_start_date'] = ['name'=>'Start Date',
+                                                'value' => Input::get('filter_start_date'),
+                                                'enabled' => Input::has('filter_start_date')
+                                            ];
+
+        $this->filter['filter_end_date'] = ['name'=>'End Date',
+                                                'value' => Input::get('filter_end_date'),
+                                                'enabled' => Input::has('filter_end_date')
+                                            ];
+
+        $this->filter['filter_supplier'] = ['name'=>'Supplier',
+                                            'value' => Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
+                                            'enabled' => Input::has('filter_supplier')
+                                            ];
+
+        $this->data['filterActive'] = (boolean)count(
+                                            array_filter($this->filter,function($v){
+                                                return $v['enabled'] === true;
+                                            })
+                                        );
+
+        $limitPerPage = 30;
+
+        /*
+         * Get forms
+         */
+        $query = \SwiftACPRequest::query();
+        $activeSuppliers = \SwiftACPRequest::query();
+
+        //With
+        $query->with(['supplier','company','payment'=>function($q){
+                        return $q->where('status','=',\SwiftACPPayment::STATUS_SIGNED);
+                    },'paymentVoucher','invoice'])
+                ->whereHas('workflow',function($q){
+                    return $q->inprogress()->whereHas('pendingNodes',function($q){
+                        return $q->whereHas('definition',function($q){
+                           return $q->where('name','=','acp_cheque_assign_exec');
+                        });
+                    });
+                })
+                ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
+                ->orderBy('swift_acp_invoice.due_date','ASC');
+
+        $activeSuppliers->groupBy('supplier_code')
+                        ->orderBy('supplier_code','ASC')
+                        ->with(['supplier'])
+                        ->whereHas('workflow',function($q){
+                            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                                return $q->whereHas('definition',function($q){
+                                   return $q->where('name','=','acp_cheque_assign_exec');
+                                });
+                            });
+                        });
+
+        switch($type)
+        {
+            case 'all':
+                if(\Input::has('filter_end_date') || \Input::has('filter_end_date'))
+                {
+                    $filter_end_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
+                    $filter_start_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
+
+                    $query->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
+                        if($filter_start_date !== false)
+                        {
+                            $q->where('due_date','>=',$filter_start_date->format('Y-m-d'),'AND');
+                        }
+                        if($filter_end_date !== false)
+                        {
+                            $q->where('due_date','<=',$filter_end_date->format('Y-m-d'),'AND');
+                        }
+
+                        $q->whereNotNull('due_date');
+
+                        return $q;
+                    });
+
+                }
+                else
+                {
+                    $query->has('invoice');
+                }
+                break;
+            case 'overdue':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                });
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'today':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
+                })
+                ->orderBy('swift_acp_request.supplier_code','ASC');
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'tomorrow':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                })
+                ->orderBy('swift_acp_request.supplier_code','ASC');
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'future':
+                //Filter by date end
+                if(\Input::has('filter_end_date') && \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date')))
+                {
+                    $query->whereHas('invoice',function($q){
+                        return $q->whereNotNull('due_date')
+                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND')
+                              ->where('due_date','>',\Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date'))->format('Y-m-d'),'AND');
+                    });
+                }
+                else
+                {
+                    $query->whereHas('invoice',function($q){
+                        return $q->whereNotNull('due_date')
+                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                    });
+                }
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNotNull('due_date')
+                          ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                });
+
+                break;
+            case 'nodate':
+                $query->whereHas('invoice',function($q){
+                    return $q->whereNull('due_date');
+                });
+
+                $activeSuppliers->whereHas('invoice',function($q){
+                    return $q->whereNull('due_date');
+                });
+                break;
+        }
+
+        /*
+         * Counts
+         */
+
+        $this->data['all_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_cheque_assign_exec');
+                                                });
+                                            });
+                                        })
+                                        ->has('invoice')
+                                        ->count();
+
+        //Overdue
+
+        $this->data['overdue_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_cheque_assign_exec');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
+                                        })->count();
+
+        //Today
+
+        $this->data['today_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_cheque_assign_exec');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
+                                        })->count();
+
+        //Tomorrow
+
+        $this->data['tomorrow_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_cheque_assign_exec');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                                        })->count();
+
+        //Future
+
+        $this->data['future_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_cheque_assign_exec');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNotNull('due_date')
+                                                  ->where('due_date','>',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
+                                        })->count();
+
+        $this->data['nodate_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
+                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                                                return $q->whereHas('definition',function($q){
+                                                   return $q->where('name','=','acp_cheque_assign_exec');
+                                                });
+                                            });
+                                        })
+                                        ->whereHas('invoice',function($q){
+                                            return $q->whereNull('due_date');
+                                        })
+                                        ->count();
+
+
+        //The Filters
+
+        if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
+        {
+            $query->where('supplier_code','=',\Input::get('filter_supplier'));
+        }
+
+        //Form for Display and Count
+
+        $form_count = $query->count();
+
+        //If no Filter - We limit the results
+        if(!$this->data['filterActive'])
+        {
+            $query->take($limitPerPage);
+            if($page > 1)
+            {
+                $query->offset(($page-1)*$limitPerPage);
+            }
+        }
+        $forms = $query->get();
+
+        $activeSupplierResult = $activeSuppliers->get();
+
+//        $this->data['overdue'] = $overdue;
+//        $this->data['dueToday'] = $dueToday;
+//        $this->data['dueTomorrow'] = $dueTomorrow;
+//        $this->data['dueFuture'] = $dueFuture;
+//        $this->data['tomorrowDate'] = $this->data['futureStartDate'] = $tomorrowDate;
+//        $this->data['futureEndDate'] = $futureEndDate;
+        $this->data['exec_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignExecPermission]);
+        $this->data['activeSuppliers'] = $activeSupplierResult;
+        $this->data['forms'] = $forms;
+        $this->data['count'] = $form_count;
+        $this->data['type'] = $type;
+        $this->data['page'] = $page;
+        $this->data['limit_per_page'] = $limitPerPage;
+        $this->data['filter_string'] = "?".$_SERVER['QUERY_STRING'];
+        $this->data['filter'] = $this->filter;
+        $this->data['filter_on'] = (boolean)count(array_filter($this->filter,function($v){
+                                        return $v['enabled'];
+                                    }));
+        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
+        $this->data['pageTitle'] = "Assign Cheque To Executive - ".ucfirst($type);
+
+        return $this->makeView('acpayable/cheque-assign-exec');
     }
 
     /*
@@ -2233,7 +2540,15 @@ class AccountsPayableController extends UserController {
                                 }
                                 else
                                 {
-                                    return \WorkflowActivity::progressHelp($acp,false);
+                                    if($progress === true)
+                                    {
+                                        \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
+                                        return \Response::make('Success');
+                                    }
+                                    else
+                                    {
+                                        return \WorkflowActivity::progressHelp($acp,false);
+                                    }
                                 }
                             }
                             break;
@@ -2266,7 +2581,7 @@ class AccountsPayableController extends UserController {
             return parent::forbidden();
         }
 
-        $form = \SwiftACPRequest::find(\Crypt::decrypt($form_id));
+        $form = \SwiftACPRequest::with('invoice')->find(\Crypt::decrypt($form_id));
         if($form)
         {
             if(!is_numeric(\Input::get('value')))
@@ -2278,9 +2593,23 @@ class AccountsPayableController extends UserController {
             {
                 $payment = new \SwiftACPPayment([
                     'payment_number' => \Input::get('value'),
-                    'type' => \SwiftACPPayment::TYPE_CHEQUE,
                     'status' => \SwiftACPPayment::STATUS_ISSUED
                 ]);
+
+                /*
+                 * Determine Payment Type
+                 */
+                if($form->invoice && $form->invoice->currency_code !== "")
+                {
+                    if($form->invoice->currency_code === "MUR")
+                    {
+                        $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+                    }
+                    else
+                    {
+                        $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                    }
+                }
 
                 if($form->payment()->save($payment))
                 {
@@ -2320,7 +2649,7 @@ class AccountsPayableController extends UserController {
             return parent::forbidden();
         }
 
-        $form = \SwiftACPRequest::find(\Crypt::decrypt($form_id));
+        $form = \SwiftACPRequest::with('invoice')->find(\Crypt::decrypt($form_id));
         if($form)
         {
             if(!is_numeric(\Input::get('value')))
@@ -2332,9 +2661,23 @@ class AccountsPayableController extends UserController {
             {
                 $payment = new \SwiftACPPayment([
                     'batch_number' => \Input::get('value'),
-                    'type' => \SwiftACPPayment::TYPE_CHEQUE,
                     'status' => \SwiftACPPayment::STATUS_ISSUED
                 ]);
+
+                /*
+                 * Determine Payment Type
+                 */
+                if($form->invoice && $form->invoice->currency_code !== "")
+                {
+                    if($form->invoice->currency_code === "MUR")
+                    {
+                        $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+                    }
+                    else
+                    {
+                        $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                    }
+                }
 
                 if($form->payment()->save($payment))
                 {
@@ -2374,7 +2717,7 @@ class AccountsPayableController extends UserController {
             return parent::forbidden();
         }
 
-        $form = \SwiftACPRequest::find(\Crypt::decrypt($form_id));
+        $form = \SwiftACPRequest::with('invoice')->find(\Crypt::decrypt($form_id));
         if($form)
         {
             if(!is_numeric(\Input::get('value')) || ((int) \Input::get('value') <= 0))
@@ -2386,9 +2729,23 @@ class AccountsPayableController extends UserController {
             {
                 $payment = new \SwiftACPPayment([
                     'cheque_signator_id' => \Input::get('value'),
-                    'type' => \SwiftACPPayment::TYPE_CHEQUE,
                     'status' => \SwiftACPPayment::STATUS_ISSUED
                 ]);
+
+                /*
+                 * Determine Payment Type
+                 */
+                if($form->invoice && $form->invoice->currency_code !== "")
+                {
+                    if($form->invoice->currency_code === "MUR")
+                    {
+                        $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+                    }
+                    else
+                    {
+                        $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                    }
+                }
 
                 if($form->payment()->save($payment))
                 {
@@ -2419,6 +2776,123 @@ class AccountsPayableController extends UserController {
         }
 
         return \Response::make("Unable to process your request",500);
+    }
+
+    public function putPaymentType($form_id)
+    {
+        if(!$this->isAdmin && !$this->isAccountingDept)
+        {
+            return parent::forbidden();
+        }
+
+        $form = \SwiftACPRequest::with('invoice')->find(\Crypt::decrypt($form_id));
+        if($form)
+        {
+            if(!is_numeric(\Input::get('value')) || array_key_exists((int)\Input::get('value'),\SwiftACPPayment::$type))
+            {
+                return \Response::make("Type of payment not recognized",400);
+            }
+
+            if(is_numeric(\Input::get('pk')))
+            {
+                $payment = new \SwiftACPPayment([
+                    'type' => (int)\Input::get('value')
+                ]);
+
+                if($form->payment()->save($payment))
+                {
+                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                }
+            }
+            else
+            {
+                $payment = \SwiftACPPayment::find(\Crypt::decrypt(\Input::get('pk')));
+                if($payment)
+                {
+                    $payment->type = (int)\Input::get('value');
+                    if($payment->save())
+                    {
+                        return \Response::make("Success");
+                    }
+                }
+                else
+                {
+                    return \Response::make("Payment Entry Not Found",400);
+                }
+            }
+        }
+        else
+        {
+            return \Response::make("Account Payable Form Not Found",404);
+        }
+
+        return \Response::make("Unable to process your request",500);
+    }
+
+    public function putChequeExec()
+    {
+        if(!$this->isAdmin && !$this->isAccountingDept)
+        {
+            return parent::forbidden();
+        }
+
+        if(is_numeric(\Input::get('pk')))
+        {
+            return \Response::make("Invalid key for payment",500);
+        }
+
+        $payment = \SwiftACPPayment::find(\Crypt::decrypt(\Input::get('pk')));
+
+        if($payment)
+        {
+            if(!is_numeric(\Input::get('value')))
+            {
+                return \Response::make("User not recognized",400);
+            }
+
+            $payment->cheque_exec_signator_id = (int)\Input::get('value');
+            if($payment->save())
+            {
+                return \Response::make("Success");
+            }
+        }
+
+        return \Response::make("Unable to process your request",500);
+    }
+
+    public function postPaymentExecSign($payment_id)
+    {
+        if(!$this->isAdmin && !$this->isAccountingDept)
+        {
+            return parent::forbidden();
+        }
+
+        if(is_numeric($payment_id))
+        {
+            return \Response::make("Invalid key for payment",500);
+        }
+
+        $payment = \SwiftACPPayment::with('acp')->find(\Crypt::decrypt($payment_id));
+
+        if($payment)
+        {
+            if($payment->status === \SwiftACPPayment::STATUS_SIGNED)
+            {
+                if($payment->cheque_exec_signator_id === null)
+                {
+                    return \Response::make("Please select a user to sign the cheque.",500);
+                }
+                
+                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($payment->acp),'id'=>$payment->acp->id,'user_id'=>$this->currentUser->id));
+                return \Response::make("Success");
+            }
+            else
+            {
+                return \Response::make("Please make sure the cheque has been signed by accounting dept first.",400);
+            }
+        }
+
+        return \Response::make("Unable to process your request at this time",500);
     }
 
     public function postSaveChequeSign()

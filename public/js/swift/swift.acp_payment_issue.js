@@ -3,7 +3,7 @@
  * Description:
  */
 
-(window.acp_payment_cheque_issue = function(){
+(window.acp_payment_issue = function(){
     var $content = $('#content');
     tableHeightSize();
 
@@ -29,9 +29,9 @@
     }
 
     //Gets tooltips activated
-    $("#cheque-issue-table [rel=tooltip]").tooltip();
+    $("#inbox-table [rel=tooltip]").tooltip();
 
-    $("#cheque-issue-table input[type='checkbox']").change(function(e) {
+    $("#inbox-table input[type='checkbox']").change(function(e) {
            $(this).closest('tr').toggleClass("highlight", this.checked);
            toggleHighlightBar();
     });
@@ -165,6 +165,16 @@
             }
         },
         {
+            text: 'Set Payment Type',
+            action: function(e,obj)
+            {
+                $('.dropdown-context').css({display:''}).find('.drop-left').removeClass('drop-left');
+                $('#paymentTypeModal').modal({
+                    backdrop: false
+                });
+            }            
+        },
+        {
             text: 'Publish Form',
             action: function(e,obj)
             {
@@ -207,7 +217,14 @@
         return false;
     });
     
-    $('#cheque-issue-table').on('click','a.btn-single-publish',function(e){
+    $('#btn-setpaymenttype').on('click',function(){
+        $('#paymentTypeModal').modal({
+            backdrop: false
+        });
+        return false;        
+    });
+    
+    $('#inbox-table').on('click','a.btn-single-publish',function(e){
         e.preventDefault();
         savePublish($(this));
         return false;
@@ -222,7 +239,7 @@
         {
             $('tr.pvform.highlight').find('input.input-paymentnumber').val(paymentnum);
             $('tr.pvform.highlight').find('input.input-paymentnumber').each(function(){
-                saveNumber($(this));
+                saveInput($(this));
             });
         }
         else
@@ -241,7 +258,7 @@
         {
             $('tr.pvform.highlight').find('input.input-batchnumber').val(batchnum);
             $('tr.pvform.highlight').find('input.input-batchnumber').each(function(){
-                saveNumber($(this));
+                saveInput($(this));
             });            
         }
         else
@@ -257,8 +274,16 @@
     {
         $('tr.pvform.highlight').find('.input-cheque-signator-id').val($('#batchSelectChequeSignator').val());
         $('tr.pvform.highlight').find('.input-cheque-signator-id').each(function(){
-            saveSignator($(this));
-        });         
+            saveInput($(this));
+        });
+    }
+    
+    function setbatchtype()
+    {
+        $('tr.pvform.highlight').find('.input-payment-type').val($('#batchSelectType').val());
+        $('tr.pvform.highlight').find('.input-payment-type').each(function(){
+            saveInput($(this));
+        });        
     }
     
     function publishForm()
@@ -281,7 +306,7 @@
             type: 'POST',
             success:function(){
                 $this.removeClass('btn-default');
-                $this.removeClass('btn-error');
+                $this.removeClass('btn-danger');
                 $this.addClass('btn-success');
                 $.smallBox({
                         title : "Form published",
@@ -293,24 +318,24 @@
                 $this.removeClass('disabled');
                 $this.removeAttr('disabled');                
             },
-            error: function() {
+            error: function(xhr) {
                 $this.removeClass('btn-default');
                 $this.removeClass('btn-success');
-                $this.addClass('btn-error');
+                $this.addClass('btn-danger');
                 $.smallBox({
-                        title : "Form failed to publish",
+                        title : "Form failed to publish: "+xhr.responseText,
                         content : "Look for the red tick button",
                         color : "#a65858",
                         icon : "fa fa-times",
-                        timeout: 2000
+                        timeout: 3500
                 });
                 $this.removeClass('disabled');
                 $this.removeAttr('disabled');
             }
-        })
+        });
     }
     
-    function saveNumber($this)
+    function saveInput($this)
     {
         if($this.length)
         {
@@ -324,7 +349,7 @@
                     {
                         if($this.attr('data-pk') === "0")
                         {
-                            $this.parents('.pvform').find('.input-paymentnumber,.input-batchnumber,.input-cheque-signator-id').attr('data-pk',result.encrypted_id);
+                            $this.parents('.pvform').find('.input-with-pk').attr('data-pk',result.encrypted_id);
                         }                        
                         $this.attr("data-prev-value",$this.val());
                         $this.removeClass('bg-color-redLight');
@@ -343,50 +368,17 @@
         }
     }
     
-    function saveSignator($this)
-    {
-        if($this.length)
-        {
-            if($this.val() !== $this.attr('data-prev-value'))
-            {
-                $.ajaxq("pvform"+$this.parents('.pv-form').attr('data-id'),{
-                    type:'PUT',
-                    url: $this.attr('data-url'),
-                    data: {"pk":$this.attr('data-pk'),"value":$this.val()},
-                    success:function(result)
-                    {
-                        if($this.attr('data-pk') === "0")
-                        {
-                            $this.parents('.pvform').find('.input-paymentnumber,.input-batchnumber,.input-cheque-signator-id').attr('data-pk',result.encrypted_id);
-                        }                        
-                        $this.attr("data-prev-value",$this.val());
-                        $this.removeClass('bg-color-redLight');
-                        $this.removeClass('bg-color-light-orange');                        
-                        $this.addClass('bg-color-light-green');
-                    },
-                    error:function(xhr, status, error)
-                    {
-                        $this.removeClass('bg-color-light-green');
-                        $this.removeClass('bg-color-light-orange');
-                        $this.addClass('bg-color-redLight');
-                        return xhr.responseText;
-                    }
-                });
-            }            
-        }
-    }
-    
-    $('#cheque-issue-table').on('keypress','.input-paymentnumber,.input-batchnumber',function(e){
+    $('#inbox-table').on('keypress','.input-paymentnumber,.input-batchnumber',function(e){
         if(e.keyCode == 13) {
-            saveNumber($(this));
+            saveInput($(this));
         }
     });
     
-    $('#cheque-issue-table').on('change','.input-cheque-signator-id',function(e){
-        saveSignator($(this));
+    $('#inbox-table').on('change','.input-cheque-signator-id',function(e){
+        saveInput($(this));
     });
     
-    $('#cheque-issue-table').on('keyup','.input-paymentnumber,.input-batchnumber',function(e){
+    $('#inbox-table').on('keyup','.input-paymentnumber,.input-batchnumber',function(e){
         switch(e.keyCode)
         {
             case 38: // Up

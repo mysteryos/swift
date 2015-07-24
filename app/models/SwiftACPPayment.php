@@ -237,6 +237,11 @@ class SwiftACPPayment extends Eloquent
         return $this->belongsTo('User','cheque_signator_id');
     }
 
+    public function chequeExecSignator()
+    {
+        return $this->belongsTo('User','cheque_exec_signator_id');
+    }
+
     public function invoice()
     {
         return $this->hasOne('SwiftACPInvoice','acp_id','acp_id');

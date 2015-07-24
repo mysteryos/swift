@@ -1878,5 +1878,16 @@ var main = {
             pageSetUp();
             acp_cheque_assign_exec();
         }          
+    },
+    acp_cheque_dispatch: function() {
+        if(typeof window['acp_cheque_dispatch'] === "undefined")
+        {
+            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+        }
+        else
+        {
+            pageSetUp();
+            acp_cheque_dispatch();
+        }         
     }
 }

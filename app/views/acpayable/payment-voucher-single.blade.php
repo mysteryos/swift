@@ -26,9 +26,11 @@
                     </tr>
                     <tr>
                         <td><label>Purchase Order</label></td>
-                        <td class="searchable">@foreach($f->purchaseOrder as $po)
-                        <p>{{$po->reference}} {{$po->type}} @if($po->validated === \SwiftPurchaseOrder::VALIDATION_FOUND)<a href="/jde-purchase-order/view/{{$po->order_id}}" class="purchase-order-view colorbox-ajax"><i class="fa fa-search"></i> View</a></p>@endif
-                    @endforeach</td>
+                        <td class="searchable">
+                        @foreach($f->purchaseOrder as $po)
+                            <p>{{$po->reference}} {{$po->type}} @if($po->validated === \SwiftPurchaseOrder::VALIDATION_FOUND)<a href="/jde-purchase-order/view-by-form/{{$po->id}}" class="purchase-order-view colorbox-ajax"><i class="fa fa-search"></i> View</a></p>@endif
+                        @endforeach
+                        </td>
                     </tr>
                     <tr>
                         <td><label>Invoice Number</label></td>

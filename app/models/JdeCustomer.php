@@ -96,6 +96,19 @@ class JdeCustomer extends Eloquent {
     }
 
     /*
+     * Count Customers By Code
+     *
+     * @param string $term
+     * @return integer
+     */
+    public static function countByVat($term)
+    {
+        return self::where('an8','LIKE',"%$term%")
+                ->remember(self::$cache_expiry_time)
+                ->count();
+    }
+
+    /*
      * Utility
      */
     public function getReadableName()

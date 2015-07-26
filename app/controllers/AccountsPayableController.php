@@ -440,6 +440,11 @@ class AccountsPayableController extends UserController {
                                             'enabled' => Input::has('filter_supplier')
                                             ];
 
+        $this->filter['filter_type'] = ['name'=>'Order Type',
+                                        'value' => \Input::get('filter_type'),
+                                        'enabled' => \Input::has('filter_type') && \Input::get('filter_type',0) > 0
+                                        ];
+
         $this->data['filterActive'] = (boolean)count(
                                             array_filter($this->filter,function($v){
                                                 return $v['enabled'] === true;
@@ -505,6 +510,7 @@ class AccountsPayableController extends UserController {
                 {
                     $query->has('invoice');
                 }
+                
                 break;
             case 'overdue':
                 $query->whereHas('invoice',function($q){
@@ -664,9 +670,25 @@ class AccountsPayableController extends UserController {
 
         //The Filters
 
+        //Filter: Supplier
         if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
         {
             $query->where('supplier_code','=',\Input::get('filter_supplier'));
+        }
+
+        //Filter: Type of Order
+        if($this->filter['filter_type']['enabled'])
+        {
+           $query->whereHas('invoice',function($q){
+                if($this->filter['filter_type']['value'] === 1)
+                {
+                    return $q->where('currency_code','=','MUR');
+                }
+                else
+                {
+                    return $q->where('currency_code','!=','MUR');
+                }
+           });
         }
 
         //Form for Display and Count
@@ -2048,6 +2070,7 @@ class AccountsPayableController extends UserController {
             $this->data['activity'] = \Helper::getMergedRevision($acp->revisionRelations,$acp);
             $this->pageTitle = $acp->getReadableName();
             $this->data['form'] = $acp;
+            $this->data['po_validation'] = json_encode(Helper::jsonobject_encode(SwiftPurchaseOrder::$validation));
             $this->data['cheque_status'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$status));
             $this->data['payment_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$type));
             $this->data['cheque_dispatch'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$dispatch));

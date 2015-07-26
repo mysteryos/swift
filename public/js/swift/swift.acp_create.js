@@ -144,7 +144,7 @@
                          return {
                              id: item.Supplier_Code,
                              name: $.trim(item.Supplier_Name),
-                             text: $.trim(item.Supplier_Name)+" (Code:"+item.Supplier_Code+")"
+                             text: $.trim(item.Supplier_Name)+" (Code: "+item.Supplier_Code+")"+" | "+item.Supplier_LongAddNo+" | "+item.Supplier_Add1
                          };
                       });
                      return {results: found, more:more};

@@ -46,6 +46,14 @@
                         <form method="GET" action="" name="filter_cheque">
                             <input type="hidden" name="filter" value="1" />
                             <div class="form-group">
+                                <label>Order Type</label>
+                                <select name="filter_type" class="form-control">
+                                    <option selected value="">All</option>
+                                    <option value="1">Local</option>
+                                    <option value="2">Foreign</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Supplier</label>
                                 <select name="filter_supplier" class="form-control">
                                     <option disabled selected>Please select a supplier</option>
@@ -108,22 +116,22 @@
                     <h6> Filters </h6>
                     <ul class="inbox-menu-lg">
                             <li @if($type=="all"){{"class=\"active\""}}@endif >
-                                    <a href="/{{ $rootURL }}/cheque-issue/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All @if($all_count > 0 ){{"(".$all_count.")"}} @endif</a>
+                                    <a href="/{{ $rootURL }}/payment-issue/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All @if($all_count > 0 ){{"(".$all_count.")"}} @endif</a>
                             </li>
                             <li @if($type=="overdue"){{"class=\"active\""}}@endif >
-                                    <a href="/{{ $rootURL }}/cheque-issue/overdue" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>Overdue @if($overdue_count > 0 ){{"(".$overdue_count.")"}} @endif</a>
+                                    <a href="/{{ $rootURL }}/payment-issue/overdue" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>Overdue @if($overdue_count > 0 ){{"(".$overdue_count.")"}} @endif</a>
                             </li>
                             <li @if($type=="today"){{"class=\"active\""}}@endif >
-                                    <a href="/{{ $rootURL }}/cheque-issue/today" class="form-pjax-filter pjax"><i class="fa fa-check"></i>Today @if($today_count > 0){{"(".$today_count.")"}} @endif</a>
+                                    <a href="/{{ $rootURL }}/payment-issue/today" class="form-pjax-filter pjax"><i class="fa fa-check"></i>Today @if($today_count > 0){{"(".$today_count.")"}} @endif</a>
                             </li>
                             <li @if($type=="tomorrow"){{"class=\"active\""}}@endif >
-                                    <a href="/{{ $rootURL }}/cheque-issue/tomorrow" class="form-pjax-filter pjax"><i class="fa fa-reply"></i>Tomorrow @if($tomorrow_count > 0){{"(".$tomorrow_count.")"}} @endif</a>
+                                    <a href="/{{ $rootURL }}/payment-issue/tomorrow" class="form-pjax-filter pjax"><i class="fa fa-reply"></i>Tomorrow @if($tomorrow_count > 0){{"(".$tomorrow_count.")"}} @endif</a>
                             </li>
                             <li @if($type=="future"){{"class=\"active\""}}@endif >
-                                    <a href="/{{ $rootURL }}/cheque-issue/future" class="form-pjax-filter pjax"><i class="fa fa-calendar"></i>Future @if($future_count){{"(".$future_count.")"}} @endif</a>
+                                    <a href="/{{ $rootURL }}/payment-issue/future" class="form-pjax-filter pjax"><i class="fa fa-calendar"></i>Future @if($future_count){{"(".$future_count.")"}} @endif</a>
                             </li>
                             <li @if($type=="nodate"){{"class=\"active\""}}@endif >
-                                    <a href="/{{ $rootURL }}/cheque-issue/nodate" class="form-pjax-filter pjax"><i class="fa fa-question"></i>No Due Date @if($nodate_count){{"(".$nodate_count.")"}} @endif</a>
+                                    <a href="/{{ $rootURL }}/payment-issue/nodate" class="form-pjax-filter pjax"><i class="fa fa-question"></i>No Due Date @if($nodate_count){{"(".$nodate_count.")"}} @endif</a>
                             </li>
                     </ul>
                 </div>
@@ -137,18 +145,18 @@
                             <span><i>Filtered By: </i></span>
                             @foreach($filter as $name => $f)
                                 @if($f['enabled'])
-                                    <a href="{{"/".$rootURL."/cheque-issue/".$type."/0".Helper::filterQueryParam(Url::full(),$name)}}" class="btn btn-sm btn-default pjax">{{$f['name'].": ".$f['value']}} <i class="fa fa-times"></i></a>
+                                    <a href="{{"/".$rootURL."/payment-issue/".$type."/0".Helper::filterQueryParam(Url::full(),$name)}}" class="btn btn-sm btn-default pjax">{{$f['name'].": ".$f['value']}} <i class="fa fa-times"></i></a>
                                 @endif
                             @endforeach
-                            <a href="{{"/".$rootURL."/cheque-issue/".$type."/0"}}" class="btn btn-sm btn-default pjax">Clear All <i class="fa fa-times"></i></a>
+                            <a href="{{"/".$rootURL."/payment-issue/".$type."/0"}}" class="btn btn-sm btn-default pjax">Clear All <i class="fa fa-times"></i></a>
                         </div>
                     @endif
                 </div>
                 <div class="col-xs-4">
                     @if($count)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/cheque-issue/".$type."/".($page-1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/cheque-issue/".$type."/".($page+1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/payment-issue/".$type."/".($page-1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/payment-issue/".$type."/".($page+1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">

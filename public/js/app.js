@@ -1859,14 +1859,14 @@ var main = {
         }
     },
     acp_payment_issue: function() {
-        if(typeof window['acp_payment_cheque_issue'] === "undefined")
+        if(typeof window['acp_payment_issue'] === "undefined")
         {
             jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {
             pageSetUp();
-            acp_payment_cheque_issue();
+            acp_payment_issue();
         }        
     },
     acp_cheque_assign_exec: function() {

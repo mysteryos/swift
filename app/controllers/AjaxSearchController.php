@@ -237,8 +237,8 @@ Class AjaxSearchController extends UserController {
             }
             else
             {
-                $searchresult = JdeSupplierMaster::getByName(Input::get('term'),$offset,$limit);
-                $total = JdeSupplierMaster::countByName(Input::get('term'));
+                $searchresult = JdeSupplierMaster::getByNameOrVat(Input::get('term'),$offset,$limit);
+                $total = JdeSupplierMaster::countByNameOrVat(Input::get('term'));
             }
         }
         

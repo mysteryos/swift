@@ -6,8 +6,10 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            @if($canCreate)
+            <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>
+            @endif 
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalowner/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishAccounting && $current_activity['status'] === SwiftWorkflowActivity::INPROGRESS && ($isAccountingDept || $isAdmin))<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalaccounting/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($isAccountingDept || $isAdmin || $isHOD) <a class="btn btn-default btn-ribbon-share colorbox-ajax" rel="tooltip" data-original-title="Share" data-placement="bottom" href="{{\Helper::generateShareUrl($form)}}"><i class="fa fa-lg fa-reply-all"></i></a>@endif
@@ -18,8 +20,10 @@
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            @if($canCreate)
+            <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>
+            @endif
             @if($publishOwner && $current_activity['status'] === SwiftWorkflowActivity::INPROGRESS)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalowner/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishAccounting && $current_activity['status'] === SwiftWorkflowActivity::INPROGRESS && ($isAccountingDept || $isAdmin))<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalaccounting/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($isAccountingDept || $isAdmin || $isHOD) <a class="btn btn-default btn-ribbon-share colorbox-ajax" rel="tooltip" data-original-title="Share" data-placement="bottom" href="{{\Helper::generateShareUrl($form)}}"><i class="fa fa-lg fa-reply-all"></i></a>@endif

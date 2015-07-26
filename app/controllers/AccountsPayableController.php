@@ -1335,6 +1335,58 @@ class AccountsPayableController extends UserController {
     }
 
     /*
+     * HOD Approval - Utility Page
+     */
+
+    public function getHodApproval()
+    {
+        if(!$this->isHOD)
+        {
+            return parent::forbidden();
+        }
+
+        /*
+         * Get forms
+         */
+        $query = \SwiftACPRequest::query();
+
+        //With
+        $query->with(['invoice','supplier','company','document','approvalHod'=>function($q){
+            return $q->where('approval_user_id','=',$this->currentUser->id);
+        }]);
+
+        $query->whereHas('workflow',function($q){
+            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                return $q->whereHas('definition',function($q){
+                   return $q->where('name','=','acp_hodapproval');
+                });
+            });
+        });
+
+        /*
+         * Filter approvals by HOD
+         */
+        if(!$this->currentUser->isSuperUser())
+        {
+            $query->whereHas('approvalHod',function($q){
+                return $q->where('approval_user_id','=',$this->currentUser->id);
+            });
+        }
+
+        //order By
+        $query->orderBy('created_at','DESC');
+
+        $forms = $query->get();
+        $form_count = count($forms);
+
+        $this->data['forms'] = $forms;
+        $this->data['form_count'] = $form_count;
+        $this->pageTitle = "HOD Approval";
+
+        return $this->makeView('acpayable/hod-approval');
+    }
+
+    /*
      * Cheque Sign - Utility Page
      *
      */
@@ -2580,7 +2632,7 @@ class AccountsPayableController extends UserController {
 
     public function putApprovalHod($acp_id)
     {
-        $acp = \SwiftACPRequest::find(Crypt::decrypt($acp_id));
+        $acp = \SwiftACPRequest::with('approvalHod')->find(Crypt::decrypt($acp_id));
 
         if($acp)
         {
@@ -2592,6 +2644,14 @@ class AccountsPayableController extends UserController {
                         if(\Input::get('value') !== "" && !is_numeric(\Input::get('value')))
                         {
                             return \Response::make("Please select a valid user.",400);
+                        }
+                        foreach($acp->approvalHod as $approval)
+                        {
+                            if($approval->approval_user_id === \Input::get('value'))
+                            {
+                                return \Response::make("User already exists as approver. Select another one.",400);
+                                break;
+                            }
                         }
                         break;
                     case "approved":
@@ -3318,6 +3378,75 @@ class AccountsPayableController extends UserController {
             {
                 \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($payment->acp),'id'=>$payment->acp->id,'user_id'=>$this->currentUser->id));
                 return \Response::make("Success");
+            }
+        }
+
+        return \Response::make("Unable to process your request",500);
+    }
+
+    public function postSaveHodApproval($form_id,$approval_type)
+    {
+        if(!$this->isHOD)
+        {
+            return parent::forbidden();
+        }
+
+        $form = \SwiftACPRequest::with('approvalHod')->find(\Crypt::decrypt($form_id));
+
+        if($form)
+        {
+            if(!array_key_exists($approval_type,\SwiftApproval::$approved))
+            {
+                return \Response::make("Please approve/reject this form",400);
+            }
+
+            if(!$this->currentUser->isSuperUser())
+            {
+                foreach($form->approvalHod as $app)
+                {
+                    if($app->approval_user_id === $this->currentUser->id)
+                    {
+                        $app->approved = $approval_type;
+                        $app->save();
+                    }
+                }
+
+                //Save comment
+                if((int)$approval_type === \SwiftApproval::REJECTED)
+                {
+                    $comment = new \SwiftComment([
+                        'comment' => 'Rejected: '.\Input::get('comment'),
+                        'user_id' => $this->currentUser->id,
+                    ]);
+
+                    $form->comments()->save($comment);
+                }
+                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                return \Response::make('Success');
+            }
+            else
+            {
+                foreach($form->approvalHod as $app)
+                {
+                    if($app->approved === \SwiftApproval::PENDING)
+                    {
+                        $app->approved = $approval_type;
+                        $app ->save();
+                    }
+                }
+
+                //Save comment
+                if((int)$approval_type === \SwiftApproval::REJECTED)
+                {
+                    $comment = new \SwiftComment([
+                        'comment' => 'Rejected: '.\Input::get('comment'),
+                        'user_id' => $this->currentUser->id,
+                    ]);
+
+                    $form->comments()->save($comment);
+                }
+                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($form),'id'=>$form->id,'user_id'=>$this->currentUser->id));
+                return \Response::make('Success');
             }
         }
 

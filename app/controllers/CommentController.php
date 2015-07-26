@@ -19,18 +19,18 @@ class CommentController extends UserController {
 				'comment' => Input::get('comment'),
 				'user_id' => Sentry::getUser()->id,
 			);
-                        $comment = new SwiftComment;
+            $comment = new SwiftComment;
 			$comment->fill($data);
 			$comment->save();
 			$newCommentId = $comment->id;
-                        
-                        //alert users if they have been tagged
-                        if(trim(Input::get('usermention')) != "")
-                        {
-                            $userMentions = explode(',',Input::get('usermention'));
-                            $userMentions = array_unique((array)$userMentions);
-                            Comment::mailNotify($comment,$userMentions);
-                        }
+            
+            //alert users if they have been tagged
+            if(trim(Input::get('usermention')) != "")
+            {
+                $userMentions = explode(',',Input::get('usermention'));
+                $userMentions = array_unique((array)$userMentions);
+                Comment::mailNotify($comment,$userMentions);
+            }
 			return Response::make($newCommentId);
 
 		} catch (\Exception $e) {

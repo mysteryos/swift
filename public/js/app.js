@@ -1233,7 +1233,8 @@ $.maindiv.on('click','a.colorbox-ajax',function(){
         initialWidth:"64px",
         initialHeight:"84px",
         closeButton:false,
-        transition:"fade"
+        transition:"fade",
+        iframe: $(this).is('[data-colorbox-iframe]')
     });
     return false; 
 });

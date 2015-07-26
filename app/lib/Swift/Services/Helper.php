@@ -302,6 +302,35 @@ class Helper {
         return "javascript:void(0);";
     }
 
+     /*
+     * Generates URL for sharing form
+     * Used in many places
+     *
+     * @param \Illuminate\Database\Eloquent\Model $obj
+     * @param boolean $absoluteaddress
+     *
+     * @return string
+     */
+
+    public function generateShareUrl($obj,$absoluteaddress=false)
+    {
+        $class = get_class($obj);
+        $context = self::resolveContext($class);
+        if($context)
+        {
+            $url = "/share/view/$context/".\Crypt::encrypt($obj->id);
+
+            if($absoluteaddress)
+            {
+               $url = \Config::get('app.url').$url;
+            }
+
+            return $url;
+        }
+
+        return "javascript:void(0);";
+    }
+
     /*
      * Check if session has a filter value set
      *

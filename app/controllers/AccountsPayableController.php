@@ -1872,12 +1872,40 @@ class AccountsPayableController extends UserController {
         }
         else
         {
-            return parent::forbidden();
+            /*
+             * Check Sharing Settings
+             */
+            
+            $className = \Config::get('context.'.$this->context);
+            //Check Sharing Settings
+            $sharedUser = \SwiftShare::findUserByForm($className,\Crypt::decrypt($id),$this->currentUser->id);
+
+            if($sharedUser)
+            {
+                //Check Permission
+                if($sharedUser->permission === \SwiftShare::PERMISSION_EDIT)
+                {
+                    return \Redirect::action('AccountsPayableController@getEdit',array('id'=>$id,'override'=>true));
+                }
+                else
+                {
+                    return $this->form($id,false);
+                }
+            }
+            else
+            {
+                return parent::forbidden();
+            }
         }
     }
 
-    public function getEdit($id)
+    public function getEdit($id,$override=false)
     {
+        if($override === true)
+        {
+            return $this->form($id,true);
+        }
+
         if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
         {
             return $this->form($id,true);
@@ -1888,7 +1916,29 @@ class AccountsPayableController extends UserController {
         }
         else
         {
-            return parent::forbidden();
+            /*
+             * Check Sharing Settings
+             */
+            $className = \Config::get('context.'.$this->context);
+            //Check Sharing Settings
+            $sharedUser = \SwiftShare::findUserByForm($className,\Crypt::decrypt($id),$this->currentUser->id);
+
+            if($sharedUser)
+            {
+                //Check Permission
+                if($sharedUser->permission === \SwiftShare::PERMISSION_EDIT)
+                {
+                    return $this->form($id,true);
+                }
+                else
+                {
+                    return \Redirect::action('AccountsPayableController@getView',array('id'=>$id,'override'=>true));
+                }
+            }
+            else
+            {
+                return parent::forbidden();
+            }
         }
     }
 
@@ -1919,6 +1969,18 @@ class AccountsPayableController extends UserController {
         if(in_array($this->currentUser->id,$approvalUserIds))
         {
             $hasAccess = true;
+        }
+
+        /*
+         * Sharing Access
+         */
+        if(!$hasAccess)
+        {
+             $sharedUserCount = $acp->share()->where('to_user_id','=',$this->currentUser->id)->count();
+             if($sharedUserCount > 0)
+             {
+                 $hasAccess = true;
+             }
         }
 
         //Permission Check - End
@@ -1954,12 +2016,6 @@ class AccountsPayableController extends UserController {
              * Enable Commenting
              */
             $this->enableComment($acp);
-
-            //Permission Check
-            if(!$this->checkAccess($acp))
-            {
-                return parent::forbidden();
-            }
 
             //Find HoDs;
             $this->data['approval_hod'] = array();
@@ -2013,7 +2069,7 @@ class AccountsPayableController extends UserController {
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$acpayableTags));
             $this->data['owner'] = \Helper::getUserName($acp->owner_user_id,$this->currentUser);
             $this->data['edit'] = $edit;
-            $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = $this->data['savePaymentVoucher'] = $this->data['checkPayment'] = false;
+            $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = $this->data['savePaymentVoucher'] = $this->data['checkPayment'] = $this->data['signCheque'] = false;
             $this->data['isCreator'] = $acp->owner_user_id == $this->currentUser->id;
             
             if($edit === true)

@@ -278,6 +278,11 @@ class SwiftACPRequest extends Eloquent
         return $this->morphMany('SwiftStory','storyfiable');
     }
 
+    public function share()
+    {
+        return $this->morphMany('SwiftShare','shareable');
+    }
+
     public function document()
     {
         return $this->morphMany('SwiftACPDocument','document');

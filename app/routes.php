@@ -78,6 +78,9 @@ Route::group(array('before' => array('auth')), function()
 
     //Document Viewer
     Route::controller('document-viewer','DocumentViewerController');
+
+    //Share
+    Route::controller('share','ShareController');
     
 });
 

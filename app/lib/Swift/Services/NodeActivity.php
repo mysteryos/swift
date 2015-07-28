@@ -298,7 +298,7 @@ class NodeActivity {
                     self::save($nodeActivity,SwiftNodeActivity::$FLOW_STOP);
                 }
                 break;
-            case SwiftNodeDefinition::$T_NODE_CONDITION:                
+            case SwiftNodeDefinition::$T_NODE_CONDITION:
             case SwiftNodeDefinition::$T_NODE_INPUT:
             case SwiftNodeDefinition::$T_NODE_ACTION:
                 $function = $nodeActivity->definition->php_function."::".lcfirst(studly_case($nodeActivity->definition->name));

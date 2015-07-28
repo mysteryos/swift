@@ -66,12 +66,12 @@ class SwiftStory extends Eloquent {
     
     public function storyfiable()
     {
-        return $this->morphTo();
+        return $this->morphTo()->withTrashed();
     }
     
     public function context()
     {
-        return $this->morphTo();
+        return $this->morphTo()->withTrashed();
     }
     
     public function actionText()

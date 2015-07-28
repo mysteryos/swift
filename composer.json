@@ -36,7 +36,9 @@
                 "tecnick.com/tcpdf": "6.*",
                 "maxxscho/laravel-tcpdf": "0.*",
 		"analog/analog": "^1.0",
-		"greenlion/php-sql-parser": "^4.0"
+		"greenlion/php-sql-parser": "^4.0",
+		"setasign/fpdi": "^1.5",
+		"setasign/fpdf": "^1.7"
 	},
         "repositories": [
             {

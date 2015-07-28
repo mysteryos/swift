@@ -23,6 +23,7 @@
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" class="checkbox style-2" tabindex="-1" />
+                                <span></span>
                             </label>
                         </div>
                     </td>

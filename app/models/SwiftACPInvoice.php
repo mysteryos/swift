@@ -63,6 +63,19 @@ class SwiftACPInvoice extends Eloquent
     {
         return $this->acp;
     }
+
+    /*
+     * More Attributes
+     */
+
+    const TYPE_LOCAL = 1;
+    const TYPE_FOREIGN = 2;
+
+    public static $type = [
+        self::TYPE_LOCAL => 'Local',
+        self::TYPE_FOREIGN => 'Foreign'
+    ];
+    
     
     /*
      * Event Observers
@@ -82,7 +95,7 @@ class SwiftACPInvoice extends Eloquent
                 $model->date_received = date('Y-m-d');
             }
         });
-    }    
+    }
     
     /*
      * Accessors
@@ -127,6 +140,16 @@ class SwiftACPInvoice extends Eloquent
     /*
      * Scope
      */
+
+    public function scopeLocal($q)
+    {
+        return $q->where('currency_code','=','MUR');
+    }
+
+    public function scopeForeign($q)
+    {
+        return $q->whereNotNull('currency_code')->where('currency_code','!=','MUR','AND');
+    }
     
     /*
      * Relationships

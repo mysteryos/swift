@@ -88,8 +88,8 @@
                 @if(count($form->item))
                     @foreach($form->item as $i)
                         <tr>
-                            <td>{{$i->product->LITM}}</td>
-                            <td>{{$i->product->DSC1}}</td>
+                            <td>@if($i->product){{$i->product->LITM}}@else{{"N/A"}}@endif</td>
+                            <td>@if($i->product){{$i->product->DSC1}}@else{{"N/A"}}@endif</td>
                             <td>{{$i->quantity_ordered}}</td>
                             <td>{{$i->weight}}</td>
                             <td>{{$i->volume}}</td>

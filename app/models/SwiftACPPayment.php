@@ -68,10 +68,12 @@ class SwiftACPPayment extends Eloquent
 
     const DISPATCH_PICKUP = 1;
     const DISPATCH_POSTAL = 2;
+    const DISPATCH_RECEPTION = 3;
 
     public static $dispatch = [
         self::DISPATCH_PICKUP => 'Pickup',
-        self::DISPATCH_POSTAL => 'Postal'
+        self::DISPATCH_POSTAL => 'Postal',
+        self::DISPATCH_RECEPTION => 'Reception'
     ];
     
     /* Revisionable */

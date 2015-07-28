@@ -78,7 +78,7 @@ class NodeMail {
         }
     }
 
-    public static function sendApprovalMail($workflowActivity)
+    public static function sendChequeSign($workflowActivity)
     {
         if(count($workflowActivity))
         {
@@ -120,7 +120,7 @@ class NodeMail {
         }
     }
 
-    public function sendChequeSign($workflowActivity)
+    public function sendApprovalMail($workflowActivity)
     {
         if(count($workflowActivity))
         {

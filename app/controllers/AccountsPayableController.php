@@ -18,7 +18,6 @@ class AccountsPayableController extends UserController {
         $this->accountingChequeSignExecPermission = "acp-exec";
         $this->canWhat();
         $this->isWho();
-
     }
 
     private function canWhat()
@@ -239,12 +238,12 @@ class AccountsPayableController extends UserController {
                 }
             }
 
-            Session::flash('acp_form_filter',$filter);
+            \Session::flash('acp_form_filter',$filter);
 
         }
         else
         {
-            Session::forget('acp_form_filter');
+            \Session::forget('acp_form_filter');
         }
 
         $formsCount = $acprequestquery->count();
@@ -441,7 +440,7 @@ class AccountsPayableController extends UserController {
                                             ];
 
         $this->filter['filter_type'] = ['name'=>'Order Type',
-                                        'value' => \Input::get('filter_type'),
+                                        'value' => \Input::get('filter_type',0) > 0 ? \SwiftACPInvoice::$type[(int)\Input::get('filter_type')] : "" ,
                                         'enabled' => \Input::has('filter_type') && \Input::get('filter_type',0) > 0
                                         ];
 
@@ -680,13 +679,13 @@ class AccountsPayableController extends UserController {
         if($this->filter['filter_type']['enabled'])
         {
            $query->whereHas('invoice',function($q){
-                if($this->filter['filter_type']['value'] === 1)
+                if((int)\Input::get('filter_type',0) === SwiftACPInvoice::TYPE_LOCAL)
                 {
-                    return $q->where('currency_code','=','MUR');
+                    return $q->local();
                 }
                 else
                 {
-                    return $q->where('currency_code','!=','MUR');
+                    return $q->foreign();
                 }
            });
         }
@@ -1439,6 +1438,14 @@ class AccountsPayableController extends UserController {
             });
         });
 
+        /*
+         * Filter Accounting Employees
+         */
+        if(!$this->currentUser->isSuperUser() && $this->canSignCheque)
+        {
+            $query->where('cheque_signator_id','=',$this->currentUser->id);
+        }
+
         //order By
         $query->orderBy('payment_number','ASC');
 
@@ -1482,6 +1489,14 @@ class AccountsPayableController extends UserController {
                 });
             });
         });
+
+        /*
+         * Filter Executive by ID
+         */
+        if(!$this->currentUser->isSuperUser() && $this->canSignChequeExec)
+        {
+            $query->where('cheque_exec_signator_id','=',$this->currentUser->id);
+        }
 
         //order By
         $query->orderBy('payment_number','ASC');
@@ -1877,6 +1892,46 @@ class AccountsPayableController extends UserController {
         }
     }
 
+    /*
+     * Create Multi Forms from single PDF
+     */
+    public function getCreateMulti()
+    {
+        if(!$this->canCreate)
+        {
+            return parent::forbidden();
+        }
+
+        $this->pageTitle = 'Create Multi';
+
+        return $this->makeView('acpayable/create-multi');
+    }
+
+    /*
+     * 
+     */
+
+    public function postMultiPdf()
+    {
+        if(\Input::has('multi_pdf'))
+        {
+            $file = \Input::file('document');
+            $file_name = $file->getClientOriginalName()."_".microtime();
+            if($file->move(storage_path().'/tmp/',$file_name))
+            {
+                $pdf = new setasign\fpdi\FPDI();
+                $pdf->setSourceFile();
+                return \Response::json(['file_name'=>$file_name]);
+            }
+        }
+        else
+        {
+            return \Response::make("Please upload a file.",400);
+        }
+
+        return \Response::make("Unable to process your request",500);
+    }
+
     public function getView($id,$override=false)
     {
         if($override === true)
@@ -2156,12 +2211,12 @@ class AccountsPayableController extends UserController {
                 //Check if form has supplier payment terms
                 if($this->isAccountingDept || $this->isAdmin)
                 {
-                    if(!$acp->supplier->paymentTerm)
-                    {
-                        $this->data['message'][] = [ 'type' => 'warning',
-                                                     'msg' => "This supplier doesn't have any payment terms. <a href=\"".Helper::generateURL($acp->supplier)."\" class=\"pjax\">Please provide one.</a>"
-                                                    ];
-                    }
+//                    if(!$acp->supplier->paymentTerm)
+//                    {
+//                        $this->data['message'][] = [ 'type' => 'warning',
+//                                                     'msg' => "This supplier doesn't have any payment terms. <a href=\"".Helper::generateURL($acp->supplier)."\" class=\"pjax\">Please provide one.</a>"
+//                                                    ];
+//                    }
 
                     if($this->data['checkPayment'] === true)
                     {
@@ -2212,7 +2267,7 @@ class AccountsPayableController extends UserController {
                         return Response::make("Please select a valid type",500);
                     }
                     break;
-                case "billable_customer_code":
+                case "billable_company_code":
                     if(!is_numeric(trim(Input::get('value'))))
                     {
                         return Response::make("Company code should be numeric.",400);

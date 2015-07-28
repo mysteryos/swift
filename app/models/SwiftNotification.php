@@ -58,7 +58,10 @@ class SwiftNotification extends Eloquent {
     
     public static function getByUser($user_id,$limit=10)
     {
-        return self::where('to','=',$user_id)->take($limit)->orderBy('created_at','DESC')->get();
+        return self::where('to','=',$user_id)
+            ->take($limit)
+            ->orderBy('created_at','DESC')
+            ->get();
     }
     
     public static function getUnreadCountByUser($user_id)

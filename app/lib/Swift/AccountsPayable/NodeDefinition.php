@@ -211,7 +211,6 @@ Class NodeDefinition {
 
             if(count($returnReasonList) === 0 && !$returnReason)
             {
-                \Queue::push('Swift\AccountsPayable\JdeReconcialiation@reconcialiatePaymentTask',['class'=>get_class($acp),'id'=>$acp->id,'user_id'=>\Sentry::getUser()->id]);
                 return true;
             }
             

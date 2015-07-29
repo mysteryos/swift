@@ -208,7 +208,7 @@ class JdeReconcialiation {
                 switch($jdeCol)
                 {
                     case 'ag':
-                        $pv->invoice->$col = abs($jdePV->$jdeCol);
+                        $pv->invoice->$col = $jdePV->$jdeCol;
                         break;
                     case 'ddj':
                         if($pv->invoice->due_date === null)
@@ -233,7 +233,7 @@ class JdeReconcialiation {
                                 ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
                                 ->groupBy('DOC')
                                 ->sum('aap');
-            $pv->invoice->open_amount = $dueAmountTotal;
+            $pv->invoice->open_amount = $openAmountTotal;
 
             return $pv->invoice->save();
         }
@@ -266,7 +266,7 @@ class JdeReconcialiation {
             {
                 if($jdeCol === 'paap')
                 {
-                    $pay->$col = abs($jdePay->$jdeCol);
+                    $pay->$col = $jdePay->$jdeCol;
                 }
                 else
                 {
@@ -275,6 +275,32 @@ class JdeReconcialiation {
             }
 
             return $pay->save();
+        }
+
+        return false;
+    }
+
+    public static function updatePvOpenAmount($form)
+    {
+        $form->load(['paymentVoucher','invoice']);
+        if($form->paymentVoucher && $form->invoice)
+        {
+            if($form->paymentVoucher->validated === \SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+            {
+                $prevAmount = $form->invoice->open_amount;
+                $openAmountTotal = \JdePaymentVoucher::where('DOC','=',$form->paymentVoucher->number)
+                                    ->where('kco','=',sprintf('%05d', $form->billable_company_code),'AND')
+                                    ->groupBy('DOC')
+                                    ->sum('aap');
+
+                //Amount changed, we update
+                if($openAmountTotal !== $prevAmount)
+                {
+                    $form->invoice->open_amount = $openAmountTotal;
+                    $form->invoice->save();
+                    return true;
+                }
+            }
         }
 
         return false;

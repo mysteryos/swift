@@ -41,18 +41,6 @@ class AccountsPayableController extends UserController {
 
     public function getIndex()
     {
-        $paymentList = \SwiftACPPayment::with('acp')
-                                ->where('validated','!=',\SwiftACPPayment::VALIDATION_COMPLETE)
-                                ->get();
-
-        foreach($paymentList as $pay)
-        {
-            if(\Swift\AccountsPayable\JdeReconcialiation::reconcialiatePayment($pay))
-            {
-                \Swift\AccountsPayable\JdeReconcialiation::autofillPayment($pay);
-            }
-        }
-
         return \Redirect::to('/'.$this->context.'/overview');
     }
 

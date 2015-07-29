@@ -80,8 +80,6 @@ Class NodeDefinitionJoin {
                 $acp->approval()->save($approval);
             }
 
-            //Reconciliate Payment Voucher With JDE
-            \Queue::push('Swift\AccountsPayable\JdeReconcialiation@reconcialiatePaymentVoucherTask',['class'=>get_class($acp),'id'=>$acp->id,'user_id'=>\Sentry::getUser()->id]);
         }
         
         return true;

@@ -120,13 +120,13 @@ class NodeMail {
         }
     }
 
-    public function sendApprovalMail($workflowActivity)
+    public static function sendApprovalMail($workflowActivity)
     {
         if(count($workflowActivity))
         {
             $acp = $workflowActivity->workflowable;
             $acp->load(['payment'=>function($q){
-                return $q->where('approved','=',\SwiftApproval::PENDING);
+                return $q->where('validated','=',\SwiftApproval::PENDING);
             },'approvalHod.approver']);
 
 

@@ -61,18 +61,25 @@ class acpcheckpayment extends ScheduledCommand {
          * Workflow with check payment
          */
 
-        $forms = \SwiftAPRequest::whereHas('workflow',function($q){
+        $forms = \SwiftACPRequest::whereHas('workflow',function($q){
                     return $q->inprogress()->whereHas('pendingNodes',function($q){
                         return $q->whereHas('definition',function($q){
                             return $q->where('name','=','acp_checkpayment');
                         });
                     });
                 })
+                ->with(['invoice','paymentVoucher'])
                 ->get();
 
         foreach($forms as $f)
         {
-            \Workflow::update($f,'acpayable');
+            /*
+             * Fetch Latest Open amount
+             */
+            if(\Swift\AccountsPayable\JdeReconcialiation::updatePvOpenAmount($f))
+            {
+                \WorkflowActivity::update($f,'acpayable');
+            }
         }
 
     }
@@ -83,7 +90,7 @@ class acpcheckpayment extends ScheduledCommand {
    public function schedule(Schedulable $scheduler)
    {
        //Every Day at 4a.m
-       return $scheduler->daily()->hours(4)->minutes(30);
+       return $scheduler->daily()->hours(5)->minutes(0);
    }
 
 	/**

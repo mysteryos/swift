@@ -52,7 +52,7 @@
                 </div>
             </div>
         @endif
-        @if(count($inprogress_important) && $isAdmin)
+        @if(count($inprogress_important) && $permission->isAdmin())
             <div class="panel panel-default">
                 <div class="panel-heading">
                         <h4 class="panel-title">
@@ -78,7 +78,7 @@
                 </div>
             </div>
         @endif
-        @if(count($inprogress) && $isAdmin)
+        @if(count($inprogress) && $permission->isAdmin())
             <div class="panel panel-default">
                 <div class="panel-heading">
                         <h4 class="panel-title">

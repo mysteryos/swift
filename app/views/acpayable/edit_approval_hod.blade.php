@@ -6,10 +6,10 @@
                 <a href="#" @if(isset($approval->id)) {{ "id=\"approval_hod_user_".$approval->id."\"" }} @endif class="editable approval-hod-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="select" data-context="approvalhod" data-name="approval_user_id" data-pk="{{ $approval->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/approval-hod/{{ Crypt::encrypt($form->id) }}" data-source='{{ $approval_hod }}' data-value="{{ $approval->approval_user_id or "" }}"></a>
             </div>
         </div>
-        <div class="form-group col-xs-6" @if((!isset($approval->id)) || !$isHOD || (isset($dummy) && $dummy == true)) style="display:none;" @endif>
+        <div class="form-group col-xs-6" @if((!isset($approval->id)) || !$permission->isHOD() || (isset($dummy) && $dummy == true)) style="display:none;" @endif>
             <label class="col-md-4 control-label">Approval</label>
             <div class="col-md-8">
-                <a href="#" @if(isset($approval->id)) {{ "id=\"approval_hod_approved_".$approval->id."\"" }} @endif class="editable @if(!$isHOD && !$isAdmin) editable-disabled @endif editable-noblur approval-hod-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="select" data-context="approvalhod" data-name="approved" data-pk="{{ $approval->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/approval-hod/{{ Crypt::encrypt($form->id) }}" data-source='{{ $approval_code }}' data-value="{{ $approval->approved or 0 }}"></a>
+                <a href="#" @if(isset($approval->id)) {{ "id=\"approval_hod_approved_".$approval->id."\"" }} @endif class="editable @if(!$permission->isHOD() && !$permission->isAdmin()) editable-disabled @endif editable-noblur approval-hod-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="select" data-context="approvalhod" data-name="approved" data-pk="{{ $approval->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/approval-hod/{{ Crypt::encrypt($form->id) }}" data-source='{{ $approval_code }}' data-value="{{ $approval->approved or 0 }}"></a>
             </div>
         </div>
     </div>

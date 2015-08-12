@@ -31,17 +31,17 @@
     </div>
     <div class="row">
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
-            @if($canCreate)
+            @if($permission->canCreate())
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$canCreate){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$permission->canCreate()){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
                     </div>
                 </div>
             @endif
             <div class="row">
                 <div class="col-xs-12 inbox-side-bar">
                     <h6> Filters <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a>--></h6>
-                    @if($isAccountingDept || $isAdmin)
+                    @if($permission->isAccountingDept() || $permission->isAdmin())
                         <ul class="inbox-menu-lg">
                                 <li @if($type=="inprogress"){{"class=\"active\""}}@endif >
                                         <a href="/{{ $rootURL }}/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
@@ -61,7 +61,7 @@
                     <h6> Quick Access <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a>--> </h6>
 
                     <ul class="inbox-menu-sm">
-                            @if($canCreate)
+                            @if($permission->canCreate())
                                 <li @if($type=="mine"){{"class=\"active\""}}@endif >
                                       <a href="/{{ $rootURL }}/forms/mine" class="form-pjax-filter pjax"><i class="fa fa-heart"></i>Mine</a>
                                 </li>
@@ -100,7 +100,7 @@
                         </ul>
                     </div>
                     @endif
-                    @if($canCreate)
+                    @if($permission->canCreate())
                         <a href="/{{ $rootURL }}/create" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
                     @endif
                     @if($count)

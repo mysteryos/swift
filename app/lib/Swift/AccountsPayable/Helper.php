@@ -40,4 +40,70 @@ class Helper
         
         return $chequesign_users;
     }
+
+    public static function checkAccess($acp)
+    {
+        $hasAccess = false;
+        //Owner has access
+        if($acp->isOwner())
+        {
+            $hasAccess = true;
+        }
+
+        //Accounting or Admin has access
+        if($this->isAccountingDept || $this->isAdmin)
+        {
+            $hasAccess = true;
+        }
+
+        //HoDs have access
+        $approvalUserIds = array();
+        $approvalUserIds = array_map(function($val){
+                                if($val['type'] === \SwiftApproval::APC_HOD)
+                                {
+                                    return $val['approval_user_id'];
+                                }
+                           },$acp->approval->toArray());
+
+
+        if(in_array($this->currentUser->id,$approvalUserIds))
+        {
+            if($this->isHOD)
+            {
+                $hasAccess = true;
+            }
+        }
+
+        //Executive Access
+        $executiveUserIds = [];
+        $executiveUserIds = array_map(function($val){
+                                if($val['cheque_exec_signator_id'] !== null && (int)$val['cheque_exec_signator_id'] > 0)
+                                {
+                                    return $val['cheque_exec_signator_id'];
+                                }
+                            },$acp->payment->toArray());
+
+        if(in_array($this->currentUser->id,$executiveUserIds))
+        {
+            if($this->canSignChequeExec)
+            {
+                $hasAccess = true;
+            }
+        }
+
+        /*
+         * Sharing Access
+         */
+        if(!$hasAccess)
+        {
+             $sharedUserCount = $acp->share()->where('to_user_id','=',$this->currentUser->id)->count();
+             if($sharedUserCount > 0)
+             {
+                 $hasAccess = true;
+             }
+        }
+
+        //Permission Check - End
+        return $hasAccess;
+    }
 }

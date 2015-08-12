@@ -7,39 +7,7 @@ class AccountsPayableController extends UserController {
         $this->pageName = "Accounts Payable";
         $this->context = $this->data['context'] = "acpayable";
         $this->rootURL = $this->data['rootURL'] = "accounts-payable";
-        $this->adminPermission = "acp-admin";
-        $this->viewPermission = "acp-view";
-        $this->editPermission = "acp-edit";
-        $this->createPermission = "acp-create";
-        $this->HODPermission = "acp-hod";
-        $this->accountingPaymentVoucherPermission = "acp-paymentvoucher";
-        $this->accountingPaymentIssuePermission = "acp-paymentissue";
-        $this->accountingChequeDispatch = "acp-chequedispatch";
-        $this->accountingChequeSignPermission = "acp-chequesign";
-        $this->accountingChequeSignExecPermission = "acp-exec";
-        $this->canWhat();
-        $this->isWho();
-    }
-
-    private function canWhat()
-    {
-        $this->canCreate = $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
-        $this->canEdit = $this->data['canEdit'] = $this->currentUser->hasAccess($this->editPermission);
-        $this->canView = $this->data['canView'] = $this->currentUser->hasAccess($this->viewPermission);
-        $this->canSignCheque = $this->data['canSignCheque'] = $this->currentUser->hasAccess($this->accountingChequeSignPermission);
-        $this->canSignChequeExec = $this->data['canSignChequeExec'] = $this->currentUser->hasAccess($this->accountingChequeSignExecPermission);
-        $this->canDispatchCheque = $this->data['canDispatchCheque'] = $this->currentUser->hasAccess($this->accountingChequeDispatch);
-    }
-
-    private function isWho()
-    {
-        $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
-        $this->isAccountingDept = $this->data['isAccountingDept'] = $this->currentUser->hasAnyAccess([$this->accountingPaymentVoucherPermission,
-                                                                        $this->accountingPaymentIssuePermission,
-                                                                        $this->accountingChequeSignPermission,
-                                                                        $this->accountingChequeDispatch
-                                                                    ]);
-        $this->isHOD = $this->data['isHOD'] = $this->currentUser->hasAccess($this->HODPermission);
+        $this->permission = $this->data['permission'] = new \Permission\SwiftACPRequest();
     }
 
     public function getIndex()
@@ -119,14 +87,14 @@ class AccountsPayableController extends UserController {
         //Check user group
         if($type===false)
         {
-            if(!$this->isAdmin)
+            if(!$this->permission->isAdmin())
             {
                 //Set defaults
-                if($this->isAccountingDept)
+                if($this->permission->isAccountingDept())
                 {
                     $type='inprogress';
                 }
-                else if($this->canCreate)
+                else if($this->permission->canCreate())
                 {
                     $type='mine';
                 }
@@ -139,7 +107,7 @@ class AccountsPayableController extends UserController {
         else
         {
             //Creators can have access to their own only.
-            if(!$this->isAdmin && $this->canCreate && !in_array($type,['mine','starred']))
+            if(!$this->permission->isAdmin() && $this->permission->canCreate() && !in_array($type,['mine','starred']))
             {
                 $type='mine';
             }
@@ -313,7 +281,6 @@ class AccountsPayableController extends UserController {
 
         //The Data
         $this->data['type'] = $type;
-        $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->createPermission,$this->adminPermission]);
         $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
         $this->data['forms'] = $forms;
         $this->data['count'] = isset($filter) ? $formsCount : SwiftACPRequest::count();
@@ -332,7 +299,7 @@ class AccountsPayableController extends UserController {
      */
     public function getPaymentVoucherProcess()
     {
-        if(!$this->isAccountingDept && !$this->isAdmin)
+        if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -406,7 +373,7 @@ class AccountsPayableController extends UserController {
      */
     public function getPaymentIssue($type='all',$page=1)
     {
-        if(!$this->isAccountingDept && !$this->isAdmin)
+        if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -753,7 +720,7 @@ class AccountsPayableController extends UserController {
      */
     public function getChequeAssignExec($type='all',$page=1)
     {
-        if(!$this->isAccountingDept && !$this->isAdmin)
+        if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -1057,7 +1024,7 @@ class AccountsPayableController extends UserController {
      */
     public function getChequeDispatch($type='all',$page=1)
     {
-        if(!$this->canDispatchCheque && !$this->isAdmin)
+        if(!$this->permission->canDispatchCheque() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -1352,7 +1319,7 @@ class AccountsPayableController extends UserController {
 
     public function getHodApproval()
     {
-        if(!$this->isHOD)
+        if(!$this->permission->isHOD())
         {
             return parent::forbidden();
         }
@@ -1404,7 +1371,7 @@ class AccountsPayableController extends UserController {
      */
     public function getChequeSign()
     {
-        if(!$this->canSignCheque && !$this->isAdmin)
+        if(!$this->permission->canSignCheque() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -1432,7 +1399,7 @@ class AccountsPayableController extends UserController {
         /*
          * Filter Accounting Employees
          */
-        if(!$this->currentUser->isSuperUser() && $this->canSignCheque)
+        if(!$this->currentUser->isSuperUser() && $this->permission->canSignCheque())
         {
             $query->where('cheque_signator_id','=',$this->currentUser->id);
         }
@@ -1456,7 +1423,7 @@ class AccountsPayableController extends UserController {
      */
     public function getChequeSignExec()
     {
-        if(!$this->canSignChequeExec && !$this->isAdmin)
+        if(!$this->permission->canSignChequeExec() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -1484,7 +1451,7 @@ class AccountsPayableController extends UserController {
         /*
          * Filter Executive by ID
          */
-        if(!$this->currentUser->isSuperUser() && $this->canSignChequeExec)
+        if(!$this->currentUser->isSuperUser() && $this->permission->canSignChequeExec())
         {
             $query->where('cheque_exec_signator_id','=',$this->currentUser->id);
         }
@@ -1504,7 +1471,7 @@ class AccountsPayableController extends UserController {
 
     public function getPaymentDue($type='all',$page=1)
     {
-        if(!$this->isAccountingDept && !$this->isAdmin)
+        if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -1888,7 +1855,7 @@ class AccountsPayableController extends UserController {
      */
     public function getCreateMulti()
     {
-        if(!$this->canCreate)
+        if(!$this->permission->canCreate())
         {
             return parent::forbidden();
         }
@@ -2010,72 +1977,6 @@ class AccountsPayableController extends UserController {
         }
     }
 
-    private function checkAccess($acp)
-    {
-        $hasAccess = false;
-        //Owner has access
-        if($acp->isOwner())
-        {
-            $hasAccess = true;
-        }
-
-        //Accounting or Admin has access
-        if($this->isAccountingDept || $this->isAdmin)
-        {
-            $hasAccess = true;
-        }
-
-        //HoDs have access
-        $approvalUserIds = array();
-        $approvalUserIds = array_map(function($val){
-                                if($val['type'] === \SwiftApproval::APC_HOD)
-                                {
-                                    return $val['approval_user_id'];
-                                }
-                           },$acp->approval->toArray());
-
-        
-        if(in_array($this->currentUser->id,$approvalUserIds))
-        {
-            if($this->isHOD)
-            {
-                $hasAccess = true;
-            }
-        }
-
-        //Executive Access
-        $executiveUserIds = [];
-        $executiveUserIds = array_map(function($val){
-                                if($val['cheque_exec_signator_id'] !== null && (int)$val['cheque_exec_signator_id'] > 0)
-                                {
-                                    return $val['cheque_exec_signator_id'];
-                                }
-                            },$acp->payment->toArray());
-
-        if(in_array($this->currentUser->id,$executiveUserIds))
-        {
-            if($this->canSignChequeExec)
-            {
-                $hasAccess = true;
-            }
-        }
-
-        /*
-         * Sharing Access
-         */
-        if(!$hasAccess)
-        {
-             $sharedUserCount = $acp->share()->where('to_user_id','=',$this->currentUser->id)->count();
-             if($sharedUserCount > 0)
-             {
-                 $hasAccess = true;
-             }
-        }
-
-        //Permission Check - End
-        return $hasAccess;
-    }
-
     private function form($id,$edit=false)
     {
         $acp_id = \Crypt::decrypt($id);
@@ -2084,7 +1985,7 @@ class AccountsPayableController extends UserController {
         if($acp)
         {
             //Check Access
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2180,13 +2081,13 @@ class AccountsPayableController extends UserController {
                         {
                             if($d->data != "")
                             {
-                                if(isset($d->data->publishOwner) && ($this->isAdmin || $this->isAccountingDept || $acp->isOwner()))
+                                if(isset($d->data->publishOwner) && ($this->permission->isAdmin() || $this->permission->isAccountingDept() || $acp->isOwner()))
                                 {
                                     $this->data['publishOwner'] = true;
                                     break;
                                 }
 
-                                if(isset($d->data->publishAccounting) && ($this->isAdmin || $this->isAccountingDept))
+                                if(isset($d->data->publishAccounting) && ($this->permission->isAdmin() || $this->permission->isAccountingDept()))
                                 {
                                     $this->data['publishAccounting'] = true;
                                     break;
@@ -2204,13 +2105,13 @@ class AccountsPayableController extends UserController {
                                     break;
                                 }
 
-                                if(isset($d->data->savePaymentVoucher) && ($this->isAdmin || $this->isAccountingDept))
+                                if(isset($d->data->savePaymentVoucher) && ($this->permission->isAdmin() || $this->permission->isAccountingDept()))
                                 {
                                     $this->data['savePaymentVoucher'] = true;
                                     break;
                                 }
 
-                                if(isset($d->data->checkPayment) && ($this->isAdmin || $this->isAccountingDept))
+                                if(isset($d->data->checkPayment) && ($this->permission->isAdmin() || $this->permission->isAccountingDept()))
                                 {
                                     $this->data['checkPayment'] = true;
                                     break;
@@ -2221,7 +2122,7 @@ class AccountsPayableController extends UserController {
                 }
 
                 //Check if form has supplier payment terms
-                if($this->isAccountingDept || $this->isAdmin)
+                if($this->permission->isAccountingDept() || $this->permission->isAdmin())
                 {
 //                    if(!$acp->supplier->paymentTerm)
 //                    {
@@ -2262,7 +2163,7 @@ class AccountsPayableController extends UserController {
         if($acp)
         {
 
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2328,7 +2229,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2351,7 +2252,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2384,7 +2285,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2410,7 +2311,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2442,7 +2343,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2514,7 +2415,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->checkAccess($acp))
+            if(!$this->permission->checkAccess($acp))
             {
                 return parent::forbidden();
             }
@@ -2543,7 +2444,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->isAccountingDept && !$this->isAdmin)
+            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
             {
                 return parent::forbidden();
             }
@@ -2672,7 +2573,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->isAccountingDept && !$this->isAdmin)
+            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
             {
                 return parent::forbidden();
             }
@@ -2701,7 +2602,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->isAccountingDept && !$this->isAdmin)
+            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
             {
                 return parent::forbidden();
             }
@@ -2756,7 +2657,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->isAccountingDept && !$this->isAdmin)
+            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
             {
                 return parent::forbidden();
             }
@@ -2782,7 +2683,7 @@ class AccountsPayableController extends UserController {
 
         if($acp)
         {
-            if($this->checkAccess($acp))
+            if($this->permission->checkAccess($acp))
             {
                 switch(\Input::get('name'))
                 {
@@ -2805,7 +2706,7 @@ class AccountsPayableController extends UserController {
                         {
                             return \Response::make("Please select a valid approval status.",400);
                         }
-                        if(!$this->isHOD)
+                        if(!$this->permission->isHOD())
                         {
                             return \Response::make("You don't have access to this action",400);
                         }
@@ -2877,7 +2778,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->isAccountingDept && !$this->isAdmin)
+            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
             {
                 return parent::forbidden();
             }
@@ -2904,7 +2805,7 @@ class AccountsPayableController extends UserController {
         if($acp)
         {
             //Is owner or Is admin
-            if($acp->owner_user_id === $this->currentUser->id || $this->isAdmin)
+            if($acp->owner_user_id === $this->currentUser->id || $this->permission->isAdmin())
             {
                 $workflow_progress = \WorkflowActivity::progress($acp);
                 if($workflow_progress['status'] === \SwiftWorkflowActivity::INPROGRESS)
@@ -2992,7 +2893,7 @@ class AccountsPayableController extends UserController {
         if($acp)
         {
             //Is accounting or Admin
-            if($this->isAccountingDept || $this->isAdmin)
+            if($this->permission->isAccountingDept() || $this->permission->isAdmin())
             {
                 $workflow_progress = \WorkflowActivity::progress($acp);
                 if($workflow_progress['status'] === \SwiftWorkflowActivity::INPROGRESS)
@@ -3079,7 +2980,7 @@ class AccountsPayableController extends UserController {
 
     public function putPaymentNumber($form_id)
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3147,7 +3048,7 @@ class AccountsPayableController extends UserController {
 
     public function putBatchNumber($form_id)
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3215,7 +3116,7 @@ class AccountsPayableController extends UserController {
     
     public function putChequeSignatorId($form_id)
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3283,7 +3184,7 @@ class AccountsPayableController extends UserController {
 
     public function putPaymentType($form_id)
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3334,7 +3235,7 @@ class AccountsPayableController extends UserController {
 
     public function putChequeExec()
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3365,7 +3266,7 @@ class AccountsPayableController extends UserController {
 
     public function postPaymentExecSign($payment_id)
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3400,7 +3301,7 @@ class AccountsPayableController extends UserController {
 
     public function postSaveChequeSign()
     {
-        if(!$this->isAdmin && !$this->canSignCheque)
+        if(!$this->permission->isAdmin() && !$this->permission->canSignCheque())
         {
             return parent::forbidden();
         }
@@ -3433,7 +3334,7 @@ class AccountsPayableController extends UserController {
     
     public function postSaveChequeSignExec()
     {
-        if(!$this->isAdmin && !$this->canSignChequeExec)
+        if(!$this->permission->isAdmin() && !$this->permission->canSignChequeExec())
         {
             return parent::forbidden();
         }
@@ -3470,7 +3371,7 @@ class AccountsPayableController extends UserController {
      */
     public function putChequeDispatch()
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3505,7 +3406,7 @@ class AccountsPayableController extends UserController {
      */
     public function postChequeDispatch($payment_id)
     {
-        if(!$this->isAdmin && !$this->isAccountingDept)
+        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
         {
             return parent::forbidden();
         }
@@ -3532,7 +3433,7 @@ class AccountsPayableController extends UserController {
 
     public function postSaveHodApproval($form_id,$approval_type)
     {
-        if(!$this->isHOD)
+        if(!$this->permission->isHOD())
         {
             return parent::forbidden();
         }
@@ -3733,7 +3634,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->isAccountingDept && !$this->isAdmin)
+            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
             {
                 return parent::forbidden();
             }
@@ -3929,7 +3830,7 @@ class AccountsPayableController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->isAdmin)
+        if(!$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -4027,7 +3928,7 @@ class AccountsPayableController extends UserController {
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
-        $this->data['edit_access'] = $this->isHOD || $this->isAccountingDept;
+        $this->data['edit_access'] = $this->permission->isHOD() || $this->permission->isAccountingDept();
 
         return $this->makeView("acpayable/suppliers");
     }
@@ -4049,14 +3950,14 @@ class AccountsPayableController extends UserController {
             //Check access to mode
             if($mode=='edit')
             {
-                if(!$this->isAccountingDept && !$this->isAdmin)
+                if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
                 {
                     $mode='view';
                 }
             }
             else
             {
-                if($this->isAccountingDept || $this->isAdmin)
+                if($this->permission->isAccountingDept() || $this->permission->isAdmin())
                 {
                     $mode='edit';
                 }
@@ -4164,7 +4065,7 @@ class AccountsPayableController extends UserController {
 
     public function getStories()
     {
-        if($this->isAdmin || $this->isAccountingDept)
+        if($this->permission->isAdmin() || $this->permission->isAccountingDept())
         {
             $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
         }
@@ -4311,7 +4212,7 @@ class AccountsPayableController extends UserController {
     public function getViewPayment($payment_id)
     {
         //Check Access
-        if($this->canSignChequeExec || $this->isAdmin || $this->isAccountingDept)
+        if($this->permission->canSignChequeExec() || $this->permission->isAdmin() || $this->permission->isAccountingDept())
         {
             if(is_numeric($payment_id))
             {

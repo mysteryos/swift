@@ -81,6 +81,9 @@ Route::group(array('before' => array('auth')), function()
 
     //Share
     Route::controller('share','ShareController');
+
+    //Settings
+    Route::controller('setting','SettingController');
     
 });
 
@@ -100,5 +103,3 @@ Route::controller('login','LoginController');
  */
 
 Route::get('404','UserController@notfound');
-
-Route::controller('test','testController');

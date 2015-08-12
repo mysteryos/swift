@@ -184,9 +184,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             },
             error:function(xhr, status, error)
             {
+                $.smallBox({
+			title : "Help information",
+			content : xhr.responseText,
+			color : "#5384AF",
+			icon : "fa fa-question"
+		});                
                 $this.removeAttr('disabled');
                 $this.removeClass('loading-animation');
-                return xhr.responseText;
             }
         });
     });

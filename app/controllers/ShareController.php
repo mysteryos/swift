@@ -98,6 +98,7 @@ class ShareController extends UserController
                 $this->data['users'] = \User::where('activated','=',1)
                                         ->where('email','!=',\Config::get('website.system_mail'),'AND')
                                         ->where('id','!=',$this->currentUser->id,'AND')
+                                        ->orderBy('first_name','last_name')
                                         ->get();
                 $this->data['permission'] = \SwiftShare::$permissions;
                 return \View::make('share/shareable',$this->data);

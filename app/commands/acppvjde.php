@@ -74,6 +74,29 @@ class acppvjde extends ScheduledCommand {
                     \Swift\AccountsPayable\JdeReconcialiation::autofillPaymentVoucher($pv);
                 }
             }
+
+            /*
+             * Get all payment voucher that has been recently updated on JDE
+             */
+
+            $paymentVoucherList = \JdePaymentVoucher::groupBy('doc')
+                                    ->select(\DB::raw('MAX(updated_at) as max_updated_at, doc, kco'))
+                                    ->having(\DB::raw('max_updated_at'),'>=',\Carbon::now()->subDays(3))
+                                    ->get();
+
+            foreach($paymentVoucherList as $pv)
+            {
+                $localPv = \SwiftACPPaymentVoucher::where('number','=',$pv->doc)
+                            ->whereHas('acp',function($q) use ($pv){
+                                return $q->where('billable_company_code','=',$pv->kco);
+                            })
+                            ->where('validated','=',\SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
+                            ->first();
+                if($localPv)
+                {
+                    \Swift\AccountsPayable\JdeReconcialiation::autofillPaymentVoucher($localPv);
+                }
+            }
         } 
         catch (Exception $ex)
         {
@@ -90,7 +113,7 @@ class acppvjde extends ScheduledCommand {
    public function schedule(Schedulable $scheduler)
    {
        //Every Day at 4a.m
-       return $scheduler->daily()->hours(4);
+       return $scheduler->daily()->hours(5)->minutes(30);
    }
 
 	/**

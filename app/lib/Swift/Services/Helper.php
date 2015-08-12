@@ -38,6 +38,21 @@ class Helper {
     }
 
     /*
+     * Resolver for User Id for the System
+     */
+    public function getUserId()
+    {
+        if(Sentry::check())
+        {
+            return Sentry::getUser()->id;
+        }
+        else
+        {
+            return \Config::get('website.system_user_id');
+        }
+    }
+
+    /*
      * Saves history of a recently viewed form
      *
      * @param \Illuminate\Database\Eloquent\Model $obj

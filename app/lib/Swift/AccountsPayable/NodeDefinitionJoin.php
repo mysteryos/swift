@@ -40,6 +40,11 @@ Class NodeDefinitionJoin {
         return false;
     }
 
+    public static function creditNoteToEnd($nodeActivity)
+    {
+        return true;
+    }
+
     public static function approvalToPaymentvoucher($nodeActivity)
     {
         //Only if approval of HOD is approved

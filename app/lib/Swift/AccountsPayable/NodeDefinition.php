@@ -374,6 +374,16 @@ Class NodeDefinition {
                 $returnReasonList['payment_error'] = "Payment errors have been found. See payment section";
             }
 
+            //Payment voucher & Payment checks out
+            //Do manual verification of open amount vs amount paid
+            $paymentAmount = (float)$acp->payment()->where('validated','=',\SwiftACPPayment::VALIDATION_COMPLETE)->sum('amount');
+            $invoice = $acp->invoice()->first();
+            $total_due = (float)$invoice->due_amount + $paymentAmount;
+            if($total_due !== (float)$invoice->open_amount)
+            {
+                $returnReasonList['payment_error'] = "Open amount doesn't tally. Please wait for JDE nightly update";
+            }
+
             //No errors at all, mark as complete
             if(count($returnReasonList) === 0 && !$returnReason)
             {

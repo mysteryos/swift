@@ -75,9 +75,13 @@ class SwiftACPPaymentVoucher extends Eloquent
         static::bootElasticSearchEvent();
         
         static::bootRevisionable();
-
-        static::created(function($model){
-            //Push job to validate PV in JDE table
+        static::updating(function($model){
+            $dirty = $model->getDirty();
+            if(array_key_exists('number',$dirty))
+            {
+                $model->validated = self::VALIDATION_PENDING;
+                $model->validated_msg = "";
+            }
         });
     }    
     

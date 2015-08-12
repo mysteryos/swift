@@ -9,14 +9,14 @@ class SearchController extends UserController {
                                         'order-tracking'=>array('ot-view','ot-admin'),
                                         'aprequest'=>array('apr-view','apr-admin'),
                                         'acpayable'=>array('acp-admin','acp-edit'),
-                                        'supplier'=>array('acp-view'),
+//                                        'supplier'=>array('acp-view'),
                                         'product-returns'=>['pr-view']
                                    );
         $this->searchCategory = array(
                                     'order-tracking' => 'Order Process',
                                     'aprequest' => 'A&P Request',
                                     'acpayable' => 'Accounts Payable',
-                                    'supplier' => 'JDE Supplier',
+//                                    'supplier' => 'JDE Supplier',
                                     'product-returns' => 'Product Returns'
                                 );
     }

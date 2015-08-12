@@ -90,7 +90,7 @@ class acpcheckpayment extends ScheduledCommand {
    public function schedule(Schedulable $scheduler)
    {
        //Every Day at 4a.m
-       return $scheduler->daily()->hours(5)->minutes(0);
+       return $scheduler->daily()->hours(6)->minutes(0);
    }
 
 	/**

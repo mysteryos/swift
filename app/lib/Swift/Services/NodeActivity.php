@@ -15,7 +15,14 @@ Use \Sentry;
 Use \NodeDefinition;
 
 class NodeActivity {
-    
+
+    public $user_id;
+
+    public function __construct()
+    {
+        $this->user_id = \Helper::getUserId();
+    }
+
     /*
      * Fetches all nodes which are currently in progress
      *
@@ -146,7 +153,7 @@ class NodeActivity {
      */
     public function save(SwiftNodeActivity $node_activity,$flow=1/*Forward Flow*/)
     {
-        $node_activity->user_id = Sentry::getUser()->id;
+        $node_activity->user_id = $this->user_id;
         $node_activity->flow = $flow;
         $node_activity->save();
     }
@@ -814,7 +821,7 @@ class NodeActivity {
     public function hasAccess($node_definition_id,$permission_type=1)
     {
         //Super Man Access
-        if(Sentry::getUser()->isSuperUser())
+        if(Sentry::findUserById($this->user_id)->isSuperUser())
         {
             return true;
         }
@@ -825,7 +832,7 @@ class NodeActivity {
             $arrayPermission = array_map(function(SwiftNodePermission $p){
                 return $p->permission_name;
             },$nodeDefinitionPermission);
-            return Sentry::getUser()->hasAnyAccess((array)$arrayPermission);
+            return Sentry::findUserById($this->user_id)->hasAnyAccess((array)$arrayPermission);
         }
         
         return false;

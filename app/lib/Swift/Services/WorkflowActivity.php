@@ -18,7 +18,15 @@ class WorkflowActivity {
      *
      * @return boolean
      */
-    
+
+    public $user_id;
+
+    public function __construct()
+    {
+        $this->user_id = \Helper::getUserId();
+        $this->nodeActivity = new NodeActivity;
+    }
+
     public function create($relation_object,$workflow_name)
     {
         //Check if relation is indeed an object
@@ -33,7 +41,7 @@ class WorkflowActivity {
          * Verifying Start Workflow Access
          */
         
-        if(!\NodeActivity::hasStartAccess($workflow_name))
+        if(!$this->nodeActivity->hasStartAccess($workflow_name))
         {
             //No Access
             throw new \UnexpectedValueException("User doesn't have access to current operation");
@@ -77,6 +85,8 @@ class WorkflowActivity {
         {
             return false;
         }
+
+        $this->nodeActivity->user_id = $this->user_id;
         
         //Go Fetch!
         $workflow = $relation_object->workflow()->first();
@@ -97,7 +107,7 @@ class WorkflowActivity {
             $updateTimeBefore = $workflow->updated_at;
             
             //We have workflow object, get Da Nodes
-            $nodeInProgress = \NodeActivity::inProgress($workflow->id);
+            $nodeInProgress = $this->nodeActivity->inProgress($workflow->id);
             if(!count($nodeInProgress))
             {
                 $latestNodeBefore = SwiftNodeActivity::getLatestByWorkflow($workflow->id);
@@ -106,7 +116,7 @@ class WorkflowActivity {
                 {
                     foreach($latestNodeBefore as $l)
                     {
-                        \NodeActivity::process($l,SwiftNodeActivity::$FLOW_FORWARD);
+                        $this->nodeActivity->process($l,SwiftNodeActivity::$FLOW_FORWARD);
                     }
                 }
                 else
@@ -115,10 +125,10 @@ class WorkflowActivity {
                     $startNodeDef = \NodeDefinition::getStartNodeDefinition($workflow_name);
                     if($startNodeDef)
                     {
-                        $startNodeActivity = \NodeActivity::create($workflow->id, $startNodeDef);
+                        $startNodeActivity = $this->nodeActivity->create($workflow->id, $startNodeDef);
                         if($startNodeActivity)
                         {
-                            \NodeActivity::process($startNodeActivity,SwiftNodeActivity::$FLOW_FORWARD);
+                            $this->nodeActivity->process($startNodeActivity,SwiftNodeActivity::$FLOW_FORWARD);
                         }
                         else
                         {
@@ -136,7 +146,7 @@ class WorkflowActivity {
                 foreach($nodeInProgress as $n)
                 {
                     $n->load('definition');
-                    \NodeActivity::process($n,SwiftNodeActivity::$FLOW_FORWARD);
+                    $this->nodeActivity->process($n,SwiftNodeActivity::$FLOW_FORWARD);
                 }
             }
 
@@ -169,7 +179,7 @@ class WorkflowActivity {
                 
                 //Deferred mail send to allow for auto processing of pending nodes - Avoid useless mailing for already completed steps
                 //Send Mail For pending Nodes
-                \NodeActivity::mail($workflowUpdated);
+                $this->nodeActivity->mail($workflowUpdated);
             }
         }
         
@@ -193,10 +203,7 @@ class WorkflowActivity {
 
         if(isset($data['user_id']))
         {
-            $user = Sentry::findUserById($data['user_id']);
-
-            // Log the user in
-            Sentry::login($user, false);
+           $this->user_id = $data['user_id'];
         }
         
         if(isset($data['class']) && isset($data['id']))
@@ -253,7 +260,7 @@ class WorkflowActivity {
             return array('label'=>'Rejected','status'=>SwiftWorkflowActivity::REJECTED,'status_class'=>'color-red');
         }
         
-        $nodeInProgress = \NodeActivity::inProgress($workflow->id);
+        $nodeInProgress = $this->nodeActivity->inProgress($workflow->id);
         if(!count($nodeInProgress))
         {
             //No node in progress, Find latest completed node
@@ -269,7 +276,7 @@ class WorkflowActivity {
                     }
                 }
                 //Something's wrong with the workflow. Rerun WorkflowActivity Update
-                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($relation_object),'id'=>$relation_object->id,'user_id'=>\Sentry::findUserByLogin(\Config::get('website.system_mail'))->id));
+                //\Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($relation_object),'id'=>$relation_object->id,'user_id'=>\Sentry::findUserByLogin(\Config::get('website.system_mail'))->id));
             }
         }
         else
@@ -326,13 +333,13 @@ class WorkflowActivity {
                 return \Response::make("Workflow has been rejected");
                 break;
             case SwiftWorkflowActivity::INPROGRESS:
-                $nodeInProgress = \NodeActivity::inProgress($workflow->id);
+                $nodeInProgress = $this->nodeActivity->inProgress($workflow->id);
                 $reasonList = array();
                 if(count($nodeInProgress))
                 {
                     foreach($nodeInProgress as $n)
                     {
-                        $reason = \NodeActivity::help($n,$needPermission);
+                        $reason = $this->nodeActivity->help($n,$needPermission);
                         if(!is_bool($reason))
                         {
                             $reasonList = array_merge($reasonList,$reason);
@@ -388,13 +395,13 @@ class WorkflowActivity {
                 return true;
                 break;
             case SwiftWorkflowActivity::INPROGRESS:
-                $nodeInProgress = \NodeActivity::inProgress($workflow->id);
+                $nodeInProgress = $this->nodeActivity->inProgress($workflow->id);
                 $reasonList = array();
                 if(count($nodeInProgress))
                 {
                     foreach($nodeInProgress as $n)
                     {
-                        $reason = \NodeActivity::help($n,true);
+                        $reason = $this->nodeActivity->help($n,true);
                         if(!is_bool($reason))
                         {
                             $reasonList = array_merge($reasonList,$reason);
@@ -448,7 +455,7 @@ class WorkflowActivity {
             {
                 \Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
                                                      'obj_id'=>$workflow->id,
-                                                     'user_id'=>\Sentry::getUser()->id,
+                                                     'user_id'=>$this->user_id,
                                                      'context'=>get_class($relation_object),
                                                      'action'=>\SwiftStory::ACTION_CANCEL));
                 return true;

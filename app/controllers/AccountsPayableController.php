@@ -281,7 +281,7 @@ class AccountsPayableController extends UserController {
 
         //The Data
         $this->data['type'] = $type;
-        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
+        $this->data['edit_access'] = $this->permission->canEdit() || $this->permission->isAdmin();
         $this->data['forms'] = $forms;
         $this->data['count'] = isset($filter) ? $formsCount : SwiftACPRequest::count();
         $this->data['page'] = $page;
@@ -694,7 +694,7 @@ class AccountsPayableController extends UserController {
 //        $this->data['tomorrowDate'] = $this->data['futureStartDate'] = $tomorrowDate;
 //        $this->data['futureEndDate'] = $futureEndDate;
         $this->data['payment_type'] = \SwiftACPPayment::$type;
-        $this->data['chequesign_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignPermission]);
+        $this->data['chequesign_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->permission->accountingChequeSignPermission]);
         $this->data['activeSuppliers'] = $activeSupplierResult;
         $this->data['forms'] = $forms;
         $this->data['count'] = $form_count;
@@ -998,7 +998,7 @@ class AccountsPayableController extends UserController {
 //        $this->data['dueFuture'] = $dueFuture;
 //        $this->data['tomorrowDate'] = $this->data['futureStartDate'] = $tomorrowDate;
 //        $this->data['futureEndDate'] = $futureEndDate;
-        $this->data['exec_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignExecPermission]);
+        $this->data['exec_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->permission->accountingChequeSignExecPermission]);
         $this->data['activeSuppliers'] = $activeSupplierResult;
         $this->data['forms'] = $forms;
         $this->data['count'] = $form_count;
@@ -1738,7 +1738,7 @@ class AccountsPayableController extends UserController {
         /*
          * Check Permission
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->createPermission]))
+        if(!$this->permission->isAdmin() && !$this->permission->canCreate())
         {
             return parent::forbidden();
         }
@@ -1751,7 +1751,7 @@ class AccountsPayableController extends UserController {
         /*
          * Check Permission
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->createPermission]))
+        if(!$this->permission->isAdmin() && !$this->permission->canCreate())
         {
             return parent::forbidden();
         }
@@ -1897,11 +1897,11 @@ class AccountsPayableController extends UserController {
             return $this->form($id,false);
         }
 
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->permission->canEdit() || $this->permission->isAdmin())
         {
             return Redirect::action('AccountsPayableController@getEdit',array('id'=>$id));
         }
-        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
+        elseif($this->permission->canView())
         {
             return $this->form($id,false);
         }
@@ -1941,11 +1941,11 @@ class AccountsPayableController extends UserController {
             return $this->form($id,true);
         }
 
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->permission->canEdit() || $this->permission->isAdmin())
         {
             return $this->form($id,true);
         }
-        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
+        elseif($this->permission->canView())
         {
             return \Redirect::action('AccountsPayableController@getView',array('id'=>$id));
         }
@@ -2009,7 +2009,7 @@ class AccountsPayableController extends UserController {
 
             //Find HoDs;
             $this->data['approval_hod'] = array();
-            $hods = \Sentry::findAllUsersWithAccess(array($this->HODPermission));
+            $hods = \Sentry::findAllUsersWithAccess(array($this->permission->HODPermission));
             if(count($hods))
             {
                 foreach($hods as $h)
@@ -2046,10 +2046,10 @@ class AccountsPayableController extends UserController {
             $this->data['pay_validation'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$validationArray));
             $this->data['approval_hod'] = json_encode(\Helper::jsonobject_encode($this->data['approval_hod']));
             $this->data['chequesign_users'] = json_encode(\Helper::jsonobject_encode(
-                                                \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignPermission])
+                                                \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->permission->accountingChequeSignPermission])
                                             ));
             $this->data['chequesign_exec_users'] = json_encode(\Helper::jsonobject_encode(
-                                                        \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->accountingChequeSignExecPermission])
+                                                        \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->permission->accountingChequeSignExecPermission])
                                                     ));
             $this->data['currency'] = json_encode(\Helper::jsonobject_encode(\Currency::getAll()));
             $this->data['flag_important'] = \Flag::isImportant($acp);
@@ -3506,7 +3506,7 @@ class AccountsPayableController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->permission->isAdmin() && !$this->permission->canEdit())
         {
             return parent::forbidden();
         }
@@ -3550,7 +3550,7 @@ class AccountsPayableController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->permission->isAdmin() && !$this->permission->canEdit())
         {
             return parent::forbidden();
         }
@@ -3599,7 +3599,7 @@ class AccountsPayableController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->permission->isAdmin() && !$this->permission->canEdit())
         {
             return parent::forbidden();
         }
@@ -3676,7 +3676,7 @@ class AccountsPayableController extends UserController {
         /*
         * Check Permissions
         */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->permission->isAdmin() && !$this->permission->canEdit())
         {
             return parent::forbidden();
         }
@@ -3797,14 +3797,14 @@ class AccountsPayableController extends UserController {
         /*
         * Check Permissions
         */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->permission->isAdmin() && !$this->permission->canEdit())
         {
             return "You don't have access to this resource.";
         }
 
         $needPermission = true;
 
-        if($this->currentUser->hasAccess($this->adminPermission))
+        if($this->permission->isAdmin())
         {
             $needPermission = false;
         }
@@ -3859,7 +3859,7 @@ class AccountsPayableController extends UserController {
      */
     public function putMark($type)
     {
-        return \Flag::set($type,'SwiftACPRequest',$this->adminPermission);
+        return \Flag::set($type,'SwiftACPRequest',$this->permission->adminPermission);
     }
 
     /*
@@ -3868,7 +3868,7 @@ class AccountsPayableController extends UserController {
 
     public function getSupplierList($filter=false,$page=1)
     {
-        if(!$this->currentUser->hasAccess($this->viewPermission))
+        if(!$this->permission->canView())
         {
             return parent::forbidden();
         }

@@ -215,12 +215,12 @@ Class AjaxSearchController extends UserController {
 
         if(Input::get('term')==="")
         {
-            //Get Most Popular customers
+            //Get Most Recent customers
             $searchresult = \SwiftACPRequest::groupBy('supplier_code')
-                            ->select(array(\DB::Raw('COUNT(*) as count'), 'jdesuppliermaster.*'))
+                            ->select(array(\DB::Raw('MAX(created_at) as max_created_at'), 'jdesuppliermaster.*'))
                             ->limit($limit)
                             ->offset($offset)
-                            ->orderBy('count','DESC')
+                            ->orderBy('max_created_at','DESC')
                             ->join('sct_jde.jdesuppliermaster','swift_acp_request.supplier_code','=','jdesuppliermaster.Supplier_Code')
                             ->remember(5)->get();
 
@@ -232,8 +232,8 @@ Class AjaxSearchController extends UserController {
         {
             if(is_numeric(Input::get('term')))
             {
-                $searchresult = JdeSupplierMaster::getByCode(Input::get('term'),$offset,$limit);
-                $total = JdeSupplierMaster::countByCode(Input::get('term'));
+                $searchresult = JdeSupplierMaster::getByExactCode(Input::get('term'),$offset,$limit);
+                $total = JdeSupplierMaster::countByExactCode(Input::get('term'));
             }
             else
             {

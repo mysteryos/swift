@@ -36,50 +36,9 @@
                     </ul>
                 </div>
                 <div class="btn-group">
-                    <button class="btn btn-default popover-trigger" id="filter-btn" data-original-title="Filter" data-placement="bottom" rel="tooltip">
+                    <button class="btn btn-default" id="filter-btn" data-original-title="Filter" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-filter"></i>
                     </button>
-                    <div id="filter-popover" class="hide">
-                        <form method="GET" action="" name="filter_cheque">
-                            <input type="hidden" name="filter" value="1" />
-                            <div class="form-group">
-                                <label>Supplier</label>
-                                <select name="filter_supplier" class="form-control">
-                                    <option disabled selected>Please select a supplier</option>
-                                    @foreach($activeSuppliers as $s)
-                                        <option value="{{$s->supplier_code}}">{{$s->supplier->getReadableName()}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @if($type==="all" || $type === "future")
-                                <div class="form-group">
-                                    <div class="row">
-                                        @if($type==="all")
-                                        <div class="col-xs-5 text-center">
-                                            <input type="text" class="datepicker form-control" name="filter_start_date" value="" placeholder="Start Date" date-format="dd/mm/yy"/>
-                                        </div>
-                                        <div class="col-xs-2 text-center">
-                                            -
-                                        </div>
-                                        @endif
-                                        <div class="col-xs-5 text-center">
-                                            <input type="text" class="datepicker form-control" name="filter_end_date" value="" placeholder="End Date" date-format="dd/mm/yy"/>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                            <div class="form-actions">
-                                <div class="row">
-                                    <div class="col-xs-6">
-                                        <button type="submit" class="btn btn-primary btn-sm">Filter Now</button>
-                                    </div>
-                                    <div class="col-xs-6">
-                                        <button class="btn btn-default" id="filter-btn-close">Close</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
                 </div>
                 <div class="btn-group toggle-oncheck"style="display:none;">
                     <button class="btn btn-default" id="btn-setbatchexec" data-original-title="Set Executive" data-placement="bottom" rel="tooltip">
@@ -121,7 +80,8 @@
             </div>
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
-            <div class="row">
+            @include('acpayable.filter-form')
+            <div class="row row-space-2">
                 <div class="col-xs-8">
                     @if($filter_on)
                         <div class="hidden-tablet pull-left">

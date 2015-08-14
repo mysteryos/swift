@@ -33,20 +33,16 @@ class apRequestLate extends ScheduledCommand {
 	public function __construct()
 	{
 		parent::__construct();
-                if ( ! Sentry::check())
-                {
-                    Helper::loginSysUser();
-                }
 	}
         
-        public function getName()
-        {
-            return $this->name;
-        }
-        
-        public function isEnabled() {
-            return true;
-        }
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function isEnabled() {
+        return true;
+    }
 
 	/**
 	 * Execute the console command.

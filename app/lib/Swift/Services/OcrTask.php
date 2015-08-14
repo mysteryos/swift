@@ -15,10 +15,6 @@ class OcrTask {
      */
     
     public function __construct(){
-        if(!Helper::loginSysUser())
-        {
-            Log::error('Unable to login system user');
-        }
         $this->guzzle = new \GuzzleHttp\Client(['base_url'=>'http://cloud.ocrsdk.com']);
     }
     

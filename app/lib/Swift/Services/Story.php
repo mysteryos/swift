@@ -10,7 +10,14 @@ Namespace Swift\Services;
 class Story {
     
     private $story;
-    
+
+    public $user_id;
+
+    public function __construct()
+    {
+        $this->user_id = \Helper::getUserId();
+    }
+
     /*
      * Save Story
      *
@@ -23,7 +30,10 @@ class Story {
      */
     public function relate($obj,$action,$type=1,$context_type=false,$context_id=0)
     {
-        $this->story = new \SwiftStory;
+        $this->story = new \SwiftStory([
+            'user_id' => $this->user_id
+        ]);
+        
         if($context_type===false)
         {
             switch(get_class($obj))
@@ -93,15 +103,7 @@ class Story {
         
         if(isset($data['user_id']))
         {
-            $user = \Sentry::findUserById($data['user_id']);
-            if(count($user))
-            {
-                \Sentry::login($user,false);
-            }
-        }
-        else
-        {
-            \Helper::loginSysUser();
+           $this->user_id = $data['user_id'];
         }
         
         if(\Sentry::check() && count($obj))

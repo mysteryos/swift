@@ -90,6 +90,14 @@ class JdeSupplierMaster extends Eloquent {
                 ->get();
     }
 
+    public static function getByExactCode($term,$offset,$limit)
+    {
+        return self::where('Supplier_Code','=',$term)
+                ->limit($limit)
+                ->offset($offset)
+                ->get();
+    }
+
     public static function getByVat($term,$offset,$limit)
     {
         return self::where('Supplier_LongAddNo','LIKE',"%$term%")
@@ -116,6 +124,12 @@ class JdeSupplierMaster extends Eloquent {
     public static function countByCode($term)
     {
         return self::where('Supplier_Code','LIKE',"%$term%")
+                ->count();
+    }
+
+    public static function countByExactCode($term)
+    {
+        return self::where('Supplier_Code','=',$term)
                 ->count();
     }
 

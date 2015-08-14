@@ -31,7 +31,7 @@ class AccountsPayableController extends UserController {
         /*
          * Admin can see all
          */
-        if($this->data['isAdmin'])
+        if($this->permission->isAdmin())
         {
             $inprogress = \SwiftACPRequest::getInProgress($this->data['inprogress_limit']);
             $inprogress_count = \SwiftACPRequest::getInProgressCount();
@@ -158,6 +158,7 @@ class AccountsPayableController extends UserController {
                 $acprequestquery->where('owner_user_id','=',$this->currentUser->id);
                 break;
             case 'all':
+            default:
                 $acprequestquery->orderBy('updated_at','desc');
                 break;
         }
@@ -373,6 +374,7 @@ class AccountsPayableController extends UserController {
      */
     public function getPaymentIssue($type='all',$page=1)
     {
+        
         if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
@@ -382,88 +384,34 @@ class AccountsPayableController extends UserController {
          * Register Filters
          */
 
-        $this->filter['filter_start_date'] = ['name'=>'Start Date',
-                                                'value' => Input::get('filter_start_date'),
-                                                'enabled' => Input::has('filter_start_date')
-                                            ];
+        $this->task()->registerFilters();
 
-        $this->filter['filter_end_date'] = ['name'=>'End Date',
-                                                'value' => Input::get('filter_end_date'),
-                                                'enabled' => Input::has('filter_end_date')
-                                            ];
-
-        $this->filter['filter_supplier'] = ['name'=>'Supplier',
-                                            'value' => Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
-                                            'enabled' => Input::has('filter_supplier')
-                                            ];
-
-        $this->filter['filter_type'] = ['name'=>'Order Type',
-                                        'value' => \Input::get('filter_type',0) > 0 ? \SwiftACPInvoice::$type[(int)\Input::get('filter_type')] : "" ,
-                                        'enabled' => \Input::has('filter_type') && \Input::get('filter_type',0) > 0
-                                        ];
-
-        $this->data['filterActive'] = (boolean)count(
-                                            array_filter($this->filter,function($v){
-                                                return $v['enabled'] === true;
-                                            })
-                                        );
-
+        //Vars
         $limitPerPage = 30;
+
+        $nodeDefinitionName = 'acp_paymentissue';
 
         /*
          * Get forms
          */
         $query = \SwiftACPRequest::query();
-        $activeSuppliers = \SwiftACPRequest::query();
 
         //With
         $query->with(['supplier','company','payment','paymentVoucher','invoice'])
-                ->whereHas('workflow',function($q){
-                    return $q->inprogress()->whereHas('pendingNodes',function($q){
-                        return $q->whereHas('definition',function($q){
-                           return $q->where('name','=','acp_paymentissue');
+                ->whereHas('workflow',function($q) use($nodeDefinitionName){
+                    return $q->inprogress()->whereHas('pendingNodes',function($q) use($nodeDefinitionName){
+                        return $q->whereHas('definition',function($q) use($nodeDefinitionName){
+                           return $q->where('name','=',$nodeDefinitionName);
                         });
                     });
                 })
                 ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
                 ->orderBy('swift_acp_invoice.due_date','ASC');
 
-        $activeSuppliers->groupBy('supplier_code')
-                        ->orderBy('supplier_code','ASC')
-                        ->with(['supplier'])
-                        ->whereHas('workflow',function($q){
-                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                return $q->whereHas('definition',function($q){
-                                   return $q->where('name','=','acp_paymentissue');
-                                });
-                            });
-                        });
-
         switch($type)
         {
             case 'all':
-                if(\Input::has('filter_end_date') || \Input::has('filter_end_date'))
-                {
-                    $filter_end_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
-                    $filter_start_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
-
-                    $query->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
-                        if($filter_start_date !== false)
-                        {
-                            $q->where('due_date','>=',$filter_start_date->format('Y-m-d'),'AND');
-                        }
-                        if($filter_end_date !== false)
-                        {
-                            $q->where('due_date','<=',$filter_end_date->format('Y-m-d'),'AND');
-                        }
-
-                        $q->whereNotNull('due_date');
-
-                        return $q;
-                    });
-
-                }
-                else
+                if(!$this->filter['filter_start_date']['enabled'] && !$this->filter['filter_end_date']['enabled'])
                 {
                     $query->has('invoice');
                 }
@@ -472,14 +420,8 @@ class AccountsPayableController extends UserController {
             case 'overdue':
                 $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
                 });
-                
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
-                });
-                
                 break;
             case 'today':
                 $query->whereHas('invoice',function($q){
@@ -487,12 +429,6 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                });
-                
                 break;
             case 'tomorrow':
                 $query->whereHas('invoice',function($q){
@@ -500,43 +436,15 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                });
-                
                 break;
             case 'future':
-                //Filter by date end
-                if(\Input::has('filter_end_date') && \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date')))
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND')
-                              ->where('due_date','>',\Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date'))->format('Y-m-d'),'AND');
-                    });
-                }
-                else
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                    });
-                }
-
-                $activeSuppliers->whereHas('invoice',function($q){
+                $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
                           ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 });
-            
                 break;
             case 'nodate':
                 $query->whereHas('invoice',function($q){
-                    return $q->whereNull('due_date');
-                });
-
-                $activeSuppliers->whereHas('invoice',function($q){
                     return $q->whereNull('due_date');
                 });
                 break;
@@ -546,107 +454,10 @@ class AccountsPayableController extends UserController {
          * Counts
          */
 
-        $this->data['all_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_paymentissue');
-                                                });
-                                            });
-                                        })
-                                        ->has('invoice')
-                                        ->count();
-
-        //Overdue
-
-        $this->data['overdue_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_paymentissue');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Today
-
-        $this->data['today_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_paymentissue');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Tomorrow
-
-        $this->data['tomorrow_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_paymentissue');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Future
-
-        $this->data['future_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_paymentissue');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','>',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        $this->data['nodate_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_paymentissue');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNull('due_date');
-                                        })
-                                        ->count();
-
+        $this->task()->getCounts($nodeDefinitionName);
 
         //The Filters
-
-        //Filter: Supplier
-        if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
-        {
-            $query->where('supplier_code','=',\Input::get('filter_supplier'));
-        }
-
-        //Filter: Type of Order
-        if($this->filter['filter_type']['enabled'])
-        {
-           $query->whereHas('invoice',function($q){
-                if((int)\Input::get('filter_type',0) === SwiftACPInvoice::TYPE_LOCAL)
-                {
-                    return $q->local();
-                }
-                else
-                {
-                    return $q->foreign();
-                }
-           });
-        }
+        $this->task()->applyFilters($query);
 
         //Form for Display and Count
 
@@ -661,6 +472,7 @@ class AccountsPayableController extends UserController {
                 $query->offset(($page-1)*$limitPerPage);
             }
         }
+        
         $forms = $query->get();
 
         /*
@@ -685,17 +497,10 @@ class AccountsPayableController extends UserController {
             }
         }
 
-        $activeSupplierResult = $activeSuppliers->get();
-
-//        $this->data['overdue'] = $overdue;
-//        $this->data['dueToday'] = $dueToday;
-//        $this->data['dueTomorrow'] = $dueTomorrow;
-//        $this->data['dueFuture'] = $dueFuture;
-//        $this->data['tomorrowDate'] = $this->data['futureStartDate'] = $tomorrowDate;
-//        $this->data['futureEndDate'] = $futureEndDate;
         $this->data['payment_type'] = \SwiftACPPayment::$type;
         $this->data['chequesign_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->permission->accountingChequeSignPermission]);
-        $this->data['activeSuppliers'] = $activeSupplierResult;
+        $this->data['activeSuppliers'] = $this->task()->getActiveSuppliers($type,$nodeDefinitionName);
+        $this->data['activeBillableCompanies'] = $this->task()->getBillableCompanyCodes($type,$nodeDefinitionName);
         $this->data['forms'] = $forms;
         $this->data['count'] = $form_count;
         $this->data['type'] = $type;
@@ -729,85 +534,36 @@ class AccountsPayableController extends UserController {
          * Register Filters
          */
 
-        $this->filter['filter_start_date'] = ['name'=>'Start Date',
-                                                'value' => Input::get('filter_start_date'),
-                                                'enabled' => Input::has('filter_start_date')
-                                            ];
+        $this->task()->registerFilters();
 
-        $this->filter['filter_end_date'] = ['name'=>'End Date',
-                                                'value' => Input::get('filter_end_date'),
-                                                'enabled' => Input::has('filter_end_date')
-                                            ];
-
-        $this->filter['filter_supplier'] = ['name'=>'Supplier',
-                                            'value' => Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
-                                            'enabled' => Input::has('filter_supplier')
-                                            ];
-
-        $this->data['filterActive'] = (boolean)count(
-                                            array_filter($this->filter,function($v){
-                                                return $v['enabled'] === true;
-                                            })
-                                        );
-
+        //Vars
         $limitPerPage = 30;
+
+        $nodeDefinitionName = 'acp_cheque_assign_exec';
 
         /*
          * Get forms
          */
         $query = \SwiftACPRequest::query();
-        $activeSuppliers = \SwiftACPRequest::query();
 
         //With
         $query->with(['supplier','company','payment'=>function($q){
                         return $q->where('status','=',\SwiftACPPayment::STATUS_SIGNED);
                     },'paymentVoucher','invoice'])
-                ->whereHas('workflow',function($q){
-                    return $q->inprogress()->whereHas('pendingNodes',function($q){
-                        return $q->whereHas('definition',function($q){
-                           return $q->where('name','=','acp_cheque_assign_exec');
+                ->whereHas('workflow',function($q) use ($nodeDefinitionName){
+                    return $q->inprogress()->whereHas('pendingNodes',function($q) use ($nodeDefinitionName){
+                        return $q->whereHas('definition',function($q) use ($nodeDefinitionName){
+                           return $q->where('name','=',$nodeDefinitionName);
                         });
                     });
                 })
                 ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
                 ->orderBy('swift_acp_invoice.due_date','ASC');
 
-        $activeSuppliers->groupBy('supplier_code')
-                        ->orderBy('supplier_code','ASC')
-                        ->with(['supplier'])
-                        ->whereHas('workflow',function($q){
-                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                return $q->whereHas('definition',function($q){
-                                   return $q->where('name','=','acp_cheque_assign_exec');
-                                });
-                            });
-                        });
-
         switch($type)
         {
             case 'all':
-                if(\Input::has('filter_end_date') || \Input::has('filter_end_date'))
-                {
-                    $filter_end_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
-                    $filter_start_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
-
-                    $query->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
-                        if($filter_start_date !== false)
-                        {
-                            $q->where('due_date','>=',$filter_start_date->format('Y-m-d'),'AND');
-                        }
-                        if($filter_end_date !== false)
-                        {
-                            $q->where('due_date','<=',$filter_end_date->format('Y-m-d'),'AND');
-                        }
-
-                        $q->whereNotNull('due_date');
-
-                        return $q;
-                    });
-
-                }
-                else
+                if(!$this->filter['filter_start_date']['enabled'] && !$this->filter['filter_end_date']['enabled'])
                 {
                     $query->has('invoice');
                 }
@@ -815,14 +571,8 @@ class AccountsPayableController extends UserController {
             case 'overdue':
                 $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
                 });
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'today':
                 $query->whereHas('invoice',function($q){
@@ -830,12 +580,6 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'tomorrow':
                 $query->whereHas('invoice',function($q){
@@ -843,43 +587,16 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'future':
                 //Filter by date end
-                if(\Input::has('filter_end_date') && \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date')))
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND')
-                              ->where('due_date','>',\Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date'))->format('Y-m-d'),'AND');
-                    });
-                }
-                else
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                    });
-                }
-
-                $activeSuppliers->whereHas('invoice',function($q){
+                $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
                           ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 });
-
                 break;
             case 'nodate':
                 $query->whereHas('invoice',function($q){
-                    return $q->whereNull('due_date');
-                });
-
-                $activeSuppliers->whereHas('invoice',function($q){
                     return $q->whereNull('due_date');
                 });
                 break;
@@ -889,91 +606,12 @@ class AccountsPayableController extends UserController {
          * Counts
          */
 
-        $this->data['all_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_assign_exec');
-                                                });
-                                            });
-                                        })
-                                        ->has('invoice')
-                                        ->count();
-
-        //Overdue
-
-        $this->data['overdue_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_assign_exec');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Today
-
-        $this->data['today_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_assign_exec');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Tomorrow
-
-        $this->data['tomorrow_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_assign_exec');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Future
-
-        $this->data['future_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_assign_exec');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','>',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        $this->data['nodate_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_assign_exec');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNull('due_date');
-                                        })
-                                        ->count();
+        $this->task()->getCounts($nodeDefinitionName);
 
 
         //The Filters
 
-        if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
-        {
-            $query->where('supplier_code','=',\Input::get('filter_supplier'));
-        }
+        $this->task()->applyFilters($query);
 
         //Form for Display and Count
 
@@ -990,16 +628,9 @@ class AccountsPayableController extends UserController {
         }
         $forms = $query->get();
 
-        $activeSupplierResult = $activeSuppliers->get();
-
-//        $this->data['overdue'] = $overdue;
-//        $this->data['dueToday'] = $dueToday;
-//        $this->data['dueTomorrow'] = $dueTomorrow;
-//        $this->data['dueFuture'] = $dueFuture;
-//        $this->data['tomorrowDate'] = $this->data['futureStartDate'] = $tomorrowDate;
-//        $this->data['futureEndDate'] = $futureEndDate;
         $this->data['exec_users'] = \Swift\AccountsPayable\Helper::getChequeSignUserList([$this->permission->accountingChequeSignExecPermission]);
-        $this->data['activeSuppliers'] = $activeSupplierResult;
+        $this->data['activeSuppliers'] = $this->task()->getActiveSuppliers($type,$nodeDefinitionName);
+        $this->data['activeBillableCompanies'] = $this->task()->getBillableCompanyCodes($type,$nodeDefinitionName);
         $this->data['forms'] = $forms;
         $this->data['count'] = $form_count;
         $this->data['type'] = $type;
@@ -1033,85 +664,37 @@ class AccountsPayableController extends UserController {
          * Register Filters
          */
 
-        $this->filter['filter_start_date'] = ['name'=>'Start Date',
-                                                'value' => Input::get('filter_start_date'),
-                                                'enabled' => Input::has('filter_start_date')
-                                            ];
+        $this->task()->registerFilters();
 
-        $this->filter['filter_end_date'] = ['name'=>'End Date',
-                                                'value' => Input::get('filter_end_date'),
-                                                'enabled' => Input::has('filter_end_date')
-                                            ];
-
-        $this->filter['filter_supplier'] = ['name'=>'Supplier',
-                                            'value' => Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
-                                            'enabled' => Input::has('filter_supplier')
-                                            ];
-
-        $this->data['filterActive'] = (boolean)count(
-                                            array_filter($this->filter,function($v){
-                                                return $v['enabled'] === true;
-                                            })
-                                        );
+        //Variables
 
         $limitPerPage = 30;
+
+        $nodeDefinitionName = 'acp_cheque_ready';
 
         /*
          * Get forms
          */
         $query = \SwiftACPRequest::query();
-        $activeSuppliers = \SwiftACPRequest::query();
 
         //With
         $query->with(['supplier','company','payment'=>function($q){
                         return $q->where('status','=',\SwiftACPPayment::STATUS_SIGNED_BY_EXEC);
                     },'paymentVoucher','invoice'])
-                ->whereHas('workflow',function($q){
-                    return $q->inprogress()->whereHas('pendingNodes',function($q){
-                        return $q->whereHas('definition',function($q){
-                           return $q->where('name','=','acp_cheque_ready');
+                ->whereHas('workflow',function($q) use($nodeDefinitionName){
+                    return $q->inprogress()->whereHas('pendingNodes',function($q) use($nodeDefinitionName){
+                        return $q->whereHas('definition',function($q) use($nodeDefinitionName){
+                           return $q->where('name','=',$nodeDefinitionName);
                         });
                     });
                 })
                 ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
                 ->orderBy('swift_acp_invoice.due_date','ASC');
 
-        $activeSuppliers->groupBy('supplier_code')
-                        ->orderBy('supplier_code','ASC')
-                        ->with(['supplier'])
-                        ->whereHas('workflow',function($q){
-                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                return $q->whereHas('definition',function($q){
-                                   return $q->where('name','=','acp_cheque_ready');
-                                });
-                            });
-                        });
-
         switch($type)
         {
             case 'all':
-                if(\Input::has('filter_end_date') || \Input::has('filter_end_date'))
-                {
-                    $filter_end_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
-                    $filter_start_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
-
-                    $query->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
-                        if($filter_start_date !== false)
-                        {
-                            $q->where('due_date','>=',$filter_start_date->format('Y-m-d'),'AND');
-                        }
-                        if($filter_end_date !== false)
-                        {
-                            $q->where('due_date','<=',$filter_end_date->format('Y-m-d'),'AND');
-                        }
-
-                        $q->whereNotNull('due_date');
-
-                        return $q;
-                    });
-
-                }
-                else
+                if(!$this->filter['filter_start_date']['enabled'] && !$this->filter['filter_end_date']['enabled'])
                 {
                     $query->has('invoice');
                 }
@@ -1119,14 +702,8 @@ class AccountsPayableController extends UserController {
             case 'overdue':
                 $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
                 });
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'today':
                 $query->whereHas('invoice',function($q){
@@ -1134,12 +711,6 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'tomorrow':
                 $query->whereHas('invoice',function($q){
@@ -1147,43 +718,15 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'future':
-                //Filter by date end
-                if(\Input::has('filter_end_date') && \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date')))
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND')
-                              ->where('due_date','>',\Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date'))->format('Y-m-d'),'AND');
-                    });
-                }
-                else
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                    });
-                }
-
-                $activeSuppliers->whereHas('invoice',function($q){
+                $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
                           ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 });
-
                 break;
             case 'nodate':
                 $query->whereHas('invoice',function($q){
-                    return $q->whereNull('due_date');
-                });
-
-                $activeSuppliers->whereHas('invoice',function($q){
                     return $q->whereNull('due_date');
                 });
                 break;
@@ -1193,92 +736,12 @@ class AccountsPayableController extends UserController {
          * Counts
          */
 
-        $this->data['all_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_ready');
-                                                });
-                                            });
-                                        })
-                                        ->has('invoice')
-                                        ->count();
-
-        //Overdue
-
-        $this->data['overdue_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_ready');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Today
-
-        $this->data['today_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_ready');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Tomorrow
-
-        $this->data['tomorrow_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_ready');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Future
-
-        $this->data['future_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_ready');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','>',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        $this->data['nodate_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress()->whereHas('pendingNodes',function($q){
-                                                return $q->whereHas('definition',function($q){
-                                                   return $q->where('name','=','acp_cheque_ready');
-                                                });
-                                            });
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNull('due_date');
-                                        })
-                                        ->count();
-
+        $this->task()->getCounts($nodeDefinitionName);
 
         //The Filters
 
-        if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
-        {
-            $query->where('supplier_code','=',\Input::get('filter_supplier'));
-        }
-
+        $this->task()->applyFilters($query);
+        
         //Form for Display and Count
 
         $form_count = $query->count();
@@ -1294,9 +757,9 @@ class AccountsPayableController extends UserController {
         }
         $forms = $query->get();
 
-        $activeSupplierResult = $activeSuppliers->get();
         $this->data['dispatch_method'] = \SwiftACPPayment::$dispatch;
-        $this->data['activeSuppliers'] = $activeSupplierResult;
+        $this->data['activeSuppliers'] = $this->task()->getActiveSuppliers($type,$nodeDefinitionName);
+        $this->data['activeBillableCompanies'] = $this->task()->getBillableCompanyCodes($type,$nodeDefinitionName);
         $this->data['forms'] = $forms;
         $this->data['count'] = $form_count;
         $this->data['type'] = $type;
@@ -1348,7 +811,7 @@ class AccountsPayableController extends UserController {
         if(!$this->currentUser->isSuperUser())
         {
             $query->whereHas('approvalHod',function($q){
-                return $q->where('approval_user_id','=',$this->currentUser->id);
+                return $q->where('approved','=',\SwiftApproval::PENDING)->where('approval_user_id','=',$this->currentUser->id,'AND');
             });
         }
 
@@ -1480,26 +943,7 @@ class AccountsPayableController extends UserController {
          * Register Filters
          */
 
-        $this->filter['filter_start_date'] = ['name'=>'Start Date',
-                                                'value' => \Input::get('filter_start_date'),
-                                                'enabled' => \Input::has('filter_start_date')
-                                            ];
-
-        $this->filter['filter_end_date'] = ['name'=>'End Date',
-                                                'value' => \Input::get('filter_end_date'),
-                                                'enabled' => \Input::has('filter_end_date')
-                                            ];
-
-        $this->filter['filter_supplier'] = ['name'=>'Supplier',
-                                            'value' => \Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
-                                            'enabled' => \Input::has('filter_supplier')
-                                            ];
-
-        $this->data['filterActive'] = (boolean)count(
-                                            array_filter($this->filter,function($v){
-                                                return $v['enabled'] === true;
-                                            })
-                                        );
+        $this->task()->registerFilters();
 
         $limitPerPage = 30;
 
@@ -1507,7 +951,6 @@ class AccountsPayableController extends UserController {
          * Get forms
          */
         $query = \SwiftACPRequest::query();
-        $activeSuppliers = \SwiftACPRequest::query();
 
         //With
         $query->with(['supplier','company','payment','invoice'])
@@ -1517,38 +960,10 @@ class AccountsPayableController extends UserController {
                 ->join('swift_acp_invoice','swift_acp_request.id','=','swift_acp_invoice.acp_id')
                 ->orderBy('swift_acp_invoice.due_date','ASC');
 
-        $activeSuppliers->groupBy('supplier_code')
-                        ->orderBy('supplier_code','ASC')
-                        ->with(['supplier'])
-                        ->whereHas('workflow',function($q){
-                            return $q->inprogress();
-                        });
-
         switch($type)
         {
             case 'all':
-                if(\Input::has('filter_end_date') || \Input::has('filter_end_date'))
-                {
-                    $filter_end_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date'));
-                    $filter_start_date = \Carbon::createFromFormat('d/m/Y',Input::get('filter_start_date'));
-
-                    $query->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
-                        if($filter_start_date !== false)
-                        {
-                            $q->where('due_date','>=',$filter_start_date->format('Y-m-d'),'AND');
-                        }
-                        if($filter_end_date !== false)
-                        {
-                            $q->where('due_date','<=',$filter_end_date->format('Y-m-d'),'AND');
-                        }
-
-                        $q->whereNotNull('due_date');
-
-                        return $q;
-                    });
-
-                }
-                else
+                if(!$this->filter['filter_start_date']['enabled'] && !$this->filter['filter_end_date']['enabled'])
                 {
                     $query->has('invoice');
                 }
@@ -1556,14 +971,8 @@ class AccountsPayableController extends UserController {
             case 'overdue':
                 $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
+                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
                 });
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now()->subDay())->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'today':
                 $query->whereHas('invoice',function($q){
@@ -1571,12 +980,6 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'tomorrow':
                 $query->whereHas('invoice',function($q){
@@ -1584,43 +987,16 @@ class AccountsPayableController extends UserController {
                           ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 })
                 ->orderBy('swift_acp_request.supplier_code','ASC');
-
-                $activeSuppliers->whereHas('invoice',function($q){
-                    return $q->whereNotNull('due_date')
-                          ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                });
-
                 break;
             case 'future':
                 //Filter by date end
-                if(\Input::has('filter_end_date') && \Carbon::createFromFormat('d/m/Y',Input::get('filter_end_date')))
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND')
-                              ->where('due_date','>',\Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date'))->format('Y-m-d'),'AND');
-                    });
-                }
-                else
-                {
-                    $query->whereHas('invoice',function($q){
-                        return $q->whereNotNull('due_date')
-                              ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                    });
-                }
-
-                $activeSuppliers->whereHas('invoice',function($q){
+                $query->whereHas('invoice',function($q){
                     return $q->whereNotNull('due_date')
                           ->where('due_date','>',\Helper::nextBusinessDay(\Carbon::now()->addDay())->format('Y-m-d'),'AND');
                 });
-
                 break;
             case 'nodate':
                 $query->whereHas('invoice',function($q){
-                    return $q->whereNull('due_date');
-                });
-
-                $activeSuppliers->whereHas('invoice',function($q){
                     return $q->whereNull('due_date');
                 });
                 break;
@@ -1630,67 +1006,12 @@ class AccountsPayableController extends UserController {
          * Counts
          */
 
-        $this->data['all_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress();
-                                        })
-                                        ->has('invoice')
-                                        ->count();
-
-        //Overdue
-
-        $this->data['overdue_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress();
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','<',\Helper::previousBusinessDay(Carbon::now())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Today
-
-        $this->data['today_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress();
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Carbon::now()->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Tomorrow
-
-        $this->data['tomorrow_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress();
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','=',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        //Future
-
-        $this->data['future_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress();
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNotNull('due_date')
-                                                  ->where('due_date','>',\Helper::nextBusinessDay(Carbon::now()->addDay())->format('Y-m-d'),'AND');
-                                        })->count();
-
-        $this->data['nodate_count'] = \SwiftACPRequest::whereHas('workflow',function($q){
-                                            return $q->inprogress();
-                                        })
-                                        ->whereHas('invoice',function($q){
-                                            return $q->whereNull('due_date');
-                                        })
-                                        ->count();
+        $this->task()->getCounts();
 
 
         //The Filters
 
-        if(\Input::has('filter_supplier') && is_numeric(\Input::get('filter_supplier')))
-        {
-            $query->where('supplier_code','=',\Input::get('filter_supplier'));
-        }
+        $this->task()->applyFilters($query);
 
         //Form for Display and Count
 
@@ -1713,9 +1034,8 @@ class AccountsPayableController extends UserController {
             $f->current_activity = \WorkflowActivity::progress($f);
         }
 
-        $activeSupplierResult = $activeSuppliers->get();
-
-        $this->data['activeSuppliers'] = $activeSupplierResult;
+        $this->data['activeSuppliers'] = $this->task()->getActiveSuppliers($type);
+        $this->data['activeBillableCompanies'] = $this->task()->getBillableCompanyCodes($type);
         $this->data['forms'] = $forms;
         $this->data['count'] = $form_count;
         $this->data['type'] = $type;

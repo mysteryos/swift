@@ -29,11 +29,7 @@ class ordertrackingweeklymail extends ScheduledCommand {
      */
     public function __construct()
     {
-            parent::__construct();
-            if ( ! Sentry::check())
-            {
-                Helper::loginSysUser();
-            }
+        parent::__construct();
     }
 
     public function getName()

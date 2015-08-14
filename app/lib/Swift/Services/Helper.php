@@ -17,25 +17,6 @@ use Sentry;
 use Eloquent;
 
 class Helper {
-    /*
-     * Finds system user and logs him in.
-     * Used mostly for laravel queue workers
-     *
-     * @return boolean
-     */
-    public function loginSysUser()
-    {
-        $sysuser = Sentry::findUserByLogin(Config::get('website.system_mail'));
-        if($sysuser)
-        {
-            Sentry::login($sysuser,false);
-            if(Sentry::check())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 
     /*
      * Resolver for User Id for the System

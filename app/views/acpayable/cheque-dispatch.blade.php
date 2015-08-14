@@ -121,6 +121,7 @@
             </div>
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
+            @include('acpayable.filter-form')
             <div class="row">
                 <div class="col-xs-8">
                     @if($filter_on)

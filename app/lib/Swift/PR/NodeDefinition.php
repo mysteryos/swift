@@ -88,22 +88,19 @@ class NodeDefinition
                     return ['weworking'=>'System is currently approving the products'];
                 }
                 
-                if(\Helper::loginSysUser())
+                $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
+                $pr->load('product');
+
+                foreach($pr->product as $p)
                 {
-                    $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();
-                    $pr->load('product');
-
-                    foreach($pr->product as $p)
-                    {
-                        $p->approvalretailman()->save(new \SwiftApproval([
-                            'type' => \SwiftApproval::PR_RETAILMAN,
-                            'approved' => \SwiftApproval::APPROVED,
-                            'approval_user_id' => \Sentry::getUser()->id
-                        ]));
-                    }
-
-                    return true;
+                    $p->approvalretailman()->save(new \SwiftApproval([
+                        'type' => \SwiftApproval::PR_RETAILMAN,
+                        'approved' => \SwiftApproval::APPROVED,
+                        'approval_user_id' => \Config::get('website.system_user_id'),
+                    ]));
                 }
+
+                return true;
                 break;
             default:
                 $pr = $nodeActivity->workflowActivity()->first()->workflowable()->first();

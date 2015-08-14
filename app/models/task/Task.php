@@ -14,13 +14,15 @@ abstract class Task {
 
     protected $resource;
 
+    protected $table;
+
     protected $data = array();
 
     public function __construct($controller)
     {
         $this->controller = $controller;
 
-        $this->query = new $this->resource;
+        $this->resource = new $this->table;
 
         $this->data = array_merge($this->data,$this->controller->data);
     }

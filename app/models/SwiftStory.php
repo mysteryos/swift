@@ -46,13 +46,6 @@ class SwiftStory extends Eloquent {
      */
     public static function boot() {
         parent:: boot();
-        
-        /*
-         * Set User Id on create
-         */
-        static::creating(function($model){
-            $model->by = Sentry::getUser()->id;
-        });
     }    
     
     /*

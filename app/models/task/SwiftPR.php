@@ -7,7 +7,7 @@
 namespace Task;
 
 class SwiftPR extends Task{
-    protected $resource = "SwiftPR";
+    protected $table = "SwiftPR";
 
     protected $list;
 
@@ -145,7 +145,7 @@ class SwiftPR extends Task{
     {
         $this->data['pageTitle'] = "Approval";
 
-        $this->data['forms'] = $this->query
+        $this->data['forms'] = $this->resource->query()
                                     ->orderBy('updated_at','desc')
                                     ->with(['product'=>function($q){
                                             return $q->orderBy('id','DESC');
@@ -184,7 +184,7 @@ class SwiftPR extends Task{
     {
         $this->data['pageTitle'] = "Customer Care";
 
-        $this->data['forms'] = $this->query
+        $this->data['forms'] = $this->resource->query()
                                     ->orderBy('updated_at','desc')
                                     ->with(['order','product'=>function($q){
                                             return $q->orderBy('id','DESC')->whereHas('approvalretailman',function($q){
@@ -240,7 +240,7 @@ class SwiftPR extends Task{
     {
         $this->data['pageTitle'] = "Store Pickup";
 
-        $this->data['forms'] = $this->query
+        $this->data['forms'] = $this->resource->query()
                                     ->orderBy('updated_at','desc')
                                     ->with(['pickup','product'=>function($q){
                                             return $q->orderBy('id','DESC')
@@ -295,7 +295,7 @@ class SwiftPR extends Task{
     {
         $this->data['pageTitle'] = "Store Reception";
 
-        $this->data['forms'] = $this->query
+        $this->data['forms'] = $this->resource->query()
                                     ->orderBy('updated_at','desc')
                                     ->with(['pickup','product'=>function($q){
                                             return $q->orderBy('id','DESC')
@@ -351,7 +351,7 @@ class SwiftPR extends Task{
     {
         $this->data['pageTitle'] = "Store Validation";
 
-        $this->data['forms'] = $this->query
+        $this->data['forms'] = $this->resource->query()
                                     ->orderBy('updated_at','desc')
                                     ->with(['pickup','product'=>function($q){
                                             return $q->orderBy('id','DESC')
@@ -408,7 +408,7 @@ class SwiftPR extends Task{
     {
         $this->data['pageTitle'] = "Credit Note";
 
-        $this->data['forms'] = $this->query
+        $this->data['forms'] = $this->resource->query()
                                     ->orderBy('updated_at','desc')
                                     ->with(['order'])
                                     ->whereHas('workflow',function($q){

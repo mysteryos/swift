@@ -1858,21 +1858,32 @@ var main = {
             salesman_budget();
         }
     },
+    acp_payment_due: function() {
+        if(typeof window['acp_payment_due'] === "undefined")
+        {
+            jsLoader(['/js/swift/swift.acp_filter.js',$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+        }
+        else
+        {
+            pageSetUp();
+            acp_payment_due();
+        }
+    },
     acp_payment_issue: function() {
         if(typeof window['acp_payment_issue'] === "undefined")
         {
-            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",'/js/swift/swift.acp_filter.js',$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {
             pageSetUp();
             acp_payment_issue();
-        }        
+        }
     },
     acp_cheque_assign_exec: function() {
         if(typeof window['acp_cheque_assign_exec'] === "undefined")
         {
-            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",'/js/swift/swift.acp_filter.js',$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {
@@ -1883,7 +1894,7 @@ var main = {
     acp_cheque_dispatch: function() {
         if(typeof window['acp_cheque_dispatch'] === "undefined")
         {
-            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+            jsLoader(["/js/plugin/context/context.js","/js/plugin/ajaxq/ajaxq.min.js",'/js/swift/swift.acp_filter.js',$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
         }
         else
         {

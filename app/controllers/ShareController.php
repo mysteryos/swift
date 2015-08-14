@@ -98,7 +98,8 @@ class ShareController extends UserController
                 $this->data['users'] = \User::where('activated','=',1)
                                         ->where('email','!=',\Config::get('website.system_mail'),'AND')
                                         ->where('id','!=',$this->currentUser->id,'AND')
-                                        ->orderBy('first_name','last_name')
+                                        ->orderBy('first_name','ASC')
+                                        ->orderBy('last_name','ASC')
                                         ->get();
                 $this->data['permission'] = \SwiftShare::$permissions;
                 return \View::make('share/shareable',$this->data);
@@ -132,8 +133,7 @@ class ShareController extends UserController
                 {
                     try
                     {
-//                        \Log::info(\View::make('emails.share.shared',array('form'=>$mailData,'user'=>$share->to_user))->render());
-                        \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.share.shared',array('form'=>$mailData,'user'=>$share->to_user),function($message) use ($u,$form){
+                        \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.share.shared',array('form'=>$mailData,'user'=>$share->to_user),function($message) use ($share,$form){
                             $message->from($share->from_user->email,$share->from_user->getFullName());
                             $message->subject(\Config::get('website.name').' - A '.$form->readableName.' form has been shared with you: "'.$form->name.'" ID: '.$form->id);
                             $message->to($share->to_user->email);

@@ -55,7 +55,7 @@ class SwiftShare extends Eloquent
 
     public function to_user()
     {
-        return $this->belongsTo('User','from_user_id');
+        return $this->belongsTo('User','to_user_id');
     }
 
     public static function findUserByForm($className,$form_id,$user_id)

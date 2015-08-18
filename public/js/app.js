@@ -1858,6 +1858,18 @@ var main = {
             salesman_budget();
         }
     },
+    acp_forms: function()
+    {
+        if(typeof window['acp_forms'] === "undefined")
+        {
+            jsLoader(['/js/swift/swift.acp_filter.js',$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+        }
+        else
+        {
+            pageSetUp();
+            acp_forms();
+        }        
+    },
     acp_payment_due: function() {
         if(typeof window['acp_payment_due'] === "undefined")
         {

@@ -25,6 +25,9 @@
             <div class="inbox-inline-actions page-title">
                 <div class="btn-group">
                     <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                    <button class="btn btn-default" id="filter-btn" data-original-title="Filter" data-placement="bottom" rel="tooltip">
+                        <i class="fa fa-filter"></i>
+                    </button>
                 </div>
             </div>            
         </div>
@@ -66,6 +69,9 @@
                                       <a href="/{{ $rootURL }}/forms/mine" class="form-pjax-filter pjax"><i class="fa fa-heart"></i>Mine</a>
                                 </li>
                             @endif
+                            <li @if($type=="recent"){{"class=\"active\""}}@endif >
+                                    <a href="/{{ $rootURL }}/forms/recent" class="form-pjax-filter pjax"><i class="fa fa-history"></i>Recent</a>
+                            </li>
                             <li @if($type=="starred"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/forms/starred" class="form-pjax-filter pjax"><i class="fa fa-star"></i>Starred</a>
                             </li>
@@ -79,42 +85,40 @@
             
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
-            <div class="row">
-                <div class="col-xs-12">
-                    @if($type != 'inprogress')
-                    <div class="hidden-tablet pull-left">
-                        <ul class="nav nav-pills filter-nav">
-                            <li>
-                                <a href="javascript:void(0);"><i>Filter By: </i></a>
-                            </li>
-                            <li class="dropdown">
-                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('apr_form_filter','node_definition_id')) {{ $node_definition_list[Session::get('apr_form_filter')['node_definition_id']] }} @else {{ "Current Step" }} @endif<i class="fa fa-angle-down"></i></a>
-                                <ul class="dropdown-menu">
-                                    @foreach($node_definition_list as $node_key => $node_val)
-                                        <li @if(Helper::sessionHasFilter('apr_form_filter','node_definition_id',$node_key)){{ 'class="active"' }}@endif>
-                                            <a href="{{ URL::current()."?filter=1&filter_name=node_definition_id&filter_value=".urlencode($node_key) }}" class="pjax">{{ $node_val }}</a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
+            @include('acpayable.filter-form')
+            <div class="row row-space-2 row-space-top-2">
+                <div class="col-xs-8">
+                    @if($filter_on)
+                        <div class="hidden-tablet pull-left">
+                            <span><i>Filtered By: </i></span>
+                            @foreach($filter as $name => $f)
+                                @if($f['enabled'])
+                                    <a href="{{"/".$rootURL."/forms/".$type."/0/0/0".\Helper::filterQueryParam(Url::full(),$name)}}" class="btn btn-sm btn-default pjax">{{$f['name'].": ".$f['value']}} <i class="fa fa-times"></i></a>
+                                @endif
+                            @endforeach
+                            <a href="{{"/".$rootURL."/forms/".$type."/0/0/0"}}" class="btn btn-sm btn-default pjax">Clear All <i class="fa fa-times"></i></a>
+                        </div>
                     @endif
+                </div>
+                <div class="col-xs-4">
                     @if($permission->canCreate())
                         <a href="/{{ $rootURL }}/create" id="compose-mail-mini" class="btn btn-primary pull-right hidden-desktop visible-tablet pjax"> <strong><i class="fa fa-file fa-lg"></i></strong> </a>
                     @endif
-                    @if($count)
+                    @if($formCount)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($prev_offset === 0 && $next_offset < $limit_per_page){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".$movement_offset."/".($prev_offset-$movement_offset < 0 ? 0 : $prev_offset-$movement_offset)."/".($prev_offset).$filter_string}}@endif" class="btn btn-default btn-sm @if(($next_offset-$movement_offset) < 0){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($next_offset > $formCount){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".$movement_offset."/".$prev_offset."/".$next_offset.$filter_string}}@endif" class="btn btn-default btn-sm @if($next_offset >= $formCount){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">
                         <div class="btn-group">
                             <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                            <button class="btn btn-default" id="filter-btn" data-original-title="Filter" data-placement="bottom" rel="tooltip">
+                                <i class="fa fa-filter"></i>
+                            </button>
                         </div>
                     </div>
-                    @if($count) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">@if($page == 1){{1}}@else{{ (($page-1)*$limit_per_page)+1 }}@endif</span>-<span id="count-end">@if($count < ($page*$limit_per_page)) {{ $count }} @else{{ $page*$limit_per_page }}@endif</span></strong> of <strong><span id="count-total">{{ $count }}</span></strong></span> @endif
+                    @if($formCount) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">{{ $record_offset_start }}</span>-<span id="count-end">@if($next_offset > $formCount) {{ $formCount }} @else{{ $next_offset }}@endif</span></strong> of <strong><span id="count-total">{{ $formCount }}</span></strong></span> @endif
                 </div>
             </div>
             <div class="row">

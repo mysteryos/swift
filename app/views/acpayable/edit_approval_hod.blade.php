@@ -9,7 +9,7 @@
         <div class="form-group col-xs-6" @if(isset($dummy) && $dummy == true) style="display:none;" @endif>
             <label class="col-md-4 control-label">Approval</label>
             <div class="col-md-8">
-                <a href="#" @if(isset($approval->id)) {{ "id=\"approval_hod_approved_".$approval->id."\"" }} @endif class="editable @if(!$permission->isHOD() && !$permission->isAdmin()) editable-disabled @endif editable-noblur approval-hod-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="select" data-context="approvalhod" data-name="approved" data-pk="{{ $approval->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/approval-hod/{{ Crypt::encrypt($form->id) }}" data-source='{{ $approval_code }}' data-value="{{ $approval->approved or 0 }}"></a>
+                <a href="#" @if(isset($approval->id)) {{ "id=\"approval_hod_approved_".$approval->id."\"" }} @endif class="editable @if((!$permission->isHOD() && $publishOwner) && !$permission->isAdmin()) editable-disabled @endif editable-noblur approval-hod-editable @if(isset($dummy) && $dummy == true) dummy @endif" data-type="select" data-context="approvalhod" data-name="approved" data-pk="{{ $approval->encrypted_id or 0 }}" data-url="/{{ $rootURL }}/approval-hod/{{ Crypt::encrypt($form->id) }}" data-source='{{ $approval_code }}' data-value="{{ $approval->approved or 0 }}"></a>
             </div>
         </div>
     </div>

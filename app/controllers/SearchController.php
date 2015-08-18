@@ -68,15 +68,18 @@ class SearchController extends UserController {
                     case "acpayable":
                         $contextClass = \Config::get('context.'.$line['_type']);
                         $obj = $contextClass::find($line['_id']);
-                        $result[] = array('icon'=>(new $contextClass)->getIcon(),
-                                          'title'=> (new $contextClass)->readableName,
-                                          'id' => $line['_id'],
-                                          'value'=>$obj->name,
-                                          'url'=>\Helper::generateUrl($obj),
-                                          'highlight'=>$highlight);
+                        if($obj->permission()->checkAccess())
+                        {
+                            $result[] = array('icon'=>(new $contextClass)->getIcon(),
+                                              'title'=> (new $contextClass)->readableName,
+                                              'id' => $line['_id'],
+                                              'value'=>$obj->name,
+                                              'url'=>\Helper::generateUrl($obj),
+                                              'highlight'=>$highlight);
+                        }
                         break;
                     default:
-                        //order-tracking, acpayable, aprequest
+                        //order-tracking, aprequest
                         $contextClass = \Config::get('context.'.$line['_type']);
                         $obj = $contextClass::find($line['_id']);
                         $result[] = array('icon'=>(new $contextClass)->getIcon(),
@@ -123,7 +126,7 @@ class SearchController extends UserController {
                 $searchstring = str_replace('#','',$search);
                 if(strlen($searchstring) === 0)
                 {
-                    return \Response::make("");
+                    return \Response::make("Type in an ID");
                 }
                 else
                 {

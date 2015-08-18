@@ -84,6 +84,13 @@
 
        return false;
     });
+    
+    
+    /*
+     * Activate Filter
+     */
+    
+    acp_filter();
 
     //Hide Loading Message
     messenger_hidenotiftop();

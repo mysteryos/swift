@@ -70,20 +70,6 @@ class SwiftReception extends Eloquent {
         static::bootRevisionable();
     }
     
-    public function getReceptionUserEsAttribute($val)
-    {
-        if((int)$val !== 0)
-        {
-            $user = \Sentry::findUserById($val);
-            if(count($user))
-            {
-                return $user->first_name." ".$user->last_name;
-            }
-        }
-        
-        return "";
-    }
-    
     /*
      * Mutator
      */

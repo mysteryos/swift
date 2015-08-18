@@ -7,10 +7,19 @@ abstract class Permission {
 
     protected $resource;
 
-    public function __construct()
+    public function __construct($form,$user_id)
     {
-        $this->currentUser = \Sentry::getUser();
+        if($user_id === false)
+        {
+            //Get currently logged in user
+            $this->currentUser = \Sentry::getUser();
+        }
+        else
+        {
+            //Fetch user
+            $this->currentUser = \Sentry::findUserById($user_id);
+        }
 
-        $this->query = new $this->resource;
+        $this->resource = $form;
     }
 }

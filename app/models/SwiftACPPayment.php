@@ -47,10 +47,12 @@ class SwiftACPPayment extends Eloquent
     //Type
     const TYPE_CHEQUE = 1;
     const TYPE_BANKTRANSFER = 2;
+    const TYPE_DIRECTDEBIT = 3;
 
     public static $type = [
         self::TYPE_CHEQUE => 'Cheque',
         self::TYPE_BANKTRANSFER => 'Bank Transfer',
+        self::TYPE_DIRECTDEBIT => 'Direct Debit'
     ];
 
     //Validation
@@ -218,6 +220,11 @@ class SwiftACPPayment extends Eloquent
     public function scopeBankTransfer($query)
     {
         return $query->where('type','=',self::TYPE_BANKTRANSFER);
+    }
+
+    public function scopeDirectDebit($query)
+    {
+        return $query->where('type','=',self::TYPE_DIRECTDEBIT);
     }
     
     /*

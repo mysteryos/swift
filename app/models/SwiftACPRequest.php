@@ -9,6 +9,8 @@ class SwiftACPRequest extends Eloquent
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
+    use \Swift\Share\SharingTrait;
+    use \Permission\PermissionTrait;
 
     //Used with Context
     public $readableName = "Accounts Payable";
@@ -276,11 +278,6 @@ class SwiftACPRequest extends Eloquent
     public function story()
     {
         return $this->morphMany('SwiftStory','storyfiable');
-    }
-
-    public function share()
-    {
-        return $this->morphMany('SwiftShare','shareable');
     }
 
     public function document()

@@ -403,13 +403,13 @@ Class NodeDefinition {
         {
             $bankNoJournalEntryCount = $acp
                                         ->payment()
-                                        ->where('type','=',\SwiftACPPayment::TYPE_BANKTRANSFER)
+                                        ->whereIn('type',[\SwiftACPPayment::TYPE_BANKTRANSFER.\SwiftACPPayment::TYPE_DIRECTDEBIT])
                                         ->where('payment_number','=',0)
                                         ->count();
 
             if($bankNoJournalEntryCount > 0)
             {
-                $returnReasonList['banknojournalentry'] = "Please set a journal entry for bank trasnfers";
+                $returnReasonList['banknojournalentry'] = "Please set a journal entry for bank transfers/direct debits";
             }
 
             if(count($returnReasonList) === 0 && !$returnReason)

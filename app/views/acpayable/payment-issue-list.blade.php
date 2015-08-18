@@ -13,7 +13,7 @@
                 <th>Entries</th>
                 <th>Type</th>
                 <th>Payment Number</th>
-                <th>Batch Number</th>
+<!--                <th>Batch Number</th>-->
                 <th>Signator</th>
                 <th>&nbsp;</th>
             </tr>
@@ -93,9 +93,9 @@
                     <td>
                         <input type="text" class="form-control input-block-level input-with-pk input-paymentnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-number/{{ \Crypt::encrypt($f->id) }}" name="payment_number" value="" />
                     </td>
-                    <td>
+                    <!-- <td>
                         <input type="text" class="form-control input-block-level input-with-pk input-batchnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/batch-number/{{ \Crypt::encrypt($f->id) }}" name="batch_number" value="" />
-                    </td>
+                    </td>-->
                     <td>
                         <select name="cheque_signator_id" class="form-control input-with-pk input-block-level input-cheque-signator-id" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/cheque-signator-id/{{ \Crypt::encrypt($f->id) }}">
                             <option selected disabled>Select a User</option>

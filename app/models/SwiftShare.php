@@ -21,10 +21,12 @@ class SwiftShare extends Eloquent
 
     const PERMISSION_VIEW = 1;
     const PERMISSION_EDIT = 2;
+    const PERMISSION_EDIT_PUBLISH = 3;
 
     public static $permissions = [
         self::PERMISSION_VIEW => 'Can View',
-        self::PERMISSION_EDIT => 'Can Edit'
+        self::PERMISSION_EDIT => 'Can Edit',
+        self::PERMISSION_EDIT_PUBLISH => 'Can Edit & Publish'
     ];
 
 

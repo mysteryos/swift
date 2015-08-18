@@ -56,6 +56,41 @@ class SwiftACPRequest extends Task{
                                                     );
     }
 
+    public function registerFormFilters()
+    {
+        \Input::flash();
+
+        $this->controller->filter['filter_supplier'] = ['name'=>'Supplier',
+                                                        'value' => \Input::has('filter_supplier') ? \JdeSupplierMaster::find(\Input::get('filter_supplier'))->getReadableName() : false,
+                                                        'enabled' => \Input::has('filter_supplier'),
+                                                        'function' => 'filterSupplier'
+                                                        ];
+
+        $this->controller->filter['filter_billable_company_code'] = ['name'=>'Billable Company',
+                                                                        'value' => \Input::has('filter_billable_company_code') ? \JdeCustomer::find(\Input::get('filter_billable_company_code'))->getReadableName() : false,
+                                                                        'enabled' => \Input::has('filter_billable_company_code'),
+                                                                        'function' => 'filterBillableCompanyCode'
+                                                                       ];
+
+        $this->controller->filter['filter_type'] = ['name'=>'Order Type',
+                                                    'value' => \Input::get('filter_type',0) > 0 ? \SwiftACPInvoice::$type[(int)\Input::get('filter_type')] : "" ,
+                                                    'enabled' => \Input::has('filter_type') && \Input::get('filter_type',0) > 0,
+                                                    'function' => 'filterType'
+                                                    ];
+
+        $this->controller->filter['filter_step'] = ['name' => 'Current Step',
+                                                    'value' => \Input::get('filter_step',0) > 0 ? \SwiftNodeDefinition::find(\Input::get('filter_step'))->label : false,
+                                                    'enabled' => \Input::has('filter_step'),
+                                                    'function' => 'filterStep'
+                                                    ];
+
+        $this->controller->data['filterActive'] = (boolean)count(
+                                                        array_filter($this->controller->filter,function($v){
+                                                            return $v['enabled'] === true;
+                                                        })
+                                                    );
+    }
+
     /*
      * Apply Filters
      */
@@ -288,6 +323,62 @@ class SwiftACPRequest extends Task{
         return $activeSuppliers->get();
     }
 
+    /*
+     * Get Billable Company Codes for Form
+     */
+    public function getFormBillableCompanyCodes($nodeDefinitionId=false)
+    {
+        $activeBillableCompanyCodes = $this->resource->query();
+
+        $activeBillableCompanyCodes->groupBy('billable_company_code')
+                                    ->orderBy('billable_company_code','ASC')
+                                    ->with(['company'])
+                                    ->whereHas('workflow',function($q) use ($nodeDefinitionId){
+                                        $q->inprogress();
+                                        if($nodeDefinitionId !== false)
+                                        {
+                                            $q->whereHas('pendingNodes',function($q) use ($nodeDefinitionId){
+                                                return $q->whereHas('definition',function($q) use ($nodeDefinitionId){
+                                                   return $q->where('id','=',$nodeDefinitionId);
+                                                });
+                                            });
+                                        }
+                                        return $q;
+                                    });
+
+        return $activeBillableCompanyCodes->get();
+    }
+
+    /*
+     * Get list of suppliers for form filters
+     *
+     */
+    public function getFormActiveSuppliers($nodeDefinitionId=false)
+    {
+        $activeSuppliers = $this->resource->query();
+
+        $activeSuppliers->groupBy('supplier_code')
+                        ->orderBy('supplier_code','ASC')
+                        ->with(['supplier'])
+                        ->whereHas('workflow',function($q) use ($nodeDefinitionId){
+                            $q->inprogress();
+                            if($nodeDefinitionId !== false)
+                            {
+                                $q->whereHas('pendingNodes',function($q) use ($nodeDefinitionId){
+                                    return $q->whereHas('definition',function($q) use ($nodeDefinitionId){
+                                       return $q->where('id','=',$nodeDefinitionId);
+                                    });
+                                });
+                            }
+                            return $q;
+                        });
+
+        return $activeSuppliers->get();
+    }
+
+    /*
+     * Filter Functions: START
+     */
     private function filterDueDateOverdue(&$query)
     {
         return $query->whereHas('invoice',function($q){
@@ -387,4 +478,19 @@ class SwiftACPRequest extends Task{
              }
         });
     }
+
+    private function filterStep(&$query)
+    {
+        $query->whereHas('workflow',function($q){
+            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                return $q->whereHas('definition',function($q){
+                   return $q->where('id','=',\Input::get('filter_step'));
+                });
+            });
+        });
+    }
+
+    /*
+     * Filter Functions: END
+     */
 }

@@ -10,13 +10,27 @@ function acp_filter()
         prevText : '<i class="fa fa-chevron-left"></i>',
         nextText : '<i class="fa fa-chevron-right"></i>',            
     });
-
-    $('#select_filter_supplier').select2({
-        placeholder: 'Please select a supplier',
-    });
-    $('#select_filter_billable_company_code').select2({
-        placeholder: 'Please select a billable company'
-    });
+    
+    if(document.getElementById('select_filter_supplier'))
+    {
+        $('#select_filter_supplier').select2({
+            placeholder: 'Please select a supplier',
+        });
+    }
+    
+    if(document.getElementById('select_filter_billable_company_code'))
+    {
+        $('#select_filter_billable_company_code').select2({
+            placeholder: 'Please select a billable company'
+        });
+    }
+    
+    if(document.getElementById('select_filter_step'))
+    {
+        $('#select_filter_step').select2({
+            placeholder: 'Please select a step'
+        });        
+    }
 
     $('#filter-btn').on('click',function(){
 

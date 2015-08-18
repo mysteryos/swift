@@ -13,7 +13,7 @@
             </div>
         </div>
     </div>
-    <div class="row payment-1 payment-2" @if(!isset($pay->type) || (int)$pay->type ===0) style="display:none;" @endif>
+    <div class="row payment-1 payment-2" @if(!isset($pay->type) || (int)$pay->type === 0) style="display:none;" @endif>
         <div class="form-group col-md-6">
             <label class="col-md-4 control-label">Payment Number*</label>
             <div class="col-md-8">
@@ -29,7 +29,7 @@
             </div>
         </div>
     </div>
-    <div class="row payment-1 payment-2" @if(!isset($pay->type) || (int)$pay->type ===0) style="display:none;" @endif>
+    <div class="row payment-1 payment-2" @if(!isset($pay->type) || (int)$pay->type === 0) style="display:none;" @endif>
         <div class="form-group col-lg-6 col-md-6">
             <label class="col-md-4 control-label">Amount</label>
             <div class="col-md-8">
@@ -43,7 +43,7 @@
             </div>
         </div>
     </div>
-    <div class="row payment-2" @if(!isset($pay->type) || $pay->type !== \SwiftACPPayment::TYPE_BANKTRANSFER) style="display:none;" @endif>
+    <div class="row payment-2" @if(!isset($pay->type) || $pay->type !== \SwiftACPPayment::TYPE_BANKTRANSFER || !$pay->type !== \SwiftACPPayment::TYPE_DIRECTDEBIT) style="display:none;" @endif>
     </div>
     <div class="row payment-1" @if(!isset($pay->type) || $pay->type !== \SwiftACPPayment::TYPE_CHEQUE) style="display:none;" @endif>
         <div class="form-group col-md-6">

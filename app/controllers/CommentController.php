@@ -27,28 +27,59 @@ class CommentController extends UserController {
             //alert users if they have been tagged
             if(trim(Input::get('usermention')) != "")
             {
-                $userMentions = explode(',',Input::get('usermention'));
+                $userMentions = explode(',',\Input::get('usermention'));
                 $userMentions = array_unique((array)$userMentions);
-                Comment::mailNotify($comment,$userMentions);
+                //Give Access to form if needed
+                $this->checkAndGiveAccess($commentableType,$commentableId,$userMentions);
+                \Comment::mailNotify($comment,$userMentions);
             }
 			return Response::make($newCommentId);
 
 		} catch (\Exception $e) {
 
-                    return Response::Make($e->getMessage());
+            return Response::Make($e->getMessage());
 		}
 
 	}
         
-        public function getListcomment($commentable)
+    public function getListcomment($commentable)
+    {
+        list($commentableType, $commentableId) = Comment::getKey($commentable);
+
+        $classObj = new $commentableType;
+        $classObj = $classObj::find($commentableId);
+
+        return \View::make('comments_list',array('comments'=>$classObj->comments()->orderBy('created_at','DESC')->get()));
+
+    }
+
+    private function checkAndGiveAccess($commentableType,$commentableId,$userMentions)
+    {
+        if(is_array($userMentions))
         {
-            list($commentableType, $commentableId) = Comment::getKey($commentable);
-            
-            $classObj = new $commentableType;
-            $classObj = $classObj::find($commentableId);
-            
-            return View::make('comments_list',array('comments'=>$classObj->comments()->orderBy('created_at','DESC')->get()));
-            
+            switch($commentableType)
+            {
+                case "SwiftACPRequest":
+                    $form = (new $commentableType)->find($commentableId);
+                    if($form)
+                    {
+                        foreach($userMentions as $user_id)
+                        {
+                            if(!$form->permission($user_id)->checkAccess())
+                            {
+                                $share = new \SwiftShare([
+                                    'from_user_id' => $this->currentUser->id,
+                                    'to_user_id' => $user_id,
+                                    'permission' => \SwiftShare::PERMISSION_VIEW
+                                ]);
+
+                                $form->share()->save($share);
+                            }
+                        }
+                    }
+                break;
+            }
         }
+    }
 
 }

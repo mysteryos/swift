@@ -78,9 +78,32 @@ class AccountsPayableController extends UserController {
      * @param boolean|string $type
      * @integer $page
      */
-    public function getForms($type=false,$page=1)
+    public function getForms($type=false,$movementOffset=0,$prevOffset=0,$nextOffset=0)
     {
-        $limitPerPage = 15;
+        /*
+         * Register Filters
+         */
+        $this->task()->registerFormFilters();
+
+        $limitPerPage = 3;
+        /*
+         * Calculate previous offset
+         */
+        if($nextOffset < $limitPerPage)
+        {
+            $prevOffset = 0;
+        }
+        else
+        {
+            $prevOffset = $nextOffset- $movementOffset;
+        }
+
+        if((int)$prevOffset === 0 && (int)$nextOffset === 0)
+        {
+            $this->data['record_offset_start'] = 1;
+        }
+        
+        $movementOffset=0;
 
         $this->pageTitle = 'Forms';
 
@@ -157,138 +180,142 @@ class AccountsPayableController extends UserController {
             case 'mine':
                 $acprequestquery->where('owner_user_id','=',$this->currentUser->id);
                 break;
+            case 'recent':
+                $acprequestquery->join('swift_recent',function($join){
+                    $join->on('swift_recent.recentable_type','=',DB::raw('"SwiftACPRequest"'));
+                    $join->on('swift_recent.recentable_id','=','swift_acp_request.id');
+                })->orderBy('swift_recent.updated_at','DESC')->select('swift_acp_request.*');
+                break;
             case 'all':
             default:
                 $acprequestquery->orderBy('updated_at','desc');
                 break;
         }
 
-        //Filters
-        if(Input::has('filter'))
-        {
-
-            if(Session::has('acp_form_filter'))
-            {
-                $filter = Session::get('acp_form_filter');
-            }
-            else
-            {
-                $filter = array();
-            }
-
-            $filter[Input::get('filter_name')] = Input::get('filter_value');
-
-            /*
-             * loop & Apply all filters
-             */
-            foreach($filter as $f_name => $f_val)
-            {
-                switch($f_name)
-                {
-                    case 'business_unit':
-                        $acprequestquery->where('business_unit','=',$f_val);
-                        break;
-                    case 'node_definition_id':
-                        $acprequestquery->whereHas('workflow',function($q) use($f_val){
-                           return $q->whereHas('nodes',function($q) use($f_val){
-                               return $q->where('node_definition_id','=',$f_val);
-                           });
-                        });
-                        break;
-                }
-            }
-
-            \Session::flash('acp_form_filter',$filter);
-
-        }
-        else
-        {
-            \Session::forget('acp_form_filter');
-        }
+        //The Filters
+        $this->task()->applyFilters($acprequestquery);
 
         $formsCount = $acprequestquery->count();
-        if($type !== 'inprogress')
-        {
-            /*
-             * If not in progress, we limit rows
-             */
-            $acprequestquery->take($limitPerPage);
-            if($page > 1)
-            {
-                $acprequestquery->offset(($page-1)*$limitPerPage);
-            }
-        }
         
-        $forms = $acprequestquery->get();
+        $forms = array();
 
         /*
          * Fetch latest history;
          */
-        foreach($forms as $k => &$f)
+        do
         {
-            //Set Current Workflow Activity
-            $f->current_activity = \WorkflowActivity::progress($f);
+            $resultquery = clone $acprequestquery;
+            $resultquery->take($limitPerPage);
+            $resultquery->offset($nextOffset);
+            
+            $result = $resultquery->get();
 
-            //If in progress, we filter
-            if($type == 'inprogress')
+            //Nothing more in results
+            if(count($result) === 0)
             {
-                $hasAccess = false;
-                /*
-                 * Loop through node definition and check access
-                 */
-                if(isset($f->current_activity['definition']))
+                break;
+            }
+
+            foreach($result as $k => &$f)
+            {
+                $nextOffset++;
+                if(count($forms) === $limitPerPage)
                 {
-                    foreach($f->current_activity['definition'] as $d)
+                    break;
+                }
+                else
+                {
+                    $movementOffset++;
+                }
+                
+                //Set Current Workflow Activity
+                $f->current_activity = \WorkflowActivity::progress($f);
+
+                //If in progress, we filter
+                if($type === 'inprogress')
+                {
+                    $hasAccess = false;
+                    /*
+                     * Loop through node definition and check access
+                     */
+                    if(isset($f->current_activity['definition']))
                     {
-                        if(\NodeActivity::hasAccess($d,\SwiftNodePermission::RESPONSIBLE))
+                        foreach($f->current_activity['definition'] as $d)
                         {
-                            $hasAccess = true;
-                            break;
+                            if(\NodeActivity::hasAccess($d,\SwiftNodePermission::RESPONSIBLE))
+                            {
+                                $hasAccess = true;
+                                break;
+                            }
                         }
                     }
-                }
 
-                /*
-                 * No Access : We Remove order from list
-                 */
-                if(!$hasAccess)
-                {
-                    unset($forms[$k]);
-                    $formsCount--;
-                    continue;
-                }
-            }
-            else
-            {
-                if(isset($filter) && isset($filter['node_definition_id']))
-                {
-                    if(!isset($f->current_activity['definition']) || !in_array((int)$filter['node_definition_id'],$f->current_activity['definition']))
+                    /*
+                     * No Access : We Remove order from list
+                     */
+                    if(!$hasAccess)
                     {
-                        unset($forms[$k]);
                         $formsCount--;
-                        break;
+                        continue;
+                    }
+                    else
+                    {
+                        $forms[] = $f;
                     }
                 }
+                else
+                {
+                    //check Access
+                    if(!$f->permission()->checkAccess())
+                    {
+                        $formsCount--;
+                        continue;
+                    }
+                    else
+                    {
+                        $forms[] = $f;
+                    }
+                }
+
+                //Set Revision
+                $f->revision_latest = \Helper::getMergedRevision($f->revisionRelations,$f);
+
+                //Set Starred/important
+                $f->flag_starred = \Flag::isStarred($f);
+                $f->flag_important = \Flag::isImportant($f);
+                $f->flag_read = \Flag::isRead($f);
             }
+            
+            if(count($forms) >= $limitPerPage)
+            {
+                break;
+            }
+            
+        } while(count($forms) < $limitPerPage);
 
-            //Set Revision
-            $f->revision_latest = Helper::getMergedRevision($f->revisionRelations,$f);
-
-            //Set Starred/important
-            $f->flag_starred = Flag::isStarred($f);
-            $f->flag_important = Flag::isImportant($f);
-            $f->flag_read = Flag::isRead($f);
+        if(!isset($this->data['record_offset_start']))
+        {
+            $this->data['record_offset_start'] = $nextOffset-$movementOffset;
         }
+
 
         //The Data
         $this->data['type'] = $type;
         $this->data['edit_access'] = $this->permission->canEdit() || $this->permission->isAdmin();
+        $this->data['activeSuppliers'] = $this->task()->getFormActiveSuppliers(\Input::get('filter_step',false));
+        $this->data['activeBillableCompanies'] = $this->task()->getFormBillableCompanyCodes(\Input::get('filter_step',false));
+        $this->data['activeSteps'] = \SwiftNodeDefinition::getByWorkflowType(\SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
         $this->data['forms'] = $forms;
-        $this->data['count'] = isset($filter) ? $formsCount : SwiftACPRequest::count();
-        $this->data['page'] = $page;
+        $this->data['formCount'] = $formsCount;
+        $this->data['prev_offset'] = $prevOffset < 0 ? 0 : $prevOffset;
+        $this->data['next_offset'] = $nextOffset;
+        $this->data['movement_offset'] = $movementOffset;
         $this->data['limit_per_page'] = $limitPerPage;
-        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
-        $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
+        $this->data['filter'] = $this->filter;
+        $this->data['filter_on'] = (boolean)count(array_filter($this->filter,function($v){
+                                        return $v['enabled'];
+                                    }));
+        $this->data['filter_string'] = "?".$_SERVER['QUERY_STRING'];
         $this->data['rootURL'] = $this->rootURL;
 
         return $this->makeView("acpayable/forms");
@@ -1305,7 +1332,7 @@ class AccountsPayableController extends UserController {
         if($acp)
         {
             //Check Access
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -1401,7 +1428,12 @@ class AccountsPayableController extends UserController {
                         {
                             if($d->data != "")
                             {
-                                if(isset($d->data->publishOwner) && ($this->permission->isAdmin() || $this->permission->isAccountingDept() || $acp->isOwner()))
+                                if(isset($d->data->publishOwner) && 
+                                    ($this->permission->isAdmin() || 
+                                     $this->permission->isAccountingDept() ||
+                                     $acp->isOwner() ||
+                                     $acp->isSharedWith($this->currentUser->id,\SwiftShare::PERMISSION_EDIT_PUBLISH))
+                                    )
                                 {
                                     $this->data['publishOwner'] = true;
                                     break;
@@ -1444,13 +1476,6 @@ class AccountsPayableController extends UserController {
                 //Check if form has supplier payment terms
                 if($this->permission->isAccountingDept() || $this->permission->isAdmin())
                 {
-//                    if(!$acp->supplier->paymentTerm)
-//                    {
-//                        $this->data['message'][] = [ 'type' => 'warning',
-//                                                     'msg' => "This supplier doesn't have any payment terms. <a href=\"".Helper::generateURL($acp->supplier)."\" class=\"pjax\">Please provide one.</a>"
-//                                                    ];
-//                    }
-
                     if($this->data['checkPayment'] === true)
                     {
                         $checkProgress = \WorkflowActivity::checkProgress($acp);
@@ -1477,53 +1502,53 @@ class AccountsPayableController extends UserController {
 
     public function putGeneralInfo()
     {
-        $acp_id = Crypt::decrypt(Input::get('pk'));
-        $acp = SwiftACPRequest::find($acp_id);
+        $acp_id = \Crypt::decrypt(Input::get('pk'));
+        $acp = \SwiftACPRequest::find($acp_id);
 
         if($acp)
         {
 
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
 
-            switch(Input::get('name'))
+            switch(\Input::get('name'))
             {
                 case "name":
                     break;
                 case "description":
                     break;
                 case "type":
-                    if(!array_key_exists(Input::get('value'),\SwiftACPRequest::$order))
+                    if(!array_key_exists(\Input::get('value'),\SwiftACPRequest::$order))
                     {
-                        return Response::make("Please select a valid type",500);
+                        return \Response::make("Please select a valid type",500);
                     }
                     break;
                 case "billable_company_code":
-                    if(!is_numeric(trim(Input::get('value'))))
+                    if(!is_numeric(trim(\Input::get('value'))))
                     {
-                        return Response::make("Company code should be numeric.",400);
+                        return \Response::make("Company code should be numeric.",400);
                     }
                     break;
                 case "supplier_code":
-                    if(!is_numeric(trim(Input::get('value'))))
+                    if(!is_numeric(trim(\Input::get('value'))))
                     {
-                        return Response::make("Supplier code should be numeric.",400);
+                        return \Response::make("Supplier code should be numeric.",400);
                     }
                     break;
                 default:
-                    return Response::make("Unknown Field",400);
+                    return \Response::make("Unknown Field",400);
             }
 
-            $acp->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
+            $acp->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
             if($acp->save())
             {
-                return Response::make('Success', 200);
+                return \Response::make('Success', 200);
             }
             else
             {
-                return Response::make('Failed to save. Please retry',400);
+                return \Response::make('Failed to save. Please retry',400);
             }
         }
         else
@@ -1549,7 +1574,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -1572,7 +1597,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -1605,7 +1630,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -1631,7 +1656,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -1663,7 +1688,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -1735,7 +1760,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->permission->checkAccess($acp))
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -2003,7 +2028,7 @@ class AccountsPayableController extends UserController {
 
         if($acp)
         {
-            if($this->permission->checkAccess($acp))
+            if($acp->permission()->checkAccess())
             {
                 switch(\Input::get('name'))
                 {

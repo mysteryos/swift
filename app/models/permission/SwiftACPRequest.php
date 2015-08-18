@@ -9,8 +9,6 @@ namespace Permission;
 
 class SwiftACPRequest extends Permission {
 
-    protected $resource = "\SwiftACPRequest";
-
     public $adminPermission = "acp-admin";
     public $viewPermission = "acp-view";
     public $editPermission = "acp-edit";
@@ -22,9 +20,9 @@ class SwiftACPRequest extends Permission {
     public $accountingChequeSignPermission = "acp-chequesign";
     public $accountingChequeSignExecPermission = "acp-exec";
 
-    public function __construct()
+    public function __construct($form=false,$user_id=false)
     {
-        parent::__construct();
+        parent::__construct($form,$user_id);
     }
 
     public function canCreate()
@@ -76,11 +74,11 @@ class SwiftACPRequest extends Permission {
         return $this->currentUser->hasAccess($this->HODPermission);
     }
 
-    public function checkAccess($acp)
+    public function checkAccess()
     {
         $hasAccess = false;
         //Owner has access
-        if($acp->isOwner())
+        if($this->resource->isOwner($this->currentUser->id))
         {
             $hasAccess = true;
         }
@@ -98,7 +96,7 @@ class SwiftACPRequest extends Permission {
                                 {
                                     return $val['approval_user_id'];
                                 }
-                           },$acp->approval->toArray());
+                           },$this->resource->approval->toArray());
 
 
         if(in_array($this->currentUser->id,$approvalUserIds))
@@ -116,7 +114,7 @@ class SwiftACPRequest extends Permission {
                                 {
                                     return $val['cheque_exec_signator_id'];
                                 }
-                            },$acp->payment->toArray());
+                            },$this->resource->payment->toArray());
 
         if(in_array($this->currentUser->id,$executiveUserIds))
         {
@@ -129,13 +127,9 @@ class SwiftACPRequest extends Permission {
         /*
          * Sharing Access
          */
-        if(!$hasAccess)
+        if(!$hasAccess && $this->resource->isSharedWith($this->currentUser->id))
         {
-             $sharedUserCount = $acp->share()->where('to_user_id','=',$this->currentUser->id)->count();
-             if($sharedUserCount > 0)
-             {
-                 $hasAccess = true;
-             }
+            $hasAccess = true;
         }
 
         //Permission Check - End

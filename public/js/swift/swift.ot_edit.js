@@ -607,6 +607,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         $dummy = $this.parents('.jarviswidget').find('fieldset.dummy');
         if($dummy.length)
         {
+            var $editableContainer = $.maindiv.find('.editable-container');
+            if($editableContainer.length)
+            {
+                if($editableContainer.prev().hasClass('editable'))
+                {
+                    $editableContainer.prev().editable('hide');
+                }
+            }            
             addMulti($dummy);
         }
         else

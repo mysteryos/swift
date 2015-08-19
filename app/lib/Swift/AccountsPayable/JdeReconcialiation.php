@@ -71,6 +71,7 @@ class JdeReconcialiation {
 
         //Payment voucher number not found in database
         $jdePV = \JdePaymentVoucher::where('doc','=',$pv->number)
+                ->where('dct','=',$pv->type,'AND')
                 ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
                 ->first();
         
@@ -192,7 +193,9 @@ class JdeReconcialiation {
     public static function autofillPaymentVoucher(\SwiftACPPaymentVoucher &$pv)
     {
         $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)
+                 ->where('dct','=',$pv->type,'AND')
                  ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')->first();
+        
         if($jdePV && $pv->validated === \SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
         {
             $pv->load('invoice');
@@ -224,12 +227,14 @@ class JdeReconcialiation {
             //Total Amounts
 
             $dueAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)
+                                ->where('dct','=',$pv->type,'AND')
                                 ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
                                 ->groupBy('DOC')
                                 ->sum('ag');
             $pv->invoice->due_amount = $dueAmountTotal;
 
             $openAmountTotal = \JdePaymentVoucher::where('DOC','=',$pv->number)
+                                ->where('dct','=',$pv->type,'AND')
                                 ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
                                 ->groupBy('DOC')
                                 ->sum('aap');
@@ -289,6 +294,7 @@ class JdeReconcialiation {
             {
                 $prevAmount = $form->invoice->open_amount;
                 $openAmountTotal = \JdePaymentVoucher::where('DOC','=',$form->paymentVoucher->number)
+                                    ->where('dct','=',$form->paymentVoucher->type,'AND')
                                     ->where('kco','=',sprintf('%05d', $form->billable_company_code),'AND')
                                     ->groupBy('DOC')
                                     ->sum('aap');

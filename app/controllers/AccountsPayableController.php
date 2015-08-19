@@ -1389,6 +1389,7 @@ class AccountsPayableController extends UserController {
             $this->data['cheque_status'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$status));
             $this->data['payment_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$type));
             $this->data['cheque_dispatch'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$dispatch));
+            $this->data['pv_type'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPaymentVoucher::$typeArray));
             $this->data['pv_validation'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPaymentVoucher::$validationArray));
             $this->data['pay_validation'] = json_encode(\Helper::jsonobject_encode(\SwiftACPPayment::$validationArray));
             $this->data['approval_hod'] = json_encode(\Helper::jsonobject_encode($this->data['approval_hod']));
@@ -1961,6 +1962,15 @@ class AccountsPayableController extends UserController {
                         return \Response::make("Please input a numeric value.",400);
                     }
                     break;
+                case "type":
+                    if(\Input::get('value') !== "")
+                    {
+                        if(!array_key_exists(\Input::get('value'),\SwiftACPPaymentVoucher::$typeArray))
+                        {
+                            return \Response::make("Please select a valid type.",400);
+                        }
+                    }
+                    break;
                 case "validated":
                     if(!$this->currentUser->isSuperUser())
                     {
@@ -1994,8 +2004,8 @@ class AccountsPayableController extends UserController {
 
     public function deletePaymentvoucher()
     {
-        $id = Crypt::decrypt(Input::get('pk'));
-        $pv = SwiftACPPaymentVoucher::find($id);
+        $id = \Crypt::decrypt(Input::get('pk'));
+        $pv = \SwiftACPPaymentVoucher::find($id);
         if($pv)
         {
             $acp = $pv->acp;
@@ -3362,19 +3372,30 @@ class AccountsPayableController extends UserController {
                 if($pv)
                 {
                     $pv->number = \Input::get('pv-number');
+                    $pv->type = \Input::get('type');
                     $pv->save();
                     return \Response::json(['id'=>\Crypt::encrypt($pv->id)]);
                 }
             }
             
             //Create new / Old one was deleted
-            $acp = \SwiftACPRequest::find(\Crypt::decrypt(\Input::get('id')));
+            $acp = \SwiftACPRequest::with('paymentVoucher')->find(\Crypt::decrypt(\Input::get('id')));
             if($acp)
             {
-                $pv = new \SwiftACPPaymentVoucher([
-                   'number' => \Input::get('pv-number')
-                ]);
-                $acp->paymentVoucher()->save($pv);
+                if($acp->paymentVoucher)
+                {
+                    $acp->paymentVoucher->number = \Input::get('pv-number');
+                    $acp->paymentVoucher->type = \Input::get('type');
+                    $acp->paymentVoucher->save();
+                }
+                else
+                {
+                    $pv = new \SwiftACPPaymentVoucher([
+                        'number' => \Input::get('pv-number'),
+                        'type' => \Input::get('type')
+                    ]);
+                    $acp->paymentVoucher()->save($pv);
+                }
 
                 \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
                 return \Response::json(['id'=>\Crypt::encrypt($pv->id)]);

@@ -12,7 +12,7 @@
 <!-- END RIBBON -->
 
 <!-- MAIN CONTENT -->
-<div id="content">
+<div id="content"  data-js="admin_users" data-urljs="{{Bust::url('/js/swift/swift.admin_users.js')}}">
         <div class="row">
             <div class="col-xs-12 col-sm-7 col-md-7 col-lg-4">
                     <h1 class="page-title txt-color-blueDark"><i class="fa-fw fa fa-home"></i> Admin <span>> Users</span></h1>
@@ -29,7 +29,7 @@
                                     <th>Email</th>
                                     <th>Created At</th>
                                     <th>Last Login</th>
-                                    <th>Actions</th>
+                                    <th colspan="2">Actions</th>
                             </tr>
                     </thead>
                     <tbody>
@@ -41,6 +41,7 @@
                                 <td>{{ $u->created_at }}</td>
                                 <td>{{ $u->last_login }}</td>
                                 <td><a href="/user/{{{ $u->email }}}"><i class="fa fa-edit"></i> Modify</a></td>
+                                <td>@if($u->activated === 1)<a href="/admin/login-as/{{$u->email}}" class="ajax-login"><i class="fa fa-user"></i> Login</a>@endif</td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -25,6 +25,23 @@ Class AdminController extends UserController {
         
         return $this->makeView('admin.users');
     }
+
+    public function getLoginAs($email)
+    {
+        if($this->currentUser->isSuperUser())
+        {
+            $user = \Sentry::findUserByLogin($email);
+            if($user)
+            {
+                \Sentry::login($user,false);
+                return \Response::make("Success");
+            }
+        }
+        else
+        {
+            return \Response::make("You are not allowed to do this action",500);
+        }
+    }
     
     public function getPhpinfo()
     {

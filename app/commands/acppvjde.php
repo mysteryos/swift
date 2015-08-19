@@ -83,6 +83,7 @@ class acppvjde extends ScheduledCommand {
             foreach($paymentVoucherList as $pv)
             {
                 $localPv = \SwiftACPPaymentVoucher::where('number','=',$pv->doc)
+                            ->where('type','=',$pv->dct,'AND')
                             ->whereHas('acp',function($q) use ($pv){
                                 return $q->where('billable_company_code','=',$pv->kco);
                             })

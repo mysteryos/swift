@@ -90,6 +90,12 @@ function addMulti($dummy,pk)
                         totalpriceElement.removeClass('loading');
                     }
                 });
+            }).on('shown', function(e, editable) {
+                if (arguments.length == 2) {
+                    setTimeout(function() {
+                       editable.input.$input.select2("open");
+                    }, 0);
+                }
             });
         }
         else
@@ -396,6 +402,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                         totalpriceElement.removeClass('loading');
                     }
                 });
+            }).on('shown', function(e, editable) {
+                if (arguments.length == 2) {
+                    setTimeout(function() {
+                       editable.input.$input.select2("open");
+                    }, 0);
+                }
             });
         }
         else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="customer_code" && this.getAttribute('data-context')=="generalinfo")
@@ -449,6 +461,12 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     initSelection: function (element, callback) {
                         callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
                     }                    
+                }
+            }).on('shown', function(e, editable) {
+                if (arguments.length == 2) {
+                    setTimeout(function() {
+                       editable.input.$input.select2("open");
+                    }, 0);
                 }
             });
         }
@@ -565,6 +583,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         $dummy = $this.parents('.jarviswidget').find('fieldset.dummy');
         if($dummy.length)
         {
+            var $editableContainer = $.maindiv.find('.editable-container');
+            if($editableContainer.length)
+            {
+                if($editableContainer.prev().hasClass('editable'))
+                {
+                    $editableContainer.prev().editable('hide');
+                }
+            }
             addMulti($dummy);
         }
         else

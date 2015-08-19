@@ -1309,6 +1309,11 @@ $('#search-fld').typeahead(null, {
     $.pjax({
        url:selection.url
     });
+}).on('focus',function(){
+    var save_this = $(this);
+    window.setTimeout (function(){ 
+       save_this.select(); 
+    },100);    
 });
 
 $('form.header-search').on('submit',function(){

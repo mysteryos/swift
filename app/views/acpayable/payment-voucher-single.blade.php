@@ -73,6 +73,16 @@
                         </td>
                     </tr>
                     <tr>
+                        <td><label>Type</label></td>
+                        <td>
+                            <select name="type" class="form-control">
+                                @foreach(\SwiftACPPaymentVoucher::$typeArray as $type_k => $type_v)
+                                    <option value="{{$type_k}}" @if($type_k === \SwiftACPPaymentVoucher::TYPE_PV) selected @endif>{{$type_v}}</option>
+                                @endforeach
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
                         <td><label>Payment Voucher</label></td>
                         <td class="searchable"><input type="text" name="pv-number" class="payment-voucher-val form-control" autocomplete="off" value="" placeholder="Type in PV numbers" @if($first)autofocus @endif /></td>
                     </tr>

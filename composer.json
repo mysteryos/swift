@@ -31,7 +31,7 @@
                 "xethron/migrations-generator": "dev-master",
                 "kmd/logviewer": "1.2.*",
                 "barryvdh/laravel-debugbar": "1.*",
-		"themonkeys/cachebuster": "dev-master",
+		"themonkeys/cachebuster": "1.*",
                 "phpoffice/phpexcel": "1.8.0",
                 "tecnick.com/tcpdf": "6.*",
                 "maxxscho/laravel-tcpdf": "0.*",

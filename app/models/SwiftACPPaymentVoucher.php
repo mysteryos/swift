@@ -14,14 +14,15 @@ class SwiftACPPaymentVoucher extends Eloquent
     
     protected $table = "scott_swift.swift_acp_payment_voucher";
     
-    protected $fillable = ['number','validated'];
+    protected $fillable = ['number','type','validated'];
     
     protected $dates = ['deleted_at'];
 
     protected $touches = array('acp');
 
     protected $attributes = [
-        'validated' => self::VALIDATION_PENDING
+        'validated' => self::VALIDATION_PENDING,
+        'type' => self::TYPE_PV
     ];
 
     public static $validationArray = [
@@ -30,10 +31,20 @@ class SwiftACPPaymentVoucher extends Eloquent
         self::VALIDATION_ERROR => 'Error'
     ];
 
+    public static $typeArray = [
+        self::TYPE_PV => 'Invoice',
+        self::TYPE_PN => 'Credit Note'
+    ];
+
     //Validation
     const VALIDATION_PENDING = 0;
     const VALIDATION_COMPLETE = 1;
     const VALIDATION_ERROR = -1;
+
+    //Type
+
+    const TYPE_PV = 'PV';
+    const TYPE_PN = 'PN';
 
     /* Revisionable */
     
@@ -42,7 +53,8 @@ class SwiftACPPaymentVoucher extends Eloquent
     protected $keepRevisionOf = array('number');
     
     protected $revisionFormattedFieldNames = array(
-        'number' => 'PV number'
+        'number' => 'PV number',
+        'type' => 'Type'
     );
     
     public $saveCreateRevision = true;
@@ -58,7 +70,7 @@ class SwiftACPPaymentVoucher extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "paymentVoucher";
-    public $esRemove = ['acp_id','validated','validated_msg'];
+    public $esRemove = ['acp_id','validated','validated_msg','type'];
 
     public function esGetParent()
     {

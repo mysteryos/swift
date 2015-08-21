@@ -81,7 +81,7 @@ $.pjax.defaults.container = "#main";
  * Pusher Main
  */
 
-var pusher = new Pusher('d34044dc68acb4ac2833',{authEndpoint : '/pusher/auth'});
+var pusher = new Pusher(document.getElementById('pusher_app_id').value,{authEndpoint : '/pusher/auth'});
 //Presence Channel for current page
 var presenceChannelCurrent = presenceChannelUser = null;
 //List of presence channels subscribed to

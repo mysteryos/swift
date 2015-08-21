@@ -46,7 +46,7 @@ class SalesCommissionController extends UserController {
         {
             $superUser = false;
             $departmentList = SwiftSalesmanDepartment::whereHas('permission',function($q){
-                                return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                return $q->whereIn('permission',(array)array_keys($this->currentUser->getMergedPermissions()));
                               })->get();
                               
             if(!count($departmentList))
@@ -64,7 +64,7 @@ class SalesCommissionController extends UserController {
             {
                 //Check access again
                 $departmentCheck = SwiftSalesmanDepartment::whereHas('permission',function($q){
-                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                    return $q->whereIn('permission',(array)array_keys($this->currentUser->getMergedPermissions()));
                                   })->where('id','=',(int)$selectedDepartment)->count();
                                   
                 if($departmentCheck === 0)
@@ -119,7 +119,7 @@ class SalesCommissionController extends UserController {
             $superUser = false;
             $isAllowed = SwiftSalesman::where('salesman_id','=',$salesman_id)
                             ->whereHas('department',function($q){
-                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                    return $q->whereIn('permission',(array)array_keys($this->currentUser->getMergedPermissions()));
                             })->count();
             
             if($isAllowed === 0)
@@ -174,7 +174,7 @@ class SalesCommissionController extends UserController {
             $superUser = false;
             $isAllowed = SwiftSalesman::where('salesman_id','=',$salesman_id)
                             ->whereHas('department',function($q){
-                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                    return $q->whereIn('permission',(array)array_keys($this->currentUser->getMergedPermissions()));
                             })->count();
             
             if($isAllowed === 0)

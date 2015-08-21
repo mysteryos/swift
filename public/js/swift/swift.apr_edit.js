@@ -416,7 +416,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 disabled: $this.hasClass('editable-disabled'),
                 placeholder: "Select a customer",
                 onblur: 'submit',
-                source: 'select2',
+                source: '/ajaxsearch/customercode',
                 select2: {
                     allowClear: false,
                     minimumInputLength: 3,

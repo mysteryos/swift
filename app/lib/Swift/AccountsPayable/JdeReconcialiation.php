@@ -89,7 +89,7 @@ class JdeReconcialiation {
             $pv->load('acp');
             $comment = new \SwiftComment([
                 'comment' => "Supplier code mismatch: {$jdePV->AN8} for PV no: {$pv->number}",
-                'user_id' => \Sentry::getUser()->id
+                'user_id' => \Config::get('website.system_user_id')
             ]);
 
             $pv->acp->comments()->save($comment);

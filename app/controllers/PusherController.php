@@ -18,7 +18,7 @@ class PusherController extends UserController {
     {
         if(Sentry::check())
         {
-            $user = Sentry::getUser();
+            $user = $this->currentUser;
             $avatar = Swift\Avatar::get();
             $presence_data = array('name' => $user->first_name." ".$user->last_name,'avatarColor'=>$avatar['color'],'avatarLetter'=>$avatar['letter']);
             echo $this->pusher->presence_auth(Input::get('channel_name'), Input::get('socket_id'), $user->id, $presence_data);       

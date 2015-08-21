@@ -432,14 +432,14 @@ Class AjaxSearchController extends UserController {
     
     public function getUserall()
     {
-        $users = User::where('id','!=',Sentry::getUser()->id)->get();
+        $users = \User::where('id','!=',$this->currentUser->id)->get();
         $userArray = array();
         foreach($users as $u)
         {
             $userArray[] = array('username'=>$u->first_name.".".$u->last_name,'name'=>$u->first_name." ".$u->last_name,'id'=>$u->id,'email'=>$u->email);
         }
         
-        return Response::json($userArray);
+        return \Response::json($userArray);
     }
 
     public function getPrInvoiceCode()

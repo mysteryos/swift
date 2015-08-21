@@ -168,7 +168,7 @@ class SalesmanController extends UserController {
         {
             $superUser = false;
             $departmentList = SwiftSalesmanDepartment::whereHas('permission',function($q){
-                                return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                return $q->whereIn('permission',(array)array_keys($this->currentUser->getMergedPermissions()));
                               })->get();
                               
             if(!count($departmentList))
@@ -187,7 +187,7 @@ class SalesmanController extends UserController {
             {
                 //Check access again
                 $departmentCheck = SwiftSalesmanDepartment::whereHas('permission',function($q){
-                                    return $q->whereIn('permission',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                                    return $q->whereIn('permission',(array)array_keys($this->currentUser->getMergedPermissions()));
                                   })->where('id','=',(int)$selectedDepartment)->count();
                                   
                 if($departmentCheck === 0)

@@ -104,7 +104,7 @@ class SwiftACPRequest extends Eloquent
         static::bootRevisionable();
 
         static::creating(function($model){
-            $model->owner_user_id = Sentry::getUser()->id;
+            $model->owner_user_id = \Helper::getUserId();
         });
     }
     

@@ -17,7 +17,7 @@ class CommentController extends UserController {
 				'commentable_type' => $commentableType,
 				'commentable_id' => $commentableId,
 				'comment' => Input::get('comment'),
-				'user_id' => Sentry::getUser()->id,
+				'user_id' => $this->currentUser->id,
 			);
             $comment = new SwiftComment;
 			$comment->fill($data);

@@ -26,9 +26,9 @@
                         <li>
                             <a href="javascript:void(0);" class="btn-tick-all">All</a>
                         </li>
-                        <li>
+<!--                        <li>
                             <a href="javascript:void(0);" class="btn-tick-nobatchnumber">No Batch number</a>
-                        </li>
+                        </li>-->
                         <li>
                             <a href="javascript:void(0);" class="btn-tick-nopvnumber">No PV Number</a>
                         </li>

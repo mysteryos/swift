@@ -52,16 +52,16 @@
         toggleHighlightBar();
     });
     
-    $content.on('click','.btn-tick-nobatchnumber',function(){
-        $content.find('tr.pvform').removeClass('highlight')
-                .find('input[type="checkbox"]').prop("checked",false);
-        var $pvlist = $content.find('.input-batchnumber').filter(function(){
-            return this.value === "";
-        });
-        $pvlist.parents('tr.pvform').addClass('highlight')
-                .find('input[type="checkbox"]').prop("checked",true);
-        toggleHighlightBar();
-    });
+//    $content.on('click','.btn-tick-nobatchnumber',function(){
+//        $content.find('tr.pvform').removeClass('highlight')
+//                .find('input[type="checkbox"]').prop("checked",false);
+//        var $pvlist = $content.find('.input-batchnumber').filter(function(){
+//            return this.value === "";
+//        });
+//        $pvlist.parents('tr.pvform').addClass('highlight')
+//                .find('input[type="checkbox"]').prop("checked",true);
+//        toggleHighlightBar();
+//    });
     
     $content.on('click','.btn-tick-nopvnumber',function(){
         $content.find('tr.pvform').removeClass('highlight')

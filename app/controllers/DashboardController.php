@@ -107,8 +107,18 @@ Class DashboardController extends UserController {
         $context = Config::get('context');
         $this->data['todoList'] = SwiftWorkflowActivity::getInProgressResponsible($context,$perPage);
 
-        foreach($this->data['todoList'] as &$row)
+        foreach($this->data['todoList'] as $key => &$row)
         {
+            switch(get_class($row->workflowable))
+            {
+                case "SwiftACPRequest":
+                    if(!$row->workflowable->permission()->checkAccess())
+                    {
+                            unset($this->data['todoList'][$key]);
+                            continue;
+                    }
+                    break;
+            }
             $row->current_activity = WorkflowActivity::progress($row);
             $row->activity = Helper::getMergedRevision($row->workflowable->revisionRelations,$row->workflowable);                    
         }        

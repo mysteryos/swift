@@ -85,7 +85,7 @@ class AccountsPayableController extends UserController {
          */
         $this->task()->registerFormFilters();
 
-        $limitPerPage = 3;
+        $limitPerPage = 10;
         /*
          * Calculate previous offset
          */
@@ -120,6 +120,10 @@ class AccountsPayableController extends UserController {
                 else if($this->permission->canCreate())
                 {
                     $type='mine';
+                }
+                else
+                {
+                    $type='all';
                 }
             }
             else
@@ -218,13 +222,13 @@ class AccountsPayableController extends UserController {
 
             foreach($result as $k => &$f)
             {
-                $nextOffset++;
                 if(count($forms) === $limitPerPage)
                 {
                     break;
                 }
                 else
                 {
+                    $nextOffset++;
                     $movementOffset++;
                 }
                 

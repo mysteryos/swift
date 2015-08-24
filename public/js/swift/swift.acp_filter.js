@@ -11,8 +11,14 @@ function acp_filter()
         nextText : '<i class="fa fa-chevron-right"></i>',            
     });
     
+    /*
+     * Clean previous instances of select2
+     */
+    $('.select2-container').remove();
+
     if(document.getElementById('select_filter_supplier'))
     {
+        $('#select_filter_supplier').val('');
         $('#select_filter_supplier').select2({
             placeholder: 'Please select a supplier',
         });
@@ -20,6 +26,7 @@ function acp_filter()
     
     if(document.getElementById('select_filter_billable_company_code'))
     {
+        $('#select_filter_billable_company_code').val('');
         $('#select_filter_billable_company_code').select2({
             placeholder: 'Please select a billable company'
         });
@@ -27,6 +34,7 @@ function acp_filter()
     
     if(document.getElementById('select_filter_step'))
     {
+        $('#select_filter_step').val('');
         $('#select_filter_step').select2({
             placeholder: 'Please select a step'
         });        

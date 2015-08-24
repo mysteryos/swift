@@ -44,7 +44,6 @@
             <div class="row">
                 <div class="col-xs-12 inbox-side-bar">
                     <h6> Filters <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a>--></h6>
-                    @if($permission->isAccountingDept() || $permission->isAdmin())
                         <ul class="inbox-menu-lg">
                                 <li @if($type=="inprogress"){{"class=\"active\""}}@endif >
                                         <a href="/{{ $rootURL }}/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
@@ -59,7 +58,6 @@
                                         <a href="/{{ $rootURL }}/forms/rejected" class="form-pjax-filter pjax"><i class="fa fa-times"></i>Rejected </a>
                                 </li>
                         </ul>
-                    @endif
 
                     <h6> Quick Access <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a>--> </h6>
 

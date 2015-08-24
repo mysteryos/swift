@@ -28,14 +28,14 @@ trait SharingTrait
         $query = $this->query();
         if($permission_type=== false)
         {
-            return (boolean)$query->share()->where('to_user_id','=',$user_id)
+            return (boolean)$this->share()->where('to_user_id','=',$user_id)
                             ->count();
         }
         else
         {
             if(array_key_exists($permission_type,SwiftShare::$permissions))
             {
-                return (boolean)$query->share()->where('to_user_id','=',$user_id)
+                return (boolean)$this->share()->where('to_user_id','=',$user_id)
                     ->where('permission','=',$permission_type,'AND')
                     ->count();
             }

@@ -31,7 +31,7 @@ class Story {
     public function relate($obj,$action,$type=1,$context_type=false,$context_id=0)
     {
         $this->story = new \SwiftStory([
-            'user_id' => $this->user_id
+            'by' => $this->user_id
         ]);
         
         if($context_type===false)
@@ -81,7 +81,7 @@ class Story {
      */
     private function checkExisting(\Illuminate\Database\Eloquent\Model $obj)
     {
-        return \SwiftStory::where('context_type','=',$this->story->context_type)
+        return (boolean)\SwiftStory::where('context_type','=',$this->story->context_type)
                 ->where('context_id','=',$this->story->context_id,'AND')
                 ->where('storyfiable_type','=',get_class($obj),'AND')
                 ->where('storyfiable_id','=',$obj->getKey(),'AND')

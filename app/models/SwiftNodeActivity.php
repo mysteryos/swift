@@ -144,6 +144,16 @@ class SwiftNodeActivity extends Eloquent
                     ->inprogress()
                     ->count();
     }
+
+    public static function countByWorkflowAndIsUnique($workflow_activity_id,$node_definition_id)
+    {
+        return self::where('workflow_activity_id','=',$workflow_activity_id)
+                ->whereHas('definition',function($q) use ($node_definition_id){
+                    return $q->unique()
+                            ->where('id','=',$node_definition_id,'AND');
+                })
+                ->count();
+    }
     
     public static function getLateNodes($workflowType,$limit=0,$offset=0)
     {

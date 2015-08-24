@@ -75,8 +75,25 @@ class workflow extends Command {
                             $this->info("No Forms in progress");
                         }
                         break;
+                    case 'acprequest':
+                        $forms = \SwiftACPRequest::whereHas('workflow',function($q){
+                                    return $q->inprogress();
+                                  })->get();
+                        if(count($forms))
+                        {
+                            foreach($forms as $f)
+                            {
+                                \WorkflowActivity::update($f,'acprequest');
+                                $this->info("Workflow Update on Form ID: ".$f->id);
+                            }
+                        }
+                        else
+                        {
+                            $this->info("No Forms in progress");
+                        }
+                        break;
                     default:
-                        $this->info('We dont have this context. Available ones: aprequest, order-tracking');
+                        $this->info('We dont have this context. Available ones: aprequest, order-tracking, acprequest');
                 }
             } 
             catch(Exception $e)

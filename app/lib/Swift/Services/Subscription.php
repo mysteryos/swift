@@ -95,7 +95,7 @@ class Subscription {
             return false;
         }
 
-        $this->modelData = ['user_id' => Sentry::getUser()->id];
+        $this->modelData = ['user_id' => \Sentry::getUser()->id];
 
         switch(get_class($obj))
         {

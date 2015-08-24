@@ -113,7 +113,9 @@ class NodeActivity {
     {
         $nodeCheck = SwiftNodeActivity::countByWorkflowAndDefinitionPending($workflow_activity_id,$node_definition->id);
         //If node with same definition doesn't exists and is pending
-        if($nodeCheck === 0)
+        $nodeExistsAndUnique = (boolean)SwiftNodeActivity::countByWorkflowAndIsUnique($workflow_activity_id,$node_definition->id);
+        //Node is unique and exists
+        if($nodeCheck === 0 && !$nodeExistsAndUnique)
         {
             $nodeActivity = new SwiftNodeActivity;
             $nodeActivity->node_definition_id = $node_definition->id;
@@ -299,7 +301,7 @@ class NodeActivity {
                     if(is_callable($function))
                     {
                         call_user_func_array($function,array($nodeActivity,false));
-                    }                
+                    }
                 
                     //Save Current
                     self::save($nodeActivity,SwiftNodeActivity::$FLOW_STOP);

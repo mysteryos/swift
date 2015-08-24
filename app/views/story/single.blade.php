@@ -30,7 +30,7 @@
         </div>
         <div class="smart-timeline-content">
                 <p>
-                    {{ \Swift\Avatar::getHTML($story->by,true,"medium") }} {{ Helper::getUserName($story->by,Sentry::getUser()) }} <i>{{ $story->actionText() }}</i> {{ $story->contextText() }}
+                    {{ \Swift\Avatar::getHTML($story->by,true,"medium") }} {{ \Helper::getUserName($story->by,\Sentry::getUser()) }} <i>{{ $story->actionText() }}</i> {{ $story->contextText() }}
                 </p>
         </div>
 </li>

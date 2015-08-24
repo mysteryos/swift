@@ -66,12 +66,6 @@ class Helper {
      */
     public function getProductPrice($job,$data)
     {
-        if(!self::loginSysUser())
-        {
-            \Log::error('Unable to login system user');
-            return;
-        }
-        
         if(isset($data['product_id']))
         {
             $prod = $data['class']::find((int)$data['product_id']);
@@ -125,13 +119,13 @@ class Helper {
      *
      * @return string
      */
-    public function getUserName($user,$current_user,$me=true)
+    public function getUserName($user,$current_user=false,$me=true)
     {
         $user = User::find($user);
         if($user)
         {
             
-            if($user->id == $current_user->id && $me)
+            if($user->id == self::getUserId() && $me)
             {
                 return "Me";
             }

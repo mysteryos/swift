@@ -91,7 +91,7 @@ class Notification {
         {
             $this->notification = new \SwiftNotification;
             $this->notification->msg = 'awaits your input.';
-            $this->notification->from = \Sentry::getUser()->id;
+            $this->notification->from = \Helper::getUserId();
             $this->notification->to = $user->id;
             $this->notification->type = \SwiftNotification::TYPE_RESPONSIBLE;
             $relation_object->notification()->save($this->notification);
@@ -114,7 +114,7 @@ class Notification {
             $this->notification = new \SwiftNotification;
             $this->notification->msg = 'You completed step <b>'.$definition->label.'</b>';
             $this->notification->from = \Sentry::findUserByLogin(\Config::get('website.system_mail'))->id;
-            $this->notification->to = \Sentry::getUser()->id;
+            $this->notification->to = \Helper::getUserId();
             $this->notification->type = \SwiftNotification::TYPE_SUCCESS;
             $workflow->workflowable->notification()->save($this->notification);
             return true;

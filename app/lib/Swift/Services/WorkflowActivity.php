@@ -101,67 +101,85 @@ class WorkflowActivity {
                 throw new \Exception ("Workflow activity failed: Cannot create activity.");
             }
         }
-        
+
         if($workflow->status === \SwiftWorkflowActivity::INPROGRESS)
         {
             $updateTimeBefore = $workflow->updated_at;
-            
-            //We have workflow object, get Da Nodes
-            $nodeInProgress = $this->nodeActivity->inProgress($workflow->id);
-            if(!count($nodeInProgress))
+
+            //Check if workflow is complete
+            $endNodePresent = (boolean)SwiftNodeActivity::where('workflow_activity_id','=',$workflow->id)
+                              ->whereHas('definition',function($q){
+                                  return $q->where('type','=',SwiftNodeDefinition::$T_NODE_END);
+                              })
+                              ->where('user_id','!=',0,'AND')
+                              ->count();
+
+            if($endNodePresent)
             {
-                $latestNodeBefore = SwiftNodeActivity::getLatestByWorkflow($workflow->id);
-                //Check if Nodes Exists
-                if(count($latestNodeBefore))
+                $workflow->status = SwiftWorkflowActivity::COMPLETE;
+                $workflow->save();
+                \Story::relate($workflow,\SwiftStory::ACTION_COMPLETE);
+            }
+            else
+            {
+                //We have workflow object, get Da Nodes
+                $nodeInProgress = $this->nodeActivity->inProgress($workflow->id);
+                if(!count($nodeInProgress))
                 {
-                    foreach($latestNodeBefore as $l)
+                    $latestNodeBefore = SwiftNodeActivity::getLatestByWorkflow($workflow->id);
+                    //Check if Nodes Exists
+                    if(count($latestNodeBefore))
                     {
-                        $this->nodeActivity->process($l,SwiftNodeActivity::$FLOW_FORWARD);
-                    }
-                }
-                else
-                {
-                    //No Nodes, Let's get it starteddd
-                    $startNodeDef = \NodeDefinition::getStartNodeDefinition($workflow_name);
-                    if($startNodeDef)
-                    {
-                        $startNodeActivity = $this->nodeActivity->create($workflow->id, $startNodeDef);
-                        if($startNodeActivity)
+                        foreach($latestNodeBefore as $l)
                         {
-                            $this->nodeActivity->process($startNodeActivity,SwiftNodeActivity::$FLOW_FORWARD);
-                        }
-                        else
-                        {
-                            throw new \Exception ("Workflow activity failed: Unable to save start node.");
+                            $this->nodeActivity->process($l,SwiftNodeActivity::$FLOW_FORWARD);
                         }
                     }
                     else
                     {
-                        throw new \Exception ("Workflow activity failed: No Start node.");
-                    }                     
+                        //No Nodes, Let's get it starteddd
+                        $startNodeDef = \NodeDefinition::getStartNodeDefinition($workflow_name);
+                        if($startNodeDef)
+                        {
+                            $startNodeActivity = $this->nodeActivity->create($workflow->id, $startNodeDef);
+                            if($startNodeActivity)
+                            {
+                                $this->nodeActivity->process($startNodeActivity,SwiftNodeActivity::$FLOW_FORWARD);
+                            }
+                            else
+                            {
+                                throw new \Exception ("Workflow activity failed: Unable to save start node.");
+                            }
+                        }
+                        else
+                        {
+                            throw new \Exception ("Workflow activity failed: No Start node.");
+                        }
+                    }
                 }
-            }
-            else
-            {
-                foreach($nodeInProgress as $n)
+                else
                 {
-                    $n->load('definition');
-                    $this->nodeActivity->process($n,SwiftNodeActivity::$FLOW_FORWARD);
+                    foreach($nodeInProgress as $n)
+                    {
+                        $n->load('definition');
+                        $this->nodeActivity->process($n,SwiftNodeActivity::$FLOW_FORWARD);
+                    }
                 }
             }
 
             //Check if workflow is complete
-            //Get Latest Node Activity
-            $latestNodeAfter = SwiftNodeActivity::getLatestByWorkflow($workflow->id)->first();
-            if(count($latestNodeAfter))
+            $endNodePresent = (boolean)SwiftNodeActivity::where('workflow_activity_id','=',$workflow->id)
+                              ->whereHas('definition',function($q){
+                                  return $q->where('type','=',SwiftNodeDefinition::$T_NODE_END);
+                              })
+                              ->where('user_id','!=',0,'AND')
+                              ->count();
+                              
+            if($endNodePresent)
             {
-                $latestNodeAfter->load('definition');
-                if($latestNodeAfter->definition->type == SwiftNodeDefinition::$T_NODE_END && $latestNodeAfter->user_id != 0)
-                {
-                    $workflow->status = SwiftWorkflowActivity::COMPLETE;
-                    $workflow->save();
-                    \Story::relate($workflow,\SwiftStory::ACTION_COMPLETE);
-                }
+                $workflow->status = SwiftWorkflowActivity::COMPLETE;
+                $workflow->save();
+                \Story::relate($workflow,\SwiftStory::ACTION_COMPLETE);
             }
             
             //If Timestamp on workflow Activity changes, Node Activity updates have occured
@@ -557,5 +575,4 @@ class WorkflowActivity {
         }
         return false;
     }
-    
 }

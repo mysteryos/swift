@@ -22,7 +22,7 @@ class SwiftRecent extends Eloquent {
          * Set User Id on create
          */
         static::creating(function($model){
-            $model->user_id = Sentry::getUser()->id;
+            $model->user_id = \Sentry::getUser()->id;
         });
     }    
     

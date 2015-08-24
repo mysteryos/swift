@@ -14,7 +14,7 @@ class SwiftNodeDefinition extends Eloquent {
     
     protected $guarded = array('id');
     
-    protected $fillable = array('type','name','label','description','php_function','php_mail_function','php_notification_function','workflow_type_id','eta','data');
+    protected $fillable = array('type','name','label','description','php_function','php_mail_function','php_notification_function','workflow_type_id','eta','data','unique');
     
     protected $dates = ['deleted_at'];
     
@@ -89,7 +89,15 @@ class SwiftNodeDefinition extends Eloquent {
     {
         return $this->belongsTo('SwiftNodeDefinitionJoin', 'parent_id','id');
     }
-    
+
+    /*
+     * Scope
+     */
+
+    public function scopeUnique($query)
+    {
+        return $query->where('unique','=',1);
+    }
     
     /*
      * Fetch Node By Type

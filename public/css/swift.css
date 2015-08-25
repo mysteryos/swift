@@ -109,6 +109,16 @@ div.FixedHeader_Cloned td {
 }
 
 /*
+* Colorbox CSS
+*/
+
+.colorbox-container{
+    min-width:500px;
+    min-height:225px;
+    padding: 16px;
+}
+
+/*
 * Swift Avatar
 */
 

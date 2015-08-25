@@ -136,6 +136,12 @@
         }
         return false;
     });
+    
+    $pvProcessInfo.on('click','.btn-suggest',function(e){
+        $pvProcessInfo.find('a.btn-suggest').removeClass('active');
+        $(this).addClass('active'); 
+    });
+    
     //Hide Loading Message
     messenger_hidenotiftop();
 })();    

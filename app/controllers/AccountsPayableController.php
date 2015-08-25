@@ -110,34 +110,7 @@ class AccountsPayableController extends UserController {
         //Check user group
         if($type===false)
         {
-            if(!$this->permission->isAdmin())
-            {
-                //Set defaults
-                if($this->permission->isAccountingDept())
-                {
-                    $type='inprogress';
-                }
-                else if($this->permission->canCreate())
-                {
-                    $type='mine';
-                }
-                else
-                {
-                    $type='all';
-                }
-            }
-            else
-            {
-                $type='all';
-            }
-        }
-        else
-        {
-            //Creators can have access to their own only.
-            if(!$this->permission->isAdmin() && $this->permission->canCreate() && !in_array($type,['mine','starred']))
-            {
-                $type='mine';
-            }
+            $type = 'all';
         }
 
         $acprequestquery = \SwiftACPRequest::query();
@@ -3610,5 +3583,105 @@ class AccountsPayableController extends UserController {
         {
             return \Response::make('<div class="well"><h3>You don\'t have access to this feature.</h3></div>');
         }
+    }
+
+    public function getHodSuggestion($form_id)
+    {
+        $id = \Crypt::decrypt($form_id);
+        $form = \SwiftACPRequest::with('approvalHod')->find($id);
+        if($form)
+        {
+            $approvalHodIds = array_map(function($element)
+                                {
+                                    return $element['approval_user_id'];
+                                },$form->approvalHod->toArray());
+            $users = \Sentry::findAllUsersWithAccess([$this->permission->HODPermission]);
+            foreach($users as $key => $user)
+            {
+                if($user->isSuperUser() || !$user->activated || in_array($user->id,$approvalHodIds))
+                {
+                    unset($users[$key]);
+                }
+            }
+
+            //Curate the data
+            $this->data['users'] = array();
+            foreach($users as $u)
+            {
+                $this->data['users'][] =
+                    [
+                        'id' => $u['id'],
+                        'name' => $u['first_name']." ".$u['last_name']
+                    ];
+            }
+
+            
+
+            $this->data['form'] = $form;
+            return \View::make('acpayable/hod-suggest',$this->data);
+        }
+
+        return \Response::make("Form not found",404);
+    }
+
+    public function postHodSuggestion($form_id)
+    {
+        $id = \Crypt::decrypt($form_id);
+        $form = \SwiftACPRequest::with('approvalHod')->find($id);
+        if($form)
+        {
+            if(\Input::has('acp_hod_suggest_select') && \Input::get('acp_hod_suggest_select') !== "")
+            {
+                /*
+                 * Set approval for each user
+                 */
+                $userIds = explode(",",\Input::get('acp_hod_suggest_select'));
+                foreach($userIds as $uId)
+                {
+                    $approval = new \SwiftApproval([
+                        'type' => \SwiftApproval::APC_HOD,
+                        'approval_user_id' => $uId,
+                    ]);
+
+                    $form->approval()->save($approval);
+                }
+
+                /*
+                 * Remove my approval
+                 */
+
+                if(\Input::has('remove_approval'))
+                {
+                    foreach($form->approvalHod as $a)
+                    {
+                        if($a->approval_user_id === $this->currentUser->id)
+                        {
+                            $a->delete();
+                            break;
+                        }
+                    }
+                }
+
+                /*
+                 * Notify HODs
+                 */
+                if(\Input::has('notify_mail'))
+                {
+                    $form->load('workflow');
+                    if($form->workflow)
+                    {
+                        \Swift\AccountsPayable\NodeMail::sendApprovalMail($form->workflow);
+                    }
+                }
+
+                return \Response::make("Success");
+            }
+            else
+            {
+                return \Response::make("Please retry your last operation",400);
+            }
+        }
+
+        return \Response::make("Form not found",400);
     }
 }

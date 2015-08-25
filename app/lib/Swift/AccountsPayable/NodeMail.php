@@ -173,6 +173,9 @@ class NodeMail {
         }
     }
 
+    /*
+     * HOD Approval Mail
+     */
     public static function sendApprovalMail($workflowActivity)
     {
         if(count($workflowActivity))
@@ -199,7 +202,6 @@ class NodeMail {
                     {
                         try
                         {
-                            //\Log::info(\View::make('emails.order-tracking.pending',array('order'=>$acp,'user'=>$u))->render());
                             \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.acpayable.hod-approval',array('form'=>$mailData,'user'=>$approval->approver),function($message) use ($approval,$acp){
                                 $message->from('swift@scott.mu','Scott Swift');
                                 $message->subject(\Config::get('website.name').' - Approval Pending on Accounts Payable "'.$acp->name.'" ID: '.$acp->id);

@@ -1,5 +1,5 @@
 <div class="row row-space-2" id="filter-options" @if(!$filter_on){{"style='display:none;'"}}@endif>
-    <form method="GET" action="" name="filter_cheque" class="form-inline" id="form-filter-options">
+    <form method="GET" action="/{{$rootURL}}/forms/{{$type}}" name="filter_cheque" class="form-inline" id="form-filter-options">
         <input type="hidden" name="filter" value="1" />
         @if(array_key_exists('filter_billable_company_code',$filter))
         <div class="form-group col-lg-3 col-md-2">
@@ -34,7 +34,7 @@
                 </div>
             @endif
         @endif
-        @if(array_key_exists('filter_step',$filter))
+        @if(array_key_exists('filter_step',$filter) && isset($type) && $type==="all")
             <div class="form-group col-lg-3 col-md-2">
                 <select name="filter_step" class="full-width" id="select_filter_step">
                     <option></option>

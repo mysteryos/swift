@@ -118,7 +118,11 @@ class WorkflowActivity {
             {
                 $workflow->status = SwiftWorkflowActivity::COMPLETE;
                 $workflow->save();
-                \Story::relate($workflow,\SwiftStory::ACTION_COMPLETE);
+                \Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
+                                                     'obj_id'=>$workflow->id,
+                                                     'user_id'=>$this->user_id,
+                                                     'context'=>get_class($relation_object),
+                                                     'action'=>\SwiftStory::ACTION_COMPLETE));
             }
             else
             {
@@ -179,7 +183,11 @@ class WorkflowActivity {
             {
                 $workflow->status = SwiftWorkflowActivity::COMPLETE;
                 $workflow->save();
-                \Story::relate($workflow,\SwiftStory::ACTION_COMPLETE);
+                \Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
+                                                     'obj_id'=>$workflow->id,
+                                                     'user_id'=>$this->user_id,
+                                                     'context'=>get_class($relation_object),
+                                                     'action'=>\SwiftStory::ACTION_COMPLETE));
             }
             
             //If Timestamp on workflow Activity changes, Node Activity updates have occured

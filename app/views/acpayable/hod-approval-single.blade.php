@@ -72,8 +72,9 @@
                 </table>
                 <div class="row">
                     <div class="col-xs-12">
-                        <a class="btn btn-default btn-approve btn-sm col-xs-5 col-xs-offset-1" tabindex="-1" href="/{{$rootURL}}/save-hod-approval/{{\Crypt::encrypt($f->id)}}/{{\SwiftApproval::APPROVED}}"><i class="fa fa-check"></i> Approve</a>
-                        <a class="btn btn-default btn-reject btn-sm col-xs-5 col-xs-offset-1" tabindex="-1" href="/{{$rootURL}}/save-hod-approval/{{\Crypt::encrypt($f->id)}}/{{\SwiftApproval::REJECTED}}"><i class="fa fa-times"></i> Reject</a>
+                        <a class="btn btn-default btn-approve btn-sm col-xs-3 col-xs-offset-1" tabindex="-1" href="/{{$rootURL}}/save-hod-approval/{{\Crypt::encrypt($f->id)}}/{{\SwiftApproval::APPROVED}}"><i class="fa fa-check"></i> Approve</a>
+                        <a class="btn btn-default btn-reject btn-sm col-xs-3 col-xs-offset-1" tabindex="-1" href="/{{$rootURL}}/save-hod-approval/{{\Crypt::encrypt($f->id)}}/{{\SwiftApproval::REJECTED}}"><i class="fa fa-times"></i> Reject</a>
+                        <a class="btn btn-default btn-suggest colorbox-ajax btn-sm col-xs-3 col-xs-offset-1" tabindex="-1" href="/{{$rootURL}}/hod-suggestion/{{\Crypt::encrypt($f->id)}}"><i class="fa fa-question"></i> Not mine</a>
                     </div>
                 </div>
             </div>

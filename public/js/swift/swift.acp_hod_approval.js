@@ -138,8 +138,8 @@
     });
     
     $pvProcessInfo.on('click','.btn-suggest',function(e){
-        $pvProcessInfo.find('a.btn-suggest').removeClass('active');
-        $(this).addClass('active'); 
+        $pvProcessInfo.find('a.btn-suggest').removeClass('is_active');
+        $(this).addClass('is_active'); 
     });
     
     //Hide Loading Message

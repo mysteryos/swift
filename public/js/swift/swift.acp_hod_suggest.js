@@ -1,5 +1,6 @@
 $('#acp_hod_suggest_container').on('click','#btn-cancel',function(){
     $('#acp_hod_suggest_select').select2('destroy');
+    $('#pv-process-info').find('a.btn-suggest.is_active').removeClass('is_active');
     $(window).colorbox.close();
     return false;
 });
@@ -59,17 +60,17 @@ $('#acp_hod_suggestion_form').on('click','#btn-send',function(){
         success:function()
         {
             $('#acp_hod_suggest_select').select2('destroy');
-            var activeBtn = $('#pv-process-info').find('a.btn-suggest.active');
+            var activeBtn = $('#pv-process-info').find('a.btn-suggest.is_active');
             activeBtn.parents('.pv-row').find('a.btn').addClass('disabled').attr('disabled','disabled');
             activeBtn.parents('.pv-row').next().find('.pv-form').trigger('click');
-            activeBtn.removeClass('active').addClass('btn-primary');
+            activeBtn.removeClass('is_active').addClass('btn-primary');
             $(window).colorbox.close();
             
         },
         error:function(xhr, status, error)
         {
             $this.removeAttr('disabled','disabled');
-            $('#pv-process-info').find('a.btn-suggest.active').removeClass('active');
+            $('#pv-process-info').find('a.btn-suggest.is_active').removeClass('is_active');
             return xhr.responseText;
         }
     });

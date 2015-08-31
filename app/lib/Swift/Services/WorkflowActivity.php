@@ -120,7 +120,7 @@ class WorkflowActivity {
                 $workflow->save();
                 \Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
                                                      'obj_id'=>$workflow->id,
-                                                     'user_id'=>$this->user_id,
+                                                     'user_id'=>\Config::get('website.system_user_id'),
                                                      'context'=>get_class($relation_object),
                                                      'action'=>\SwiftStory::ACTION_COMPLETE));
             }
@@ -185,7 +185,7 @@ class WorkflowActivity {
                 $workflow->save();
                 \Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
                                                      'obj_id'=>$workflow->id,
-                                                     'user_id'=>$this->user_id,
+                                                     'user_id'=>\Config::get('website.system_user_id'),
                                                      'context'=>get_class($relation_object),
                                                      'action'=>\SwiftStory::ACTION_COMPLETE));
             }

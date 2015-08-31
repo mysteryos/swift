@@ -18,6 +18,13 @@
 
 <!-- MAIN CONTENT -->
 <div id="content" data-js="acp_create_multi" data-urljs="{{Bust::url('/js/swift/swift.acp_create_multi.js')}}">
+    <div id="draghover" class="text-align-center">
+        <div class="circle bg-color-blue">
+            <i class="fa fa-cloud-upload fa-4x"></i><br>
+            <h2 class="text-align-center ">Incoming!</h2>
+            <p class="text-align-center">Drop your files instantly to upload it!</p>
+        </div>
+    </div>
     <div class="row">
         <div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
             <h1 class="page-title txt-color-blueDark">
@@ -30,99 +37,216 @@
             </h1>
         </div>
     </div>
-
-    <!-- widget grid -->
-    <section id="widget-grid" class="">
-        <!-- START ROW -->
-        <div class="row">
-            <!-- NEW COL START -->
-            <article class="col-xs-12">
-                <!-- Widget ID (each widget will need unique ID)-->
-                <div class="jarviswidget" id="widget-form" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-togglebutton="false" data-widget-sortable="false">
-                    <header>
-                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                        <h2>Create Form </h2>
-                    </header>
-                    <!-- widget div-->
-                    <div>
-                        <!-- widget content -->
-                        <div class="widget-body no-padding">
-                            <form action="/{{ $rootURL }}/create" method="POST" id="acprequest-create-form" enctype="multipart/form-data" class="form-horizontal" name="acprequest-create" novalidate="novalidate">
-                                <input type="hidden" name="id" value="" />
-                                <div class="panel-group smart-accordion-default" id="accordion">
-                                    <div class="panel panel-default" id="generalInfo">
-                                        <div class="panel-heading">
-                                            <h4 class="panel-title">
-                                                <a data-toggle="collapse" href="#accordion-1">
-                                                    <i class="fa fa-lg fa-angle-down pull-right"></i>
-                                                    <i class="fa fa-lg fa-angle-up pull-right"></i>
-                                                    General info
-                                                </a>
-                                            </h4>
+    <div class="row" id="acp_create_multi_container">
+        <form action="/{{$rootURL}}/saveMultiForm" id="multi_form" class="form-horizontal">
+            <div class="col-xs-3 ui-widget-content" id="doc-list" style="overflow-x:auto;overflow-y:auto;">
+                <div class="row row-space-top-2">
+                    <div class="col-xs-6 checkbox">
+                        <label class="row-space-left-2">
+                            <input type="checkbox" class="checkbox" id="check-all-files" />
+                            <span>Select All</span>
+                        </label>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                        <a class="btn btn-primary btn-sm" id="btn-upload" href="javascript:void(0);"><i class="fa fa-plus"></i> Upload</a>
+                    </div>
+                </div>
+                <hr/>
+                <div id="multi-dropzone" data-action="/{{$rootURL}}/multi-upload" data-delete="/{{$rootURL}}/multi-upload">
+                    @if(count($files))
+                        @foreach($files as $f)
+                            @if(\File::exists($f))
+                                <div class="row dz-success" data-url="{{asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME))}}" data-name="{{pathinfo($f,PATHINFO_BASENAME)}}">
+                                    <div class="col-xs-12">
+                                        <div class="hide">
+                                            <span class="preview"><img data-dz-thumbnail=""></span>
                                         </div>
-                                        <div id="accordion-1" class="panel-collapse collapse in">
-                                            <div class="panel-body">
-                                                <fieldset class="col-lg-6 col-lg-offset-3 col-md-9 col-xs-12">
-                                                    <div class="form-group">
-                                                        <label class="col-md-2 control-label">Billable Company*</label>
-                                                        <div class="col-md-10">
-                                                            <input type="hidden" class="full-width" id="customercode" name="billable_company_code" placeholder="Type in the company's name/code" />
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="form-group">
-                                                        <label class="col-md-2 control-label">Supplier*</label>
-                                                        <div class="col-md-10">
-                                                            <input type="hidden" class="full-width" id="suppliercode" name="supplier_code" placeholder="Type in the supplier's name/code" />
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="form-group">
-                                                        <label class="col-md-2 control-label">Invoice number</label>
-                                                        <div class="col-md-10">
-                                                             <input type="text" autocomplete="off" class="form-control" name="invoice_number" placeholder="Type in an invoice number" />
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="form-group">
-                                                        <label class="col-xs-2 control-label">Purchase Order number</label>
-                                                        <div class="col-xs-8">
-                                                                <input type="text" autocomplete="off" class="form-control" name="po_number" placeholder="Type in a purchase order number" />
-                                                        </div>
-                                                        <div class="col-xs-2">
-                                                            <select name="po_type" class="form-control">
-                                                                @foreach(\SwiftPurchaseOrder::$types as $k => $v)
-                                                                    <option value="{{$k}}" @if($v==="ON")selected @endif>{{$v}}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </fieldset>
+                                        <div class="col-xs-8">
+                                            <div class="col-xs-12 checkbox">
+                                                <label>
+                                                    <input type="checkbox" class="form-group checkbox check-document" value="{{pathinfo($f,PATHINFO_BASENAME)}}" name="document[]" />
+                                                    <span class="name" data-dz-name=""><a class="file-view" target="_blank" data-type="{{\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f)}}" href="{{asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME))}}">
+                                                    <?php
+                                                    switch(\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f))
+                                                    {
+                                                        case "image/jpeg":
+                                                        case "image/png":
+                                                        case "image/bmp":
+                                                        case "image/jpg":
+                                                            echo '<i class="fa fa-file-image-o row-space-right-1"></i>';
+                                                            break;
+                                                        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                                                        case "application/vnd.ms-excel":
+                                                            echo '<i class="fa fa-file-excel-o row-space-right-1"></i>';
+                                                            break;
+                                                        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                                                        case "application/msword":
+                                                            echo '<i class="fa fa-file-word-o row-space-right-1"></i>';
+                                                            break;
+                                                        case "application/pdf":
+                                                            echo '<i class="fa fa-file-pdf-o row-space-right-1"></i>';
+                                                            break;
+                                                        default:
+                                                            echo '<i class="fa fa-file-o row-space-right-1"></i>';
+                                                            break;
+                                                    }
+                                                    ?>{{\File::name($f)}}</a> <a class="row-space-left-1" target="_blank" href="<?php
+                                                    switch(\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f))
+                                                    {
+                                                        case "image/jpeg":
+                                                        case "image/png":
+                                                        case "image/bmp":
+                                                        case "image/jpg":
+                                                            echo asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME));
+                                                            break;
+                                                        case "application/pdf":
+                                                            echo "/pdfviewer/viewer.html?file=".asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME));
+                                                            break;
+                                                        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                                                        case "application/vnd.ms-excel":
+                                                        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                                                        case "application/msword":
+                                                        default:
+                                                            echo "https://docs.google.com/viewerng/viewer?url=".asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME));
+                                                            break;
+                                                    }?>" rel="tooltip" data-original-title="Open in new window" data-placement="bottom"><i class="fa fa-external-link"></i></a></span>
+                                                </label>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-xs-12">
+                                                    <strong class="error text-danger" data-dz-errormessage=""></strong>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="form-actions">
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <button class="btn btn-default" id="save-draft" type="submit">
-                                                        Save
-                                                </button>
+                                        <div class="col-xs-2">
+                                            <p class="size hide" data-dz-size=""></p>
+                                            <div class="progress progress-striped active hide" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                              <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
                                             </div>
+                                        </div>
+                                        <div class="col-xs-2">
+                                          <button data-dz-remove="" class="btn btn-danger delete btn-xs">
+                                            <i class="glyphicon glyphicon-trash"></i>
+                                          </button>
                                         </div>
                                     </div>
                                 </div>
-                            </form>
+                            @endif
+                        @endforeach
+                    @endif
+                    <div id="template" class="row">
+                        <!-- This is used as the file preview template -->
+                        <div class="hide">
+                            <span class="preview"><img data-dz-thumbnail=""></span>
                         </div>
-                        <!-- end widget content -->
+                        <div class="col-xs-6">
+                            <div class="row">
+                                <div class="col-xs-12 checkbox">
+                                    <label>
+                                        <input type="checkbox" class="form-group checkbox check-document" style="display:hidden;" name="document[]" />
+                                        <span class="name" data-dz-name=""></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <strong class="error text-danger" data-dz-errormessage=""></strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-4">
+                            <p class="size hide" data-dz-size=""></p>
+                            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                              <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
+                            </div>
+                        </div>
+                        <div class="col-xs-2">
+                          <button data-dz-remove="" class="btn btn-danger delete btn-xs">
+                            <i class="glyphicon glyphicon-trash"></i>
+                          </button>
+                        </div>
                     </div>
-                    <!-- end widget div -->
                 </div>
-                <!-- end widget -->
-            </article>
-        </div>
-        <!-- END ROW -->
-    </section>
-    <!-- end widget grid -->
+            </div>
+            <div class="col-xs-3 ui-widget-content" id="form-content" style="position:relative;overflow-y:auto;">
+                <div class="row-space-top-6 text-center" id="no-form">
+                    <h4 class="row-space-top-6"><i class="fa fa-arrow-left"></i> Select a document on the left pane to get started.</h4>
+                </div>
+                <div id="form-container" style="display:none;">
+                    <fieldset>
+                        <legend>
+                            General
+                            <button type="reset" class="btn btn-sm btn-danger pull-right" id="btn-reset">Reset</button>
+                        </legend>
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">Billable Company*</label>
+                            <div class="col-md-8">
+                                <input type="hidden" class="full-width" id="customercode" name="billable_company_code" placeholder="Type in the company's name/code" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">Supplier*</label>
+                            <div class="col-md-8">
+                                <input type="hidden" class="full-width" id="suppliercode" name="supplier_code" placeholder="Type in the supplier's name/code" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">Invoice number</label>
+                            <div class="col-md-8">
+                                 <input type="text" autocomplete="off" class="form-control" name="invoice_number" placeholder="Type in an invoice number" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-xs-4 control-label">PO number</label>
+                            <div class="col-xs-4">
+                                    <input type="text" autocomplete="off" class="form-control" name="po_number" placeholder="Type in a purchase order number" />
+                            </div>
+                            <div class="col-xs-4">
+                                <select name="po_type" class="form-control">
+                                    @foreach(\SwiftPurchaseOrder::$types as $k => $v)
+                                        <option value="{{$k}}" @if($v==="ON")selected @endif>{{$v}}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">HOD approval</label>
+                            <div class="col-md-8">
+                                <input type="hidden" class="full-width" id="hodapproval" name="hod_approval" placeholder="Type in the supplier's name/code" />
+                                <input type="hidden" id="hod_user_list" value='{{json_encode($users)}}'/>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <hr/>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="checkbox row-space-left-5">
+                                <label>
+                                    <input type="checkbox" class="checkbox" name="save_one" />
+                                    <span>Combine into one form</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-space-top-4">
+                        <div class="col-xs-12">
+                            <input name="save" type="submit" class="btn btn-default col-xs-5 col-xs-offset-1" id="btn-save" value="Create" />
+                            <input name="save_publish" type="submit" class="btn btn-primary col-xs-5 col-xs-offset-1" id="btn-save-publish" value="Create & Publish" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-6 ui-widget-content" id="doc-content">
+                <div class="row-space-top-6 text-center" id="no-doc">
+                    <h3><i class="fa fa-file-o"></i> Document Preview will appear here</h3>
+                </div>
+                <div id="doc-container" style="display:none;height:100%;width:100%;"></div>
+            </div>
+        </form>
+    </div>
 </div>
 
 @stop

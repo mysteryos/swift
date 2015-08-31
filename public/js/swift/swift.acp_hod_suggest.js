@@ -11,7 +11,7 @@ $('#acp_hod_suggest_select').select2({
         var data = {results: []};
 
         $.each($.parseJSON(document.getElementById('acp_hod_suggest_user_list').value), function(){
-            if(query.term.length === 0){
+            if(query.term.length === 0 || this.name.toLowerCase().indexOf(query.term.toLowerCase()) >= 0 ){
                 data.results.push({id: this.id, text: this.name });
             }
         });
@@ -33,6 +33,8 @@ $('#acp_hod_suggest_select').select2({
         'left': '0',
         'zIndex': '10000'
     });
+}).on('change',function(){
+    $.fn.colorbox.resize({});
 });
 
 $('#acp_hod_suggestion_form').on('click','#btn-send',function(){

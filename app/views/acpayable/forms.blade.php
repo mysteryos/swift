@@ -36,8 +36,9 @@
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
             @if($permission->canCreate())
                 <div class="row">
-                    <div class="col-xs-12">
-                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$permission->canCreate()){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                    <div class="col-xs-12 btn-group">
+                        <a href="/{{ $rootURL }}/create" class="btn btn-primary col-xs-6 pjax @if(!$permission->canCreate()){{ "disabled" }}@endif"> <strong>Create</strong> </a>
+                        <a href="/{{ $rootURL }}/create-multi" class="btn btn-primary col-xs-6 pjax @if(!$permission->canCreate()){{ "disabled" }}@endif"> <i class="fa fa-plus-circle"></i> Multi </a>
                     </div>
                 </div>
             @endif

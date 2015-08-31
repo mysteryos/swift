@@ -299,6 +299,12 @@ Class AjaxSearchController extends UserController {
         {
             $searchresult = \JdeProduct::getByCode(Input::get('term'),$offset,$limit);
             $total = \JdeProduct::countByCode(Input::get('term'));
+            
+            if(!$total)
+            {
+                $searchresult = \JdeProduct::getByName(Input::get('term'),$offset,$limit);
+                $total = \JdeProduct::countByName(Input::get('term'));
+            }
         }
         else
         {

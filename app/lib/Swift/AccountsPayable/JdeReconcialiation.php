@@ -214,10 +214,11 @@ class JdeReconcialiation {
                         $pv->invoice->$col = $jdePV->$jdeCol;
                         break;
                     case 'ddj':
-                        if($pv->invoice->due_date === null)
+                        if(empty($pv->invoice->due_date))
                         {
                             $pv->invoice->$col = $jdePV->$jdeCol;
                         }
+                        break;
                     default:
                         $pv->invoice->$col = $jdePV->$jdeCol;
                         break;

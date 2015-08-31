@@ -1196,6 +1196,15 @@ p.totalprice.loading:after, a.loading:after {
 }
 
 /*
+* Accounts Payable - Create Multi
+*/
+
+#acp_create_multi_container #doc-list, #acp_create_multi_container #form-content,#acp_create_multi_container #doc-preview
+{
+    overflow-y: scroll;
+}
+
+/*
 * 404 Not found
 */
 

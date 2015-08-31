@@ -33,7 +33,7 @@ class SwiftACPPaymentVoucher extends Eloquent
 
     public static $typeArray = [
         self::TYPE_PV => 'Invoice',
-        self::TYPE_PN => 'Credit Note'
+        self::TYPE_PD => 'Credit Note'
     ];
 
     //Validation
@@ -44,7 +44,7 @@ class SwiftACPPaymentVoucher extends Eloquent
     //Type
 
     const TYPE_PV = 'PV';
-    const TYPE_PN = 'PN';
+    const TYPE_PD = 'PD';
 
     /* Revisionable */
     

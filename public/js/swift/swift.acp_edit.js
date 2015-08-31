@@ -511,6 +511,16 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         previewTemplate: previewTemplate,
         autoQueue: true,
         createImageThumbnails : false,
+        accept: function(file, done) {
+            if(file.name.indexOf('+') !== -1)
+            {
+                done("Please remove the plus sign from your document's name.");
+            }
+            else
+            {
+                done();
+            }
+        },
         addedfile: function(file) {
             var node, removeLink, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results;
             if (this.element === this.previewsContainer) {

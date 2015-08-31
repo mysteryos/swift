@@ -1174,46 +1174,6 @@ class AccountsPayableController extends UserController {
         }
     }
 
-    /*
-     * Create Multi Forms from single PDF
-     */
-    public function getCreateMulti()
-    {
-        if(!$this->permission->canCreate())
-        {
-            return parent::forbidden();
-        }
-
-        $this->pageTitle = 'Create Multi';
-
-        return $this->makeView('acpayable/create-multi');
-    }
-
-    /*
-     * 
-     */
-
-    public function postMultiPdf()
-    {
-        if(\Input::has('multi_pdf'))
-        {
-            $file = \Input::file('document');
-            $file_name = $file->getClientOriginalName()."_".microtime();
-            if($file->move(storage_path().'/tmp/',$file_name))
-            {
-                $pdf = new setasign\fpdi\FPDI();
-                $pdf->setSourceFile();
-                return \Response::json(['file_name'=>$file_name]);
-            }
-        }
-        else
-        {
-            return \Response::make("Please upload a file.",400);
-        }
-
-        return \Response::make("Unable to process your request",500);
-    }
-
     public function getView($id,$override=false)
     {
         if($override === true)
@@ -2136,81 +2096,7 @@ class AccountsPayableController extends UserController {
         $acp = \SwiftACPRequest::with('approvalRequester','invoice')->find($id);
         if($acp)
         {
-            //Is owner or Is admin
-            if($acp->owner_user_id === $this->currentUser->id || $this->permission->isAdmin())
-            {
-                $workflow_progress = \WorkflowActivity::progress($acp);
-                if($workflow_progress['status'] === \SwiftWorkflowActivity::INPROGRESS)
-                {
-                    if(empty($workflow_progress['definition_obj']))
-                    {
-                        \WorkflowActivity::update($acp);
-                    }
-
-                    foreach($workflow_progress['definition_obj'] as $def)
-                    {
-                        if(isset($def->data->publishOwner))
-                        {
-                            if(count($acp->approvalRequester))
-                            {
-                                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
-                                return \Response::make('Form already Published',400);
-                            }
-                            else
-                            {
-                                $returnReasonList = array();
-
-                                /*
-                                 * Approvals
-                                 */
-                                if(count($acp->approvalHod) === 0)
-                                {
-                                    $returnReasonList['hodapproval_absent'] = "Enter HOD's details for approval";
-                                }
-
-                                /*
-                                 * Documents
-                                 */
-
-                                if(count($acp->document) === 0)
-                                {
-                                    $returnReasonList['document_absent'] = "Upload invoice document";
-                                }
-
-                                if(count($returnReasonList) !== 0)
-                                {
-                                    return Response::make(implode(", ",$returnReasonList),400);
-                                }
-
-                                /*
-                                 * All great we proceed on
-                                 */
-
-                                $approval = new \SwiftApproval([
-                                    'approval_user_id' => $this->currentUser->id,
-                                    'approved' => \SwiftApproval::APPROVED,
-                                    'type'=> \SwiftApproval::APC_REQUESTER
-                                ]);
-
-                                $acp->approval()->save($approval);
-                                \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
-                                return \Response::make('Success');
-                            }
-                            break;
-                        }
-                    }
-
-                    return \Response::make("You can't publish the form at this time.");
-                }
-                else
-                {
-                    return \Response::make('Workflow is either complete or rejected.');
-                }
-            }
-            else
-            {
-                return parent::forbidden();
-            }
+            return $this->process()->publishOwner($acp);
         }
         else
         {
@@ -3683,5 +3569,110 @@ class AccountsPayableController extends UserController {
         }
 
         return \Response::make("Form not found",400);
+    }
+
+    public function getCreateMulti()
+    {
+        $this->pageTitle = 'Create Multi';
+
+        /*
+         * Check Permission
+         */
+        if(!$this->permission->isAdmin() && !$this->permission->canCreate())
+        {
+            return parent::forbidden();
+        }
+
+        /*
+         * Get HOD List
+         */
+
+        $users = \Sentry::findAllUsersWithAccess([$this->permission->HODPermission]);
+        foreach($users as $key => $user)
+        {
+            if($user->isSuperUser() || !$user->activated)
+            {
+                unset($users[$key]);
+            }
+        }
+
+        //Curate the data
+        $this->data['users'] = array();
+        foreach($users as $u)
+        {
+            $this->data['users'][] =
+                [
+                    'id' => $u['id'],
+                    'name' => $u['first_name']." ".$u['last_name']
+                ];
+        }
+
+        /*
+         * Get File List
+         */
+
+        $this->data['files'] = \File::files(storage_path().'/tmp/acpayable');
+
+        return $this->makeView('acpayable/create-multi');
+    }
+
+    public function postMultiUpload()
+    {
+        if(\Input::file('file'))
+        {
+            $file = \Input::file('file');
+            $file_name = time()."_".$file->getClientOriginalName();
+            if($file->move(storage_path().'/tmp/acpayable/',$file_name))
+            {
+                return \Response::make(json_encode(['success'=>1,'url'=>asset("/".$this->rootURL."/multi-file/".$file_name),'name'=>$file_name]));
+            }
+        }
+        else
+        {
+            return \Response::make("Please upload a file.",400);
+        }
+
+        return \Response::make("Unable to process your request",500);
+    }
+
+    public function deleteMultiUpload($file_name)
+    {
+        if($file_name)
+        {
+            if(\File::exists(storage_path().'/tmp/acpayable/'.$file_name))
+            {
+                if(\File::delete(storage_path().'/tmp/acpayable/'.$file_name))
+                {
+                    return \Response::make("Success");
+                }
+                else
+                {
+                    return \Response::make("Server Error: Unable to delete",400);
+                }
+            }
+            else
+            {
+                return \Response::make("File doesn't exist",400);
+            }
+        }
+
+        return \Response::make("Please specify a file name",500);
+    }
+
+    public function getMultiFile($file_name)
+    {
+        if($file_name)
+        {
+            if(\File::exists(storage_path().'/tmp/acpayable/'.$file_name))
+            {
+                return \Response::make(\File::get(storage_path().'/tmp/acpayable/'.$file_name));
+            }
+            else
+            {
+                return \Response::make("File doesn't exist",400);
+            }
+        }
+
+        return \Response::make("Please specify a file name",500);
     }
 }

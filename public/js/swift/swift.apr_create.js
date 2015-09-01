@@ -62,7 +62,6 @@
     /*
      * Clean previous instances of select2
      */
-    $('.select2-container').remove();
     $('#ccode').val('');
     
     $('#ccode').select2({

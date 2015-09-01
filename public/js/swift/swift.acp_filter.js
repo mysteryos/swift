@@ -10,11 +10,6 @@ function acp_filter()
         prevText : '<i class="fa fa-chevron-left"></i>',
         nextText : '<i class="fa fa-chevron-right"></i>',            
     });
-    
-    /*
-     * Clean previous instances of select2
-     */
-    $('.select2-container').remove();
 
     if(document.getElementById('select_filter_supplier'))
     {

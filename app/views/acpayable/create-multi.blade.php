@@ -38,7 +38,7 @@
         </div>
     </div>
     <div class="row" id="acp_create_multi_container">
-        <form action="/{{$rootURL}}/saveMultiForm" id="multi_form" class="form-horizontal">
+        <form action="/{{$rootURL}}/save-multi-form" id="multi_form" class="form-horizontal" method="POST">
             <div class="col-xs-3 ui-widget-content" id="doc-list" style="overflow-x:auto;overflow-y:auto;">
                 <div class="row row-space-top-2">
                     <div class="col-xs-6 checkbox">
@@ -90,7 +90,7 @@
                                                             echo '<i class="fa fa-file-o row-space-right-1"></i>';
                                                             break;
                                                     }
-                                                    ?>{{\File::name($f)}}</a> <a class="row-space-left-1" target="_blank" href="<?php
+                                                    ?>{{preg_replace('/^\d+_(.*)$/', '$1', \File::name($f))}}</a> <a class="row-space-left-1" target="_blank" href="<?php
                                                     switch(\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f))
                                                     {
                                                         case "image/jpeg":
@@ -135,35 +135,37 @@
                         @endforeach
                     @endif
                     <div id="template" class="row">
-                        <!-- This is used as the file preview template -->
-                        <div class="hide">
-                            <span class="preview"><img data-dz-thumbnail=""></span>
-                        </div>
-                        <div class="col-xs-6">
-                            <div class="row">
-                                <div class="col-xs-12 checkbox">
-                                    <label>
-                                        <input type="checkbox" class="form-group checkbox check-document" style="display:hidden;" name="document[]" />
-                                        <span class="name" data-dz-name=""></span>
-                                    </label>
+                        <div class="col-xs-12">
+                            <!-- This is used as the file preview template -->
+                            <div class="hide">
+                                <span class="preview"><img data-dz-thumbnail=""></span>
+                            </div>
+                            <div class="col-xs-8">
+                                <div class="row">
+                                    <div class="col-xs-12 checkbox">
+                                        <label>
+                                            <input type="checkbox" class="form-group checkbox check-document" style="display:hidden;" disabled="disabled" name="document[]" />
+                                            <span class="name" data-dz-name=""></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <strong class="error text-danger" data-dz-errormessage=""></strong>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-xs-12">
-                                    <strong class="error text-danger" data-dz-errormessage=""></strong>
+                            <div class="col-xs-2">
+                                <p class="size hide" data-dz-size=""></p>
+                                <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                  <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-xs-4">
-                            <p class="size hide" data-dz-size=""></p>
-                            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                              <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
+                            <div class="col-xs-2">
+                              <button data-dz-remove="" class="btn btn-danger delete btn-xs">
+                                <i class="glyphicon glyphicon-trash"></i>
+                              </button>
                             </div>
-                        </div>
-                        <div class="col-xs-2">
-                          <button data-dz-remove="" class="btn btn-danger delete btn-xs">
-                            <i class="glyphicon glyphicon-trash"></i>
-                          </button>
                         </div>
                     </div>
                 </div>
@@ -217,6 +219,18 @@
                             <div class="col-md-8">
                                 <input type="hidden" class="full-width" id="hodapproval" name="hod_approval" placeholder="Type in the supplier's name/code" />
                                 <input type="hidden" id="hod_user_list" value='{{json_encode($users)}}'/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">Comments</label>
+                            <div class="col-md-8">
+                                <div class="textarea-div">
+                                    <div class="typearea">
+                                        <div data-ph="Write a comment..." autocomplete="off" id="comment-textarea" class="custom-scroll inputor" contenteditable="true"></div>
+                                        <input type="hidden" name="usermention" id="input_mentions" value="[]" />
+                                        <input type="hidden" name="comment" id='input_comment' value="" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </fieldset>

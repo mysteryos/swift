@@ -3616,6 +3616,9 @@ class AccountsPayableController extends UserController {
         return $this->makeView('acpayable/create-multi');
     }
 
+    /*
+     * Save file to local temp storage
+     */
     public function postMultiUpload()
     {
         if(\Input::file('file'))
@@ -3635,6 +3638,10 @@ class AccountsPayableController extends UserController {
         return \Response::make("Unable to process your request",500);
     }
 
+    /*
+     * Delete file from local temp storage
+     *
+     */
     public function deleteMultiUpload($file_name)
     {
         if($file_name)
@@ -3659,6 +3666,9 @@ class AccountsPayableController extends UserController {
         return \Response::make("Please specify a file name",500);
     }
 
+    /*
+     * Get file contents from local storage
+     */
     public function getMultiFile($file_name)
     {
         if($file_name)
@@ -3674,5 +3684,238 @@ class AccountsPayableController extends UserController {
         }
 
         return \Response::make("Please specify a file name",500);
+    }
+
+    public function postSaveMultiForm()
+    {
+        if(!$this->permission->isAdmin() && !$this->permission->canCreate())
+        {
+            return parent::forbidden();
+        }
+
+        $validation = \Validator::make(\Input::all(),[
+            'billable_company_code' => 'required|numeric|exists:sct_jde.jdecustomers,AN8',
+            'supplier_code' => 'required|numeric|exists:sct_jde.jdesuppliermaster,Supplier_Code',
+            'po_number' => 'numeric',
+            'document' => 'required'
+        ]);
+
+        if($validation->fails())
+        {
+            return \Response::make($validation->errors(),400);
+        }
+        else
+        {
+            /*
+             * Manual Validation
+             */
+            if(\Input::has('save_publish') && !\Input::has('hod_approval'))
+            {
+                return \Response::make("Please add a HOD for approval",400);
+            }
+
+            /*
+             * Check for duplicate invoice
+             */
+            if(\Input::has('invoice_number'))
+            {
+                //See if invoice number already exists
+                $invoiceExist = \SwiftACPRequest::where('billable_company_code','=',\Input::get('billable_company_code'))
+                                ->where('supplier_code','=',\Input::get('supplier_code'),'AND')
+                                ->whereHas('invoice',function($q){
+                                    return $q->where('number','=',\Input::get('invoice_number'));
+                                })->whereHas('workflow',function($q){
+                                    return $q->inprogress();
+                                })->get();
+
+                if(count($invoiceExist))
+                {
+                    return \Response::make("Invoice already exists for supplier: <a href='".\Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
+                }
+            }
+
+            $loopCount = 0;
+
+            /*
+             * Save Routine Starts
+             */
+            do
+            {
+                try
+                {
+                    \DB::beginTransaction();
+
+                    //Create Form
+                    $acp = new \SwiftACPRequest([
+                        'billable_company_code' => \Input::get('billable_company_code'),
+                        'supplier_code' => \Input::get('supplier_code'),
+                    ]);
+
+                    $acp->save();
+
+                    
+                    /*
+                     * Add invoice
+                     */
+                    $invoice = new \SwiftACPInvoice([
+                        'date_received' => \Carbon::now()
+                    ]);
+
+                    //Has invoice number
+                    if(\Input::has('invoice_number') && \Input::get('invoice_number') !== "")
+                    {
+                        $invoice->number = \Input::get('invoice_number');
+                    }
+
+                    $acp->invoice()->save($invoice);
+
+                    /*
+                     * Has Purchase Order
+                     */
+
+                    if(\Input::has('po_number') && \Input::get('po_number') !== "")
+                    {
+                        if(\Input::has('po_type') && in_array(\Input::get('po_type'),array_keys(\SwiftPurchaseOrder::$types)))
+                        {
+                            $purchaseOrder = new \SwiftPurchaseOrder([
+                                'reference' => \Input::get('po_number'),
+                                'type' => \Input::get('po_type')
+                            ]);
+                            $acp->purchaseOrder()->save($purchaseOrder);
+                        }
+                    }
+
+                    /*
+                     * Had HOD Approval
+                     */
+                    if(\Input::has('hod_approval'))
+                    {
+                        $hods = explode(",",\Input::get('hod_approval'));
+                        foreach($hods as $hod_id)
+                        {
+                            $hodObj = new \SwiftApproval();
+                            $hodObj->approval_user_id = $hod_id;
+                            $hodObj->type = \SwiftApproval::APC_HOD;
+                            $acp->approval()->save($hodObj);
+                        }
+                    }
+
+                    /*
+                     * Add Document
+                     */
+                    if(!\Input::has('save_one'))
+                    {
+                        $document_name = \Input::get('document')[$loopCount];
+                        if(\File::exists(storage_path().'/tmp/acpayable/'.$document_name))
+                        {
+                            //Save Document
+                            $doc = new \SwiftACPDocument();
+                            $doc->document = storage_path().'/tmp/acpayable/'.$document_name;
+                            $acp->document()->save($doc);
+
+                            //Delete Doc once processed
+                            \File::delete(storage_path().'/tmp/acpayable/'.$document_name);
+                        }
+                        else
+                        {
+                            return \Response::make("Server Error: Unable to locate the document",500);
+                        }
+                    }
+                    else
+                    {
+                        foreach(\Input::get('document') as $document_name)
+                        {
+                            if(\File::exists(storage_path().'/tmp/acpayable/'.$document_name))
+                            {
+                                //Save Document
+                                $doc = new \SwiftACPDocument();
+                                $doc->document = storage_path().'/tmp/acpayable/'.$document_name;
+                                $acp->document()->save($doc);
+                                //Delete Doc once processed
+                                \File::delete(storage_path().'/tmp/acpayable/'.$document_name);
+                            }
+                            else
+                            {
+                                return \Response::make("Server Error: Unable to locate the document",500);
+                            }
+                        }
+                    }
+
+                    /*
+                     * If publish, add approval owner
+                     */
+                    if(\Input::has('save_publish'))
+                    {
+                        $ownerApproval = new \SwiftApproval([
+                            'approval_user_id' => $this->currentUser->id,
+                            'approved' => \SwiftApproval::APPROVED,
+                            'type'=> \SwiftApproval::APC_REQUESTER
+                        ]);
+
+                        $acp->approval()->save($ownerApproval);
+                    }
+
+                    //Update Workflow
+                    if(\WorkflowActivity::update($acp,$this->context))
+                    {
+                        //Story Relate
+                        \Queue::push('Story@relateTask',array('obj_class'=>get_class($acp),
+                                                             'obj_id'=>$acp->id,
+                                                             'action'=>\SwiftStory::ACTION_CREATE,
+                                                             'user_id'=>$this->currentUser->id,
+                                                             'context'=>get_class($acp)));
+
+
+                    }
+                    else
+                    {
+                        return \Response::make("Server Error: Unable to start workflow",500);
+                    }
+
+                    /*
+                     * Has Comments
+                     */
+
+                    if(trim(\Input::get('comment')) !== "")
+                    {
+                        $comment = new \SwiftComment([
+                            'comment' => trim(\Input::get('comment')),
+                            'user_id' => $this->currentUser->id,
+                        ]);
+
+                        if($acp->comments()->save($comment))
+                        {
+                            //alert users if they have been tagged
+                            if(trim(\Input::get('usermention')) != "")
+                            {
+                                $userMentions = explode(',',\Input::get('usermention'));
+                                $userMentions = array_unique((array)$userMentions);
+
+                                //Give Access to form if needed
+                                $acp->permission()->checkAndShare($this->currentUser->id,$userMentions);
+
+                                //Send Mail as per needed
+                                \Comment::mailNotify($comment,$userMentions);
+                            }
+                        }
+                    }
+
+                    //Commit DB Transaction
+                    \DB::commit();
+                }
+                catch(\PDOException $e)
+                {
+                    \DB::rollback();
+                    \Log::error('Accounts-Payable: Save Multi Form Failed with msg: "'.$e->getMessage().'"');
+                    return \Response::make("Server Error: Unable to save form.",500);
+                }
+                $loopCount++;
+            }
+            while ($loopCount < count(\Input::get('document')) && !\Input::has('save_one'));
+
+            return \Response::json(["success"=>1]);
+        }
+
+        return \Response::make("Server Error: Unable to process",500);
     }
 }

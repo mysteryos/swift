@@ -77,11 +77,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 
 (window.ot_edit = function () {
     
-    /*
-     * Clean previous instances of select2
-     */
-    $('.select2-container').remove();    
-    
     //Ribbon Buttons
     $('a.btn-ribbon-cancel').on('click',function(e){
         e.preventDefault();            

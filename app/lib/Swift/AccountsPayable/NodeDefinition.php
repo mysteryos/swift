@@ -381,7 +381,13 @@ Class NodeDefinition {
             $total_due = (float)$invoice->due_amount + $paymentAmount;
             if($total_due !== (float)$invoice->open_amount)
             {
-                $returnReasonList['payment_error'] = "Open amount doesn't tally. Please wait for JDE nightly update";
+                //Update Open Amount Now from Sct JDE
+                JdeReconcialiation::updatePvOpenAmount($acp);
+                //Check Open Amount
+                if((float)$invoice->open_amount !== 0.0)
+                {
+                    $returnReasonList['payment_error'] = "Open amount doesn't tally. Please wait for JDE nightly update";
+                }
             }
 
             //No errors at all, mark as complete

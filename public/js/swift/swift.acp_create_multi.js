@@ -1,6 +1,6 @@
 function multiShowForm()
 {
-    if($('#doc-list').find('.check-document:checked').length)
+    if($('#doc-list').find('.check-document:checked:enabled').length)
     {
         $('#no-form').hide();
         $('#form-container').show();
@@ -18,6 +18,7 @@ function multiShowForm()
     var $divHeight = $(window).height()-$('#doc-content').offset().top;
     var $noDoc = $('#no-doc');
     var $docContainer = $('#doc-container');
+    var uploadmsg;
     
     $('#doc-list').resizable({
         containment: "#acp_create_multi_container",
@@ -111,7 +112,7 @@ function multiShowForm()
     var previewNode = document.querySelector("#template");
     var previewTemplate = previewNode.parentNode.innerHTML;
     previewNode.style.display = "none";    
-    var myDropzone = new Dropzone(document.getElementById('content'), {
+    var myDropzone = new Dropzone('div#content', {
                         url: $multiDropzone.attr('data-action'),
                         clickable: '#btn-upload',
                         previewsContainer: "#multi-dropzone",
@@ -252,7 +253,7 @@ function multiShowForm()
                     });
     
     myDropzone.on("sending", function(file,xhr,formdata) {
-        var uploadmsg = Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
+        uploadmsg = Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
             message: 'Uploading "'+file.name+'" <div class="progress progress-sm progress-striped active"><div aria-valuetransitiongoal="25" class="progress-bar bg-color-blue" id="upload-progress" style="width: 0%;" aria-valuenow="25"></div> </div>',
             hideAfter: 0,
             showCloseButton: false,
@@ -266,21 +267,21 @@ function multiShowForm()
             case "image/png":
             case "image/bmp":
             case "image/jpg":
-                var icon = '<i class="fa fa-file-image-o"></i>';
+                var icon = '<i class="fa fa-file-image-o row-space-right-1"></i>';
                 break;
             case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
             case "application/vnd.ms-excel":
-                var icon = '<i class="fa fa-file-excel-o"></i>';
+                var icon = '<i class="fa fa-file-excel-o row-space-right-1"></i>';
                 break;
             case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
             case "application/msword":
-                var icon = '<i class="fa fa-file-word-o"></i>';
+                var icon = '<i class="fa fa-file-word-o row-space-right-1"></i>';
                 break;
             case "application/pdf":
-                var icon = '<i class="fa fa-file-pdf-o"></i>';
+                var icon = '<i class="fa fa-file-pdf-o row-space-right-1"></i>';
                 break;                        
             default:
-                var icon = '<i class="fa fa-file-o"></i>';
+                var icon = '<i class="fa fa-file-o row-space-right-1"></i>';
                 break;
         }
 
@@ -304,7 +305,9 @@ function multiShowForm()
             //Set Doc Id
             $(file.previewElement).attr('data-url',res.url);
             $(file.previewElement).attr('data-name',res.name);
-            $(file.previewElement).find('input.check-document').val(res.name).show();
+            $(file.previewElement).find('input.check-document').val(res.name).removeAttr('disabled').show();
+            //CleanUp
+            $(file.previewElement).removeClass('dz-processing').removeAttr('id');            
         }
         //Hide Progress Bar
         $(file.previewElement).find('div.progress').addClass('hide');
@@ -377,7 +380,6 @@ function multiShowForm()
     /*
      * Clean previous instances of select2
      */
-    $('.select2-container').remove();
     $('#customercode,#suppliercode,#hodapproval').val('');
     
     /*
@@ -511,7 +513,33 @@ function multiShowForm()
         $(this).valid();
     });
     
-    $('#multi_form').validate({
+    //Comments
+    $('#comment-textarea').atwho({
+        at: "@",
+        data: '/ajaxsearch/userall',
+        search_key: 'name',
+        limit: 5,
+        delay: 300,
+        tpl: '<li data-value="${name}">${name} <small>${email}</small></li>',
+        insert_tpl: '<input type="button" value="@${name}" data-id="${id}" title="${email}" class="usermention btn btn-default btn-xs" />',
+        show_the_at: true
+    });
+    
+//    //On Mention Add
+//    $('#comment-textarea').on('inserted.atwho',function(e,$li){
+//        document.getElementById('input_mentions').value = $('#comment-textarea').find('.usermention').map(function(){
+//            return $(this).attr('data-id');
+//        }).get().join();
+//    });
+//    
+//    //On Mention Delete
+//    $formContent.on('remove','.usermention',function(){
+//        document.getElementById('input_mentions').value = $('#comment-textarea').find('.usermention').map(function(){
+//            return $(this).attr('data-id');
+//        }).get().join();        
+//    });
+    
+    var multi_form_validator = $('#multi_form').validate({
         ignore: '',
         rules: {
             billable_company_code: {
@@ -538,15 +566,34 @@ function multiShowForm()
                 required: 'Select a document'
             }
         },
-
+        errorPlacement: function(error, element) {
+            if (element.attr("name") == "document[]" )
+            {
+                error.appendTo(element.parents('div.dz-success').find('strong.error'));
+            }
+            else
+            {
+                error.insertAfter(element);
+            }
+        },
         // Ajax form submition
         submitHandler : function(form) {
+                //Fill in Mentions
+                document.getElementById('input_mentions').value = $('#comment-textarea').find('.usermention').map(function(){
+                    return $(this).attr('data-id');
+                }).get().join();
+                document.getElementById('input_comment').value = $('#comment-textarea').text();
+                
                 var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
                                 message: 'Saving Accounts Payable form',
                                 type: 'info',
                                 id: 'notif-top'
                               });
+                              
                 $formContent.prepend("<div class='loading-overlay'></div>");
+                
+                $('#btn-save,#btn-save-publish').attr('disabled','disabled').addClass('disabled');
+                
                 $(form).ajaxSubmit({
                         dataType: 'json',
                         success : function(data) {
@@ -554,7 +601,20 @@ function multiShowForm()
                                 type: 'success',
                                 message: 'Save Success!'
                             });
+                            
+                            $('#btn-save,#btn-save-publish').removeAttr('disabled').removeClass('disabled');
+                            
                             $formContent.find('div.loading-overlay').remove();
+                            
+                            $('input.check-document:checked').each(function(){
+                                $(this).parents('div.dz-success').remove();
+                            });
+                            
+                            if($('div.dz-success').length === 0)
+                            {
+                                $('#no-form').show();
+                                $('#form-container').hide();
+                            }
                         },
                         error: function (xhr, status, error) {
                             savemsg.update({
@@ -562,12 +622,15 @@ function multiShowForm()
                                 message: xhr.responseText,
                                 hideAfter: 5
                             });
+                            
+                            $('#btn-save,#btn-save-publish').removeAttr('disabled').removeClass('disabled');
+                            
                             $formContent.find('div.loading-overlay').remove();
                         }
                 });
                 return false;
         }
-    });    
+    });
     
     $('#btn-save').on('click',function(e){
         $('#hodapproval').rules('remove');
@@ -581,8 +644,18 @@ function multiShowForm()
     
     $('#btn-reset').on('click',function(){
         $('#customercode,#suppliercode,#hodapproval').select2('close').select2("val", "");
+        document.getElementById('input_mentions').value = "";
+        document.getElementById('comment-textarea').innerHTML = "";
+        document.getElementById('input_comment').value = "";
+        $('#multi_form div').removeClass('has-error');
+        multi_form_validator.resetForm();
+        multi_form_validator.reset();
+        $('#no-form').show();
+        $('#form-container').hide();        
         return true;
     });
+    
+    
     
     //Hide Loading Message
     messenger_hidenotiftop();    

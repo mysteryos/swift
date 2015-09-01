@@ -961,7 +961,7 @@ function enableComments()
             insert_tpl: '<input type="button" value="@${name}" data-id="${id}" title="${email}" class="usermention btn btn-default btn-xs" />',
             show_the_at: true
                     
-        });        
+        });
         
         //Send Comment
         $commentForm.on('submit',function(e){
@@ -1245,6 +1245,9 @@ $.maindiv.on('click','a.colorbox-ajax',function(){
 $.document_.on('pjax:success, pjax:end',function(){
     //Execute Javascript
     $('.popover, .tooltip').remove();
+    //Remove Left over select2 containers
+    $('.select2-container').remove();
+    
     executePageScript();
     //Check Site Version
     if($.root_.attr('data-version') !== document.getElementById('site_version').value)

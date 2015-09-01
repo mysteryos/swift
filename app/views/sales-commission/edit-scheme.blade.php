@@ -6,13 +6,11 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
             @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore-scheme" }}@else{{ "delete-scheme" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax" href="{{ URL::previous() }}" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
             @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore-scheme" }}@else{{ "delete-scheme" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
         </div>

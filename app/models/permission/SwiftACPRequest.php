@@ -78,7 +78,7 @@ class SwiftACPRequest extends Permission {
     {
         $hasAccess = false;
         //Owner has access
-        if($this->resource->isOwner($this->currentUser->id))
+        if($this->form->isOwner($this->currentUser->id))
         {
             $hasAccess = true;
         }
@@ -96,7 +96,7 @@ class SwiftACPRequest extends Permission {
                                 {
                                     return $val['approval_user_id'];
                                 }
-                           },$this->resource->approval->toArray());
+                           },$this->form->approval->toArray());
 
 
         if(in_array($this->currentUser->id,$approvalUserIds))
@@ -114,7 +114,7 @@ class SwiftACPRequest extends Permission {
                                 {
                                     return $val['cheque_exec_signator_id'];
                                 }
-                            },$this->resource->payment->toArray());
+                            },$this->form->payment->toArray());
 
         if(in_array($this->currentUser->id,$executiveUserIds))
         {
@@ -127,7 +127,7 @@ class SwiftACPRequest extends Permission {
         /*
          * Sharing Access
          */
-        if(!$hasAccess && $this->resource->isSharedWith($this->currentUser->id))
+        if(!$hasAccess && $this->form->isSharedWith($this->currentUser->id))
         {
             $hasAccess = true;
         }

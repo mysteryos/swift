@@ -6,7 +6,6 @@
     /*
      * Clean previous instances of select2
      */
-    $('.select2-container').remove();    
     
     $('#invoice_cancelled_form').validate({
         ignore: '',
@@ -62,7 +61,6 @@
     /*
      * Clean previous instances of select2
      */
-    $('.select2-container').remove();
     $('#invoicecode_autocomplete').val('');
     
     $('#invoicecode_autocomplete').select2({

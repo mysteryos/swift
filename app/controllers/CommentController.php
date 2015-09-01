@@ -29,8 +29,11 @@ class CommentController extends UserController {
             {
                 $userMentions = explode(',',\Input::get('usermention'));
                 $userMentions = array_unique((array)$userMentions);
+                
                 //Give Access to form if needed
-                $this->checkAndGiveAccess($commentableType,$commentableId,$userMentions);
+                $form = $commentableType::find($commentableId);
+                $form->permission()->checkAndShare($this->currentUser->id,$userMentions);
+                
                 \Comment::mailNotify($comment,$userMentions);
             }
 			return Response::make($newCommentId);
@@ -51,35 +54,6 @@ class CommentController extends UserController {
 
         return \View::make('comments_list',array('comments'=>$classObj->comments()->orderBy('created_at','DESC')->get()));
 
-    }
-
-    private function checkAndGiveAccess($commentableType,$commentableId,$userMentions)
-    {
-        if(is_array($userMentions))
-        {
-            switch($commentableType)
-            {
-                case "SwiftACPRequest":
-                    $form = (new $commentableType)->find($commentableId);
-                    if($form)
-                    {
-                        foreach($userMentions as $user_id)
-                        {
-                            if(!$form->permission($user_id)->checkAccess())
-                            {
-                                $share = new \SwiftShare([
-                                    'from_user_id' => $this->currentUser->id,
-                                    'to_user_id' => $user_id,
-                                    'permission' => \SwiftShare::PERMISSION_VIEW
-                                ]);
-
-                                $form->share()->save($share);
-                            }
-                        }
-                    }
-                break;
-            }
-        }
     }
 
 }

@@ -53,7 +53,6 @@
     /*
      * Clean previous instances of select2
      */
-    $('.select2-container').remove();
     $('#select_user_id').val('');
     
     $('#select_user_id').select2({

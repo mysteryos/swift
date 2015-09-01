@@ -198,7 +198,7 @@ class NodeMail {
 
                 foreach($acp->approvalHod as $approval)
                 {
-                    if($approval->approver->activated)
+                    if($approval->approver && $approval->approver->activated === 1)
                     {
                         try
                         {

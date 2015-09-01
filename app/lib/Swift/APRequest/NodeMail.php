@@ -50,9 +50,9 @@ class NodeMail {
     public static function sendCancelledMail($aprequest)
     {
         //Get owner of AP Request
-        $owner_user = \Sentry::find($aprequest->requester_user_id);
+        $owner_user = \Sentry::findUserById($aprequest->requester_user_id);
         
-        if($owner_user->activated)
+        if($owner_user->isActivated())
         {
             \Mail::queueOn('sqs-mail','emails.aprequest.pending',array('aprequest'=>$aprequest,'user'=>$owner_user),function($message) use ($owner_user,$aprequest){
                 $message->from('swift@scott.mu','Scott Swift');

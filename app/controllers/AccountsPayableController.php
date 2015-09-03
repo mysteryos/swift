@@ -2070,7 +2070,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Permissions
              */
-            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
+            if(!$acp->permission()->checkAccess())
             {
                 return parent::forbidden();
             }
@@ -2410,7 +2410,7 @@ class AccountsPayableController extends UserController {
         $form = \SwiftACPRequest::with('invoice')->find(\Crypt::decrypt($form_id));
         if($form)
         {
-            if(!is_numeric(\Input::get('value')) || array_key_exists((int)\Input::get('value'),\SwiftACPPayment::$type))
+            if(!is_numeric(\Input::get('value')) || !array_key_exists((int)\Input::get('value'),\SwiftACPPayment::$type))
             {
                 return \Response::make("Type of payment not recognized",400);
             }

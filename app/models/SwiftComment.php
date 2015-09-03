@@ -6,6 +6,7 @@
 
 class SwiftComment extends Eloquent {
     use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Illuminate\Database\Eloquent\SoftDeletingTrait;
 	/**
 	 * Name of the table to use for this model
 	 *

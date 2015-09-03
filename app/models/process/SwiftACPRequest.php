@@ -77,11 +77,11 @@ class SwiftACPRequest extends Process
                     }
                 }
 
-                return \Response::make("You can't publish the form at this time.");
+                return \Response::make("You can't publish the form at this time.",400);
             }
             else
             {
-                return \Response::make('Workflow is either complete or rejected.');
+                return \Response::make('Workflow is either complete or rejected.',400);
             }
         }
         else

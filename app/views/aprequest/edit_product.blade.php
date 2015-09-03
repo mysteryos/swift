@@ -83,6 +83,7 @@
     </div>    
     @endif    
     <legend class="top"></legend>
-    @if(($edit && isset($canModifyProduct) && $isCreator) || $isAdmin)<a class="btn btn-default btn-xs top-right btn-delete" href="/{{ $rootURL }}/product" title="Delete Product"><i class="fa fa-trash-o"></i></a>@endif
+    @if(($edit && isset($canModifyProduct) && $isCreator) || $isAdmin)<a class="btn btn-default btn-xs top-right btn-delete hidden-mobile" href="/{{ $rootURL }}/product" title="Delete Product"><i class="fa fa-trash-o"></i></a>@endif
+    @if(($edit && isset($canModifyProduct) && $isCreator) || $isAdmin)<a class="btn btn-default top-right btn-delete visible-mobile hide" href="/{{ $rootURL }}/product" title="Delete Product"><i class="fa fa-trash-o"></i></a>@endif
     @if(!isset($dummy) && isset($p))<span class="float-id">ID: {{ Crypt::decrypt($p->id) }}</span> @endif
 </fieldset>

@@ -19,16 +19,18 @@ class JdePurchaseOrder extends Eloquent
     private static $cache_expiry_time = 240;
 
     /*
-     * Get Purchase Order by Number & Type
+     * Get Purchase Order by Number,Type & Company
      *
      * @param integer $number
      * @param string $type
+     * @param string $company
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public static function findByNumberAndType($number,$type)
+    public static function findByNumberTypeCompany($number,$type,$company="269")
     {
         return self::where('order_Number','=',$number)
                 ->where('order_Type','=',$type,'AND')
+                ->where('order_company','=',sprintf("%05d",$company),'AND')
                 ->remember(self::$cache_expiry_time)
                 ->first();
     }

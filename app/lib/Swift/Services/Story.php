@@ -41,6 +41,7 @@ class Story {
                 case "SwiftComment":
                     $this->story->context_type = $obj->commentable_type;
                     $this->story->context_id = $obj->commentable_id;
+                    $this->story->by = $obj->user_id;
                     break;
                 case "SwiftWorkflowActivity":
                     $this->story->context_type = $obj->workflowable_type;
@@ -49,6 +50,7 @@ class Story {
                 case "SwiftNodeActivity":
                     $this->story->context_type = $obj->workflowactivity->workflowable_type;
                     $this->story->context_id = $obj->workflowactivity->workflowable_id;
+                    $this->story->by = $obj->user_id;
                     break;
                 default:
                     $this->story->context_type = \get_class($obj);
@@ -106,7 +108,7 @@ class Story {
            $this->user_id = $data['user_id'];
         }
         
-        if(\Sentry::check() && count($obj))
+        if(count($obj))
         {
             $data['context'] = isset($data['context']) ? $data['context'] : false;
             $data['type'] = isset($data['type']) ? $data['type'] : \SwiftStory::TYPE_STATIC;
@@ -181,6 +183,7 @@ class Story {
                         ->whereIn('context_type',$contextArray)
                         ->take($take)
                         ->with(array('storyfiable','byUser'));
+            
             if($offsetId>0)
             {
                 $stories->where('id','<',$offsetId);
@@ -201,6 +204,13 @@ class Story {
             //increment View count
             if(count($stories))
             {
+                foreach($stories as $k=>$s)
+                {
+                    if(!$s->storyfiable)
+                    {
+                        unset($stories[$k]);
+                    }
+                }
                 \Queue::push('Story@viewIncrementTask',array('stories'=>$stories));
             }
             return $stories;

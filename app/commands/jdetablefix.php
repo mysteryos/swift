@@ -50,18 +50,19 @@ class jdetablefix extends Command {
 	{
         try {
             $orphanLines = \JdePurchaseOrderItem::whereNull('order_id')
-                            ->groupBy(['Order_Type','Order_Number'])
+                            ->groupBy(['order_type','order_number','order_company'])
                             ->get();
             foreach($orphanLines as $o)
             {
                 //Search for ID
-                $po = \JdePurchaseOrder::findByNumberAndType($o->Order_Number,$o->Order_Type);
+                $po = \JdePurchaseOrder::findByNumberTypeCompany($o->order_number,$o->order_type,$o->order_company);
                 if($po)
                 {
                     \DB::connection('sct_jde')
                     ->table('sct_jde.jdepodetail')
-                    ->where('Order_Type','=',$o->Order_Type)
-                    ->where('Order_Number','=',$o->Order_Number,'AND')
+                    ->where('order_type','=',$o->order_type)
+                    ->where('order_number','=',$o->order_number,'AND')
+                    ->where('order_company','=',$o->order_company,'AND')
                     ->update(['order_id'=>$po->id]);
                     $this->info('Reconciliated Purchase Order ID: '.$po->id);
                 }

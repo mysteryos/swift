@@ -144,11 +144,19 @@ Class NodeDefinition {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            $paymentVoucherCount = $acp->paymentVoucher()->count();
-            if($paymentVoucherCount === 0)
+            $paymentVoucher = $acp->paymentVoucher()->first();
+            if(!$paymentVoucher)
             {
                 $returnReasonList['paymentvoucher_absent'] = "Input payment voucher details for invoice";
             }
+            else
+            {
+                if((int)$paymentVoucher->number === 0)
+                {
+                    $returnReasonList['paymentvoucher_number'] = "Input payment voucher number";
+                }
+            }
+
             
             if(count($returnReasonList) === 0 && !$returnReason)
             {

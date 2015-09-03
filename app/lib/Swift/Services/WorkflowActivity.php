@@ -134,8 +134,30 @@ class WorkflowActivity {
                     //Check if Nodes Exists
                     if(count($latestNodeBefore))
                     {
+                        $processedNodes = [];
                         foreach($latestNodeBefore as $l)
                         {
+                            $l->load('parents');
+                            //Check if current node preceeds one that has already been processed
+                            //If it is, we skip processing.
+                            if(count(array_filter($processedNodes,function($e)use($l){
+                                foreach($e->parents as $p)
+                                {
+                                    $p->load('parentNode');
+                                    if($p->parentNode && $p->parentNode->node_definition_id === $l->node_definition_id)
+                                    {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            })))
+                            {
+                                $processedNodes[] = $l;
+                                continue;
+                            }
+                            
+                            $processedNodes[] = $l;
+                            
                             $this->nodeActivity->process($l,SwiftNodeActivity::$FLOW_FORWARD);
                         }
                     }

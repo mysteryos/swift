@@ -582,7 +582,13 @@ function multiShowForm()
                 document.getElementById('input_mentions').value = $('#comment-textarea').find('.usermention').map(function(){
                     return $(this).attr('data-id');
                 }).get().join();
-                document.getElementById('input_comment').value = $('#comment-textarea').text();
+                
+                var $comment = $('#comment-textarea').clone();
+                $comment.find('.usermention').each(function(){
+                   $(this).append('<span>'+this.attributes.value.value+'</span>');
+                });
+                
+                document.getElementById('input_comment').value = $comment.text();
                 
                 var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
                                 message: 'Saving Accounts Payable form',

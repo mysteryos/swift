@@ -186,8 +186,6 @@
         return false;
     });
     
-    
-    
     function setpaymentnum()
     {
         var paymentnum = prompt('Set payment number for '+$('.pvform.highlight').length+($('.pvform.highlight').length === 1 ? ' form' : ' forms'));
@@ -317,7 +315,7 @@
                         $this.removeClass('bg-color-light-green');
                         $this.removeClass('bg-color-light-orange');
                         $this.addClass('bg-color-redLight');
-                        return xhr.responseText;
+                        messenger_notiftop(xhr.responseText,'error');
                     }
                 });
             }
@@ -405,6 +403,27 @@
        setbatchchequesignator();
        $('#chequeSignatorModal').modal('hide');
        return false;
+    });
+    
+    /*
+     * Batch Payment Type
+     */
+    
+    $('#paymentTypeModal').on('shown.bs.modal', function(){
+        //Reset Inputs
+        $('#batchSelectType')[0].selectedIndex = 0;
+    });
+    
+    $('#btn-saveType').on('click',function(){
+       if($('#batchSelectType')[0].selectedIndex === 0)
+       {
+           alert('Please select a type');
+           return;
+       }
+       
+       setbatchtype();
+       $('#paymentTypeModal').modal('hide');        
+        return false; 
     });
 
     //Hide Loading Message

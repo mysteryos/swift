@@ -15,12 +15,12 @@ class SwiftNodeActivityJoin extends Eloquent {
     
     public function parentNode()
     {
-        $this->hasOne('SwiftNodeActivity','parent_id','id');
+        return $this->belongsTo('SwiftNodeActivity','parent_id');
     }
     
     public function childNode()
     {
-        $this->hasOne('SwiftNodeActivity','children_id','id');
+        return $this->belongsTo('SwiftNodeActivity','children_id');
     }
 }
 

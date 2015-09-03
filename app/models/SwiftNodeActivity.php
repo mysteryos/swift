@@ -68,9 +68,9 @@ class SwiftNodeActivity extends Eloquent
      * Class: Self
      */
     
-    public function parent()
+    public function parents()
     {
-        return $this->belongsTo('SwiftNodeActivity', 'parent_id');
+        return $this->hasMany('SwiftNodeActivityJoin', 'children_id');
     }
     
     /*
@@ -80,7 +80,7 @@ class SwiftNodeActivity extends Eloquent
 
     public function children()
     {
-        return $this->hasMany('SwiftNodeActivity', 'parent_id');
+        return $this->hasMany('SwiftNodeActivityJoin', 'parent_id');
     }
     
     /*

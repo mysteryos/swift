@@ -52,8 +52,27 @@ class CommentController extends UserController {
         $classObj = new $commentableType;
         $classObj = $classObj::find($commentableId);
 
-        return \View::make('comments_list',array('comments'=>$classObj->comments()->orderBy('created_at','DESC')->get()));
+        return \View::make('comments_list',array('comments'=>$classObj->comments()->orderBy('created_at','DESC')->get(),'currentUser'=>$this->currentUser));
 
+    }
+
+    public function deleteEntry($id)
+    {
+        if($this->currentUser->isSuperUser())
+        {
+            $comment = \SwiftComment::find($id);
+            if($comment)
+            {
+                if($comment->delete())
+                {
+                    return \Response::make("Success");
+                }
+            }
+
+            return \Response::make("Operation failed",400);
+        }
+
+        return parent::forbidden();
     }
 
 }

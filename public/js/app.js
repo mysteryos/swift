@@ -1051,6 +1051,35 @@ function enableComments()
                 });                
             });
         }
+        
+        $commentForm.on('click','.delete-comment',function(){
+            var $this = $(this);
+            if(confirm('Please confirm deletion of comment.'))
+            {
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                    id: 'notif-top',
+                    errorMessage: 'Error deleting comment',
+                    successMessage: 'Comment has been deleted',
+                    progressMessage: 'Please Wait...',
+                    action: $.ajax,
+                },
+                {
+                    type:'DELETE',
+                    url: $this.attr('href'),
+                    success:function()
+                    {
+                        $this.parents('li.message').slideUp(400,function(){
+                           $(this).remove(); 
+                        });
+                    },
+                    error:function(xhr, status, error)
+                    {
+                        return xhr.responseText;
+                    }
+                });
+            }
+            return false; 
+        });
     }
 }
 

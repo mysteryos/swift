@@ -819,23 +819,40 @@ class Helper {
         $orphanPending = \SwiftPurchaseOrder::whereNotNull('reference')
                         ->whereNotNull('type')
                         ->where('validated','=',\SwiftPurchaseOrder::VALIDATION_PENDING)
+                        ->with('purchasable')
                         ->get();
 
         foreach($orphanPending as $o)
         {
-            $po = \JdePurchaseOrder::findByNumberAndType($o->reference, $o->type);
-            if($po)
+            if($o->purchasable)
             {
-                $o->order_id = $po->id;
-                $o->validated = \SwiftPurchaseOrder::VALIDATION_FOUND;
-                $o->validated_on = Carbon::now();
-                $o->save();
-            }
-            else
-            {
-                $o->validated = \SwiftPurchaseOrder::VALIDATION_NOTFOUND;
-                $o->validated_on = Carbon::now();
-                $o->save();
+                $company_code = "";
+
+                //Get Company Code
+                switch($o->purchasable_type)
+                {
+                    case "SwiftOrder":
+                        $company_code = $o->purchasable->business_unit;
+                        break;
+                    case "SwiftACPRequest":
+                        $company_code = $o->purchsable->billable_company_code;
+                        break;
+                }
+
+                $po = \JdePurchaseOrder::findByNumberTypeCompany($o->reference, $o->type,$company_code);
+                if($po)
+                {
+                    $o->order_id = $po->id;
+                    $o->validated = \SwiftPurchaseOrder::VALIDATION_FOUND;
+                    $o->validated_on = Carbon::now();
+                    $o->save();
+                }
+                else
+                {
+                    $o->validated = \SwiftPurchaseOrder::VALIDATION_NOTFOUND;
+                    $o->validated_on = Carbon::now();
+                    $o->save();
+                }
             }
         }
     }
@@ -849,31 +866,48 @@ class Helper {
         $orphanNotFound = \SwiftPurchaseOrder::whereNotNull('reference')
                         ->whereNotNull('type')
                         ->where('validated','=',\SwiftPurchaseOrder::VALIDATION_NOTFOUND)
+                        ->with('purchasable')
                         ->get();
 
         foreach($orphanNotFound as $o)
         {
-            $po = \JdePurchaseOrder::findByNumberAndType($o->reference, $o->type);
-            if($po)
+            if($o->purchasable)
             {
-                $o->order_id = $po->id;
-                $o->validated = \SwiftPurchaseOrder::VALIDATION_FOUND;
-                $o->validated_on = Carbon::now();
-                $o->save();
-            }
-            else
-            {
-                //If still not found after 2 days, mark as permanently not found.
-                if($o->validated_on->diffInDays(Carbon::now(),false) >= 2)
+                $company_code = "";
+
+                //Get Company Code
+                switch($o->purchasable_type)
                 {
+                    case "SwiftOrder":
+                        $company_code = $o->purchasable->business_unit;
+                        break;
+                    case "SwiftACPRequest":
+                        $company_code = $o->purchsable->billable_company_code;
+                        break;
+                }
+                
+                $po = \JdePurchaseOrder::findByNumberTypeCompany($o->reference, $o->type,$company_code);
+                if($po)
+                {
+                    $o->order_id = $po->id;
+                    $o->validated = \SwiftPurchaseOrder::VALIDATION_FOUND;
                     $o->validated_on = Carbon::now();
-                    $o->validated = \SwiftPurchaseOrder::VALIDATION_NOTFOUND_PERMANENT;
+                    $o->save();
                 }
                 else
                 {
-                    $o->validated_on = Carbon::now();
+                    //If still not found after 2 days, mark as permanently not found.
+                    if($o->validated_on->diffInDays(Carbon::now(),false) >= 2)
+                    {
+                        $o->validated_on = Carbon::now();
+                        $o->validated = \SwiftPurchaseOrder::VALIDATION_NOTFOUND_PERMANENT;
+                    }
+                    else
+                    {
+                        $o->validated_on = Carbon::now();
+                    }
+                    $o->save();
                 }
-                $o->save();
             }
         }
     }

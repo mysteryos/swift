@@ -6,21 +6,7 @@ class APRequestController extends UserController {
         parent::__construct();
         $this->pageName = "A&P Request";
         $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "aprequest";
-        /*
-         * Permissions
-         */
-        $this->adminPermission = \Config::get("permission.{$this->context}.admin");
-        $this->viewPermission = \Config::get("permission.{$this->context}.view");
-        $this->editPermission = \Config::get("permission.{$this->context}.edit");
-        $this->ccarePermission = \Config::get("permission.{$this->context}.ccare");
-        $this->storePermission = \Config::get("permission.{$this->context}.store");
-        $this->createPermission = \Config::get("permission.{$this->context}.create");
-        $this->catManPermission = \Config::get("permission.{$this->context}.catman");
-        $this->execPermission = \Config::get("permission.{$this->context}.exec");
-
-        $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
-        $this->isCatMan = $this->data['isCatMan'] = $this->currentUser->hasAccess($this->catManPermission);
-        $this->isExec = $this->data['isExec'] = $this->currentUser->hasAccess($this->execPermission);
+        $this->permission = $this->data['permission'] = new \Permission\SwiftAPRequest();
     }
     
     public function getIndex()
@@ -79,13 +65,12 @@ class APRequestController extends UserController {
             }
         }
         
-        $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
         $this->data['inprogress'] = $aprequest_inprogress;
         $this->data['inprogress_responsible'] = $aprequest_inprogress_responsible;
         $this->data['inprogress_important'] = $aprequest_inprogress_important;
         $this->data['inprogress_important_responsible'] = $aprequest_inprogress_important_responsible;
         /*$this->data['aprequest_storage'] = $storage_array*/
-        $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
+        $this->data['isAdmin'] = $this->currentUser->hasAccess($this->permission->adminPermission);
         $this->adminList();
         
         return $this->makeView('aprequest/overview');        
@@ -98,8 +83,8 @@ class APRequestController extends UserController {
      */
     private function form($id,$edit=false)
     {
-        $apr_id = Crypt::decrypt($id);
-        $apr = SwiftAPRequest::getById($apr_id);
+        $apr_id = \Crypt::decrypt($id);
+        $apr = \SwiftAPRequest::getById($apr_id);
         if(count($apr))
         {
             /*
@@ -112,7 +97,7 @@ class APRequestController extends UserController {
              * Set Read
              */
             
-            if(!Flag::isRead($apr))
+            if(!\Flag::isRead($apr))
             {
                 \Flag::toggleRead($apr);
             }
@@ -131,8 +116,7 @@ class APRequestController extends UserController {
             /*
              * Data
              */
-            $owner = $apr->revisionHistory()->orderBy('created_at','asc')->first();
-            $this->data['isCreator'] = ($this->currentUser->id == $owner->user_id ? true : false);
+            $this->data['isCreator'] = ($this->currentUser->id === $apr->requester_user_id);
             //Workflow Activity
             $this->data['current_activity'] = \WorkflowActivity::progress($apr,$this->context);
             //Audit data
@@ -142,28 +126,24 @@ class APRequestController extends UserController {
             /*
              * List data
              */
-            $this->data['product_reason_code'] = json_encode(Helper::jsonobject_encode(SwiftAPProduct::$reason));
-            $this->data['approval_code'] = json_encode(Helper::jsonobject_encode(SwiftApproval::$approved));
-            $this->data['erporder_type'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$type));
-            $this->data['erporder_status'] = json_encode(Helper::jsonobject_encode(SwiftErpOrder::$status));
-            $this->data['delivery_status'] = json_encode(Helper::jsonobject_encode(SwiftDelivery::$status));
-            $this->data['tags'] = json_encode(Helper::jsonobject_encode(SwiftTag::$aprequestTags));
+            $this->data['product_reason_code'] = json_encode(\Helper::jsonobject_encode(SwiftAPProduct::$reason));
+            $this->data['approval_code'] = json_encode(\Helper::jsonobject_encode(SwiftApproval::$approved));
+            $this->data['erporder_type'] = json_encode(\Helper::jsonobject_encode(SwiftErpOrder::$type));
+            $this->data['erporder_status'] = json_encode(\Helper::jsonobject_encode(SwiftErpOrder::$status));
+            $this->data['delivery_status'] = json_encode(\Helper::jsonobject_encode(SwiftDelivery::$status));
+            $this->data['tags'] = json_encode(\Helper::jsonobject_encode(SwiftTag::$aprequestTags));
             /*
              * Flags
              */
-            $this->data['flag_important'] = Flag::isImportant($apr);
-            $this->data['flag_starred'] = Flag::isStarred($apr);
+            $this->data['flag_important'] = \Flag::isImportant($apr);
+            $this->data['flag_starred'] = \Flag::isStarred($apr);
 
             /*
              * Edit Access
              */
-            $this->data['isCcare'] = $this->currentUser->hasAccess($this->ccarePermission);
-            $this->data['isStore'] = $this->currentUser->hasAccess($this->storePermission);
             $this->data['canPublish'] = $this->data['canModifyProduct'] = $this->data['canAddProduct'] = false;
-            $this->data['isCatMan'] = $this->currentUser->hasAccess('apr-catman');
-            $this->data['isExec'] = $this->currentUser->hasAccess('apr-exec');
             $this->data['edit'] = $edit;
-            $this->data['owner'] = Helper::getUserName($owner->user_id,$this->currentUser);
+            $this->data['owner'] = \Helper::getUserName($apr->requester_user_id,$this->currentUser);
             
             /*
              * See if can publish
@@ -185,24 +165,24 @@ class APRequestController extends UserController {
                     {
                         foreach($this->data['current_activity']['definition_obj'] as $d)
                         {
-                            if($d->data !== "" || $this->data['isAdmin'] === true)
+                            if($d->data !== "" || $this->permission->isAdmin())
                             {
                                 /*
                                  * Check permissions based on current nodes in workflow
                                  */
-                                if($this->data['isAdmin'] === true || isset($d->data->addproduct))
+                                if($this->permission->isAdmin() === true || isset($d->data->addproduct))
                                 {
                                     $this->data['canAddProduct'] = true;
                                 }
 
-                                if($this->data['isAdmin'] === true || (isset($d->data->modifyproduct) && $this->data['isCreator'] === true))
+                                if($this->permission->isAdmin() === true || (isset($d->data->modifyproduct) && $this->data['isCreator']))
                                 {
                                     $this->data['canModifyProduct'] = true;
                                 }
 
                                 if(isset($d->data->manualpublish) && 
                                     !$apr->approval()->where('type','=',\SwiftApproval::APR_REQUESTER)->count() &&
-                                    ($this->data['isAdmin'] || $apr->requester_user_id === $this->currentUser->id))
+                                    ($this->permission->isAdmin() || $this->data['isCreator']))
                                 {
                                     $this->data['canPublish'] = true;
                                     break;
@@ -287,11 +267,11 @@ class APRequestController extends UserController {
         /*
          * If user has edit access, we redirect
          */
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->currentUser->hasAnyAccess([$this->permission->editPermission,$this->permission->adminPermission]))
         {
             return Redirect::action('APRequestController@getEdit',array('id'=>$id));
         }
-        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
+        elseif($this->currentUser->hasAnyAccess([$this->permission->viewPermission]))
         {
             return $this->form($id,false);
         }
@@ -307,11 +287,11 @@ class APRequestController extends UserController {
      */
     public function getEdit($id)
     {
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->currentUser->hasAnyAccess([$this->permission->editPermission,$this->permission->adminPermission]))
         {
             return $this->form($id,true);
         }
-        elseif($this->currentUser->hasAnyAccess([$this->viewPermission]))
+        elseif($this->currentUser->hasAnyAccess([$this->permission->viewPermission]))
         {
             /*
              * Check if has view access
@@ -335,7 +315,7 @@ class APRequestController extends UserController {
         $this->pageTitle = 'Forms';
         
         //Check Edit Access
-        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);           
+        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->permission->editPermission,$this->permission->adminPermission]);
         
         //Check user group
         if(!$this->data['edit_access'] && $type='inprogress')
@@ -399,10 +379,10 @@ class APRequestController extends UserController {
         }
         
         //Set filters
-        if(Input::has('filter'))
+        if(\Input::has('filter'))
         {
             //Retrieve from session if possible
-            if(Session::has('apr_form_filter'))
+            if(\Session::has('apr_form_filter'))
             {
                 $filter = Session::get('apr_form_filter');
             }
@@ -517,8 +497,6 @@ class APRequestController extends UserController {
         
         //The Data
         $this->data['type'] = $type;
-        $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->createPermission,$this->adminPermission]);
-        $this->data['isAdmin'] = $this->currentUser->hasAnyAccess([$this->adminPermission]);
         $this->data['forms'] = $forms;
         $this->data['count'] = isset($filter) ? $formsCount : SwiftAPRequest::count();
         $this->data['page'] = $page;
@@ -587,7 +565,7 @@ class APRequestController extends UserController {
         /*
          * Check Permission
          */
-        if(!$this->currentUser->hasAccess($this->editPermission) || !NodeActivity::hasStartAccess($this->context))
+        if(!$this->currentUser->hasAccess($this->permission->editPermission) || !NodeActivity::hasStartAccess($this->context))
         {
             return parent::forbidden();
         }
@@ -640,7 +618,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */        
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -689,7 +667,7 @@ class APRequestController extends UserController {
         /*  
          * Check Permissions
          */        
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -785,7 +763,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -796,7 +774,7 @@ class APRequestController extends UserController {
             /*
              * Normal User but not creator = no access
              */
-            if($this->currentUser->hasAccess($this->editPermission) && 
+            if($this->currentUser->hasAccess($this->permission->editPermission) &&
                 !$this->currentUser->isSuperUser() && 
                 $product->aprequest->requester_user_id != $this->currentUser->id)
             {
@@ -814,7 +792,7 @@ class APRequestController extends UserController {
             {
                 foreach($progress['definition_obj'] as $d)
                 {
-                    if(($d->data != "" && isset($d->data->modifyproduct)) || $this->currentUser->hasAccess($this->adminPermission))
+                    if(($d->data != "" && isset($d->data->modifyproduct)) || $this->currentUser->hasAccess($this->permission->adminPermission))
                     {
                         /*
                          * At this stage we can delete products
@@ -846,7 +824,7 @@ class APRequestController extends UserController {
         /*  
          * Check Permissions
          */        
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->ccarePermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->ccarePermission]))
         {
             return parent::forbidden();
         }
@@ -860,7 +838,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->ccarePermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->ccarePermission]))
         {
             return parent::forbidden();
         }
@@ -873,7 +851,7 @@ class APRequestController extends UserController {
         /*  
          * Check Permissions
          */        
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->storePermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->storePermission]))
         {
             return parent::forbidden();
         }
@@ -952,7 +930,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->storePermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->storePermission]))
         {
             return parent::forbidden();
         }
@@ -984,7 +962,7 @@ class APRequestController extends UserController {
         /*  
          * Check Permissions
          */        
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1004,7 +982,7 @@ class APRequestController extends UserController {
             /*
              * Normal User but not creator = no access
              */
-            if($this->currentUser->hasAccess($this->editPermission) && 
+            if($this->currentUser->hasAccess($this->permission->editPermission) &&
                 !$this->currentUser->isSuperUser() && 
                 $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
             {
@@ -1250,7 +1228,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1299,7 +1277,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1334,7 +1312,7 @@ class APRequestController extends UserController {
         /*
         * Check Permissions
         */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1456,7 +1434,7 @@ class APRequestController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }        
@@ -1469,7 +1447,7 @@ class APRequestController extends UserController {
             /*
              * Normal User but not creator = no access
              */
-            if($this->currentUser->hasAccess($this->editPermission) && 
+            if($this->currentUser->hasAccess($this->permission->editPermission) &&
                 !$this->currentUser->isSuperUser() && 
                 $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
             {
@@ -1494,7 +1472,7 @@ class APRequestController extends UserController {
      */
     public function putMark($type)
     {
-        return Flag::set($type,'SwiftAPRequest',$this->adminPermission);
+        return Flag::set($type,'SwiftAPRequest',$this->permission->adminPermission);
     }
     
     public function getStatistics($productCategory='all')

@@ -4,12 +4,10 @@
  */
 
 (window.acp_payment_issue = function(){
-    var $content = $('#content');
     tableHeightSize();
-
     function toggleHighlightBar()
     {
-        $content.find('.pvform.highlight').length > 0 ? $('div.toggle-oncheck').show() : $('div.toggle-oncheck').hide();
+        $.contentdiv.find('.pvform.highlight').length > 0 ? $('div.toggle-oncheck').show() : $('div.toggle-oncheck').hide();
     }
 
     $(window).resize(function() {
@@ -31,7 +29,7 @@
     //Gets tooltips activated
     $("#inbox-table [rel=tooltip]").tooltip();
 
-    $("#inbox-table input[type='checkbox']").change(function(e) {
+    $.contentdiv.on('change',"#inbox-table input[type='checkbox']",function(e) {
            $(this).closest('tr').toggleClass("highlight", this.checked);
            toggleHighlightBar();
     });
@@ -40,22 +38,22 @@
      * Tick Menu
      */
     
-    $content.on('click','.btn-tick-all',function(){
-        $content.find('tr.pvform').addClass('highlight')
+    $.contentdiv.on('click','.btn-tick-all',function(){
+        $.contentdiv.find('tr.pvform').addClass('highlight')
                 .find('input[type="checkbox"]').prop("checked",true);
         toggleHighlightBar();
     });
     
-    $content.on('click','.btn-tick-clear',function(){
-        $content.find('tr.pvform').removeClass('highlight')
+    $.contentdiv.on('click','.btn-tick-clear',function(){
+        $.contentdiv.find('tr.pvform').removeClass('highlight')
                 .find('input[type="checkbox"]').prop("checked",false);
         toggleHighlightBar();
     });
     
-//    $content.on('click','.btn-tick-nobatchnumber',function(){
-//        $content.find('tr.pvform').removeClass('highlight')
+//    $.contentdiv.on('click','.btn-tick-nobatchnumber',function(){
+//        $.contentdiv.find('tr.pvform').removeClass('highlight')
 //                .find('input[type="checkbox"]').prop("checked",false);
-//        var $pvlist = $content.find('.input-batchnumber').filter(function(){
+//        var $pvlist = $.contentdiv.find('.input-batchnumber').filter(function(){
 //            return this.value === "";
 //        });
 //        $pvlist.parents('tr.pvform').addClass('highlight')
@@ -63,10 +61,10 @@
 //        toggleHighlightBar();
 //    });
     
-    $content.on('click','.btn-tick-nopvnumber',function(){
-        $content.find('tr.pvform').removeClass('highlight')
+    $.contentdiv.on('click','.btn-tick-nopvnumber',function(){
+        $.contentdiv.find('tr.pvform').removeClass('highlight')
                 .find('input[type="checkbox"]').prop("checked",false);
-        var $pvlist = $content.find('.input-paymentnumber').filter(function(){
+        var $pvlist = $.contentdiv.find('.input-paymentnumber').filter(function(){
             return this.value === "";
         });
         $pvlist.parents('tr.pvform').addClass('highlight')
@@ -141,7 +139,7 @@
     ]
     );
     
-    $content.find('tr.pvform').on('contextmenu',function(){
+    $.contentdiv.on('contextmenu','tr.pvform',function(){
         var $this = $(this);
         if(!$this.hasClass('highlight'))
         {
@@ -180,7 +178,7 @@
         return false;        
     });
     
-    $('#inbox-table').on('click','a.btn-single-publish',function(e){
+    $.contentdiv.on('click','a.btn-single-publish',function(e){
         e.preventDefault();
         savePublish($(this));
         return false;
@@ -322,17 +320,11 @@
         }
     }
     
-    $('#inbox-table').on('keypress','.input-paymentnumber,.input-batchnumber',function(e){
-        if(e.keyCode == 13) {
-            saveInput($(this));
-        }
-    });
-    
-    $('#inbox-table').on('change','.input-cheque-signator-id',function(e){
+    $.contentdiv.on('change','.input-cheque-signator-id,.input-payment-type',function(e){
         saveInput($(this));
     });
     
-    $('#inbox-table').on('keyup','.input-paymentnumber,.input-batchnumber',function(e){
+    $.contentdiv.on('keyup','.input-paymentnumber',function(e){
         switch(e.keyCode)
         {
             case 38: // Up
@@ -361,7 +353,7 @@
                     {
                         $next.find('.input-batchnumber').first().focus();
                     }
-                }                
+                }
                 break;
             case 9:  // Tab
             case 13: // Enter
@@ -380,7 +372,14 @@
                     {
                         $(this).removeClass('bg-color-redLight').removeClass('bg-color-light-orange').addClass('bg-color-light-green');
                     }
-                }            
+                }
+                
+                var $this = $(this);
+                window.clearTimeout($this.data('timer'));
+                var wait = window.setTimeout(function(){
+                    saveInput($this);
+                }, 1000);
+                $this.data('timer', wait);                
         }
     });
     

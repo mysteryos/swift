@@ -21,6 +21,11 @@ Route::group(array('before' => array('auth')), function()
     {
         return Redirect::to('/dashboard');
     });
+
+    Route::group(array('before'=> array('admin')), function()
+    {
+        Route::controller('admin','AdminController');
+    });
     
     //Logout Requests
     Route::get('/logout',array('as'=>'logout','uses'=>'LoginController@getLogout'));
@@ -85,11 +90,6 @@ Route::group(array('before' => array('auth')), function()
     //Settings
     Route::controller('setting','SettingController');
     
-});
-
-Route::group(array('before'=> array('admin')), function()
-{
-    Route::controller('admin','AdminController');
 });
 
 /*

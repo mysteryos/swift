@@ -99,26 +99,38 @@ class SwiftStory extends Eloquent {
     public function contextText()
     {
         $context = false;
-        switch($this->storyfiable_type)
+        if($this->storyfiable)
         {
-            case self::NODE_ACTIVITY:
-                $context = "step <b>{$this->storyfiable->definition->label}</b> <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowactivity->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowactivity->workflowable->getReadableName()}</a>";
-                break;
-            case self::WORKFLOW_ACTIVITY:
-                $context = "form <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowable->getReadableName()}</a>";
-                break;
-            case self::ORDER_TRACKING:
-            case self::APREQUEST:
-            case self::ACPAYABLE:
-            case self::PR:
-                $context = "<a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->getIcon()}\"></i> {$this->storyfiable->getReadableName()}</a>";
-                break;
-            case self::COMMENT:
-                $context = "on <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->commentable->getIcon()}\"></i> {$this->storyfiable->commentable->getReadableName()}</a>: '{$this->storyfiable->comment}'";
-                break;
-            case self::VESSELLIVE:
-                $context = "{$this->storyfiable->voyage} - <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->context->getIcon()}\"></i> {$this->context->getReadableName()}</a>";
-                break;
+            switch($this->storyfiable_type)
+            {
+                case self::NODE_ACTIVITY:
+                    if($this->storyfiable->definition && $this->storyfiable->workflowactivity->workflowable)
+                    {
+                        $context = "step <b>{$this->storyfiable->definition->label}</b> <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowactivity->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowactivity->workflowable->getReadableName()}</a>";
+                    }
+                    break;
+                case self::WORKFLOW_ACTIVITY:
+                    if($this->storyfiable->workflowable)
+                    {
+                        $context = "form <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->workflowable->getIcon()}\"></i> {$this->storyfiable->workflowable->getReadableName()}</a>";
+                    }
+                    break;
+                case self::ORDER_TRACKING:
+                case self::APREQUEST:
+                case self::ACPAYABLE:
+                case self::PR:
+                    $context = "<a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->getIcon()}\"></i> {$this->storyfiable->getReadableName()}</a>";
+                    break;
+                case self::COMMENT:
+                    if($this->storyfiable->commentable)
+                    {
+                        $context = "on <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->storyfiable->commentable->getIcon()}\"></i> {$this->storyfiable->commentable->getReadableName()}</a>: '{$this->storyfiable->comment}'";
+                    }
+                    break;
+                case self::VESSELLIVE:
+                    $context = "{$this->storyfiable->voyage} - <a href=\"{$this->contextLink()}\" class=\"pjax\"><i class=\"fa {$this->context->getIcon()}\"></i> {$this->context->getReadableName()}</a>";
+                    break;
+            }
         }
         return $context;
     }
@@ -126,26 +138,38 @@ class SwiftStory extends Eloquent {
     public function contextLink()
     {
         $link = false;
-        switch($this->storyfiable_type)
+        if($this->storyfiable)
         {
-            case self::NODE_ACTIVITY:
-                $link = \Helper::generateUrl($this->storyfiable->workflowactivity->workflowable);
-                break;
-            case self::WORKFLOW_ACTIVITY:
-                $link = \Helper::generateUrl($this->storyfiable->workflowable);
-                break;
-            case self::ORDER_TRACKING:
-            case self::APREQUEST:
-            case self::ACPAYABLE:
-            case self::PR:
-                $link = \Helper::generateUrl($this->storyfiable);
-                break;
-            case self::COMMENT:
-                $link = \Helper::generateUrl($this->storyfiable->commentable);
-                break;
-            case self::VESSELLIVE:
-                $link = \Helper::generateUrl($this->context);
-                break;
+            switch($this->storyfiable_type)
+            {
+                case self::NODE_ACTIVITY:
+                    if($this->storyfiable->workflowactivity && $this->storyfiable->workflowactivity->workflowable)
+                    {
+                        $link = \Helper::generateUrl($this->storyfiable->workflowactivity->workflowable);
+                    }
+                    break;
+                case self::WORKFLOW_ACTIVITY:
+                    if($this->storyfiable->workflowable)
+                    {
+                        $link = \Helper::generateUrl($this->storyfiable->workflowable);
+                    }
+                    break;
+                case self::ORDER_TRACKING:
+                case self::APREQUEST:
+                case self::ACPAYABLE:
+                case self::PR:
+                    $link = \Helper::generateUrl($this->storyfiable);
+                    break;
+                case self::COMMENT:
+                    if($this->storyfiable->commentable)
+                    {
+                        $link = \Helper::generateUrl($this->storyfiable->commentable);
+                    }
+                    break;
+                case self::VESSELLIVE:
+                    $link = \Helper::generateUrl($this->context);
+                    break;
+            }
         }
         return $link;        
     }

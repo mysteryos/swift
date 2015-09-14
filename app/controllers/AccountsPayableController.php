@@ -2208,11 +2208,18 @@ class AccountsPayableController extends UserController {
         {
             if(!is_numeric(\Input::get('value')))
             {
-                return \Response::make("Batch number should be numeric",400);
+                return \Response::make("Payment number should be numeric",400);
             }
 
             if(is_numeric(\Input::get('pk')))
             {
+                //Check if exists
+                $paymentCount = $form->payment()->where('payment_number','=',\Input::get('value'))->count();
+                if($paymentCount > 0)
+                {
+                    return \Response::make("Payment number already exists for this form.",400);
+                }
+
                 $payment = new \SwiftACPPayment([
                     'payment_number' => \Input::get('value'),
                     'status' => \SwiftACPPayment::STATUS_ISSUED
@@ -3250,6 +3257,7 @@ class AccountsPayableController extends UserController {
                     $acp->paymentVoucher->number = \Input::get('pv-number');
                     $acp->paymentVoucher->type = \Input::get('type');
                     $acp->paymentVoucher->save();
+                    $pv_id = $acp->paymentVoucher->id;
                 }
                 else
                 {
@@ -3258,10 +3266,11 @@ class AccountsPayableController extends UserController {
                         'type' => \Input::get('type')
                     ]);
                     $acp->paymentVoucher()->save($pv);
+                    $pv_id = $pv->id;
                 }
 
                 \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
-                return \Response::json(['id'=>\Crypt::encrypt($pv->id)]);
+                return \Response::json(['id'=>\Crypt::encrypt($pv_id)]);
             }
             else
             {
@@ -3608,6 +3617,12 @@ class AccountsPayableController extends UserController {
         }
 
         /*
+         * Currency
+         */
+
+        $this->data['currency'] = \Currency::getAll();
+
+        /*
          * Get File List
          */
 
@@ -3624,7 +3639,7 @@ class AccountsPayableController extends UserController {
         if(\Input::file('file'))
         {
             $file = \Input::file('file');
-            $file_name = time()."_".$file->getClientOriginalName();
+            $file_name = time()."_".preg_replace("/[^a-z0-9\.]/", "", strtolower($file->getClientOriginalName()));
             if($file->move(storage_path().'/tmp/acpayable/',$file_name))
             {
                 return \Response::make(json_encode(['success'=>1,'url'=>asset("/".$this->rootURL."/multi-file/".$file_name),'name'=>$file_name]));
@@ -3642,13 +3657,13 @@ class AccountsPayableController extends UserController {
      * Delete file from local temp storage
      *
      */
-    public function deleteMultiUpload($file_name)
+    public function deleteMultiUpload()
     {
-        if($file_name)
+        if(\Input::has('file-name'))
         {
-            if(\File::exists(storage_path().'/tmp/acpayable/'.$file_name))
+            if(\File::exists(storage_path().'/tmp/acpayable/'.\Input::get('file-name')))
             {
-                if(\File::delete(storage_path().'/tmp/acpayable/'.$file_name))
+                if(\File::delete(storage_path().'/tmp/acpayable/'.\Input::get('file-name')))
                 {
                     return \Response::make("Success");
                 }
@@ -3697,7 +3712,10 @@ class AccountsPayableController extends UserController {
             'billable_company_code' => 'required|numeric|exists:sct_jde.jdecustomers,AN8',
             'supplier_code' => 'required|numeric|exists:sct_jde.jdesuppliermaster,Supplier_Code',
             'po_number' => 'numeric',
-            'document' => 'required'
+            'document' => 'required',
+            'invoice_due_date' => 'date_format:d/m/Y',
+            'invoice_due_amount' => 'numeric',
+            'invoice_currency_code' => 'exists:currency,code'
         ]);
 
         if($validation->fails())
@@ -3765,6 +3783,21 @@ class AccountsPayableController extends UserController {
                     if(\Input::has('invoice_number') && \Input::get('invoice_number') !== "")
                     {
                         $invoice->number = \Input::get('invoice_number');
+                    }
+
+                    if(\Input::has('invoice_due_date'))
+                    {
+                        $invoice->due_date = \Carbon::createFromFormat('d/m/Y',\Input::get('invoice_due_date'));
+                    }
+
+                    if(\Input::has('invoice_currency_code'))
+                    {
+                        $invoice->currency_code = \Input::get('invoice_currency_code');
+                    }
+
+                    if(\Input::has('invoice_due_amount'))
+                    {
+                        $invoice->due_amount = \Input::get('invoice_due_amount');
                     }
 
                     $acp->invoice()->save($invoice);

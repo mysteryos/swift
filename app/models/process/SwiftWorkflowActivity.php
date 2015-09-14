@@ -15,7 +15,15 @@ class SwiftWorkflowActivity extends process
     {
         parent::__construct($controller);
     }
-    
+
+    /*
+     * Cancel a workflow
+     * @param string $parentResourceName
+     * @param integer $parentResourceId
+     * @param closure $callback
+     *
+     * @return \Illuminate\Support\Facades\Response
+     */
     public function cancel($parentResourceName, $parentResourceId, \Closure $callback = null)
     {
         $this->form = (new $parentResourceName)->find($parentResourceId);

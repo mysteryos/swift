@@ -835,7 +835,7 @@ class Helper {
                         $company_code = $o->purchasable->business_unit;
                         break;
                     case "SwiftACPRequest":
-                        $company_code = $o->purchsable->billable_company_code;
+                        $company_code = $o->purchasable->billable_company_code;
                         break;
                 }
 

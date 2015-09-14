@@ -25,7 +25,7 @@
                 <div class="row">
                    <div class="col-xs-12">
                         <span class="h2 pull-left"><i class="fa fa-truck"></i> Pickup</span>
-                        @if($isStorePickup || $isAdmin)
+                        @if($permission->isStorePickup() || $permission->isAdmin())
                             <span class="h2 pull-left row-space-left-4">
                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                             </span>

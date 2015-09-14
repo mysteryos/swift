@@ -12,7 +12,7 @@
                 <th class="visible-lg">Last Modified On</th>
             </tr>
             @foreach($forms as $f)
-                <tr class="orderform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}" data-view="/{{ $rootURL }}/@if($canEdit){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($f->id) }}">
+                <tr class="orderform @if(!$f->flag_read) {{ "unread" }} @endif" data-pk="{{ Crypt::encrypt($f->id) }}" data-view="/{{ $rootURL }}/@if($permission->canEdit()){{ "edit" }}@else{{ "view" }}@endif/{{ Crypt::encrypt($f->id) }}">
                         <td class="inbox-table-icon">
                             @if($f->flag_important)
                             <span>

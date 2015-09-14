@@ -47,6 +47,15 @@ class UserController extends Controller {
 
         $this->currentUser = \Sentry::getUser();
         $this->data['currentUser'] = $this->currentUser;
+
+        //Check if current User is system. If it is, boot him!!
+        if($this->currentUser === false)
+        {
+            $goog = \Artdarek\OAuth\Facade\OAuth::consumer( 'Google' );
+            $url = $goog->getAuthorizationUri();
+
+            return \View::make('login',['googleAuthUrl'=>$url]);
+        }
     }
 
     /*

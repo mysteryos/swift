@@ -11,7 +11,7 @@
             <span id="add" class="btn btn-ribbon hidden-xs" data-title="add"><i class="fa fa-plus"></i> Add</span>
             <span id="search" class="btn btn-ribbon" data-title="search"><i class="fa fa-search"></i> <span class="hidden-mobile">Search</span></span>-->
             <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if($canCreate)
+            @if($permission->canCreate())
             <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>                            
             @endif            
         </div>
@@ -42,7 +42,7 @@
 
             <!-- NEW COL START -->
             <article class="col-md-6 col-xs-12">
-                @if($canCreate)
+                @if($permission->canCreate())
                 <!-- Widget ID (each widget will need unique ID)-->
                 <div class="jarviswidget" id="ap-overview-myrequests" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/aprequest/myrequests">
                     <header>
@@ -95,7 +95,7 @@
                         </div>
                     </div>
                 </div>
-                @if($isAdmin)
+                @if($permission->isAdmin())
                     <!-- Widget ID (each widget will need unique ID)-->
                     <div class="jarviswidget" id="ap-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/aprequest/pending-nodes">
                         <header>

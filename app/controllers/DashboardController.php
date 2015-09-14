@@ -131,10 +131,17 @@ Class DashboardController extends UserController {
         if($this->currentUser->isSuperUser())
         {
             $this->data['latestWorkflows'] = SwiftWorkflowActivity::getInProgress(array(),$perPage);
-            foreach($this->data['latestWorkflows'] as &$row)
+            foreach($this->data['latestWorkflows'] as $k => &$row)
             {
-                $row->current_activity = WorkflowActivity::progress($row);
-                $row->activity = Helper::getMergedRevision($row->workflowable->revisionRelations,$row->workflowable);                    
+                if(!empty($row->workflowable))
+                {
+                    $row->current_activity = WorkflowActivity::progress($row);
+                    $row->activity = Helper::getMergedRevision($row->workflowable->revisionRelations,$row->workflowable);
+                }
+                else
+                {
+                    unset($this->data['latestWorkflows'][$k]);
+                }
             }            
         }
         else

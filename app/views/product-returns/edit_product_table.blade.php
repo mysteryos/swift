@@ -9,12 +9,14 @@
         <th rowspan='2'>
             Invoice No
         </th>
+        @if(!$publishOwner || $permission->isAdmin())
         <th rowspan='2'>
             Approval
         </th>
         <th rowspan='2'>
             Approval Comment
         </th>
+        @endif
         @if($form->type === \SwiftPR::SALESMAN)
             <th rowspan='2'>
                 Pickup
@@ -26,10 +28,10 @@
         <th rowspan='2'>
             Reason Comment
         </th>
-        <th colspan='@if(!$edit || $publishReception || $publishStoreValidation || $isAdmin){{5}}@elseif($form->type === \SwiftPR::ON_DELIVERY && $publishOwner){{4}}@else{{1}}@endif' class="text-center">
+        <th colspan='@if(!$edit || $publishReception || $publishStoreValidation || $permission->isAdmin()){{5}}@elseif($form->type === \SwiftPR::ON_DELIVERY && $publishOwner){{4}}@else{{1}}@endif' class="text-center">
             Quantity
         </th>
-        @if(($addProduct && $isOwner) || $isAdmin)
+        @if(($addProduct && $isOwner) || $permission->isAdmin())
         <th rowspan='2'>
             &nbsp;
         </th>
@@ -39,7 +41,7 @@
         <th>
             Client
         </th>
-        @if(!$edit || $publishReception || $publishStoreValidation || ($form->type === \SwiftPR::ON_DELIVERY && $publishOwner) || $isAdmin)
+        @if(!$edit || $publishReception || $publishStoreValidation || ($form->type === \SwiftPR::ON_DELIVERY && $publishOwner) || $permission->isAdmin())
             <th>
                 Pickup
             </th>

@@ -26,7 +26,7 @@ class SwiftErpOrder extends Process
         //Swift AP Request Access
         if(get_class($this->parentResource) === "SwiftAPRequest")
         {
-            if(!$this->controller->currentUser->hasAccess($this->controller->adminPermission))
+            if(!$this->controller->permission->isAdmin())
             {
                 $this->resource->type = \SwiftErpOrder::TYPE_ORDER_AP;
             }
@@ -77,7 +77,7 @@ class SwiftErpOrder extends Process
             else
             {
                 //Swift AP Request Access
-                if(!$this->controller->currentUser->hasAccess($this->controller->adminPermission) &&
+                if(!$this->controller->permission->isAdmin() &&
                     \Input::get('name') == 'type' &&
                     $this->parentResourceName === "SwiftAPRequest")
                 {

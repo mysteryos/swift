@@ -12,62 +12,7 @@ class ProductReturnsController extends UserController {
         parent::__construct();
         $this->pageName = "Product Returns";
         $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "product-returns";
-
-        //Permissions
-        $this->setPermission();
-
-        //Is?
-        $this->isWho();
-
-        //Can?
-        $this->canWhat();
-        
-        /*
-         * Register Filters
-         */
-
-        $this->beforeFilter("@requirePermission",['on'=>'put|delete']);
-    }
-
-    private function setPermission()
-    {
-        $this->adminPermission = \Config::get("permission.{$this->context}.admin");
-        $this->viewPermission = \Config::get("permission.{$this->context}.view");
-        $this->editPermission = \Config::get("permission.{$this->context}.edit");
-        $this->createPermission = \Config::get("permission.{$this->context}.create");
-    }
-
-    private function isWho()
-    {
-        $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
-        $this->isSalesman = $this->data['isSalesman'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.salesman"));
-        $this->isRetailMan = $this->data['isRetailMan'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.retailman"));
-        $this->isCcare = $this->data['isCcare'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.ccare"));
-        $this->isStorePickup = $this->data['isStorePickup'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storepickup"));
-        $this->isStoreReception = $this->data['isStoreReception'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storereception"));
-        $this->isStoreValidation = $this->data['isStoreValidation'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.storevalidation"));
-        $this->isCreditor = $this->data['isCreditor'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.creditor"));
-    }
-
-    private function canWhat()
-    {
-        $this->canCreate = $this->data['canCreate'] = $this->currentUser->hasAccess($this->createPermission);
-        $this->canCreateSalesman = $this->data['canCreateSalesman'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-salesman"));
-        $this->canCreateOnDelivery = $this->data['canCreateOnDelivery'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-ondelivery"));
-        $this->canCreateInvoiceCancelled = $this->data['canCreateInvoiceCancelled'] = $this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-invoice-cancelled"));
-        $this->canEdit = $this->data['canEdit'] = $this->currentUser->hasAccess($this->editPermission);
-    }
-
-    /*
-     * Filters
-     */
-    public function requirePermission($route,$request)
-    {
-        //Basic Check of permission
-        if(!$this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
-        {
-            return parent::forbidden();
-        }
+        $this->permission = $this->data['permission'] = new \Permission\SwiftPR();
     }
     
     public function getIndex()
@@ -132,7 +77,7 @@ class ProductReturnsController extends UserController {
         $this->data['inprogress_important_responsible'] = $pr_inprogress_important_responsible;
         $this->adminList();
 
-        return $this->makeView('aprequest/overview');
+        return $this->makeView('product-returns/overview');
     }
 
     /*
@@ -151,87 +96,25 @@ class ProductReturnsController extends UserController {
         /*
          * Register Filters
          */
-
-        $this->filter['filter_start_date']  = ['name'=>'Start Date',
-                                                    'value' => \Input::get('filter_start_date'),
-                                                    'enabled' => \Input::has('filter_start_date')
-                                                ];
-
-        $this->filter['filter_end_date']    = ['name'=>'End Date',
-                                                    'value' => \Input::get('filter_end_date'),
-                                                    'enabled' => \Input::has('filter_end_date')
-                                                ];
-
-        $this->filter['filter_customer_code'] = ['name'=>'Customer',
-                                                'value' => \Input::has('filter_customer_code') ? \JdeCustomer::find(\Input::get('filter_customer_code'))->getReadableName() : false,
-                                                'enabled' => \Input::has('filter_customer_code')
-                                                ];
-        
-        $this->filter['filter_node_definition_id'] = ['name'=>'Current Step',
-                                                    'value' => \Input::has('filter_node_definition_id') ? \SwiftNodeDefinition::find(\Input::get('filter_node_definition_id'))->label :false,
-                                                    'enabled' => \Input::has('filter_node_definition_id')
-                                                    ];
-
-        $this->filter['filter_owner_user_id'] = ['name' => 'Owner',
-                                                    'value' => \Input::has('filter_owner_user_id') ? \Sentry::findUserById(\Input::get('filter_owner_user_id'))->first_name." ".\Sentry::findUserById(\Input::get('filter_owner_user_id'))->last_name : false,
-                                                    'enabled' => \Input::has('filter_owner_user_id')
-                                                ];
-
-        $this->filter['filter_driver_id'] = ['name' => 'Driver',
-                                                'value' => \Input::has('filter_driver_id') ? \SwiftDriver::find(\Input::get('filter_driver_id'))->name : false,
-                                                'enabled' => \Input::has('filter_driver_id')
-                                            ];
+        $this->task()->registerFormFilters();
 
         /*
          * Filter Lists
          */
-        $this->data['filter_list_owners'] = \User::remember(30)
-                                            ->has('pr')
-                                            ->orderBy('first_name','ASC')
-                                            ->orderBy('last_name','ASC')
-                                            ->get();
-
-        $this->data['filter_list_node_definition'] = \SwiftNodeDefinition::remember(60)
-                                                    ->whereHas('workflow',function($q){
-                                                        return $q->where('name','=',$this->context);
-                                                    })
-                                                    ->orderBy('id','ASC')
-                                                    ->get();
-
-        $this->data['filter_list_drivers'] = \SwiftDriver::remember(30)
-                                            ->whereHas('pickup',function($q){
-                                                return $q->where('pickable_type','SwiftPR');
-                                            })
-                                            ->orderBy('name','ASC')
-                                            ->get();
-
-        $this->data['filter_list_customers'] = \JdeCustomer::remember(30)
-                                                ->has('pr')
-                                                ->orderBy('ALPH','ASC')
-                                                ->get();
+        $this->data['filter_list_owners'] = $this->task()->getListOwners();
+        $this->data['filter_list_step'] = $this->task()->getListStep();
+        $this->data['filter_list_drivers'] = $this->task()->getListDrivers();
+        $this->data['filter_list_customers'] = $this->task()->getListCustomers();
 
         //Check user group
         if($type===false)
         {
-            if(!$this->isAdmin)
+            if(!$this->currentUser->isSuperUser() && $this->permission->isSalesman())
             {
-                //Set defaults
-                if($this->canCreate || $this->isSalesman)
-                {
-                    $type='mine';
-                }
-                elseif($this->canEdit)
-                {
-                    $type='inprogress';
-                }
-                else
-                {
-                    $type = 'all';
-                }
+                $type = 'mine';
             }
             else
             {
-                //Is Admin
                 $type='all';
             }
         }
@@ -274,52 +157,26 @@ class ProductReturnsController extends UserController {
                     $join->on('swift_recent.recentable_id','=','swift_order.id');
                 })->orderBy('swift_recent.updated_at','DESC')->select('swift_order.*');
                 break;
+            case 'mine':
+                $prquery->orderBy('updated_at','DESC')
+                        ->where('owner_user_id','=',$this->currentUser->id);
+                break;
             case 'all':
                 $prquery->orderBy('updated_at','desc');
                 break;
         }
 
         //The Filters
-        foreach($this->filter as $k=>$v)
-        {
-            if($v['enabled'])
-            {
-                $filterVal = \Input::get($k);
-                switch($k)
-                {
-                    case 'filter_driver_id':
+        $this->task()->applyFilters($prquery);
 
-                        break;
-                    case 'filter_node_definition_id':
-                        $prquery->whereHas('workflow',function($q) use($filterVal){
-                           return $q->whereHas('nodes',function($q) use($filterVal){
-                               return $q->where('node_definition_id','=',$filterVal);
-                           });
-                        });
-                        break;
-                    case 'filter_owner_user_id':
-                        $prquery->where('owner_user_id','=',$filterVal);
-                        break;
-                    case 'filter_customer_code':
-                        $prquery->where('customer_code','=',$filterVal);
-                        break;
-                    case 'filter_start_date':
-                        $prquery->where('created_at','>=',$filterVal);
-                        break;
-                    case 'filter_end_date':
-                        $prquery->where('created_at','<=',$filterVal);
-                        break;
-                }
-            }
-        }
-
-        $form_count = $prquery->count();
+        $formsCount = $prquery->count();
 
         $prquery->take($limitPerPage);
         if($page > 1)
         {
             $query->offset(($page-1)*$limitPerPage);
         }
+        
         $forms = $prquery->get();
 
 /*
@@ -371,7 +228,7 @@ class ProductReturnsController extends UserController {
         }
         
         $this->data['forms'] = $forms;
-        $this->data['count'] = $form_count;
+        $this->data['count'] = $formsCount;
         $this->data['type'] = $type;
         $this->data['page'] = $page;
         $this->data['limit_per_page'] = $limitPerPage;
@@ -382,7 +239,6 @@ class ProductReturnsController extends UserController {
                                     }));
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['pageTitle'] = "Forms - ".ucfirst($type);
-        $this->data['canEdit'] = $this->canEdit;
         
         return $this->makeView('product-returns/forms');
     }
@@ -455,7 +311,8 @@ class ProductReturnsController extends UserController {
                          * Detect buggy workflows
                          * Update on the spot
                          */
-                        \WorkflowActivity::update($acp);
+                        \WorkflowActivity::update($pr);
+                        $this->data['current_activity'] = \WorkflowActivity::progress($pr,$this->context);
                     }
 
                     //Set the controls
@@ -467,7 +324,7 @@ class ProductReturnsController extends UserController {
                             //Add Product
                             if(isset($d->data->publishOwner) &&
                                 !$pr->approval()->where('type','=',\SwiftApproval::PR_REQUESTER)->count() &&
-                                ($this->isAdmin || $pr->isOwner()))
+                                ($this->permission->isAdmin() || $pr->isOwner()))
                             {
                                 $this->data['publishOwner'] = true;
                                 if(isset($d->data->addProduct) && $pr->isOwner())
@@ -478,34 +335,34 @@ class ProductReturnsController extends UserController {
                             }
 
                             //Store Pickup
-                            if(isset($d->data->publishPickup) && ($this->isAdmin || $this->isStorePickup))
+                            if(isset($d->data->publishPickup) && ($this->permission->isAdmin() || $this->permission->isStorePickup()))
                             {
                                 $this->data['publishPickup'] = true;
                                 break;
                             }
 
                             //Store Reception
-                            if(isset($d->data->publishReception) && ($this->isAdmin || $this->isStoreReception))
+                            if(isset($d->data->publishReception) && ($this->permission->isAdmin() || $this->permission->isStoreReception()))
                             {
                                 $this->data['publishReception'] = true;
                                 break;
                             }
 
                             //Store Validation
-                            if(isset($d->data->publishStoreValidation) && ($this->isAdmin || $this->isStoreValidation))
+                            if(isset($d->data->publishStoreValidation) && ($this->permission->isAdmin() || $this->permission->isStoreValidation()))
                             {
                                 $this->data['publishStoreValidation'] = true;
                             }
 
                             //Credit Note
-                            if(isset($d->data->publishCreditNote) && ($this->isAdmin || $this->isCreditor))
+                            if(isset($d->data->publishCreditNote) && ($this->permission->isAdmin() || $this->permission->isCreditor()))
                             {
                                 $this->data['publishCreditNote'] = true;
                                 break;
                             }
 
                             //Driver Information
-                            if(isset($d->data->driverInfo) && ($this->isAdmin || $this->isStorePickup))
+                            if(isset($d->data->driverInfo) && ($this->permission->isAdmin() || $this->permission->isStorePickup()))
                             {
                                 $this->data['driverInfo'] = true;
                                 break;
@@ -514,7 +371,7 @@ class ProductReturnsController extends UserController {
                     }
 
                     //Admins can edit products anytime
-                    if($this->isAdmin)
+                    if($this->permission->isAdmin())
                     {
                         $this->data['addProduct'] = true;
                     }
@@ -538,19 +395,47 @@ class ProductReturnsController extends UserController {
      * @param string $id
      * @return \Illuminate\Support\Facades\Response
      */
-    public function getView($id)
+    public function getView($id,$override=false)
     {
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($override === true)
+        {
+            return $this->form($id,false);
+        }
+
+        if($this->permission->canEdit() || $this->permission->isAdmin())
         {
             return \Redirect::action('ProductReturnsController@getEdit',array('id'=>$id));
         }
-        elseif($this->currentUser->hasAccess($this->viewPermission))
+        elseif($this->permission->canView())
         {
             return $this->form($id,false);
         }
         else
         {
-            return parent::forbidden();
+            /*
+             * Check Sharing Settings
+             */
+
+            $className = \Config::get('context.'.$this->context);
+            //Check Sharing Settings
+            $sharedUser = \SwiftShare::findUserByForm($className,\Crypt::decrypt($id),$this->currentUser->id);
+
+            if($sharedUser)
+            {
+                //Check Permission
+                if($sharedUser->permission === \SwiftShare::PERMISSION_EDIT)
+                {
+                    return \Redirect::action('ProductReturnsController@getEdit',array('id'=>$id,'override'=>true));
+                }
+                else
+                {
+                    return $this->form($id,false);
+                }
+            }
+            else
+            {
+                return parent::forbidden();
+            }
         }
     }
 
@@ -562,7 +447,7 @@ class ProductReturnsController extends UserController {
      */
     public function getEdit($id)
     {
-        if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
+        if($this->currentUser->hasAnyAccess([$this->permission->editPermission,$this->permission->adminPermission]))
         {
             return $this->form($id,true);
         }
@@ -582,9 +467,9 @@ class ProductReturnsController extends UserController {
      * @param int $type
      * @return \Illuminate\Support\Facades\Response
      */
-    public function getCreate($type = SwiftPR::SALESMAN)
+    public function getCreate($type = \SwiftPR::SALESMAN)
     {
-        if(!$this->canCreate)
+        if(!$this->permission->canCreate())
         {
             return parent::forbidden();
         }
@@ -602,19 +487,19 @@ class ProductReturnsController extends UserController {
         switch($type)
         {
             case \SwiftPR::SALESMAN:
-                if(!$this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-salesman")))
+                if(!$this->permission->canCreateSalesman())
                 {
                     return parent::forbidden();
                 }
                 break;
             case \SwiftPR::ON_DELIVERY:
-                if(!$this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-ondelivery")))
+                if(!$this->permission->canCreateOnDelivery())
                 {
                     return parent::forbidden();
                 }
                 break;
             case \SwiftPR::INVOICE_CANCELLED:
-                if(!$this->currentUser->hasAccess(\Config::get("permission.{$this->context}.create-invoice-cancelled")))
+                if(!$this->permission->canCreateInvoiceCancelled())
                 {
                     return parent::forbidden();
                 }
@@ -675,7 +560,7 @@ class ProductReturnsController extends UserController {
     public function postCreate($type)
     {
 
-        if(!$this->canCreate && !$this->canCreateSalesman && !$this->canCreateOnDelivery)
+        if(!$this->permission->canCreate())
         {
             return parent::forbidden();
         }
@@ -696,7 +581,7 @@ class ProductReturnsController extends UserController {
             }
         }
 
-        if(!in_array($type,[\SwiftPR::SALESMAN,\SwiftPR::ON_DELIVERY]))
+        if(!in_array($type,array_keys(\SwiftPR::$type)))
         {
             return \Response::make('Type of product return is not valid',500);
         }
@@ -733,7 +618,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -747,7 +632,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -761,7 +646,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -774,7 +659,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -787,7 +672,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -839,7 +724,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->isAdmin && !$this->isCcare)
+        if(!$this->permission->isAdmin() && !$this->permission->isCcare())
         {
             return parent::forbidden();
         }
@@ -870,7 +755,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->isAdmin && !$this->isCreditor)
+        if(!$this->permission->isAdmin() && !$this->permission->isCreditor())
         {
             return parent::forbidden();
         }
@@ -901,7 +786,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->isAdmin && !$this->isStorePickup)
+        if(!$this->permission->isAdmin() && !$this->permission->isStorePickup())
         {
             return parent::forbidden();
         }
@@ -934,7 +819,7 @@ class ProductReturnsController extends UserController {
         /*  
          * Check Permissions
          */        
-        if(!$this->isRetailMan)
+        if(!$this->permission->isRetailMan())
         {
             return parent::forbidden();
         }
@@ -1018,7 +903,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->isRetailMan)
+        if(!$this->permission->isRetailMan())
         {
             return parent::forbidden();
         }
@@ -1049,7 +934,7 @@ class ProductReturnsController extends UserController {
                                 //Get Comments
                                 $comment = $approval->comments()->first();
 
-                                if(count($comment))
+                                if($comment)
                                 {
                                     $comment->comment = trim(\Input::get('value'));
                                     if($comment->save())
@@ -1230,7 +1115,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1249,6 +1134,14 @@ class ProductReturnsController extends UserController {
 
     public function deleteUpload($doc_id)
     {
+        /*
+         * Check Permissions
+         */
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
+        {
+            return parent::forbidden();
+        }
+        
         return $this->process('SwiftDocument')
                     ->setParentResource(new \SwiftPRDocument)
                     ->delete(\Crypt::decrypt($doc_id));
@@ -1275,7 +1168,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1293,7 +1186,7 @@ class ProductReturnsController extends UserController {
         /*
          * Check Permissions
          */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
@@ -1307,7 +1200,7 @@ class ProductReturnsController extends UserController {
          * Check Permissions
          */
 
-        if(!$this->isCreditor && !$this->isAdmin)
+        if(!$this->permission->isCreditor() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
         }
@@ -1374,14 +1267,14 @@ class ProductReturnsController extends UserController {
         /*
         * Check Permissions
         */
-        if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
+        if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return "You don't have access to this resource.";
         }
 
         $needPermission = true;
 
-        if($this->currentUser->hasAccess($this->adminPermission))
+        if($this->currentUser->hasAccess($this->permission->adminPermission))
         {
             $needPermission = false;
         }
@@ -1435,50 +1328,50 @@ class ProductReturnsController extends UserController {
                      * Detect buggy workflows
                      * Update on the spot
                      */
-                    \WorkflowActivity::update($acp);
+                    \WorkflowActivity::update($pr);
                 }
 
                 foreach($this->data['current_activity']['definition_obj'] as $d)
                 {
                     if($d->data != "")
                     {
-                        if(isset($d->data->publishOwner) && ($this->isAdmin || $pr->isOwner()))
+                        if(isset($d->data->publishOwner) && ($this->permission->isAdmin() || $pr->isOwner()))
                         {
                             $this->data['publishOwner'] = true;
-                            if(isset($d->data->addProduct) && ($pr->isOwner() || $this->isAdmin))
+                            if(isset($d->data->addProduct) && ($pr->isOwner() || $this->permission->isAdmin()))
                             {
                                 $this->data['addProduct'] = true;
                             }
                             break;
                         }
 
-                        if(isset($d->data->publishPickup) && ($this->isAdmin || $this->isStorePickup))
+                        if(isset($d->data->publishPickup) && ($this->permission->isAdmin() || $this->permission->isStorePickup()))
                         {
                             $this->data['publishPickup'] = true;
                             break;
                         }
 
-                        if(isset($d->data->publishReception) && ($this->isAdmin || $this->isStoreReception))
+                        if(isset($d->data->publishReception) && ($this->permission->isAdmin() || $this->permission->isStoreReception()))
                         {
                             $this->data['publishReception'] = true;
                             break;
                         }
 
                         //Store Validation
-                        if(isset($d->data->publishStoreValidation) && ($this->isAdmin || $this->isStoreValidation))
+                        if(isset($d->data->publishStoreValidation) && ($this->permission->isAdmin() || $this->permission->isStoreValidation()))
                         {
                             $this->data['publishStoreValidation'] = true;
                         }
 
                         //Credit Note
-                        if(isset($d->data->publishCreditNote) && ($this->isAdmin || $this->isCreditor))
+                        if(isset($d->data->publishCreditNote) && ($this->permission->isAdmin() || $this->permission->isCreditor()))
                         {
                             $this->data['publishCreditNote'] = true;
                             break;
                         }
 
                         //Driver Information
-                        if(isset($d->data->driverInfo) && ($this->isAdmin || $this->isStorePickup))
+                        if(isset($d->data->driverInfo) && ($this->permission->isAdmin() || $this->permission->isStorePickup()))
                         {
                             $this->data['driverInfo'] = true;
                             break;
@@ -1527,7 +1420,7 @@ class ProductReturnsController extends UserController {
      */
     public function getLateNodes()
     {
-        if($isAdmin)
+        if($this->permission->isAdmin())
         {
             $this->data['late_node_forms'] = \WorkflowActivity::lateNodeByForm($this->context);
             $this->data['late_node_forms_count'] = \SwiftNodeActivity::countLateNodes($this->context);
@@ -1543,7 +1436,7 @@ class ProductReturnsController extends UserController {
     public function getPendingNodes()
     {
 
-        if($isAdmin)
+        if($this->permission->isAdmin())
         {
             $this->data['pending_node_activity'] = \WorkflowActivity::statusByType($this->context);
 
@@ -1557,7 +1450,7 @@ class ProductReturnsController extends UserController {
 
     public function getStories()
     {
-        if($isAdmin)
+        if($this->permission->isAdmin())
         {
             $this->data['stories'] = \Story::fetch(\Config::get('context')[$this->context]);
             $this->data['dynamicStory'] = false;

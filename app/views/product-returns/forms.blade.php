@@ -20,23 +20,23 @@
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="ribbon-button-alignment page-title">
-                @if($canCreate)
+                @if($permission->canCreate())
                     <div class="btn-group hidden-lg">
                         <button data-toggle="dropdown" class="btn btn-primary dropdown-toggle">
                             <i class="fa fa-file"></i> <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu col-xs-12">
-                            @if($canCreateSalesman)
+                            @if($permission->canCreateSalesman())
                             <li>
                                 <a href="/{{ $rootURL }}/create/{{\SwiftPR::SALESMAN}}" class="pjax">Salesman</a>
                             </li>
                             @endif
-                            @if($canCreateOnDelivery)
+                            @if($permission->canCreateOnDelivery())
                             <li>
                                 <a href="/{{ $rootURL }}/create/{{\SwiftPR::ON_DELIVERY}}" class="pjax">On Delivery</a>
                             </li>
                             @endif
-                            @if($canCreateInvoiceCancelled)
+                            @if($permission->canCreateInvoiceCancelled())
                             <li>
                                 <a href="/{{ $rootURL }}/create/{{\SwiftPR::INVOICE_CANCELLED}}" class="pjax">Invoice Cancelled</a>
                             </li>
@@ -45,71 +45,16 @@
                     </div>
                 @endif
                 <div class="btn-group">
-                    <button class="btn btn-default popover-trigger" id="filter-btn" data-original-title="Filter" data-placement="bottom" rel="tooltip">
+                    <button class="btn btn-default" id="filter-btn" data-original-title="Filter" data-placement="bottom" rel="tooltip">
                         <i class="fa fa-filter"></i>
                     </button>
-                    <div id="filter-popover" class="hide">
-                        <form method="GET" action="" name="filter_pr_form">
-                            <input type="hidden" name="filter" value="1" />
-                            <div class="form-group">
-                                <label>Customer</label>
-                                <select name="filter_customer_code" class="form-control">
-                                    <option disabled selected>Please select a customer</option>
-                                    @foreach($filter_list_customers as $c)
-                                        <option value="{{$c->AN8}}">{{$c->getReadableName()}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>User</label>
-                                <select name="filter_owner_user_id" class="form-control">
-                                    <option disabled selected>Please select a user</option>
-                                    @foreach($filter_list_owners as $o)
-                                        <option value="{{$o->id}}">{{$o->getfullName()}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group hidden-mobile">
-                                <label>Driver</label>
-                                <select name="filter_driver_id" class="form-control">
-                                    <option disabled selected>Please select a driver</option>
-                                    @foreach($filter_list_drivers as $d)
-                                        <option value="{{$d->id}}">{{$d->name}} - {{$d->type_name}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group hidden-mobile">
-                                <div class="row">
-                                    <div class="col-xs-5 text-center">
-                                        <input type="text" class="datepicker form-control" name="filter_start_date" value="" placeholder="Start Date" date-format="dd/mm/yy"/>
-                                    </div>
-                                    <div class="col-xs-2 text-center">
-                                        -
-                                    </div>
-                                    <div class="col-xs-5 text-center">
-                                        <input type="text" class="datepicker form-control" name="filter_end_date" value="" placeholder="End Date" date-format="dd/mm/yy"/>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <div class="row">
-                                    <div class="col-xs-6">
-                                        <button type="submit" class="btn btn-primary btn-sm">Filter Now</button>
-                                    </div>
-                                    <div class="col-xs-6">
-                                        <button class="btn btn-default" id="filter-btn-close">Close</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-4 col-lg-2 hidden-tablet hidden-mobile">
-            @if($canCreate)
+            @if($permission->canCreate())
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="btn-group col-xs-12 no-padding">
@@ -117,17 +62,17 @@
 								Create <span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu col-xs-12">
-                                @if($canCreateSalesman)
+                                @if($permission->canCreateSalesman())
 								<li>
 									<a href="/{{ $rootURL }}/create/{{\SwiftPR::SALESMAN}}" class="pjax">Salesman</a>
 								</li>
                                 @endif
-                                @if($canCreateOnDelivery)
+                                @if($permission->canCreateOnDelivery())
 								<li>
 									<a href="/{{ $rootURL }}/create/{{\SwiftPR::ON_DELIVERY}}" class="pjax">On Delivery</a>
 								</li>
                                 @endif
-                                @if($canCreateInvoiceCancelled)
+                                @if($permission->canCreateInvoiceCancelled())
 								<li>
 									<a href="/{{ $rootURL }}/create/{{\SwiftPR::INVOICE_CANCELLED}}" class="pjax">Invoice Cancelled</a>
 								</li>
@@ -140,7 +85,7 @@
             <div class="row">
                 <div class="col-xs-12 inbox-side-bar">
                     <h6> Filters <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a>--></h6>
-                    @if($isAdmin)
+                    @if($permission->isAdmin())
                         <ul class="inbox-menu-lg">
                                 <li @if($type=="inprogress"){{"class=\"active\""}}@endif >
                                         <a href="/{{ $rootURL }}/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
@@ -160,7 +105,7 @@
                     <h6> Quick Access <!--<a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Add Another" class="pull-right txt-color-darken"><i class="fa fa-plus"></i></a>--> </h6>
 
                     <ul class="inbox-menu-sm">
-                        @if($canCreate)
+                        @if($permission->canCreate())
                             <li @if($type=="mine"){{"class=\"active\""}}@endif >
                                   <a href="/{{ $rootURL }}/forms/mine" class="form-pjax-filter pjax"><i class="fa fa-heart"></i>Mine</a>
                             </li>
@@ -177,12 +122,26 @@
             
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
-            <div class="row">
-                <div class="col-xs-12">
+            @include('product-returns.filter-form')
+            <div class="row row-space-2 row-space-top-2">
+                <div class="col-xs-8">
+                    @if($filter_on)
+                        <div class="hidden-tablet pull-left">
+                            <span><i>Filtered By: </i></span>
+                            @foreach($filter as $name => $f)
+                                @if($f['enabled'])
+                                    <a href="{{"/".$rootURL."/forms/".$type."/0/0/0".\Helper::filterQueryParam(Url::full(),$name)}}" class="btn btn-sm btn-default pjax">{{$f['name'].": ".$f['value']}} <i class="fa fa-times"></i></a>
+                                @endif
+                            @endforeach
+                            <a href="{{"/".$rootURL."/forms/".$type."/0/0/0"}}" class="btn btn-sm btn-default pjax">Clear All <i class="fa fa-times"></i></a>
+                        </div>
+                    @endif
+                </div>
+                <div class="col-xs-4">
                     @if($count)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page-1).$filter}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page+1).$filter}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($page == 1){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page-1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == 1){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($page == $total_pages){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".($page+1).$filter_string}}@endif" class="btn btn-default btn-sm @if($page == $total_pages){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">

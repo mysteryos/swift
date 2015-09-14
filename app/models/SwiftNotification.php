@@ -59,6 +59,7 @@ class SwiftNotification extends Eloquent {
     public static function getByUser($user_id,$limit=10)
     {
         return self::where('to','=',$user_id)
+            ->with('notifiable')
             ->take($limit)
             ->orderBy('created_at','DESC')
             ->get();

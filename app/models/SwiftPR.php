@@ -6,7 +6,8 @@
 
 class SwiftPR extends Eloquent {
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
-    use \Venturecraft\Revisionable\RevisionableTrait; 
+    use \Venturecraft\Revisionable\RevisionableTrait;
+    use \Swift\Share\SharingTrait;
     use \Swift\ElasticSearchEventTrait;
 
     public $readableName = "Product Returns";

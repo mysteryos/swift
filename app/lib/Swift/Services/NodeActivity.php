@@ -331,8 +331,6 @@ class NodeActivity {
                             {
                                 \Story::relate($nodeActivity,\SwiftStory::ACTION_COMPLETE);
                             }
-                            //Send Notification of Success
-                            \Notification::send(\SwiftNotification::TYPE_SUCCESS,$nodeActivity);
                         }
                         /*
                          * As per flow, create other nodes

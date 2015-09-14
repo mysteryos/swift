@@ -113,9 +113,9 @@ Class NodeDefinitionJoin {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            //Has bank Payment
+            //Has bank Payment/direct debit
             $bankPayment = $acp->payment()
-                        ->bankTransfer()
+                        ->whereIn('type',[\SwiftACPPayment::TYPE_BANKTRANSFER,\SwiftACPPayment::TYPE_DIRECTDEBIT])
                         ->count();
 
             if($bankPayment > 0)

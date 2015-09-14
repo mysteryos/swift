@@ -174,7 +174,10 @@ Class NodeDefinition {
         $acp = $nodeActivity->workflowActivity()->first()->workflowable()->first();
         if($acp)
         {
-            $acp->load('payment');
+            $acp->load(['payment' => function ($q){
+                return $q->where('status','=',\SwiftACPPayment::STATUS_ISSUED);
+            }]);
+            
             if(count($acp->payment) === 0)
             {
                 $returnReasonList['payment_absent'] = "Input payment details";

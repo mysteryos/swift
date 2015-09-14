@@ -173,9 +173,9 @@ function multiShowForm()
                                             }
                                             else
                                             {
-                                                $.ajax({    
+                                                $.ajax({
                                                     type:'DELETE',
-                                                    url: $multiDropzone.attr('data-delete')+'/'+$(file.previewElement).attr('data-name'),
+                                                    url: $multiDropzone.attr('data-delete')+'?file-name='+$(file.previewElement).attr('data-name'),
                                                     success:function()
                                                     {
                                                         deletemsg.update({
@@ -226,7 +226,7 @@ function multiShowForm()
 
                                     $.ajax({
                                         type:'DELETE',
-                                        url: $multiDropzone.attr('data-delete')+'/'+$thisParent.attr('data-name'),
+                                        url: $multiDropzone.attr('data-delete')+'?file-name='+$thisParent.attr('data-name'),
                                         success:function()
                                         {
                                             deletemsg.update({
@@ -513,6 +513,13 @@ function multiShowForm()
         $(this).valid();
     });
     
+    //Datepicker
+    $('#invoice_due_date').datepicker({
+        dateFormat : 'dd/mm/yy',
+        prevText : '<i class="fa fa-chevron-left"></i>',
+        nextText : '<i class="fa fa-chevron-right"></i>',            
+    })
+    
     //Comments
     $('#comment-textarea').atwho({
         at: "@",
@@ -525,19 +532,11 @@ function multiShowForm()
         show_the_at: true
     });
     
-//    //On Mention Add
-//    $('#comment-textarea').on('inserted.atwho',function(e,$li){
-//        document.getElementById('input_mentions').value = $('#comment-textarea').find('.usermention').map(function(){
-//            return $(this).attr('data-id');
-//        }).get().join();
-//    });
-//    
-//    //On Mention Delete
-//    $formContent.on('remove','.usermention',function(){
-//        document.getElementById('input_mentions').value = $('#comment-textarea').find('.usermention').map(function(){
-//            return $(this).attr('data-id');
-//        }).get().join();        
-//    });
+    $.validator.addMethod("dateFormat",
+        function(value, element) {
+            return this.optional(element) || /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[1,3-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/.test(value);
+        },
+    "Please enter a date in the format dd/mm/yyyy.");    
     
     var multi_form_validator = $('#multi_form').validate({
         ignore: '',
@@ -550,6 +549,12 @@ function multiShowForm()
             },
             'document[]': {
                 required: true
+            },
+            invoice_due_date: {
+                dateFormat: true
+            },
+            invoice_due_amount: {
+                number: true
             }
         },
         messages: {
@@ -565,6 +570,7 @@ function multiShowForm()
             'document[]': {
                 required: 'Select a document'
             }
+            
         },
         errorPlacement: function(error, element) {
             if (element.attr("name") == "document[]" )
@@ -653,6 +659,10 @@ function multiShowForm()
         document.getElementById('input_mentions').value = "";
         document.getElementById('comment-textarea').innerHTML = "";
         document.getElementById('input_comment').value = "";
+        $('#invoice_due_date').datepicker('close');
+        $.datepicker._clearDate($('#invoice_due_date'));
+        
+        
         $('#multi_form div').removeClass('has-error');
         multi_form_validator.resetForm();
         multi_form_validator.reset();

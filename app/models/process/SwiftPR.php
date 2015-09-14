@@ -100,7 +100,7 @@ class SwiftPR extends Process
         if($this->form)
         {
             //If owner or is an Admin
-            if($this->form->isOwner() || $this->controller->isAdmin)
+            if($this->form->isOwner() || $this->controller->permission->isAdmin())
             {
                 switch(\Input::get('name'))
                 {
@@ -307,7 +307,7 @@ class SwiftPR extends Process
         {
             //Requester
             case \SwiftApproval::PR_REQUESTER:
-                if(!$this->controller->isAdmin && !$this->form->isOwner())
+                if(!$this->controller->permission->isAdmin() && !$this->form->isOwner())
                 {
                     return \Response::make("You don't have permission to publish this form" ,500);
                 }
@@ -386,7 +386,7 @@ class SwiftPR extends Process
                 break;
             //Store Pickup
             case \SwiftApproval::PR_PICKUP:
-                if(!$this->controller->isAdmin && !$this->controller->isStorePikcup)
+                if(!$this->controller->permission->isAdmin() && !$this->controller->permission->isStorePikcup())
                 {
                     return \Response::make("You don't have permission to publish this form" ,500);
                 }
@@ -405,7 +405,7 @@ class SwiftPR extends Process
                 break;
             //Store Reception
             case \SwiftApproval::PR_RECEPTION:
-                if(!$this->controller->isAdmin && !$this->controller->isStoreReception)
+                if(!$this->controller->permission->isAdmin() && !$this->controller->permission->isStoreReception())
                 {
                     return \Response::make("You don't have permission to publish this form" ,500);
                 }
@@ -425,7 +425,7 @@ class SwiftPR extends Process
                 break;
             //Store Validation
             case \SwiftApproval::PR_STOREVALIDATION:
-                if(!$this->controller->isAdmin && !$this->controller->isStoreValidation)
+                if(!$this->controller->permission->isAdmin() && !$this->controller->permission->isStoreValidation())
                 {
                     return \Response::make("You don't have permission to publish this form" ,500);
                 }
@@ -445,7 +445,7 @@ class SwiftPR extends Process
                 break;
             //Accounting - Credit Note
             case \SwiftApproval::PR_CREDITNOTE:
-                if(!$this->controller->isAdmin && !$this->controller->isCreditor)
+                if(!$this->controller->permission->isAdmin() && !$this->controller->permission->isCreditor())
                 {
                     return \Response::make("You don't have permission to publish this form" ,500);
                 }

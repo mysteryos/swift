@@ -107,9 +107,7 @@ class NodeDefinition
                 if($pr)
                 {
                     $countProducts = $pr->product()->count();
-                    $countApprovals = $pr->product()->whereHas('approvalretailman',function($q){
-                        return $q->approvedBy(\SwiftApproval::PR_RETAILMAN);
-                    })->count();
+                    $countApprovals = $pr->product()->has('approvalretailman')->count();
 
                     if($countProducts === $countApprovals)
                     {

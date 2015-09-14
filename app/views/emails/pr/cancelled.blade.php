@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Scott - Product Returns Status</title>
+        <title>Scott - Product Returns Cancelled</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     <body style="margin: 0; padding: 0;">
@@ -55,7 +55,7 @@
                                          <td height="20"></td>
                                       </tr>
                                       <tr>
-                                         <td style="LINE-HEIGHT:32px;FONT-FAMILY:arial;COLOR:#f60;FONT-SIZE:24px;" valign="top">Product Returns form - New status</td>
+                                         <td style="LINE-HEIGHT:32px;FONT-FAMILY:arial;COLOR:#f60;FONT-SIZE:24px;" valign="top">A&P Request form - New status</td>
                                       </tr>
                                       <tr>
                                          <td height="14">&nbsp;</td>

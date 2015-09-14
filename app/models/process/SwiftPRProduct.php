@@ -42,7 +42,7 @@ class SwiftPRProduct extends Process
             $this->parentForm = $this->form->pr()->first();
 
             //Basic Check
-            if(!$this->parentForm->isOwner() && !$this->controller->isAdmin)
+            if(!$this->parentForm->isOwner() && !$this->controller->permission->isAdmin())
             {
                 return \Response::make("You don't have permission to complete this action",500);
             }
@@ -53,7 +53,7 @@ class SwiftPRProduct extends Process
                 });
             })->count();
 
-            if($this->parentForm->isOwner() && !$this->controller->isAdmin && !$canRemoveProducts)
+            if($this->parentForm->isOwner() && !$this->controller->permission->isAdmin() && !$canRemoveProducts)
             {
                 return \Response::make("You don't have access for this action, Please see your administrator",500);
             }
@@ -93,7 +93,7 @@ class SwiftPRProduct extends Process
         /*
          * If not admin & not owner of form
          */
-        if(!$this->controller->isAdmin && !$this->parentForm->isOwner())
+        if(!$this->controller->permission->isAdmin() && !$this->parentForm->isOwner())
         {
             return $this->controller->forbidden();
         }

@@ -26,7 +26,7 @@
                     var jsonmsg = $.parseJson(msg);
                     if(jsonmsg.encrypted_id)
                     {
-                       $this.attribute('data-pk',jsonmsg.encrypted_id);
+                       $parent.find('a.btn-approve').attribute('data-pk',jsonmsg.encrypted_id);
                     }
                     isSaving = false;
                  },
@@ -57,48 +57,57 @@
     $.maindiv.on('click','.btn-approve',function(e){
         e.stopPropagation();
         var $this =  $(this);
+        //Verify is one last to rejected
+        var $parentTable = $this.parents('.table');
+        if(($parentTable.find('.btn-reject.on').length === ($parentTable.find('.btn-reject').length - 1)) && $this.hasClass('btn-reject'))
+        {
+            if(!confirm("This will cancel the form. Are you sure?"))
+            {
+                return false;
+            }
+        }
         saveApproval($this);
         return false;
     });
     
-    $.maindiv.on('click','tr.approval_product_row td.pointable',function(e){
-        e.stopPropagation();
-        var $btn_accept = $(this).parents('tr').find('a.btn-accept');
-        var $btn_reject = $(this).parents('tr').find('a.btn-reject');
-        
-        var $img_accept = $('<div/>',{
-            class: 'btn-approve, btn-accept',
-            html: '<i class="fa fa-lg fa-check fa-lg"></i> Approved',
-        }).attr('style','position:absolute;');
-        
-        var $img_reject = $('<div/>',{
-            class: 'btn-approve, btn-reject',
-            html: '<i class="fa fa-lg fa-times fa-lg"></i> Rejected'
-        }).attr('style','position:absolute;');
-        
-        if($btn_accept.hasClass('on'))
-        {
-            $img_reject.offset({
-                top: e.pageY - $img_reject.outerHeight(),
-                left: e.pageX - ($img_reject.outerWidth()-12)
-            }).appendTo('body').effect('puff',null,700,function(){
-                $(this).remove();
-            });
-            
-            $btn_reject.trigger('click');
-        }
-        else
-        {
-            $img_accept.offset({
-                top: e.pageY - $img_accept.outerHeight(),
-                left: e.pageX - ($img_accept.outerWidth()-12)
-            }).appendTo('body').effect('puff',null,700,function(){
-                $(this).remove();
-            });
-            
-            $btn_accept.trigger('click');
-        }
-    });
+//    $.maindiv.on('click','tr.approval_product_row td.pointable',function(e){
+//        e.stopPropagation();
+//        var $btn_accept = $(this).parents('tr').find('a.btn-accept');
+//        var $btn_reject = $(this).parents('tr').find('a.btn-reject');
+//        
+//        var $img_accept = $('<div/>',{
+//            class: 'btn-approve, btn-accept',
+//            html: '<i class="fa fa-lg fa-check fa-lg"></i> Approved',
+//        }).attr('style','position:absolute;');
+//        
+//        var $img_reject = $('<div/>',{
+//            class: 'btn-approve, btn-reject',
+//            html: '<i class="fa fa-lg fa-times fa-lg"></i> Rejected'
+//        }).attr('style','position:absolute;');
+//        
+//        if($btn_accept.hasClass('on'))
+//        {
+//            $img_reject.offset({
+//                top: e.pageY - $img_reject.outerHeight(),
+//                left: e.pageX - ($img_reject.outerWidth()-12)
+//            }).appendTo('body').effect('puff',null,700,function(){
+//                $(this).remove();
+//            });
+//            
+//            $btn_reject.trigger('click');
+//        }
+//        else
+//        {
+//            $img_accept.offset({
+//                top: e.pageY - $img_accept.outerHeight(),
+//                left: e.pageX - ($img_accept.outerWidth()-12)
+//            }).appendTo('body').effect('puff',null,700,function(){
+//                $(this).remove();
+//            });
+//            
+//            $btn_accept.trigger('click');
+//        }
+//    });
     
     messenger_hidenotiftop();
 })();

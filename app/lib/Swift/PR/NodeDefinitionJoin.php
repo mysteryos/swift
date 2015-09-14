@@ -147,7 +147,7 @@ class NodeDefinitionJoin
             {
                 //All products have been rejected
                 //Update Workflow as Rejected
-                $workflowActivity->status = SwiftWorkflowActivity::REJECTED;
+                $workflowActivity->status = \SwiftWorkflowActivity::REJECTED;
                 $workflowActivity->save();
                 NodeMail::sendCancelledMail($pr);
                 return false;

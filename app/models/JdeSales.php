@@ -8,7 +8,7 @@
 class JdeSales extends Eloquent {
     protected $connection = 'sct_jde';
     
-    protected $table = 'sct_jde.jdesales';
+    protected $table = 'sct_jde.jdesalesmaster';
     
     private static $cache_expiry_time = 240;
 

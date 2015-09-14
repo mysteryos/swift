@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Scott - Product Returns Status</title>
+        <title>Scott - Product Returns Approval</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
     <body style="margin: 0; padding: 0;">
@@ -23,9 +23,7 @@
                                  </a>
                              </td>
                              <td style="COLOR:#ccc;" class="ecxglobal-nav" height="51" valign="bottom" width="548" align="right">
-                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="{{ Config::get('app.url') }}/order-tracking/" target="_blank">Order Process</a> |
-                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="{{ Config::get('app.url') }}/aprequest/" target="_blank">A&P Request</a> |
-                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="{{ Config::get('app.url') }}/product-returns/" target="_blank">Product Returns</a>
+                                 <a style="PADDING-BOTTOM:0px;PADDING-LEFT:4px;PADDING-RIGHT:4px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:11px;TEXT-DECORATION:none;PADDING-TOP:0px;" href="http://swift.scottltd.net/product-returns/overview" target="_blank">Product Returns</a>
                              </td>
                           </tr>
                           <tr height="11">
@@ -44,73 +42,86 @@
                  <td>
                     <table style="BORDER-BOTTOM:#ddd 1px solid;BORDER-LEFT:#ddd 1px solid;BACKGROUND:#fff;BORDER-TOP:#ddd 1px solid;BORDER-RIGHT:#ddd 1px solid;" class="content" border="0" cellspacing="0" cellpadding="0" width="700" align="center">
                        <tbody>
-                          <tr>
-                             <td height="20"></td>
-                          </tr>
-                          <tr>
+                            <tr>
+                                <td height="20"></td>
+                            </tr>
+                            <tr>
                              <td>
                                 <table border="0" cellspacing="0" cellpadding="0" width="620" align="center">
-                                   <tbody>
-                                      <tr>
-                                         <td height="20"></td>
-                                      </tr>
-                                      <tr>
-                                         <td style="LINE-HEIGHT:32px;FONT-FAMILY:arial;COLOR:#f60;FONT-SIZE:24px;" valign="top">Product Returns form - New status</td>
-                                      </tr>
-                                      <tr>
-                                         <td height="14">&nbsp;</td>
-                                      </tr>
-                                      <tr>
-                                         <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user['first_name'])." ".ucfirst($user['last_name']) }},</td>
-                                      </tr>
-                                      <tr>
-                                         <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
-                                             <p>
-                                                <b>{{ $pr['customer_name'] }} (ID: {{ $pr['id'] }})</b> <span style="color:<?php
-                                                switch($pr['current_activity']['status'])
-                                                {
-                                                    case SwiftWorkflowActivity::INPROGRESS:
-                                                        echo "#c79121;";
-                                                        break;
-                                                    case SwiftWorkflowActivity::COMPLETE:
-                                                        echo "#356e35;";
-                                                        break;
-                                                    case SwiftWorkflowActivity::REJECTED:
-                                                    default:
-                                                        echo "#a90329;";
-                                                        break;
+                                    <tbody>
+                                        <tr>
+                                           <td height="20"></td>
+                                        </tr>
+                                        <tr>
+                                           <td style="LINE-HEIGHT:32px;FONT-FAMILY:arial;COLOR:#f60;FONT-SIZE:24px;" valign="top">Product Returns form - Approval</td>
+                                        </tr>
+                                        <tr>
+                                           <td height="14">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                           <td style="LINE-HEIGHT:40px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:18px;" valign="top">Dear {{ ucfirst($user['first_name'])." ".ucfirst($user['last_name']) }},</td>
+                                        </tr>
+                                        <tr>
+                                           <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
+                                               <p>
+                                                  <b>{{ $form['name'] }} (ID: {{ $form['id'] }})</b> <span style="color:<?php
+                                                  switch($form['current_activity']['status'])
+                                                  {
+                                                      case SwiftWorkflowActivity::INPROGRESS:
+                                                          echo "#c79121;";
+                                                          break;
+                                                      case SwiftWorkflowActivity::COMPLETE:
+                                                          echo "#356e35;";
+                                                          break;
+                                                      case SwiftWorkflowActivity::REJECTED:
+                                                      default:
+                                                          echo "#a90329;";
+                                                          break;
 
-                                                   
-                                                }                                                
-                                                ?>"><?php 
-                                                switch($pr['current_activity']['status'])
-                                                {
-                                                    case SwiftWorkflowActivity::INPROGRESS:
-                                                        echo "is currently pending for <u>".$pr['current_activity']['label'];
-                                                        break;
-                                                    case SwiftWorkflowActivity::COMPLETE:
-                                                        echo "is complete";
-                                                        break;
-                                                    case SwiftWorkflowActivity::REJECTED:
-                                                        echo "has been cancelled";
-                                                        break;
-                                                    default:
-                                                        echo "is unknown...";
-                                                }
-                                                
-                                                ?></span>
-                                             </p>
-                                             <br/>
-                                             <br/>
-                                         </td>
-                                      </tr>
-                                      <tr>
-                                          <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
-                                             <p>
-                                                <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ $pr['url'] }}" target="_blank">Click here to view this product-returns form</a>
-                                             </p>
-                                          </td>
-                                      </tr>
+
+                                                  }
+                                                  ?>"><?php
+                                                  switch($form['current_activity']['status'])
+                                                  {
+                                                      case SwiftWorkflowActivity::INPROGRESS:
+                                                          echo "is currently pending for <u>".$form['current_activity']['label'];
+                                                          break;
+                                                      case SwiftWorkflowActivity::COMPLETE:
+                                                          echo "is complete";
+                                                          break;
+                                                      case SwiftWorkflowActivity::REJECTED:
+                                                          echo "has been cancelled";
+                                                          break;
+                                                      default:
+                                                          echo "is unknown...";
+                                                  }
+
+                                                  ?></span>
+                                               </p>
+                                               <br/>
+                                               <br/>
+                                           </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
+                                                <b>Product list:</b>
+                                                <br/>
+                                                <p>
+                                                    <ul>
+                                                        @foreach($form['products'] as $p)
+                                                            <li>{{$p['qty_client']}} * {{$p['name']}}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="LINE-HEIGHT:18px;FONT-FAMILY:arial;COLOR:#666;FONT-SIZE:12px;">
+                                               <p>
+                                                  <a style="FONT-FAMILY:arial;COLOR:#999;TEXT-DECORATION:underline;" href="{{ $form['url'] }}" target="_blank">Click here to approve this Product Returns form</a>
+                                               </p>
+                                            </td>
+                                        </tr>
                                    </tbody>
                                 </table>
                                 <table border="0" cellspacing="0" cellpadding="0" width="620" align="center" height="100">

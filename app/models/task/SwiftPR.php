@@ -18,7 +18,7 @@ class SwiftPR extends Task{
         $this->list = $this->data['taskList'] = [
             [
                 'name' => 'Approval',
-                'permission' =>[$controller->isRetailMan],
+                'permission' =>[$controller->permission->isRetailMan()],
                 'type' => 'approval',
                 'function' => 'approvalTask',
                 'view' => 'product-returns/tasker-approval',
@@ -28,7 +28,7 @@ class SwiftPR extends Task{
             ],
             [
                 'name' => 'Customer Care',
-                'permission' => [$controller->isCcare],
+                'permission' => [$controller->permission->isCcare()],
                 'type' => 'customer-care',
                 'function' => 'customerCareTask',
                 'view' => 'product-returns/tasker-customercare',
@@ -38,7 +38,7 @@ class SwiftPR extends Task{
             ],
             [
                 'name' => 'Store Pickup',
-                'permission' => [$controller->isStorePickup],
+                'permission' => [$controller->permission->isStorePickup()],
                 'type' => 'store-pickup',
                 'function' => 'storePickupTask',
                 'view' => 'product-returns/tasker-store_pickup',
@@ -48,7 +48,7 @@ class SwiftPR extends Task{
             ],
             [
                 'name' => 'Store Reception',
-                'permission' => [$controller->isStoreReception],
+                'permission' => [$controller->permission->isStoreReception()],
                 'type' => 'store-reception',
                 'function' => 'storeReceptionTask',
                 'view' => 'product-returns/tasker-store_reception',
@@ -58,7 +58,7 @@ class SwiftPR extends Task{
             ],
             [
                 'name' => 'Store Validation',
-                'permission' => [$controller->isStoreValidation],
+                'permission' => [$controller->permission->isStoreValidation()],
                 'type' => 'store-validation',
                 'function' => 'storeValidationTask',
                 'view' => 'product-returns/tasker-store_validation',
@@ -68,7 +68,7 @@ class SwiftPR extends Task{
             ],
             [
                 'name' => 'Credit Note',
-                'permission' => [$controller->isCreditor],
+                'permission' => [$controller->permission->isCreditor()],
                 'type' => 'credit-note',
                 'function' => 'creditNoteTask',
                 'view' => 'product-returns/tasker-credit_note',
@@ -77,6 +77,153 @@ class SwiftPR extends Task{
                 'channel' => 'pr_credit_note'
             ],
         ];
+    }
+
+    public function registerFormFilters()
+    {
+        \Input::flash();
+
+        $this->controller->filter['filter_start_date']  = ['name'=>'Start Date',
+                                                    'value' => \Input::get('filter_start_date'),
+                                                    'enabled' => \Input::has('filter_start_date'),
+                                                    'function' => 'filterStartDate'
+                                                ];
+
+        $this->controller->filter['filter_end_date']    = ['name'=>'End Date',
+                                                    'value' => \Input::get('filter_end_date'),
+                                                    'enabled' => \Input::has('filter_end_date'),
+                                                    'function' => 'filterEndDate'
+                                                ];
+
+        $this->controller->filter['filter_customer_code'] = ['name'=>'Customer',
+                                                'value' => \Input::has('filter_customer_code') ? \JdeCustomer::find(\Input::get('filter_customer_code'))->getReadableName() : false,
+                                                'enabled' => \Input::has('filter_customer_code'),
+                                                'function' => 'filterCustomerCode'
+                                                ];
+
+        $this->controller->filter['filter_step'] = ['name'=>'Current Step',
+                                                    'value' => \Input::has('filter_step') ? \SwiftNodeDefinition::find(\Input::get('filter_step'))->label :false,
+                                                    'enabled' => \Input::has('filter_step'),
+                                                    'function' => 'filterStep'
+                                                    ];
+
+        $this->controller->filter['filter_owner_user_id'] = ['name' => 'Owner',
+                                                    'value' => \Input::has('filter_owner_user_id') ? \Sentry::findUserById(\Input::get('filter_owner_user_id'))->first_name." ".\Sentry::findUserById(\Input::get('filter_owner_user_id'))->last_name : false,
+                                                    'enabled' => \Input::has('filter_owner_user_id'),
+                                                    'function' => 'filterOwnerUserId'
+                                                ];
+
+        $this->controller->filter['filter_driver_id'] = ['name' => 'Driver',
+                                                'value' => \Input::has('filter_driver_id') ? \SwiftDriver::find(\Input::get('filter_driver_id'))->name : false,
+                                                'enabled' => \Input::has('filter_driver_id'),
+                                                'function' => 'filterDriverId'
+                                            ];
+
+        $this->controller->data['filterActive'] = (boolean)count(
+                                                        array_filter($this->controller->filter,function($v){
+                                                            return $v['enabled'] === true;
+                                                        })
+                                                    );
+    }
+
+    /*
+     * Filter Functions: START
+     */
+
+    private function filterStartDate($query)
+    {
+        $query->where('created_at','>=',\Input::get('filter_start_date'));
+    }
+
+    private function filterEndDate($query)
+    {
+        $query->where('created_at','<=',\Input::get('filter_end_date'));
+    }
+
+    private function filterCustomerCode($query)
+    {
+        $query->where('customer_code','=',\Input::get('filter_customer_code'));
+    }
+
+    private function filterStep($query)
+    {
+        $query->whereHas('workflow',function($q){
+            return $q->inprogress()->whereHas('pendingNodes',function($q){
+                return $q->whereHas('definition',function($q){
+                   return $q->where('id','=',\Input::get('filter_step'));
+                });
+            });
+        });
+    }
+
+    private function filterOwnerUserId($query)
+    {
+        $query->where('owner_user_id','=',\Input::get('filter_owner_user_id'));
+    }
+
+    private function filterDriverId($query)
+    {
+        $query->whereHas('pickup',function($q){
+            return $q->where('driver_id','=',\Input::get('driver_id'));
+        });
+    }
+
+    /*
+     * Filter Functions: END
+     */
+
+    /*
+     * Apply Filters
+     */
+
+    public function applyFilters(&$query)
+    {
+        foreach($this->controller->filter as $filter_name => $filter_array)
+        {
+            if($filter_array['enabled'] &&
+                array_key_exists('function',$filter_array) &&
+                method_exists($this,$filter_array['function']))
+            {
+                $this->{$filter_array['function']}($query);
+            }
+        }
+    }
+
+    public function getListOwners()
+    {
+        return \User::remember(30)
+                ->has('pr')
+                ->orderBy('first_name','ASC')
+                ->orderBy('last_name','ASC')
+                ->get();
+    }
+
+    public function getListStep()
+    {
+        return \SwiftNodeDefinition::remember(60)
+                ->whereHas('workflow',function($q){
+                    return $q->where('name','=',$this->controller->context);
+                })
+                ->orderBy('id','ASC')
+                ->get();
+    }
+
+    public function getListDrivers()
+    {
+        return \SwiftDriver::remember(30)
+                ->whereHas('pickup',function($q){
+                    return $q->where('pickable_type','SwiftPR');
+                })
+                ->orderBy('name','ASC')
+                ->get();
+    }
+
+    public function getListCustomers()
+    {
+        return \JdeCustomer::remember(30)
+                ->has('pr')
+                ->orderBy('ALPH','ASC')
+                ->get();
     }
 
     /*
@@ -132,8 +279,8 @@ class SwiftPR extends Task{
                 }
             }
         }
+
         return $this->controller->forbidden();
-        
     }
 
     /*

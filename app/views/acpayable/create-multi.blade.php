@@ -64,7 +64,7 @@
                                         <div class="col-xs-8">
                                             <div class="col-xs-12 checkbox">
                                                 <label>
-                                                    <input type="checkbox" class="form-group checkbox check-document" value="{{pathinfo($f,PATHINFO_BASENAME)}}" name="document[]" />
+                                                    <input type="checkbox" class="form-group checkbox check-document" value="{{pathinfo($f,PATHINFO_BASENAME)}}" name="document[]" autocomplete="off" />
                                                     <span class="name" data-dz-name=""><a class="file-view" target="_blank" data-type="{{\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f)}}" href="{{asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME))}}">
                                                     <?php
                                                     switch(\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f))
@@ -178,7 +178,7 @@
                     <fieldset>
                         <legend>
                             General
-                            <button type="reset" class="btn btn-sm btn-danger pull-right" id="btn-reset">Reset</button>
+                            <button type="reset" class="btn btn-sm btn-danger row-space-left-2" id="btn-reset">Reset</button>
                         </legend>
                         <div class="form-group">
                             <label class="col-md-4 control-label">Billable Company*</label>
@@ -195,9 +195,33 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="col-md-4 control-label">Invoice number</label>
+                            <label class="col-md-4 control-label">Invoice Number</label>
                             <div class="col-md-8">
                                  <input type="text" autocomplete="off" class="form-control" name="invoice_number" placeholder="Type in an invoice number" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">Invoice Due Date</label>
+                            <div class="col-md-8">
+                                 <input type="text" autocomplete="off" class="form-control" name="invoice_due_date" id="invoice_due_date" placeholder="Type in a date" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">Invoice Due Amount</label>
+                            <div class="col-md-8">
+                                <div class="col-xs-4 no-padding">
+                                    <select name="invoice_currency_code" class="form-control" autocomplete="off">
+                                        @foreach($currency as $ccode => $cname)
+                                            <option value="{{$ccode}}" @if($ccode === "MUR"){{'selected'}}@endif>{{$cname}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-xs-8 no-padding">
+                                    <input type="text" autocomplete="off" class="form-control" name="invoice_due_amount" placeholder="Type in an amount" />
+                                </div>
+                                
                             </div>
                         </div>
 

@@ -17,7 +17,7 @@
                 "doctrine/dbal":"2.3.*",
                 "mrjuliuss/syntara": "1.2.*",
                 "liebig/cron": "dev-master",
-                "codesleeve/laravel-stapler": "1.0.*",
+                "codesleeve/laravel-stapler": "dev-master",
                 "aws/aws-sdk-php": "2.4.*@dev",
                 "aws/aws-sdk-php-laravel": "1.*",
                 "venturecraft/revisionable": "dev-master",

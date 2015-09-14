@@ -49,6 +49,12 @@ function addMulti($dummy,pk)
                         callback({id: element.val() , text: element.parents('td.editable-select2').children('a.product-editable').html()});
                     }
                 }
+            }).on('shown', function(e, editable) {
+                if (arguments.length == 2) {
+                    setTimeout(function() {
+                       editable.input.$input.select2("open");
+                    }, 0);
+                }
             });
         }
         else
@@ -76,7 +82,14 @@ function addMulti($dummy,pk)
             var $this = $(this);
             if(this.getAttribute('data-pk') == "0")
             {
-                $this.parents('.multi').find('div.loading-overlay').remove();
+                if($(this).hasClass('product-editable'))
+                {
+                    $('#product-form').find('div.loading-overlay').remove();
+                }
+                else
+                {
+                    $this.parents('.multi').find('div.loading-overlay').remove();
+                }                
                 var response = $.parseJSON(params.response);
                 //Set new pk value
                 addEditablePk($this.parents('.multi'),response.encrypted_id,response.id);
@@ -88,12 +101,26 @@ function addMulti($dummy,pk)
         }).on('submit',function(e){
             if(this.getAttribute('data-pk') == "0")
             {
-                $(this).parents('.multi').prepend("<div class='loading-overlay'></div>");
+                if($(this).hasClass('product-editable'))
+                {
+                    $('#product-form').prepend("<div class='loading-overlay'></div>");
+                }
+                else
+                {
+                    $(this).parents('.multi').prepend("<div class='loading-overlay'></div>");
+                }
             }            
         }).on('error',function(e){
             if(this.getAttribute('data-pk') == "0")
             {
-                $(this).parents('.multi').find('div.loading-overlay').remove();
+                if($(this).hasClass('product-editable'))
+                {
+                    $('#product-form').find('div.loading-overlay').remove();
+                }
+                else
+                {
+                    $this.parents('.multi').find('div.loading-overlay').remove();
+                }
             }             
         });
     });
@@ -169,6 +196,12 @@ function editableElement($element)
                         callback({id: element.val() , text: element.parents('td.editable-select2').children('a.product-editable').html()});
                     }                     
                 }                 
+            }).on('shown', function(e, editable) {
+                if (arguments.length == 2) {
+                    setTimeout(function() {
+                       editable.input.$input.select2("open");
+                    }, 0);
+                }
             });
         }
         else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="customer_code" && this.getAttribute('data-context')=="generalinfo")
@@ -221,6 +254,12 @@ function editableElement($element)
                     initSelection: function (element, callback) {
                         callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
                     }                    
+                }
+            }).on('shown', function(e, editable) {
+                if (arguments.length == 2) {
+                    setTimeout(function() {
+                       editable.input.$input.select2("open");
+                    }, 0);
                 }
             });
         }
@@ -345,7 +384,7 @@ function editableElement($element)
     });
     
     //Help button
-    $('a.btn-help').on('click',function(e){
+        $('a.btn-help').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
         $this.attr('disabled','disabled');
@@ -366,9 +405,14 @@ function editableElement($element)
             },
             error:function(xhr, status, error)
             {
+                $.smallBox({
+			title : "Help information",
+			content : xhr.responseText,
+			color : "#5384AF",
+			icon : "fa fa-question"
+		});                
                 $this.removeAttr('disabled');
                 $this.removeClass('loading-animation');
-                return xhr.responseText;
             }
         });
     });
@@ -472,7 +516,14 @@ function editableElement($element)
         if(this.getAttribute('data-pk') == "0")
         {
             //Remove Overlay
-            $this.parents('.multi').find('div.loading-overlay').remove();
+            if($(this).hasClass('product-editable'))
+            {
+                $('#product-form').find('div.loading-overlay').remove();
+            }
+            else
+            {
+                $this.parents('.multi').find('div.loading-overlay').remove();
+            }
             var response = $.parseJSON(params.response);
             //Set new pk value
             addEditablePk($(this).parents('.multi'),response.encrypted_id,response.id);
@@ -485,12 +536,26 @@ function editableElement($element)
     }).on('submit',function(){
         if(this.getAttribute('data-pk') == "0")
         {
-            $(this).parents('.multi').prepend("<div class='loading-overlay'></div>");
+            if($(this).hasClass('product-editable'))
+            {
+                $('#product-form').prepend("<div class='loading-overlay'></div>");
+            }
+            else
+            {
+                $(this).parents('.multi').prepend("<div class='loading-overlay'></div>");
+            }
         }
     }).on('error',function(){
         if(this.getAttribute('data-pk') == "0")
         {
-            $(this).parents('.multi').find('div.loading-overlay').remove();
+            if($(this).hasClass('product-editable'))
+            {
+                $('#product-form').find('div.loading-overlay').remove();
+            }
+            else
+            {
+                $(this).parents('.multi').find('div.loading-overlay').remove();
+            }
         }        
     });
     

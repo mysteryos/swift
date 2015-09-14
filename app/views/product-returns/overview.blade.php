@@ -7,9 +7,7 @@
 
         <div class="ribbon-button-alignment">
             <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-            @if($canCreate)
-                <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>
-            @endif            
+            @include('product-returns.ribbon-create')
         </div>
 
 </div>
@@ -38,7 +36,7 @@
 
             <!-- NEW COL START -->
             <article class="col-md-6 col-xs-12">
-                @if($canCreate)
+                @if($permission->canCreate())
                 <!-- Widget ID (each widget will need unique ID)-->
                 <div class="jarviswidget" id="pr-overview-myrequests" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/{{$rootURL}}/myrequests">
                     <header>
@@ -92,7 +90,7 @@
                     </div>
                 </div>
 
-                @if($isAdmin)
+                @if($permission->isAdmin())
                 <!-- Widget ID (each widget will need unique ID)-->
                 <div class="jarviswidget" id="pr-overview-pendingnodes" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/{{$rootURL}}/pending-nodes">
                     <header>
@@ -107,7 +105,7 @@
                 </div>
                 @endif
                 
-                @if($isAdmin)
+                @if($permission->isAdmin())
                     <!-- Widget ID (each widget will need unique ID)-->
                     <div class="jarviswidget" id="pr-overview-latetasks" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/{{$rootURL}}/late-nodes">
                         <header>

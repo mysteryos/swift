@@ -199,6 +199,16 @@ class SwiftAPRequest extends Eloquent {
         return self::with('customer','product','product.jdeproduct','product.approval','product.approvalcatman','product.approvalexec','delivery','approval','order','document')->find($id);
     }
 
+    public function isOwner($user_id=false)
+    {
+        if($user_id===false)
+        {
+            $user_id = \Sentry::getUser()->id;
+        }
+
+        return $this->requester_user_id === $user_id;
+    }
+
     /*
      * Query
      */

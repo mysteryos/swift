@@ -36,7 +36,7 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <span class="h2 pull-left"><i class="fa fa-file-archive-o row-space-right-2"></i>Credit Note </span>
-                        @if($isCreditor || $isAdmin)
+                        @if($permission->isCreditor() || $permission->isAdmin())
                         <span class="h2 pull-left row-space-left-4">
                             <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                             <a class="btn btn-success btn-publish row-space-left-2" href="/{{ $rootURL }}/publish-credit-note/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i> Publish</a>

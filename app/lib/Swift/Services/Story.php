@@ -69,8 +69,24 @@ class Story {
         //Check if story already exists
         if(!$this->checkExisting($obj))
         {
+            /*
+             * Save
+             */
             $obj->story()->save($this->story);
-            $this->push();
+            
+            /*
+             * Notification
+             */
+            switch(get_class($obj))
+            {
+                case "SwiftNodeActivity":
+                    //Send Notification of Success
+                    \Notification::send(\SwiftNotification::TYPE_SUCCESS,$obj);
+                    break;
+                default:
+                    $this->push();
+                    break;
+            }
         }
     }
 

@@ -56,7 +56,7 @@ class SwiftACPRequest extends Process
 
                             if(count($returnReasonList) !== 0)
                             {
-                                return Response::make(implode(", ",$returnReasonList),400);
+                                return \Response::make(implode(", ",$returnReasonList),400);
                             }
 
                             /*

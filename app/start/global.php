@@ -52,6 +52,25 @@ App::error(function(Exception $exception, $code)
 });
 
 /*
+ * Application System User logged in
+ * Boot The man!
+ */
+
+App::before(function($request){
+    
+    if(\Sentry::check() !== false && \Sentry::getUser()->id === \Config::get('website.system_user_id'))
+    {
+        \Sentry::logout();
+        \Session::flush();
+
+        $goog = \Artdarek\OAuth\Facade\OAuth::consumer( 'Google' );
+        $url = $goog->getAuthorizationUri();
+
+        return \View::make('login',['googleAuthUrl'=>$url]);
+    }
+});
+
+/*
 |--------------------------------------------------------------------------
 | Application 404 Handler
 |--------------------------------------------------------------------------

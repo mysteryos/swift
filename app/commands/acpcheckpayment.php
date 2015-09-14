@@ -69,13 +69,7 @@ class acpcheckpayment extends ScheduledCommand {
 
         foreach($forms as $f)
         {
-            /*
-             * Fetch Latest Open amount
-             */
-            if(\Swift\AccountsPayable\JdeReconcialiation::updatePvOpenAmount($f))
-            {
-                \WorkflowActivity::update($f,'acpayable');
-            }
+            \WorkflowActivity::update($f,'acpayable');
         }
 
     }
@@ -85,8 +79,8 @@ class acpcheckpayment extends ScheduledCommand {
     */
    public function schedule(Schedulable $scheduler)
    {
-       //Every Day at 4a.m
-       return $scheduler->daily()->hours(6)->minutes(0);
+       //Every Day at 7a.m
+       return $scheduler->daily()->hours(7)->minutes(0);
    }
 
 	/**

@@ -6,9 +6,10 @@
 <div id="ribbon">
         <div class="ribbon-button-alignment hidden-xs">
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            @include('product-returns.ribbon-create')
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-owner/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishPickup)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
-            @if(($publishPickup || $isAdmin) && $form->type===\SwiftPR::SALESMAN)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
+            @if(($publishPickup || $permission->isAdmin()) && $form->type===\SwiftPR::SALESMAN)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
             @if($publishReception)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-reception/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishStoreValidation)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-store-validation/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishCreditNote)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-credit-note/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
@@ -20,15 +21,16 @@
             @endif
             <a class="btn btn-default btn-mark-important" href="/{{ $rootURL }}/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>
             @if($edit)<a class="btn btn-default btn-help" data-href="/{{$rootURL}}/help/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
-            @if($currentUser->isSuperUser() || $isAdmin)<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{$form->encrypted_id}}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if($currentUser->isSuperUser() || $permission->isAdmin())<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $permission->isAdmin())<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{$form->encrypted_id}}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
             <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            @include('product-returns.ribbon-create')
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-owner/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishPickup)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
-            @if(($publishPickup || $isAdmin) && $form->type===\SwiftPR::SALESMAN)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
+            @if(($publishPickup || $permission->isAdmin()) && $form->type===\SwiftPR::SALESMAN)<a class="btn btn-default btn-print" href="/{{$rootURL}}/print-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Print Pickup List" data-placement="bottom" target="_blank"><i class="fa fa-lg fa-print"></i></a>@endif
             @if($publishReception)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-reception/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishStoreValidation)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-store-validation/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishCreditNote)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-credit-note/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
@@ -39,8 +41,8 @@
                 </button>
             @endif
             <a class="btn btn-default btn-mark-important" href="/{{ $rootURL }}/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>
-            @if($currentUser->isSuperUser() || $isAdmin)<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
-            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $isAdmin)<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{$form->encrypted_id}}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if($currentUser->isSuperUser() || $permission->isAdmin())<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $permission->isAdmin())<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{$form->encrypted_id}}"><i class="fa fa-lg fa-times"></i></a>@endif
         </div>
 </div>
 <!-- END RIBBON -->
@@ -118,7 +120,7 @@
                     <header>
                         <span class="widget-icon"> <i class="fa fa-beer"></i> </span>
                         <h2>Products</h2>
-                        @if(($edit && $addProduct) || $isAdmin)
+                        @if(($edit && $addProduct) || $permission->isAdmin())
                             <div class="widget-toolbar" role="menu">
                                 <a class="btn btn-primary" id="btn-add-new-from-invoice" href="javascript:void(0);" data-target="#productFromInvoiceModal" data-toggle="modal"><i class="fa fa-plus"></i> Add From Invoice</a>
                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
@@ -273,7 +275,7 @@
                     <header>
                         <span class="widget-icon"> <i class="fa fa-shopping-cart"></i> </span>
                         <h2>JDE Order </h2>
-                        @if($edit && ($isCcare || $isAdmin))
+                        @if($edit && ($permission->isCcare() || $permission->isAdmin()))
                             <div class="widget-toolbar" role="menu">
                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                             </div>
@@ -307,7 +309,7 @@
                         <header>
                             <span class="widget-icon"> <i class="fa fa-truck"></i> </span>
                             <h2>Pickup </h2>
-                            @if($edit && ($isStorePickup || $isAdmin))
+                            @if($edit && ($permission->isStorePickup() || $permission->isAdmin()))
                                 <div class="widget-toolbar" role="menu">
                                     <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                                 </div>
@@ -341,7 +343,7 @@
                     <header>
                         <span class="widget-icon"> <i class="fa fa-file-archive-o"></i> </span>
                         <h2>Credit Note </h2>
-                        @if($edit && ($isCreditor || $isAdmin))
+                        @if($edit && ($permission->isCreditor() || $permission->isAdmin()))
                             <div class="widget-toolbar" role="menu">
                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                             </div>

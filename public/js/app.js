@@ -27,6 +27,7 @@ $.left_panel = $('#left-panel');
 $.shortcut_dropdown = $('#shortcut');
 $.bread_crumb = $('#ribbon ol.breadcrumb');
 $.maindiv = $('#main');
+$.contentdiv = $('#content');
 $.leftsidemenu = $('#leftsidemenu');
 $.notification_list = $('#notification-list');
 $.notification_count = $('#activity-badge');
@@ -1277,6 +1278,9 @@ $.document_.on('pjax:success, pjax:end',function(){
     //Remove Left over select2 containers
     $('.select2-container').remove();
     
+    //Rebuild object
+    $.contentdiv = $('#content');
+    
     executePageScript();
     //Check Site Version
     if($.root_.attr('data-version') !== document.getElementById('site_version').value)
@@ -1297,10 +1301,10 @@ $.document_.on('pjax:beforeSend',function(){
 //PJAX
 
 $.document_.on('pjax:beforeReplace',function(){
-   if(presenceChannelCurrent && document.getElementById('channel_name') !== null)
-   {
-       presenceChannelCurrent.unsubscribe('presence-'+document.getElementById('channel_name').value);
-   }
+    if(presenceChannelCurrent && document.getElementById('channel_name') !== null)
+    {
+        presenceChannelCurrent.unsubscribe('presence-'+document.getElementById('channel_name').value);
+    }
 });
 
 /* ~ END: APP AJAX REQUEST SETUP */
@@ -2030,6 +2034,17 @@ var main = {
         {
             pageSetUp();
             acp_cheque_dispatch();
+        }         
+    },
+    pr_forms: function() {
+        if(typeof window['pr_forms'] === "undefined")
+        {
+            jsLoader(['/js/swift/swift.pr_filter.js',$.trim(document.getElementById('content').getAttribute('data-urljs').toString())]);
+        }
+        else
+        {
+            pageSetUp();
+            pr_forms();
         }         
     }
 }

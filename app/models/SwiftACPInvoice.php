@@ -20,7 +20,7 @@ class SwiftACPInvoice extends Eloquent
 
     protected $touches = array('acp');
 
-    protected $appends = ['due_amount_formatted'];
+    protected $appends = ['due_amount_formatted','open_amount_formatted'];
 
     protected $attributes = [
         'currency_code' => 'MUR',

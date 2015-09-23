@@ -42,9 +42,12 @@
                         </div>
                     </div>
                     <div class="col-xs-2">
-                      <button data-dz-remove="" class="btn btn-danger delete btn-xs">
-                        <i class="glyphicon glyphicon-trash"></i>
-                      </button>
+                        <a class="btn btn-primary download btn-xs" href="{{$d->getAttachedfiles()['document']->url()}}" title="download" download>
+                            <i class="glyphicon glyphicon-download"></i>
+                        </a>
+                        <button data-dz-remove="" class="btn btn-danger delete btn-xs">
+                            <i class="glyphicon glyphicon-trash"></i>
+                        </button>
                     </div>   
                 </div>
             </div>
@@ -94,13 +97,16 @@
     <div class="col-xs-4">
         <p class="size hide" data-dz-size=""></p>
         <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
+            <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
         </div>
     </div>
     <div class="col-xs-2">
-      <button data-dz-remove="" class="btn btn-danger delete btn-xs">
-        <i class="glyphicon glyphicon-trash"></i>
-      </button>
+        <a class="btn btn-primary download btn-xs" target="_blank" href="javascript:void(0);" title="download" download>
+            <i class="glyphicon glyphicon-download-alt"></i>
+        </a>
+        <button data-dz-remove="" class="btn btn-danger delete btn-xs">
+            <i class="glyphicon glyphicon-trash"></i>
+        </button>
     </div>
 </div>
 @endif

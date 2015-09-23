@@ -21,6 +21,8 @@ class SwiftACPPayment extends Eloquent
 
     protected $touches = array('acp');
 
+    protected $appends = ['amount_formatted'];
+
     protected $attributes = [
         'currency_code' => 'MUR',
         'amount' => 0,
@@ -112,7 +114,7 @@ class SwiftACPPayment extends Eloquent
     public $esContext = "acpayable";
     //Info Context
     public $esInfoContext = "payment";
-    public $esRemove = ['cheque_dispatch_comment','acp_id','validated','validated_msg','cheque_signator_id','cheque_exec_signator_id'];
+    public $esRemove = ['cheque_dispatch_comment','acp_id','validated','validated_msg','validated_id','cheque_signator_id','cheque_exec_signator_id','amount_formatted'];
 
     public function esGetParent()
     {
@@ -207,7 +209,17 @@ class SwiftACPPayment extends Eloquent
     {
         return $this->getStatusRevisionAttribute($val);
     }
-    
+
+    public function getAmountFormattedAttribute()
+    {
+        if(!empty($this->currency_code))
+        {
+            return $this->currency_code." ".number_format($this->amount);
+        }
+
+        return number_format($this->amount);
+    }
+
     /*
      * Scope
      */
@@ -254,6 +266,16 @@ class SwiftACPPayment extends Eloquent
     public function invoice()
     {
         return $this->hasOne('SwiftACPInvoice','acp_id','acp_id');
+    }
+
+    public function jdePaymentHeader()
+    {
+        return $this->hasOne('JdePaymentHeader','pyid','validated_id');
+    }
+
+    public function jdePaymentDetail()
+    {
+        return $this->hasMany('JdePaymentDetail','pyid','validated_id');
     }
 
     /*

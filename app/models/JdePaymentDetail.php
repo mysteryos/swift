@@ -7,7 +7,7 @@
 class JdePaymentDetail extends Eloquent {
     protected $connection = "sct_jde";
 
-    protected $table = "jdepaymentdetmaster";
+    protected $table = "sct_jde.jdepaymentdetmaster";
 
     /*
      * Accessors

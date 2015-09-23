@@ -97,8 +97,8 @@ class acppvjde extends ScheduledCommand {
         } 
         catch (Exception $ex)
         {
-            $this->error($e->getMessage());
-            Log::error($e);
+            $this->error($ex->getMessage());
+            Log::error($ex);
         }
 
         

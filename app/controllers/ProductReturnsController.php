@@ -491,6 +491,7 @@ class ProductReturnsController extends UserController {
                 {
                     return parent::forbidden();
                 }
+                $this->data['product_reason_codes_array'] = \SwiftPRReason::getAll();
                 break;
             case \SwiftPR::ON_DELIVERY:
                 if(!$this->permission->canCreateOnDelivery())

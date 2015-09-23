@@ -121,7 +121,7 @@ Class DashboardController extends UserController {
             }
             $row->current_activity = WorkflowActivity::progress($row);
             $row->activity = Helper::getMergedRevision($row->workflowable->revisionRelations,$row->workflowable);                    
-        }        
+        }
     }    
     
     private function generatelatestworkflow()

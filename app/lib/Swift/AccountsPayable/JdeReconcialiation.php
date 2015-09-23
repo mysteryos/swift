@@ -179,6 +179,7 @@ class JdeReconcialiation {
 
         $pay->validated = \SwiftACPPAyment::VALIDATION_COMPLETE;
         $pay->validated_msg = null;
+        $pay->validated_id = $jdePay->pyid;
         $pay->save();
         return true;
     }

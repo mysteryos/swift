@@ -17,6 +17,13 @@ Class LoginController extends Controller
         }
         else
         {
+            if(\Config::get('website.auto_login',false))
+            {
+                $user = \Sentry::findUserByLogin(\Config::get('website.webmaster_mail'));
+                \Sentry::login($user, false);
+                return \Redirect::to('/dashboard');
+            }
+
             //Time to get our hands dirty with Oauth
             $code = \Input::get( 'code' );
 

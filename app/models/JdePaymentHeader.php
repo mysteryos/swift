@@ -7,7 +7,7 @@
 class JdePaymentHeader extends Eloquent {
     protected $connection = "sct_jde";
 
-    protected $table = "jdepaymenthdrmaster";
+    protected $table = "sct_jde.jdepaymenthdrmaster";
 
     protected $primaryKey = "pyid";
 

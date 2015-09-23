@@ -117,7 +117,6 @@ class SwiftWorkflowActivity extends Eloquent {
         }        
         
         $query->inprogress()
-                ->whereIn('workflowable_type',$classList)
                 ->with('nodes','workflowable')
                 ->whereHas('nodes',function($q){
                     return $q->where('user_id','=',0)->whereHas('permission',function($q){
@@ -159,6 +158,36 @@ class SwiftWorkflowActivity extends Eloquent {
         if($perPage > 0 )
         {
             return $query->simplePaginate($perPage);
+        }
+        else
+        {
+            return $query->get();
+        }
+    }
+
+    /*
+     * List of workflows concerning the user and workflows already worked upon.
+     */
+    public static function getInProgressEngaged($user_id,$page=0)
+    {
+        $query = self::query();
+
+        $query->inprogress()
+            ->with('nodes','workflowable')
+            ->whereHas('nodes',function($q){
+                return $q->where('user_id','=',0)->whereHas('permission',function($q){
+                    return $q->where('permission_type','=',SwiftNodePermission::RESPONSIBLE,'AND')
+                        ->whereIn('permission_name',(array)array_keys(Sentry::getUser()->getMergedPermissions()));
+                });
+            },'OR')
+            ->whereHas('nodes',function($q) use ($user_id){
+                return $q->where('user_id','=',$user_id);
+            })
+            ->orderBy('updated_at','DESC');
+
+        if($page > 0)
+        {
+            return $query->simplePaginate($page);
         }
         else
         {

@@ -836,6 +836,7 @@ class AccountsPayableController extends UserController {
      * Cheque Sign - Utility Page
      *
      */
+
     public function getChequeSign()
     {
         if(!$this->permission->canSignCheque() && !$this->permission->isAdmin())
@@ -849,7 +850,7 @@ class AccountsPayableController extends UserController {
         $query = \SwiftACPPayment::query();
 
         //With
-        $query->with(['acp','invoice','acp.supplier','acp.company','acp.document','acp.approvalHod']);
+        $query->with(['jdePaymentDetail','acp','invoice','acp.supplier','acp.company','acp.document','acp.approvalHod','acp.paymentVoucher']);
 
         //Filter by workflow, at payment voucher
 
@@ -876,6 +877,31 @@ class AccountsPayableController extends UserController {
 
         $payments = $query->get();
         $payment_count = count($payments);
+
+        foreach($payments as &$row)
+        {
+            $row->amount_paid = 0;
+            
+            if(count($row->jdePaymentDetail))
+            {
+                //Loop through details
+                foreach($row->jdePaymentDetail as $d)
+                {
+                    //Match to Payment voucher
+                    if($row->acp->paymentVoucher &&
+                        $row->acp->paymentVoucher->validated === \SwiftACPPaymentVoucher::VALIDATION_COMPLETE &&
+                        (int)$d->doc === (int)$row->acp->paymentVoucher->number &&
+                        $d->dct === $row->acp->paymentVoucher->type)
+                    {
+                        $row->amount_paid += $d->paap;
+                    }
+                }
+            }
+            else
+            {
+                $row->amount_paid = $row->invoice->due_amount;
+            }
+        }
 
         $this->data['payments'] = $payments;
         $this->data['payment_count'] = $payment_count;

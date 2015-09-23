@@ -1,6 +1,6 @@
             <tr>
-                <td colspan='2'><b>Total: </b><td>
-                <td>@if($pay->invoice->currency){{$pay->invoice->currency->code}}@endif {{number_format($total)}}</td>
+                <td colspan='2'><b>Total: </b></td>
+                <td colspan="2" class="text-align-right">{{$total}}</td>
             </tr>
         </table>
         <div class="row">

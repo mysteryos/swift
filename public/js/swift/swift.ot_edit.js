@@ -76,7 +76,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 }
 
 (window.ot_edit = function () {
-    
     //Ribbon Buttons
     $('a.btn-ribbon-cancel').on('click',function(e){
         e.preventDefault();            
@@ -811,14 +810,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     theAwesomeDropZone.on("sending", function(file,xhr,formdata) {
-        var uploadmsg = Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
-            message: 'Uploading "'+file.name+'" <div class="progress progress-sm progress-striped active"><div aria-valuetransitiongoal="25" class="progress-bar bg-color-blue" id="upload-progress" style="width: 0%;" aria-valuenow="25"></div> </div>',
-            hideAfter: 0,
-            showCloseButton: false,
-            type: 'info',
-            id: 'uploadmsg'
-        });
-
         switch(file.type)
         {
             case "image/jpeg":
@@ -863,6 +854,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             //Set Doc Id
             $(file.previewElement).attr('data-id',res.id);
             $(file.previewElement).find("[rel=tooltip]").tooltip();
+            //Download button
+            $(file.previewElement).find('a.download').attr('href',res.url);
             //Set Tag Editable
             var $editable = $(file.previewElement).find('a.editable');
             $editable.html('');
@@ -878,10 +871,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     theAwesomeDropZone.on("cancelled",function(){
-       if(typeof uploadmsg !== null)
-       {
-           uploadmsg.hide();
-       }
         Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
             showCloseButton: true,
             type: 'info',
@@ -897,21 +886,6 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             hideAfter: 0,
             message: 'Upload Failed: "'+file.name+'" - '+errorMsg
         });            
-    });
-
-    theAwesomeDropZone.on('uploadprogress',function(file,progress){
-        var $uploadprogress = $('#upload-progress');
-        if($uploadprogress[0].length != 0)
-        {
-            $uploadprogress.animate({width:progress+'%'},500);
-        }
-    });
-
-    theAwesomeDropZone.on('totaluploadprogress',function(progress){
-       if(typeof uploadmsg !== "undefined" && progress == 100)
-       {
-           uploadmsg.hide();
-       }            
     });
     
     //Drag & Drop File Fix

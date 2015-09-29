@@ -3769,7 +3769,7 @@ class AccountsPayableController extends UserController {
                                 ->whereHas('invoice',function($q){
                                     return $q->where('number','=',\Input::get('invoice_number'));
                                 })->whereHas('workflow',function($q){
-                                    return $q->inprogress();
+                                    return $q->whereIn('status',[\SwiftWorkflowActivity::COMPLETE,\SwiftWorkflowActivity::INPROGRESS]);
                                 })->get();
 
                 if(count($invoiceExist))

@@ -1,9 +1,115 @@
 /* 
- * Name: Product Returns: Create Form
+ * Name: Product Returns: Create On Delivery Form
  */
-(window.pr_create = function() {
+(window.pr_create_ondelivery = function() {
     var newprod_count = 0;
-    
+
+    $('#invoice_id').select2({
+        placeholder: 'Enter an exact invoice number',
+        allowClear: true,
+        minimumInputLength: 5,
+        positionDropdownAbsolute: false,
+        ajax: {
+            url: "/ajaxsearch/pr-invoice-code-exact",
+            dataType: "json",
+            quietMillis: 500,
+            data: function (term, page) {
+                return {
+                    term: term,
+                    limit: 10,
+                    page: page
+                };
+            },
+            results: function (data, page){
+                var more = (page * 10) < data.total;
+                if(data.total > 0)
+                {
+                    var found;
+                    found = $.map(data.invoices, function (item) {
+                        return {
+                            id: item.DOC,
+                            name: item.DOC,
+                            text: item.DOC+" ("+item.DCTO+")"+ " - "+item.IVD+ " - "+item.ALPH+" ("+item.AN8+")",
+                        };
+                    });
+                    return {results: found, more:more};
+                }
+                else
+                {
+                    return {results: ''};
+                }
+            }
+        }
+    }).on('select2-open',function(){
+        $('#select2-drop-mask')
+            .height($(window).height())
+            .width($(window).width())
+            .css({
+                'opacity' : '.1',
+                'position': 'fixed',
+                'top': '0',
+                'left': '0'
+            });
+    }).on('change',function(){
+        $('#product-list').prepend("<div class='loading-overlay'></div>");
+        $('#btn-addProducts').attr('disabled','disabled').addClass('disable');
+        $.ajax({
+            url:  '/product-returns/invoice-products-for-form/'+$(this).val(),
+            type: 'GET',
+            success:function(html)
+            {
+                $('#btn-addProducts').removeAttr('disabled').removeClass('disable');
+                $('#product-list').find('div.loading-overlay').remove();
+                $('#product-list').slideUp('300',function(){
+                    $(this).html(html);
+                    $('#product_tick_all').on('click',function(){
+                        $('.product_checkbox').prop('checked',this.checked);
+                    });
+                    $(this).on('click','.pointable',function(){
+                        var $checkbox = $(this).parent('tr').find('input:checkbox');
+                        $checkbox.prop('checked', !$checkbox.prop('checked'));
+                    });
+                    $(this).slideDown('300');
+                });
+
+            },
+            error: function(xhr)
+            {
+                $('#btn-addProducts').removeAttr('disabled').removeClass('disable');
+                messenger_notiftop(xhr.responseText,'error',10);
+                $('#product-list').find('div.loading-overlay').remove().html('<p class="text-center col-xs-12">Product Info will appear here</p>');
+            }
+        });
+    });
+
+    $('#qty_pickup_included').on('click',function(){
+        if(this.checked)
+        {
+            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').show();
+        }
+        else
+        {
+            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').hide();
+        }
+    });
+
+    $('#productFromInvoiceModal').on('shown.bs.modal', function(){
+        document.getElementById('productFromInvoiceForm').reset();
+        $('#product-list').html('<p class="text-center col-xs-12">Product Info will appear here</p>');
+        $('#invoice_id').select2('data', null);
+    });
+
+    $('#btn-add-product-to-form').on('click',function(){
+        if($('#invoice_id').select2('val') !== "")
+        {
+
+        }
+        else
+        {
+            $('#productFromInvoiceModal').modal('hide');
+        }
+    });
+
     /*
      * Shortcut Key
      */
@@ -17,10 +123,17 @@
     /*
      Form Validation
      */
+
     $.validator.addMethod('positiveNumber',
         function (value) {
             return Number(value) > 0;
         }, 'Enter a positive number.'
+    );
+
+    $.validator.addMethod('quantityNumber',
+        function (value) {
+            return Number(value) >= 0;
+        }, 'Enter a valid number.'
     );
 
     var form_validator = $('#pr_create_form').validate({
@@ -61,7 +174,7 @@
                 //Add validation by name
                 if (typeof $name[1] !== "undefined") {
                     switch ($name[1]) {
-                        case 'id':
+                        case 'jde_itm':
                             $this.rules('add', {
                                 required: true,
                                 number: true
@@ -72,6 +185,27 @@
                                 required: true,
                                 number: true,
                                 positiveNumber: true
+                            });
+                            break;
+                        case 'qty_pickup':
+                            $this.rules('add', {
+                                required: true,
+                                number: true,
+                                quantityNumber: true
+                            });
+                            break;
+                        case 'qty_triage_picking':
+                            $this.rules('add', {
+                                required: true,
+                                number: true,
+                                quantityNumber: true
+                            });
+                            break;
+                        case 'qty_triage_disposal':
+                            $this.rules('add', {
+                                required: true,
+                                number: true,
+                                quantityNumber: true
                             });
                             break;
                         case 'reason_id':
@@ -135,7 +269,7 @@
                 $('.select2-input').focus();
             }).on('change',function(){
                 $(this).valid();
-                $(this).parents('.product-row').find('.product-qty').focus();
+                $(this).parents('.product-row').find('.product-qty-client').focus();
             });
 
             newprod_count += 1;
@@ -217,40 +351,35 @@
         }, 1);        
     });
 
-    if(document.getElementById('driver_id'))
-    {
-        $('#driver_id').select2({
-            placeholder: 'Select a driver for this delivery'
-        }).on('select2-open',function(){
-            $('#select2-drop-mask')
-                .height($(window).height())
-                .width($(window).width())
-                .css({
-                    'opacity' : '.1',
-                    'position': 'fixed',
-                    'top': '0',
-                    'left': '0'
-                });
-        }).on('change',function(){
-            $(this).valid();
-        }).on('select2-close',function(){
-            setTimeout(function() {
-                $('.select2-container-active').removeClass('select2-container-active');
-                $(':focus').blur();
-            }, 1);
-        }).rules('add', {
-            required: true
-        });
-    }
+    $('#driver_id').select2({
+        placeholder: 'Select a driver for this delivery'
+    }).on('select2-open',function(){
+        $('#select2-drop-mask')
+            .height($(window).height())
+            .width($(window).width())
+            .css({
+                'opacity' : '.1',
+                'position': 'fixed',
+                'top': '0',
+                'left': '0'
+            });
+    }).on('change',function(){
+        $(this).valid();
+    }).on('select2-close',function(){
+        setTimeout(function() {
+            $('.select2-container-active').removeClass('select2-container-active');
+            $(':focus').blur();
+        }, 1);
+    }).rules('add', {
+        required: true
+    });
 
-    if(document.getElementById('paper_number'))
-    {
-        $('#paper_number').rules('add',{
-            required: true,
-            number: true,
-            positiveNumber: true
-        });
-    }
+
+    $('#paper_number').rules('add',{
+        required: true,
+        number: true,
+        positiveNumber: true
+    });
 
     /*
      * Add product button

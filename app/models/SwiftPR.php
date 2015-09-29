@@ -9,6 +9,7 @@ class SwiftPR extends Eloquent {
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\Share\SharingTrait;
     use \Swift\ElasticSearchEventTrait;
+    use \Permission\PermissionTrait;
 
     public $readableName = "Product Returns";
 

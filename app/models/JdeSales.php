@@ -60,8 +60,8 @@ class JdeSales extends Eloquent {
             ->whereIn('DCTO',array('3S','4S','S9'),'AND')
             ->orderBy('DOC','ASC')
             ->groupBy('DOC')
-            ->join('jdecustomers','jdecustomers.AN8','=','jdesales.AN8')
-            ->select('DOC','IVD','jdesales.AN8','DCTO','jdecustomers.ALPH')
+            ->join('jdecustomers','jdecustomers.AN8','=','jdesalesmaster.AN8')
+            ->select('DOC','IVD','jdesalesmaster.AN8','DCTO','jdecustomers.ALPH')
             ->get();
     }
 
@@ -75,6 +75,43 @@ class JdeSales extends Eloquent {
     {
         return count(self::remember(self::$cache_expiry_time)
             ->where('DOC','LIKE',"%$invoiceCode%")
+            ->whereIn('DCTO',array('3S','4S','S9'),'AND')
+            ->groupBy('DOC')
+            ->get());
+    }
+
+    /*
+         * Find products by exact invoice code
+         *
+         * @param integer $invoiceCode
+         * @param integer $offset
+         * @param integer $limit
+         * @return \Illuminate\Support\Collection
+         */
+    public static function getByInvoiceCodeExact($invoiceCode,$offset,$limit)
+    {
+        return self::remember(self::$cache_expiry_time)
+            ->limit($limit)
+            ->offset($offset)
+            ->where('DOC','=',$invoiceCode)
+            ->whereIn('DCTO',array('3S','4S','S9'),'AND')
+            ->orderBy('DOC','ASC')
+            ->groupBy('DOC')
+            ->join('jdecustomers','jdecustomers.AN8','=','jdesalesmaster.AN8')
+            ->select('DOC','IVD','jdesalesmaster.AN8','DCTO','jdecustomers.ALPH')
+            ->get();
+    }
+
+    /*
+     * Total number of invoices, by invoice code
+     *
+     * @param integer $invoiceCode
+     * @return \Illuminate\Support\Collection
+     */
+    public static function totalByInvoiceCodeExact($invoiceCode)
+    {
+        return count(self::remember(self::$cache_expiry_time)
+            ->where('DOC','=',$invoiceCode)
             ->whereIn('DCTO',array('3S','4S','S9'),'AND')
             ->groupBy('DOC')
             ->get());

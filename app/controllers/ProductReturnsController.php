@@ -480,6 +480,7 @@ class ProductReturnsController extends UserController {
         }
 
         $this->data['type'] = $type;
+        $this->data['type_name'] = \SwiftPR::$type[$type];
 
         /*
          * Permissions
@@ -492,12 +493,18 @@ class ProductReturnsController extends UserController {
                     return parent::forbidden();
                 }
                 $this->data['product_reason_codes_array'] = \SwiftPRReason::getAll();
+                $this->pageTitle = 'Create';
+                return $this->makeView("$this->context/create");
                 break;
             case \SwiftPR::ON_DELIVERY:
                 if(!$this->permission->canCreateOnDelivery())
                 {
                     return parent::forbidden();
                 }
+                $this->pageTitle = 'Create - On Delivery';
+                $this->data['product_reason_codes_array'] = \SwiftPRReason::getAll();
+                $this->data['driver_list_array'] = \SwiftDriver::getAll();
+                return $this->makeView("$this->context/create_ondelivery");
                 break;
             case \SwiftPR::INVOICE_CANCELLED:
                 if(!$this->permission->canCreateInvoiceCancelled())
@@ -514,12 +521,6 @@ class ProductReturnsController extends UserController {
                 return parent::notfound();
                 break;
         }
-        
-        $this->data['type_name'] = \SwiftPR::$type[$type];
-        $this->data['type'] = $type;
-        $this->pageTitle = 'Create';
-        return $this->makeView("$this->context/create");
-        
     }
 
     /*
@@ -558,36 +559,15 @@ class ProductReturnsController extends UserController {
      * @return \Illuminate\Support\Facades\Response
      */
 
-    public function postCreate($type)
+    public function postCreate()
     {
-
+        //Basic Permission check
         if(!$this->permission->canCreate())
         {
             return parent::forbidden();
         }
 
-        /*
-         * validation
-         */
-
-        if((int)\Input::get('customer_code') === 0)
-        {
-            return \Response::make('Please select a customer',500);
-        }
-        else
-        {
-            if(!\JdeCustomer::find(\Input::get('customer_code')))
-            {
-                return \Response::make('Please select an existing customer',500);
-            }
-        }
-
-        if(!in_array($type,array_keys(\SwiftPR::$type)))
-        {
-            return \Response::make('Type of product return is not valid',500);
-        }
-
-        return $this->process()->create($type);
+        return $this->process()->create();
     }
 
     /*
@@ -624,8 +604,15 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_REQUESTER);
-        
+        $publishResult = $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_REQUESTER);
+        if($publishResult === true)
+        {
+            return \Response::make('Success');
+        }
+        else
+        {
+            return $publishResult;
+        }
     }
 
     public function postPublishPickup($form_id)
@@ -638,8 +625,15 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_PICKUP);
-        
+        $publishResult = $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_PICKUP);
+        if($publishResult === true)
+        {
+            return \Response::make('Success');
+        }
+        else
+        {
+            return $publishResult;
+        }
     }
 
     public function postPublishReception($form_id)
@@ -652,7 +646,15 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_RECEPTION);
+        $publishResult = $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_RECEPTION);
+        if($publishResult === true)
+        {
+            return \Response::make('Success');
+        }
+        else
+        {
+            return $publishResult;
+        }
     }
 
     public function postPublishStoreValidation($form_id)
@@ -665,7 +667,15 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_STOREVALIDATION);
+        $publishResult = $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_STOREVALIDATION);
+        if($publishResult === true)
+        {
+            return \Response::make('Success');
+        }
+        else
+        {
+            return $publishResult;
+        }
     }
 
     public function postPublishCreditNote($form_id)
@@ -678,7 +688,16 @@ class ProductReturnsController extends UserController {
             return parent::forbidden();
         }
 
-        return $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_CREDITNOTE);
+        $publishResult = $this->process()->publish(\Crypt::decrypt($form_id),\SwiftApproval::PR_CREDITNOTE);
+        if($publishResult === true)
+        {
+            return \Response::make('Success');
+        }
+        else
+        {
+            return $publishResult;
+        }
+
     }
 
     /*

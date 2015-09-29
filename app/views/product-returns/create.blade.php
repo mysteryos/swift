@@ -34,7 +34,8 @@
 	<!-- START ROW -->
 
 	<div class="row">
-        <form id="pr_create_form" action="/{{$rootURL}}/create/{{$type}}" method="post" class="form-horizontal" name="pr_create_form">
+        <form id="pr_create_form" action="/{{$rootURL}}/create" method="post" class="form-horizontal" name="pr_create_form">
+            <input type="hidden" name="type" value="{{$type}}" />
             <!-- NEW COL START -->
             <article class="col-xs-12">
 
@@ -61,7 +62,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label class="control-label col-xs-4 col-md-2">Customer</label>
-                                    <div class="controls col-xs-8 col-md-10">
+                                    <div class="col-xs-8 col-md-10">
                                         <input type="hidden" id="ccode" name="customer_code" class="full-width" autocomplete="off" value="" />
                                         <span class="help-block"></span>
                                     </div>
@@ -97,7 +98,7 @@
                                         <div class="col-lg-3 form-group">
                                             <label class="col-md-3 hidden-lg control-label">Name*</label>
                                             <div class="col-lg-12 col-md-9">
-                                                <input type="hidden" name="product[][id]" value="" class="full-width product-id" autocomplete="off" disabled />
+                                                <input type="hidden" name="product[][jde_itm]" value="" class="full-width product-id" autocomplete="off" disabled />
                                             </div>
                                         </div>
                                         <div class="col-lg-1 form-group">

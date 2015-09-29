@@ -13,6 +13,10 @@ abstract class Permission {
         {
             //Get currently logged in user
             $this->currentUser = \Sentry::getUser();
+            if($this->currentUser === false)
+            {
+                throw new \RuntimeException("We were unable to verify your access. Please try again.");
+            }
         }
         else
         {

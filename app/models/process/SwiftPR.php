@@ -15,17 +15,116 @@ class SwiftPR extends Process
     {
         parent::__construct($controller);
     }
-    
-    public function create($type)
+
+    public function validateCreate()
     {
+        $validator = \Validator::make(\Input::all(),[
+            'customer_code' => 'required|numeric|exists:sct_jde.jdecustomers,AN8',
+            'type' => 'required|in:'.\SwiftPR::SALESMAN.','.\SwiftPR::ON_DELIVERY,
+        ]);
+
+        //When on delivery, additional rules
+        $validator->sometimes('paper_number','required|numeric',function($input){
+            return (int)$input->type === \SwiftPR::ON_DELIVERY && (bool)$input->publish === true;
+        });
+
+        $validator->sometimes('driver_id','required|numeric|exists:swift_driver,id',function($input){
+            return (int)$input->type === \SwiftPR::ON_DELIVERY && (bool)$input->publish === true;
+        });
+
+        return $validator;
+    }
+
+    /*
+     * Check permission for Create action
+     * @return mixed
+     */
+    public function createPermissionCheck()
+    {
+        $permissionClass = new \Permission\SwiftPR();
+        switch((int)\Input::get('type'))
+        {
+            case \SwiftPR::SALESMAN:
+                if(!$permissionClass->canCreateSalesman())
+                {
+                    return \Response::make("You don't have the permission to access this resource.",500);
+                }
+                break;
+            case \SwiftPR::ON_DELIVERY:
+                if(!$permissionClass->canCreateOnDelivery())
+                {
+                    return \Response::make("You don't have the permission to access this resource.",500);
+                }
+                break;
+        }
+        return true;
+    }
+
+    /*
+     * Create action
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //Validate the form's basic data
+        $validator = $this->validateCreate();
+        if((bool)\Input::get('publish') && $validator->fails())
+        {
+            return \Response::make($validator->messages(),500);
+        }
+
+        //Check permissions
+        $permissionCheck = $this->createPermissionCheck();
+        if($permissionCheck !== true)
+        {
+            return $permissionCheck;
+        }
+
+        //Start transaction for saving
+        \DB::beginTransaction();
         $this->form = new $this->resourceName([
-            'type' => $type,
+            'type' => \Input::get('type'),
             'customer_code' => \Input::get('customer_code'),
             'owner_user_id' => $this->controller->currentUser->id
         ]);
 
+        //On Delivery needs paper number
+        if((int)\Input::get('type') === \SwiftPR::ON_DELIVERY)
+        {
+            $this->form->paper_number = \Input::get('paper_number');
+        }
+
         if($this->form->save())
         {
+            if(!\Input::has('product') && \Input::get('publish'))
+            {
+                return \Response::make('Please add a product',500);
+            }
+            foreach(\Input::get('product') as $product)
+            {
+                if(\Input::get('publish'))
+                {
+                    //Validate it
+                    $validator = \Validator::make($product,[
+                        'jde_itm' => 'required|numeric|exists:sct_jde.jdeproducts,ITM',
+                        'qty_client' => 'required|numeric|min:1',
+                        'reason_id' => 'required|numeric|exists:swift_pr_reason,id',
+                        'pickup' => 'numeric|in:0,1'
+                    ]);
+                    if($validator->fails())
+                    {
+                        \Db::rollBack();
+                        return \Response::make($validator->messages(),500);
+                    }
+                }
+
+                $productRow = $this->form->product()->getRelated();
+                $productRow->fill($product);
+                $this->form->product()->save($productRow);
+            }
+
+            \DB::commit();
+
             if(\WorkflowActivity::update($this->form,$this->controller->context))
             {
                 //Story Relate
@@ -34,8 +133,29 @@ class SwiftPR extends Process
                                                      'action'=>\SwiftStory::ACTION_CREATE,
                                                      'user_id'=>$this->controller->currentUser->id,
                                                      'context'=>get_class($this->form)));
+                //If form is being published
+                if(\Input::get('publish'))
+                {
+                    //If on delivery, save pickup
+                    if(\Input::get('type') === \SwiftPR::ON_DELIVERY)
+                    {
+                        $pickup = new SwiftPickup([
+                            'pickup_date' => \Carbon::now(),
+                            'driver_id' => \Input::get('driver_id'),
+                            'status' => \SwiftPickup::COLLECTION_COMPLETE
+                        ]);
+                        $this->form->pickup()->save($pickup);
+                    }
+
+                    $validPublish = $this->publish($this->form->id,\SwiftApproval::PR_REQUESTER);
+                    if($validPublish !== true)
+                    {
+                        return $validPublish;
+                    }
+                }
+
                 //Success
-                return \Response::make(json_encode(['success'=>1,'url'=>\Helper::generateUrl($this->form)]));
+                return \Response::make(json_encode(['success' => 1, 'url' => \Helper::generateUrl($this->form)]));
             }
             else
             {
@@ -109,19 +229,25 @@ class SwiftPR extends Process
                         {
                             return $this->controller->forbidden();
                         }
+                        break;
                     case 'customer_code':
                         if(\Input::get('value') === "" || !is_numeric(\Input::get('value')))
                         {
-                            return \Response::make('Please select a valid customer',500);
+                            return \Response::make('Please select a valid customer',400);
                         }
                         else
                         {
                             if(!\JdeCustomer::find(\Input::get('value')))
                             {
-                                return \Response::make('Please select an existing customer',500);
+                                return \Response::make('Please select an existing customer',400);
                             }
                         }
+                        break;
                     case 'paper_number':
+                        if(\Input::get('value') === "" || !is_numeric(\Input::get('value')))
+                        {
+                            return \Response::make('Please enter a valid RFRF number',400);
+                        }
                     case 'description':
                         break;
                     default:
@@ -309,12 +435,12 @@ class SwiftPR extends Process
             case \SwiftApproval::PR_REQUESTER:
                 if(!$this->controller->permission->isAdmin() && !$this->form->isOwner())
                 {
-                    return \Response::make("You don't have permission to publish this form" ,500);
+                    return \Response::make("You don't have permission to publish this form" ,400);
                 }
 
                 if(!count($this->form->product))
                 {
-                    return \Response::make('Please add some products to your form',500);
+                    return \Response::make('Please add some products to your form',400);
                 }
 
                 //Validation
@@ -323,29 +449,29 @@ class SwiftPR extends Process
                 {
                     if($p->jde_itm === null)
                     {
-                        return \Response::make("Please set a Product for (ID: $p->id)",500);
+                        return \Response::make("Please set a Product for (ID: $p->id)",400);
                     }
                     if($p->reason_id === null)
                     {
-                        return \Response::make("Please set a reason for '$p->name' (ID: $p->id)",500);
+                        return \Response::make("Please set a reason for '$p->name' (ID: $p->id)",400);
                     }
                     switch($this->form->type)
                     {
                         case \SwiftPR::ON_DELIVERY:
                             if($p->qty_pickup === null || $p->qty_pickup < 0)
                             {
-                                return \Response::make("Please set a valid quantity at pickup for '$p->name' (ID: $p->id)",500);
+                                return \Response::make("Please set a valid quantity at pickup for '$p->name' (ID: $p->id)",400);
                             }
 
                             if($p->qty_pickup !== ($p->qty_triage_picking + $p->qty_triage_disposal))
                             {
-                                return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",500);
+                                return \Response::make("Please make sure that quantity pickup tallies with quantity triage for '$p->name' (ID: $p->id)",400);
                             }
                             break;
                         case \SwiftPR::SALESMAN:
                             if($p->qty_client === null || $p->qty_client < 0)
                             {
-                                return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",500);
+                                return \Response::make("Please set a valid quantity at client for '$p->name' (ID: $p->id)",400);
                             }
                             break;
                     }
@@ -355,12 +481,12 @@ class SwiftPR extends Process
                 {
                     if($this->form->paper_number === null)
                     {
-                        return \Response::make("Please enter an RFRF Paper number",500);
+                        return \Response::make("Please enter an RFRF Paper number",400);
                     }
 
                     if(!count($this->form->pickup))
                     {
-                        return \Response::make("Please enter pickup details",500);
+                        return \Response::make("Please enter pickup details",400);
                     }
                     else
                     {
@@ -368,17 +494,17 @@ class SwiftPR extends Process
                         {
                             if(!$pickup->driver_id)
                             {
-                                return \Response::make("Please select a driver in your pickup details",500);
+                                return \Response::make("Please select a driver in your pickup details",400);
                             }
 
                             if($pickup->pickup_date === null)
                             {
-                                return \Response::make("Please set a date in your pickup details",500);
+                                return \Response::make("Please set a date in your pickup details",400);
                             }
 
                             if($pickup->status !== \SwiftPickup::COLLECTION_COMPLETE)
                             {
-                                return \Response::make("Please set your pickup status to 'collection complete",500);
+                                return \Response::make("Please set your pickup status to 'collection complete",400);
                             }
                         }
                     }
@@ -495,7 +621,7 @@ class SwiftPR extends Process
             if($approvalSaved)
             {
                 \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($this->form),'id'=>$this->form->id,'user_id'=>$this->controller->currentUser->id));
-                return \Response::make('success');
+                return true;
             }
             else
             {

@@ -471,4 +471,28 @@ Class AjaxSearchController extends UserController {
         }
         
     }
+
+    public function getPrInvoiceCodeExact()
+    {
+        $limit = 10;
+        $offset = (\Input::get('page') == "1" ? "0" : (\Input::get('page')-1)*$limit);
+
+        $searchresult = \JdeSales::getByInvoiceCodeExact(\Input::get('term'),$offset,$limit);
+        $total = \JdeSales::totalByInvoiceCodeExact(\Input::get('term'));
+
+        if($searchresult !== false)
+        {
+            foreach($searchresult as &$s)
+            {
+                $ivd = \Carbon::createFromFormat('Y-m-d H:i:s',$s->IVD);
+                $s->IVD = $ivd->format('Y/m/d');
+            }
+            echo json_encode(array('invoices'=>$searchresult,'total'=>$total));
+        }
+        else
+        {
+            echo json_encode(array('total'=>0));
+        }
+
+    }
 }

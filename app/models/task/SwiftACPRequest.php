@@ -430,8 +430,8 @@ class SwiftACPRequest extends Task{
 
     private function filterDate(&$query)
     {
-        $filter_end_date = \Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date'));
-        $filter_start_date = \Carbon::createFromFormat('d/m/Y',\Input::get('filter_start_date'));
+        $filter_end_date = Helper::validateDate(\Input::get('filter_end_date'),'d/m/Y') ? \Carbon::createFromFormat('d/m/Y',\Input::get('filter_end_date')) : false;
+        $filter_start_date = Helper::validateDate(\Input::get('filter_start_date'),'d/m/Y') ? \Carbon::createFromFormat('d/m/Y',\Input::get('filter_start_date')) : false;
 
         $query->whereHas('invoice',function($q) use ($filter_end_date,$filter_start_date){
             if($filter_start_date !== false)

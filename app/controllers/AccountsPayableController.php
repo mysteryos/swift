@@ -1,7 +1,7 @@
 <?php
 
 class AccountsPayableController extends UserController {
-    
+
     public function __construct(){
         parent::__construct();
         $this->pageName = "Accounts Payable";
@@ -18,14 +18,14 @@ class AccountsPayableController extends UserController {
     /*
      * Overview
      */
-    
+
     public function getOverview()
     {
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
         $this->data['late_node_forms_count'] = \SwiftNodeActivity::countLateNodes($this->context);
         $this->data['pending_node_count'] = \SwiftNodeActivity::countPendingNodesWithEta($this->context);
-        
+
         $inprogress = $inprogress_important = $inprogress_responsible = $inprogress_important_responsible = array();
 
         /*
@@ -102,7 +102,7 @@ class AccountsPayableController extends UserController {
         {
             $this->data['record_offset_start'] = 1;
         }
-        
+
         $movementOffset=0;
 
         $this->pageTitle = 'Forms';
@@ -173,7 +173,7 @@ class AccountsPayableController extends UserController {
         $this->task()->applyFilters($acprequestquery);
 
         $formsCount = $acprequestquery->count();
-        
+
         $forms = array();
 
         /*
@@ -184,7 +184,7 @@ class AccountsPayableController extends UserController {
             $resultquery = clone $acprequestquery;
             $resultquery->take($limitPerPage);
             $resultquery->offset($nextOffset);
-            
+
             $result = $resultquery->get();
 
             //Nothing more in results
@@ -204,7 +204,7 @@ class AccountsPayableController extends UserController {
                     $nextOffset++;
                     $movementOffset++;
                 }
-                
+
                 //Set Current Workflow Activity
                 $f->current_activity = \WorkflowActivity::progress($f);
 
@@ -228,11 +228,10 @@ class AccountsPayableController extends UserController {
                     }
 
                     /*
-                     * No Access : We Remove order from list
+                     * No Access : We Remove accounts payable form from list
                      */
                     if(!$hasAccess)
                     {
-                        $formsCount--;
                         continue;
                     }
                     else
@@ -245,7 +244,6 @@ class AccountsPayableController extends UserController {
                     //check Access
                     if(!$f->permission()->checkAccess())
                     {
-                        $formsCount--;
                         continue;
                     }
                     else
@@ -262,12 +260,12 @@ class AccountsPayableController extends UserController {
                 $f->flag_important = \Flag::isImportant($f);
                 $f->flag_read = \Flag::isRead($f);
             }
-            
+
             if(count($forms) >= $limitPerPage)
             {
                 break;
             }
-            
+
         } while(count($forms) < $limitPerPage);
 
         if(!isset($this->data['record_offset_start']))
@@ -284,7 +282,7 @@ class AccountsPayableController extends UserController {
         $this->data['activeSteps'] = \SwiftNodeDefinition::getByWorkflowType(\SwiftWorkflowType::where('name','=',$this->context)->first()->id)->all();
         $this->data['forms'] = $forms;
         $this->data['formCount'] = $formsCount;
-        $this->data['prev_offset'] = $prevOffset < 0 ? 0 : $prevOffset;
+        $this->data['prev_offset'] = $prevOffset <= 0 ? 0 : $prevOffset;
         $this->data['next_offset'] = $nextOffset;
         $this->data['movement_offset'] = $movementOffset;
         $this->data['limit_per_page'] = $limitPerPage;
@@ -333,7 +331,7 @@ class AccountsPayableController extends UserController {
         $query->orderBy('created_at','ASC');
 
         //Filters
-        
+
         if(\Input::has('billable_company'))
         {
             $query->where('billable_company','=',\Input::get('billable_company'));
@@ -348,7 +346,7 @@ class AccountsPayableController extends UserController {
         {
             $query->where('created_at','>=',\Carbon::createFromFormat('Y-m-d',\Input::get('date')));
         }
-        
+
         $forms = $query->get();
         $form_count = count($forms);
 
@@ -366,7 +364,7 @@ class AccountsPayableController extends UserController {
         $this->data['forms'] = $forms;
         $this->data['form_count'] = $form_count;
         $this->data['pageTitle'] = "Payment Voucher Process";
-        
+
         return $this->makeView('acpayable/payment-voucher-process');
     }
 
@@ -378,7 +376,7 @@ class AccountsPayableController extends UserController {
      */
     public function getPaymentIssue($type='all',$page=1)
     {
-        
+
         if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
         {
             return parent::forbidden();
@@ -419,7 +417,7 @@ class AccountsPayableController extends UserController {
                 {
                     $query->has('invoice');
                 }
-                
+
                 break;
             case 'overdue':
                 $query->whereHas('invoice',function($q){
@@ -476,7 +474,7 @@ class AccountsPayableController extends UserController {
                 $query->offset(($page-1)*$limitPerPage);
             }
         }
-        
+
         $forms = $query->get();
 
         /*
@@ -485,18 +483,31 @@ class AccountsPayableController extends UserController {
         foreach($forms as &$f)
         {
             $f->payment_type = 0;
-            
+            $f->payment_inprogress = false;
+            $payment_inprogress = $f->payment()->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS)->count();
+
             if($f->invoice && $f->invoice->currency_code !== "")
             {
                 if($f->invoice->currency_code === "MUR")
                 {
                     $f->payment_type = \SwiftACPPayment::TYPE_CHEQUE;
-                    continue;
                 }
                 else
                 {
                     $f->payment_type = \SwiftACPPayment::TYPE_BANKTRANSFER;
-                    continue;
+                }
+            }
+
+            //We have one payment in progress
+            if($payment_inprogress === 1)
+            {
+                foreach($f->payment as $pay)
+                {
+                    if((int)$pay->status === \SwiftACPPayment::STATUS_INPROGRESS)
+                    {
+                        $f->payment_inprogress = $pay;
+                        break;
+                    }
                 }
             }
         }
@@ -517,7 +528,7 @@ class AccountsPayableController extends UserController {
                                     }));
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['pageTitle'] = "Payment Issue - ".ucfirst($type);
-        
+
         return $this->makeView('acpayable/payment-issue');
     }
 
@@ -745,7 +756,7 @@ class AccountsPayableController extends UserController {
         //The Filters
 
         $this->task()->applyFilters($query);
-        
+
         //Form for Display and Count
 
         $form_count = $query->count();
@@ -881,7 +892,7 @@ class AccountsPayableController extends UserController {
         foreach($payments as &$row)
         {
             $row->amount_paid = 0;
-            
+
             if(count($row->jdePaymentDetail))
             {
                 //Loop through details
@@ -909,7 +920,7 @@ class AccountsPayableController extends UserController {
 
         return $this->makeView('acpayable/cheque-sign');
     }
-    
+
     /*
      * Cheque Sign By Executive - Utility Page
      *
@@ -1056,7 +1067,7 @@ class AccountsPayableController extends UserController {
                 $query->offset(($page-1)*$limitPerPage);
             }
         }
-        
+
         $forms = $query->get();
 
         foreach($forms as &$f)
@@ -1133,7 +1144,7 @@ class AccountsPayableController extends UserController {
                                     return $q->inprogress();
                                 })->get();
             }
-            
+
             if(count($invoiceExist))
             {
                 return \Response::make("Invoice already exists for supplier: <a href='".\Helper::generateUrl($invoiceExist->first())."' class='pjax'>Click here to view form</a>",400);
@@ -1172,7 +1183,7 @@ class AccountsPayableController extends UserController {
                             $acp->purchaseOrder()->save($purchaseOrder);
                         }
                     }
-                    
+
                     //Start the Workflow
                     if(\WorkflowActivity::update($acp,$this->context))
                     {
@@ -1220,7 +1231,7 @@ class AccountsPayableController extends UserController {
             /*
              * Check Sharing Settings
              */
-            
+
             $className = \Config::get('context.'.$this->context);
             //Check Sharing Settings
             $sharedUser = \SwiftShare::findUserByForm($className,\Crypt::decrypt($id),$this->currentUser->id);
@@ -1373,7 +1384,7 @@ class AccountsPayableController extends UserController {
             $this->data['edit'] = $edit;
             $this->data['publishOwner'] = $this->data['publishAccounting'] = $this->data['addCreditNote'] = $this->data['savePaymentVoucher'] = $this->data['checkPayment'] = $this->data['signCheque'] = false;
             $this->data['isCreator'] = $acp->owner_user_id == $this->currentUser->id;
-            
+
             if($edit === true)
             {
                 if($this->data['current_activity']['status'] == \SwiftWorkflowActivity::INPROGRESS)
@@ -1392,8 +1403,8 @@ class AccountsPayableController extends UserController {
                         {
                             if($d->data != "")
                             {
-                                if(isset($d->data->publishOwner) && 
-                                    ($this->permission->isAdmin() || 
+                                if(isset($d->data->publishOwner) &&
+                                    ($this->permission->isAdmin() ||
                                      $this->permission->isAccountingDept() ||
                                      $acp->isOwner() ||
                                      $acp->isSharedWith($this->currentUser->id,\SwiftShare::PERMISSION_EDIT_PUBLISH))
@@ -1452,7 +1463,7 @@ class AccountsPayableController extends UserController {
                     }
                 }
             }
-            
+
             //Save recently viewed form
             \Helper::saveRecent($acp,$this->currentUser);
 
@@ -1565,7 +1576,7 @@ class AccountsPayableController extends UserController {
             {
                 return parent::forbidden();
             }
-            
+
             if($po->delete())
             {
                 return Response::make('Success');
@@ -1624,7 +1635,7 @@ class AccountsPayableController extends UserController {
             {
                 return parent::forbidden();
             }
-            
+
             if($credit->delete())
             {
                 return Response::make('Success');
@@ -1656,8 +1667,8 @@ class AccountsPayableController extends UserController {
             {
                 return parent::forbidden();
             }
-            
-            
+
+
             //Validation
             switch(\Input::get('name'))
             {
@@ -1728,7 +1739,7 @@ class AccountsPayableController extends UserController {
             {
                 return parent::forbidden();
             }
-            
+
             if($invoice->delete())
             {
                 return Response::make('Success');
@@ -1831,7 +1842,7 @@ class AccountsPayableController extends UserController {
                 $model_obj->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
                 if(\Input::get('value')===\SwiftACPPayment::TYPE_CHEQUE)
                 {
-                    $model_obj->status = \SwiftACPPayment::STATUS_ISSUED;
+                    $model_obj->status = \SwiftACPPayment::STATUS_INPROGRESS;
                 }
                 if($acp->payment()->save($model_obj))
                 {
@@ -1939,7 +1950,7 @@ class AccountsPayableController extends UserController {
                     {
                         return \Response::make("You don't have access to this feature.",400);
                     }
-                    
+
                     if(\Input::get('value') !== "" && !array_key_exists((int)\Input::get('value'),\SwiftACPPaymentVoucher::$validationArray))
                     {
                         return \Response::make("Please enter a valid value.",400);
@@ -2204,7 +2215,7 @@ class AccountsPayableController extends UserController {
                     }
 
                     return \Response::make("You can't publish the form at this time.",500);
-                    
+
                 }
                 else
                 {
@@ -2221,6 +2232,12 @@ class AccountsPayableController extends UserController {
             return parent::notfound();
         }
     }
+
+    /*
+     * Save Payment number
+     *
+     * In use for Payment Issue page only
+     */
 
     public function putPaymentNumber($form_id)
     {
@@ -2246,29 +2263,53 @@ class AccountsPayableController extends UserController {
                     return \Response::make("Payment number already exists for this form.",400);
                 }
 
-                $payment = new \SwiftACPPayment([
-                    'payment_number' => \Input::get('value'),
-                    'status' => \SwiftACPPayment::STATUS_ISSUED
-                ]);
-
-                /*
-                 * Determine Payment Type
-                 */
-                if($form->invoice && $form->invoice->currency_code !== "")
+                //Check if payment in progress exists
+                $paymentIssuedCount = $form->payment()->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS)->count();
+                if($paymentIssuedCount > 0)
                 {
-                    if($form->invoice->currency_code === "MUR")
+                    //If there is only one, we update the later
+                    if($paymentIssuedCount === 1)
                     {
-                        $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+                        $currentPaymentEntry = $form->payment()->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS)->first();
+                        $currentPaymentEntry->payment_number = \Input::get('value');
+                        if($currentPaymentEntry->save())
+                        {
+                            return \Response::json(['encrypted_id' => \Crypt::encrypt($currentPaymentEntry->id)]);
+                        }
+
                     }
                     else
                     {
-                        $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                        //Else if there are many, we don't know which one to update
+                        return \Response::make("Too many payments in progress, please update manually on form #".$form->id,400);
                     }
                 }
-
-                if($form->payment()->save($payment))
+                else
                 {
-                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                    //No payment in progress exists
+                    $payment = new \SwiftACPPayment([
+                        'payment_number' => \Input::get('value'),
+                        'status' => \SwiftACPPayment::STATUS_INPROGRESS
+                    ]);
+
+                    /*
+                     * Determine Payment Type
+                     */
+                    if ($form->invoice && $form->invoice->currency_code !== "")
+                    {
+                        if ($form->invoice->currency_code === "MUR")
+                        {
+                            $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+                        } else
+                        {
+                            $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                        }
+                    }
+
+                    if ($form->payment()->save($payment))
+                    {
+                        return \Response::json(['encrypted_id' => \Crypt::encrypt($payment->id)]);
+                    }
                 }
             }
             else
@@ -2281,7 +2322,6 @@ class AccountsPayableController extends UserController {
                     {
                         return \Response::make("Success");
                     }
-
                 }
                 else
                 {
@@ -2297,74 +2337,82 @@ class AccountsPayableController extends UserController {
         return \Response::make("Unable to process your request",500);
     }
 
-    public function putBatchNumber($form_id)
-    {
-        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
-        {
-            return parent::forbidden();
-        }
 
-        $form = \SwiftACPRequest::with('invoice')->find(\Crypt::decrypt($form_id));
-        if($form)
-        {
-            if(!is_numeric(\Input::get('value')))
-            {
-                return \Response::make("Batch number should be numeric",400);
-            }
+//    No longer in use
+//    public function putBatchNumber($form_id)
+//    {
+//        if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
+//        {
+//            return parent::forbidden();
+//        }
+//
+//        $form = \SwiftACPRequest::with('invoice')->find(\Crypt::decrypt($form_id));
+//        if($form)
+//        {
+//            if(!is_numeric(\Input::get('value')))
+//            {
+//                return \Response::make("Batch number should be numeric",400);
+//            }
+//
+//            if(is_numeric(\Input::get('pk')))
+//            {
+//                $payment = new \SwiftACPPayment([
+//                    'batch_number' => \Input::get('value'),
+//                    'status' => \SwiftACPPayment::STATUS_INPROGRESS
+//                ]);
+//
+//                /*
+//                 * Determine Payment Type
+//                 */
+//                if($form->invoice && $form->invoice->currency_code !== "")
+//                {
+//                    if($form->invoice->currency_code === "MUR")
+//                    {
+//                        $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+//                    }
+//                    else
+//                    {
+//                        $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+//                    }
+//                }
+//
+//                if($form->payment()->save($payment))
+//                {
+//                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+//                }
+//            }
+//            else
+//            {
+//                $payment = \SwiftACPPayment::find(\Crypt::decrypt(\Input::get('pk')));
+//                if($payment)
+//                {
+//                    $payment->batch_number = \Input::get('value');
+//                    if($payment->save())
+//                    {
+//                        return \Response::make("Success");
+//                    }
+//
+//                }
+//                else
+//                {
+//                    return \Response::make("Payment Entry Not Found",400);
+//                }
+//            }
+//        }
+//        else
+//        {
+//            return \Response::make("Account Payable Form Not Found",404);
+//        }
+//
+//        return \Response::make("Unable to process your request",500);
+//    }
 
-            if(is_numeric(\Input::get('pk')))
-            {
-                $payment = new \SwiftACPPayment([
-                    'batch_number' => \Input::get('value'),
-                    'status' => \SwiftACPPayment::STATUS_ISSUED
-                ]);
 
-                /*
-                 * Determine Payment Type
-                 */
-                if($form->invoice && $form->invoice->currency_code !== "")
-                {
-                    if($form->invoice->currency_code === "MUR")
-                    {
-                        $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
-                    }
-                    else
-                    {
-                        $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
-                    }
-                }
-
-                if($form->payment()->save($payment))
-                {
-                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
-                }
-            }
-            else
-            {
-                $payment = \SwiftACPPayment::find(\Crypt::decrypt(\Input::get('pk')));
-                if($payment)
-                {
-                    $payment->batch_number = \Input::get('value');
-                    if($payment->save())
-                    {
-                        return \Response::make("Success");
-                    }
-
-                }
-                else
-                {
-                    return \Response::make("Payment Entry Not Found",400);
-                }
-            }
-        }
-        else
-        {
-            return \Response::make("Account Payable Form Not Found",404);
-        }
-
-        return \Response::make("Unable to process your request",500);
-    }
-    
+    /*
+     *  Save cheque signator for accounting
+     *
+     *  In use only on payment issue page
+     */
     public function putChequeSignatorId($form_id)
     {
         if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
@@ -2382,29 +2430,54 @@ class AccountsPayableController extends UserController {
 
             if(is_numeric(\Input::get('pk')))
             {
-                $payment = new \SwiftACPPayment([
-                    'cheque_signator_id' => \Input::get('value'),
-                    'status' => \SwiftACPPayment::STATUS_ISSUED
-                ]);
 
-                /*
-                 * Determine Payment Type
-                 */
-                if($form->invoice && $form->invoice->currency_code !== "")
+                //Check if payment in progress exists
+                $paymentIssuedCount = $form->payment()->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS)->count();
+                if($paymentIssuedCount > 0)
                 {
-                    if($form->invoice->currency_code === "MUR")
+                    //If there is only one, we update the later
+                    if($paymentIssuedCount === 1)
                     {
-                        $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+                        $currentPaymentEntry = $form->payment()->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS)->first();
+                        $currentPaymentEntry->cheque_signator_id = (int)\Input::get('value');
+                        if($currentPaymentEntry->save())
+                        {
+                            return \Response::json(['encrypted_id' => \Crypt::encrypt($currentPaymentEntry->id)]);
+                        }
+
                     }
                     else
                     {
-                        $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                        //Else if there are many, we don't know which one to update
+                        return \Response::make("Too many payments in progress, please update manually on form #".$form->id,400);
                     }
                 }
-
-                if($form->payment()->save($payment))
+                else
                 {
-                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                    $payment = new \SwiftACPPayment([
+                        'cheque_signator_id' => \Input::get('value'),
+                        'status' => \SwiftACPPayment::STATUS_INPROGRESS
+                    ]);
+
+                    /*
+                     * Determine Payment Type
+                     */
+                    if($form->invoice && $form->invoice->currency_code !== "")
+                    {
+                        if($form->invoice->currency_code === "MUR")
+                        {
+                            $payment->type = \SwiftACPPayment::TYPE_CHEQUE;
+                        }
+                        else
+                        {
+                            $payment->type = \SwiftACPPayment::TYPE_BANKTRANSFER;
+                        }
+                    }
+
+                    if($form->payment()->save($payment))
+                    {
+                        return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                    }
                 }
             }
             else
@@ -2433,6 +2506,11 @@ class AccountsPayableController extends UserController {
         return \Response::make("Unable to process your request",500);
     }
 
+    /*
+     * In use with payment issue
+     *
+     * Set payment type
+     */
     public function putPaymentType($form_id)
     {
         if(!$this->permission->isAdmin() && !$this->permission->isAccountingDept())
@@ -2450,13 +2528,37 @@ class AccountsPayableController extends UserController {
 
             if(is_numeric(\Input::get('pk')))
             {
-                $payment = new \SwiftACPPayment([
-                    'type' => (int)\Input::get('value')
-                ]);
-
-                if($form->payment()->save($payment))
+                //Check if payment in progress exists
+                $paymentIssuedCount = $form->payment()->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS)->count();
+                if($paymentIssuedCount > 0)
                 {
-                    return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                    //If there is only one, we update the later
+                    if($paymentIssuedCount === 1)
+                    {
+                        $currentPaymentEntry = $form->payment()->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS)->first();
+                        $currentPaymentEntry->type = (int)\Input::get('value');
+                        if($currentPaymentEntry->save())
+                        {
+                            return \Response::json(['encrypted_id'=>\Crypt::encrypt($currentPaymentEntry->id)]);
+                        }
+
+                    }
+                    else
+                    {
+                        //Else if there are many, we don't know which one to update
+                        return \Response::make("Too many payments in progress, please update manually on form #".$form->id,400);
+                    }
+                }
+                else
+                {
+                    $payment = new \SwiftACPPayment([
+                        'type' => (int)\Input::get('value')
+                    ]);
+
+                    if($form->payment()->save($payment))
+                    {
+                        return \Response::json(['encrypted_id'=>\Crypt::encrypt($payment->id)]);
+                    }
                 }
             }
             else
@@ -2537,7 +2639,7 @@ class AccountsPayableController extends UserController {
                 {
                     return \Response::make("Please select a user to sign the cheque.",500);
                 }
-                
+
                 \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($payment->acp),'id'=>$payment->acp->id,'user_id'=>$this->currentUser->id));
                 return \Response::make("Success");
             }
@@ -2566,7 +2668,7 @@ class AccountsPayableController extends UserController {
                 $payment = \SwiftACPPayment::with('acp')
                             ->where('id','=',$paymentId)
                             ->first();
-                
+
                 if($payment && $payment->acp)
                 {
                     $payment->status = \SwiftACPPayment::STATUS_SIGNED;
@@ -2582,7 +2684,7 @@ class AccountsPayableController extends UserController {
             return \Response::make("Unable to process your request",400);
         }
     }
-    
+
     public function postSaveChequeSignExec()
     {
         if(!$this->permission->isAdmin() && !$this->permission->canSignChequeExec())
@@ -3167,7 +3269,7 @@ class AccountsPayableController extends UserController {
         {
             $supplierQuery->offset(($page-1)*$limitPerPage);
         }
-        
+
         $forms = $supplierQuery
                  ->orderBy('Supplier_Name','ASC')
                  ->with('invoice')
@@ -3227,9 +3329,9 @@ class AccountsPayableController extends UserController {
              * Enable Commenting
              */
             $this->enableComment($supplier);
-            
+
             $this->pageTitle = $supplier->getReadableName();
-            
+
             $this->data['edit'] = $mode==='edit' ? true : false;
             $this->data['form'] = $supplier;
             $this->data['tags'] = json_encode(\Helper::jsonobject_encode(\SwiftTag::$supplierTags));
@@ -3273,7 +3375,7 @@ class AccountsPayableController extends UserController {
                     return \Response::json(['id'=>\Crypt::encrypt($pv->id)]);
                 }
             }
-            
+
             //Create new / Old one was deleted
             $acp = \SwiftACPRequest::with('paymentVoucher')->find(\Crypt::decrypt(\Input::get('id')));
             if($acp)
@@ -3421,7 +3523,7 @@ class AccountsPayableController extends UserController {
            'number' => \Input::get('invoice_number'),
            'due_date' => \Carbon::createFromFormat('d/m/Y',\Input::get('due_date'))
         ]);
-        
+
         $acp->invoice()->save($invoice);
 
         //Create Workflow
@@ -3440,7 +3542,7 @@ class AccountsPayableController extends UserController {
         {
             return \Response::json(['msg'=>"A critical error occured. Contact your administrator. Id: {$acp->getKey()}"],500);
         }
-        
+
     }
 
     public function getListByForm($class,$id)
@@ -3484,7 +3586,7 @@ class AccountsPayableController extends UserController {
                             ->with(['supplier','detail'=>function($q){
                                 return $q->orderBy('rc5','ASC');
                             }])->first();
-                
+
                 if($payment)
                 {
                     echo \View::make('jdepayment.payment-single',['pay'=>$payment])->render();
@@ -3536,7 +3638,7 @@ class AccountsPayableController extends UserController {
                     ];
             }
 
-            
+
 
             $this->data['form'] = $form;
             return \View::make('acpayable/hod-suggest',$this->data);
@@ -3797,7 +3899,7 @@ class AccountsPayableController extends UserController {
 
                     $acp->save();
 
-                    
+
                     /*
                      * Add invoice
                      */

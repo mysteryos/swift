@@ -1088,5 +1088,19 @@ class Helper {
         $len = strpos($string,$end,$ini) - $ini;
         return substr($string,$ini,$len);
     }
+
+    /*
+     * Validate Date Format
+     *
+     * @param string $date
+     * @param string $format
+     * @return boolean
+     */
+
+    public function validateDate($date, $format = 'Y-m-d H:i:s')
+    {
+        $d = \DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) == $date;
+    }
     
 }

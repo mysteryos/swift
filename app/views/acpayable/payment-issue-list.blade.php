@@ -83,26 +83,48 @@
                         {{count($f->payment)}}
                     </td>
                     <td>
-                        <select name="payment_type" class="form-control input-with-pk input-block-level input-payment-type" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-type/{{\Crypt::encrypt($f->id)}}">
-                            <option @if($f->payment_type === 0){{"selected"}}@endif disabled>Select a type</option>
-                            @foreach($payment_type as $type_key => $type_val)
-                                <option value="{{$type_key}}" @if($f->payment_type === $type_key){{"selected"}}@endif >{{$type_val}}</option>
-                            @endforeach
-                        </select>
+                        @if($f->payment_inprogress !== false)
+                            <select name="payment_type" class="form-control input-with-pk input-block-level input-payment-type" data-pk="{{\Crypt::encrypt($f->payment_inprogress->id)}}" data-prev-value="{{$f->payment_inprogress->type or ""}}" data-url="/{{$rootURL}}/payment-type/{{\Crypt::encrypt($f->id)}}">
+                                <option @if((int)$f->payment_inprogress->type === 0){{"selected"}}@endif disabled>Select a type</option>
+                                @foreach($payment_type as $type_key => $type_val)
+                                    <option value="{{$type_key}}" @if((int)$f->payment_inprogress->type === $type_key){{"selected"}}@endif >{{$type_val}}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <select name="payment_type" class="form-control input-with-pk input-block-level input-payment-type" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-type/{{\Crypt::encrypt($f->id)}}">
+                                <option @if($f->payment_type === 0){{"selected"}}@endif disabled>Select a type</option>
+                                @foreach($payment_type as $type_key => $type_val)
+                                    <option value="{{$type_key}}" @if($f->payment_type === $type_key){{"selected"}}@endif >{{$type_val}}</option>
+                                @endforeach
+                            </select>
+                        @endif
                     </td>
                     <td>
-                        <input type="text" class="form-control input-block-level input-with-pk input-paymentnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-number/{{ \Crypt::encrypt($f->id) }}" name="payment_number" value="" />
+                        @if($f->payment_inprogress !== false)
+                            <input type="text" class="form-control input-block-level input-with-pk input-paymentnumber" data-pk="{{\Crypt::encrypt($f->payment_inprogress->id)}}" data-prev-value="{{$f->payment_inprogress->payment_number}}" data-url="/{{$rootURL}}/payment-number/{{ \Crypt::encrypt($f->id) }}" name="payment_number" value="{{$f->payment_inprogress->payment_number}}" />
+                        @else
+                            <input type="text" class="form-control input-block-level input-with-pk input-paymentnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/payment-number/{{ \Crypt::encrypt($f->id) }}" name="payment_number" value="" />
+                        @endif
                     </td>
                     <!-- <td>
                         <input type="text" class="form-control input-block-level input-with-pk input-batchnumber" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/batch-number/{{ \Crypt::encrypt($f->id) }}" name="batch_number" value="" />
                     </td>-->
                     <td>
-                        <select name="cheque_signator_id" class="form-control input-with-pk input-block-level input-cheque-signator-id" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/cheque-signator-id/{{ \Crypt::encrypt($f->id) }}">
-                            <option selected disabled>Select a User</option>
+                        @if($f->payment_inprogress !== false)
+                            <select name="cheque_signator_id" class="form-control input-with-pk input-block-level input-cheque-signator-id" data-pk="{{\Crypt::encrypt($f->payment_inprogress->id)}}" data-prev-value="{{$f->payment_inprogress->cheque_signator_id or ""}}" data-url="/{{$rootURL}}/cheque-signator-id/{{ \Crypt::encrypt($f->id) }}">
+                                <option @if((int)$f->payment_inprogress->cheque_signator_id === 0){{"selected"}}@endif disabled>Select a User</option>
                                 @foreach($chequesign_users as $user_id => $user_name)
-                                    <option value="{{$user_id}}">{{$user_name}}</option>
+                                    <option value="{{$user_id}}" @if((int)$f->payment_inprogress->cheque_signator_id === $user_id){{"selected"}}@endif>{{$user_name}}</option>
                                 @endforeach
-                        </select>
+                            </select>
+                        @else
+                            <select name="cheque_signator_id" class="form-control input-with-pk input-block-level input-cheque-signator-id" data-pk="0" data-prev-value="" data-url="/{{$rootURL}}/cheque-signator-id/{{ \Crypt::encrypt($f->id) }}">
+                                <option selected disabled>Select a User</option>
+                                    @foreach($chequesign_users as $user_id => $user_name)
+                                        <option value="{{$user_id}}">{{$user_name}}</option>
+                                    @endforeach
+                            </select>
+                        @endif
                     </td>
                     <td>
                         <a href="/{{ $rootURL }}/formapprovalaccounting/{{\Crypt::encrypt($f->id)}}" class="btn btn-default btn-single-publish" title="Publish Form" tabindex="-1"><i class="fa fa-check"></i></a>

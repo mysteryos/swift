@@ -235,6 +235,11 @@ class SwiftACPRequest extends Eloquent
     {
         return $this->hasOne('SwiftACPInvoice','acp_id');
     }
+
+    public function invoiceExtra()
+    {
+        return $this->hasMany('SwiftACPInvoiceExtra','acp_id');
+    }
     
     public function payment()
     {

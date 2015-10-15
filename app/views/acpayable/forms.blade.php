@@ -19,7 +19,7 @@
 <div id="content" data-js="acp_forms" data-urljs="{{Bust::url('/js/swift/swift.acp_forms.js')}}">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>
         </div>
         <div class="col-md-8 col-lg-10 hidden-mobile">
             <div class="inbox-inline-actions page-title">
@@ -29,7 +29,7 @@
                         <i class="fa fa-filter"></i>
                     </button>
                 </div>
-            </div>            
+            </div>
         </div>
     </div>
     <div class="row">
@@ -81,7 +81,7 @@
 
                 </div>
             </div>
-            
+
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
             @include('acpayable.filter-form')
@@ -105,8 +105,8 @@
                     @endif
                     @if($formCount)
                     <div class="btn-group pull-right inbox-paging">
-                            <a href="@if($prev_offset === 0 && $next_offset < $limit_per_page){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".$movement_offset."/".($prev_offset-$movement_offset < 0 ? 0 : $prev_offset-$movement_offset)."/".($prev_offset).$filter_string}}@endif" class="btn btn-default btn-sm @if(($next_offset-$movement_offset) < 0){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
-                            <a href="@if($next_offset > $formCount){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".$movement_offset."/".$prev_offset."/".$next_offset.$filter_string}}@endif" class="btn btn-default btn-sm @if($next_offset >= $formCount){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
+                            <a href="@if($prev_offset === 0 && $next_offset < $limit_per_page){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".$movement_offset."/".($prev_offset-$movement_offset <= 0 ? 0 : $prev_offset-$movement_offset)."/".($prev_offset).$filter_string}}@endif" class="btn btn-default btn-sm @if(($prev_offset-$movement_offset) <= 0){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-previous"><strong><i class="fa fa-chevron-left"></i></strong></a>
+                            <a href="@if($next_offset > $formCount){{"javascript:void(0);"}}@else{{"/".$rootURL."/forms/".$type."/".$movement_offset."/".$prev_offset."/".$next_offset.$filter_string}}@endif" class="btn btn-default btn-sm @if($next_offset > $formCount){{"disabled"}}@else{{"pjax"}}@endif" id="inbox-nav-next"><strong><i class="fa fa-chevron-right"></i></strong></a>
                     </div>
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">

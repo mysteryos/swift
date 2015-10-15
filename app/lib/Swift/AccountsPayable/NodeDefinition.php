@@ -42,7 +42,7 @@ Class NodeDefinition {
             {
                 $returnReasonList['requester_absent'] = "Please publish the form";
             }
-            
+
             if(count($returnReasonList) === 0 && !$returnReason)
             {
                 return true;
@@ -73,7 +73,7 @@ Class NodeDefinition {
                 //No Pending
                 return true;
             }
-            
+
             if(count($returnReasonList) === 0 && !$returnReason)
             {
                 return true;
@@ -157,7 +157,7 @@ Class NodeDefinition {
                 }
             }
 
-            
+
             if(count($returnReasonList) === 0 && !$returnReason)
             {
                 return true;
@@ -175,9 +175,9 @@ Class NodeDefinition {
         if($acp)
         {
             $acp->load(['payment' => function ($q){
-                return $q->where('status','=',\SwiftACPPayment::STATUS_ISSUED);
+                return $q->where('status','=',\SwiftACPPayment::STATUS_INPROGRESS);
             }]);
-            
+
             if(count($acp->payment) === 0)
             {
                 $returnReasonList['payment_absent'] = "Input payment details";
@@ -200,12 +200,6 @@ Class NodeDefinition {
                             $returnReasonList['cheque_signator_absent'] = "Please select a user to sign the cheque on Payment ID: ".$p->id;
                             break;
                         }
-
-                        if($p->status <= \SwiftACPPayment::STATUS_INPROGRESS)
-                        {
-                            $returnReasonList['cheque_status_wrong'] = "Please set cheque status to 'issued' on Payment ID: ".$p->id;
-                            break;
-                        }
                     }
                 }
             }
@@ -214,7 +208,7 @@ Class NodeDefinition {
             $paymentPendingApprovalCount = $acp->approval()
                                     ->where('type','=',\SwiftApproval::APC_PAYMENT)
                                     ->where('approved','=',\SwiftApproval::PENDING)->count();
-            
+
             if($paymentPendingApprovalCount > 0)
             {
                 $returnReasonList['approval_absent'] = "Please publish the form";
@@ -222,9 +216,16 @@ Class NodeDefinition {
 
             if(count($returnReasonList) === 0 && !$returnReason)
             {
+                //all checks passed - switch status of payment
+                foreach($acp->payment as $pending_pay)
+                {
+                    $pending_pay->status = \SwiftACPPayment::STATUS_ISSUED;
+                    $pending_pay->save();
+                }
+
                 return true;
             }
-            
+
         }
 
         return $returnReason ? $returnReasonList : false;
@@ -243,12 +244,12 @@ Class NodeDefinition {
                                     ->where('status','<',\SwiftACPPayment::STATUS_SIGNED)
                                     ->where('type','=',\SwiftACPPayment::TYPE_CHEQUE)
                                     ->count();
-            
+
             if($chequeNotSignedCount > 0)
             {
                 $returnReasonList['chequenot_signed'] = "Please set cheque status to signed where necessary";
             }
-            
+
             if(count($returnReasonList) === 0 && !$returnReason)
             {
                 return true;
@@ -293,7 +294,7 @@ Class NodeDefinition {
 
         return $returnReason ? $returnReasonList : false;
     }
-    
+
     public static function acpChequeSignByExec($nodeActivity,$returnReason=false)
     {
         $returnReasonList = array();
@@ -344,7 +345,7 @@ Class NodeDefinition {
             {
                 return true;
             }
-            
+
         }
 
         return $returnReason ? $returnReasonList : false;
@@ -406,7 +407,7 @@ Class NodeDefinition {
             {
                 return true;
             }
-            
+
         }
         return $returnReason ? $returnReasonList : false;
     }

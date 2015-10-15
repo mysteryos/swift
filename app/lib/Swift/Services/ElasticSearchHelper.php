@@ -123,23 +123,37 @@ class ElasticSearchHelper {
                     return false;
                 }
             }
+
             //Check if Parent Exists
             try
             {
-                $result = @\Es::get([
+                $result = \Es::get([
                     'id' => $params['id'],
                     'index' => $params['index'],
                     'type' => $data['context']
                 ]);
-            } catch (\Elasticsearch\Common\Exceptions\Missing404Exception $ex) {
-                //if not, we set it
-                if(isset($parent) && $parent)
+            } catch (Exception $ex) {
+                if($ex instanceof \Elasticsearch\Common\Exceptions\Missing404Exception || $ex instanceof \Guzzle\Http\Exception\ClientErrorResponseException)
                 {
-                    $this->indexEs([
-                        'context' => $data['context'],
-                        'class' => get_class($parent),
-                        'id' => $parent->id,
-                    ]);
+                    //if not, we set it
+                    if (isset($parent) && $parent)
+                    {
+                        $this->indexEs([
+                            'context' => $data['context'],
+                            'class' => get_class($parent),
+                            'id' => $parent->id,
+                        ]);
+                    }
+                    else
+                    {
+                        \Log::error('Unexpected error in updating elasticsearch records, parent not set with message: '.$ex->getMessage());
+                        return false;
+                    }
+                }
+                else
+                {
+                    \Log::error('Unexpected error in updating elasticsearch records: '.$ex->getMessage());
+                    return false;
                 }
             }
             

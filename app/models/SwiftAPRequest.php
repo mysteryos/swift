@@ -128,7 +128,7 @@ class SwiftAPRequest extends Eloquent {
     
     public function requester()
     {
-        return $this->belongsTo('user','requester_user_id');
+        return $this->belongsTo('User','requester_user_id');
     }
     
     /*

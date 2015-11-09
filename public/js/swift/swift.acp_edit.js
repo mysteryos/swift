@@ -37,18 +37,18 @@ function addMulti($dummy,pk)
         if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('fieldset.multi').prepend("<div class='loading-overlay'></div>");
-        }        
+        }
     }).on('error',function(){
         if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
-        }          
+        }
     });
     if(typeof pk !== "undefined")
     {
         addEditablePk($clone,pk.encrypted_id,pk.id);
     }
-    
+
     $dummy.parents('.jarviswidget').find('form').prepend($clone);
     return true;
 }
@@ -60,8 +60,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     $editables.attr('data-pk',$encryptedPk);
     $editables.each(function(){
         $this=$(this);
-        $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+$pk); 
-    });       
+        $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+$pk);
+    });
     $editables.editable('option', 'pk', $encryptedPk);
     $editables.attr('data-pk',$encryptedPk);
     $editables.editable('enable');
@@ -69,10 +69,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 }
 
 (window.acp_edit = function () {
-    
+
     //Ribbon Buttons
     $('a.btn-ribbon-cancel').on('click',function(e){
-        e.preventDefault();            
+        e.preventDefault();
         var $this = $(this);
         $.SmartMessageBox({
                 title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to cancel '"+document.getElementById('project-name').value+"' ?</strong></span> ?",
@@ -101,15 +101,15 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                         {
                             return xhr.responseText;
                         }
-                    });                        
+                    });
                 }
 
         });
         return false;
     });
-    
+
     //Mark as important button
-    
+
     $('a.btn-mark-important').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
@@ -143,7 +143,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                             }
                             else
                             {
-                                $this.attr('data-original-title',"Unmark as important");                                
+                                $this.attr('data-original-title',"Unmark as important");
                                 $this.children('i').addClass('fa-exclamation-triangle');
                                 $this.children('i').removeClass('fa-exclamation');
                                 $this.tooltip();
@@ -155,13 +155,13 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                             $this.removeAttr('disabled');
                             return xhr.responseText;
                         }
-                    });                        
+                    });
                 }
 
         });
-        return false;        
+        return false;
     });
-    
+
     //Help button
     $('a.btn-help').on('click',function(e){
         e.preventDefault();
@@ -180,7 +180,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 			icon : "fa fa-question"
 		});
                 $this.removeAttr('disabled');
-                $this.removeClass('loading-animation');                
+                $this.removeClass('loading-animation');
             },
             error:function(xhr, status, error)
             {
@@ -189,7 +189,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 			content : xhr.responseText,
 			color : "#5384AF",
 			icon : "fa fa-question"
-		});                
+		});
                 $this.removeAttr('disabled');
                 $this.removeClass('loading-animation');
             }
@@ -202,7 +202,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
-    
+
     //General Info
     $('.editable:not(.dummy)').each(function(){
         var $this = $(this);
@@ -217,7 +217,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     minimumInputLength: 3,
                     id: function (item) {
                         return item.id;
-                    },                    
+                    },
                     ajax: {
                         url: '/ajaxsearch/searchsupplier',
                         data: function (term, page) {
@@ -252,8 +252,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     },
                     initSelection: function (element, callback) {
                         callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
-                    }                     
-                }                 
+                    }
+                }
             });
         }
         else if(this.getAttribute('data-type')=="select2" && this.getAttribute('data-name')=="billable_company_code" && this.getAttribute('data-context')=="generalinfo")
@@ -305,7 +305,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     },
                     initSelection: function (element, callback) {
                         callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
-                    }                    
+                    }
                 }
             });
         }
@@ -316,7 +316,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 onblur: $this.hasClass('editable-noblur') ? 'cancel' : 'submit',
             });
         }
-        
+
         $this.on('shown',function(e){
             presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: this.getAttribute('data-name'),pk: this.getAttribute('data-pk'), id: this.id});
             return true;
@@ -338,7 +338,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             return true;
         });
     });
-    
+
     //Multi
     $('.creditnote-editable, .purchaseorder-editable, .invoice-editable, .paymentvoucher-editable, .payment-editable').on('save',function(e,params){
         var $this = $(this);
@@ -365,10 +365,10 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         if(this.getAttribute('data-pk') == "0")
         {
             $(this).parents('fieldset.multi').find('div.loading-overlay').remove();
-        }        
-    });    
-    
-    
+        }
+    });
+
+
     /*
      * Add New
      */
@@ -384,7 +384,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 {
                     $editableContainer.prev().editable('hide');
                 }
-            }            
+            }
             addMulti($dummy);
         }
         else
@@ -459,14 +459,14 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         }
         return false;
     });
-    
+
     $('#acp-list').on('click','tr[data-url] td',function(){
         $.pjax({
             url: $(this).parent('tr').attr('data-url'),
             container: '#main'
        });
     });
-    
+
     $('a.btn-force-update').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
@@ -484,7 +484,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
 			icon : "fa fa-check"
 		});
                 $this.removeAttr('disabled');
-                $this.removeClass('loading-animation');                
+                $this.removeClass('loading-animation');
             },
             error:function(xhr, status, error)
             {
@@ -493,7 +493,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 return xhr.responseText;
             }
         });
-    });    
+    });
 
     /*
      * Dropzone
@@ -565,7 +565,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                             }
                             else
                             {
-                                $.ajax({    
+                                $.ajax({
                                     type:'DELETE',
                                     url: '/accounts-payable/upload/'+$(file.previewElement).attr('data-id'),
                                     success:function()
@@ -585,8 +585,8 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                                             message: xhr.responseText,
                                             showCloseButton: true
                                         });
-                                    }                                        
-                                });                                        
+                                    }
+                                });
                             }
 
                             return true;
@@ -636,7 +636,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                                 message: xhr.responseText,
                                 showCloseButton: true
                             });
-                        }                                        
+                        }
                     });
                 }
                 return false;
@@ -671,7 +671,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 break;
             case "application/pdf":
                 var icon = '<i class="fa fa-file-pdf-o"></i>';
-                break;                        
+                break;
             default:
                 var icon = '<i class="fa fa-file-o"></i>';
                 break;
@@ -730,7 +730,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             type: 'error',
             hideAfter: 0,
             message: 'Upload Failed: "'+file.name+'" - '+errorMsg
-        });            
+        });
     });
 
     theAwesomeDropZone.on('uploadprogress',function(file,progress){
@@ -745,11 +745,11 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
        if(typeof uploadmsg !== "undefined" && progress == 100)
        {
            uploadmsg.hide();
-       }            
+       }
     });
-    
+
     //Drag & Drop File Fix
-    
+
     var dragEle = document.getElementById( "content" );
     var dragster = new Dragster(dragEle);
     dragEle.addEventListener( "dragster:enter", function (e) {
@@ -759,13 +759,13 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                 e.target.classList.add( "dragged-over" );
                 break;
             }
-        }        
+        }
     }, false );
-    
+
     dragEle.addEventListener( "dragster:leave", function (e) {
         e.target.classList.remove( "dragged-over" );
     }, false );
-    
+
     $('#content').on("drop", function (event) {
         dragster.dragleave(event);
     });
@@ -795,7 +795,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         {
             //For Docs
             $.colorbox({
-               href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+               href: "http://docs.google.com/viewer?url="+encodeURIComponent($this.attr('href'))+"&embedded=true",
                maxHeight:"100%",
                maxWidth:"90%",
                innerWidth:"100%",
@@ -807,13 +807,13 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
             });
         }
     });
-    
+
     $.document_.bind('cbox_complete', function () {
         $('html').css({ overflow: 'hidden' });
     }).bind('cbox_closed', function () {
         $('html').css({ overflow: 'auto' });
-    });    
-    
+    });
+
     $('a.btn-publish').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
@@ -844,20 +844,20 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
                     {
                         return xhr.responseText;
                     }
-                });                       
+                });
             }
             else
             {
                 return false;
             }
 
-        });        
+        });
         return false;
     });
-    
+
     //Enable Commenting
     enableComments();
-    
+
     //Hide Loading Message
     messenger_hidenotiftop();
-})();    
+})();

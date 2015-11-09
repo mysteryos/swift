@@ -1,4 +1,4 @@
-/* 
+/*
  * Name: PR Edit
  * Description: Product Returns form edit
  */
@@ -20,7 +20,7 @@ function addMulti($dummy,pk)
                     minimumInputLength: 3,
                     id: function (item) {
                         return item.id;
-                    },                    
+                    },
                     ajax: {
                         url: '/ajaxsearch/product',
                         data: function (term, page) {
@@ -64,7 +64,7 @@ function addMulti($dummy,pk)
                 onblur: 'submit'
             });
         }
-        
+
         $(this).on('shown',function(e){
             presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
             if(this.getAttribute('data-type')=="select2")
@@ -89,7 +89,7 @@ function addMulti($dummy,pk)
                 else
                 {
                     $this.parents('.multi').find('div.loading-overlay').remove();
-                }                
+                }
                 var response = $.parseJSON(params.response);
                 //Set new pk value
                 addEditablePk($this.parents('.multi'),response.encrypted_id,response.id);
@@ -97,7 +97,7 @@ function addMulti($dummy,pk)
                 presenceChannelCurrent.trigger('client-multi-add',{user: presenceChannelCurrent.members.me , pk: response, context: $dummy.attr('data-name')});
             }
             //Trigger Single Value Save as well
-            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})        
+            presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $this.attr('data-name'),pk: $this.attr('data-pk'), newValue: params.newValue, id: this.id})
         }).on('submit',function(e){
             if(this.getAttribute('data-pk') == "0")
             {
@@ -109,7 +109,7 @@ function addMulti($dummy,pk)
                 {
                     $(this).parents('.multi').prepend("<div class='loading-overlay'></div>");
                 }
-            }            
+            }
         }).on('error',function(e){
             if(this.getAttribute('data-pk') == "0")
             {
@@ -121,15 +121,15 @@ function addMulti($dummy,pk)
                 {
                     $this.parents('.multi').find('div.loading-overlay').remove();
                 }
-            }             
+            }
         });
     });
-    
+
     if(typeof pk !== "undefined")
     {
         addEditablePk($clone,pk.encrypted_id,pk.id);
     }
-    
+
     if($clone.is('tr'))
     {
         $dummy.parents('.jarviswidget').find('table').append($clone);
@@ -147,7 +147,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     $fieldset.find('a.editable').attr('data-pk',$encryptedPk);
     $fieldset.find('a.editable').each(function(){
         $this=$(this);
-        $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+$pk); 
+        $this.attr('id',$this.attr('data-context')+"_"+$this.attr('data-name')+"_"+$pk);
     });
     return true;
 }
@@ -167,7 +167,7 @@ function editableElement($element)
                     minimumInputLength: 3,
                     id: function (item) {
                         return item.id;
-                    },                    
+                    },
                     ajax: {
                         url: '/ajaxsearch/product',
                         data: function (term, page) {
@@ -194,8 +194,8 @@ function editableElement($element)
                     },
                     initSelection: function (element, callback) {
                         callback({id: element.val() , text: element.parents('td.editable-select2').children('a.product-editable').html()});
-                    }                     
-                }                 
+                    }
+                }
             }).on('shown', function(e, editable) {
                 if (arguments.length == 2) {
                     setTimeout(function() {
@@ -253,7 +253,7 @@ function editableElement($element)
                     },
                     initSelection: function (element, callback) {
                         callback({id: element.val() , text: element.parents('div.editable-select2').children('a.editable').html()});
-                    }                    
+                    }
                 }
             }).on('shown', function(e, editable) {
                 if (arguments.length == 2) {
@@ -271,7 +271,7 @@ function editableElement($element)
             });
 
         }
-        
+
         $this.on('shown',function(e){
             presenceChannelCurrent.trigger('client-editable-shown',{user: presenceChannelCurrent.members.me ,name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), id: this.id});
             if(this.getAttribute('data-type')=="select2")
@@ -298,15 +298,15 @@ function editableElement($element)
                     //Set new pk value
                     $(this).editable('option', 'pk', response.encrypted_id);
                     $(this).attr('data-pk',response.encrypted_id);
-                    
+
                     //Set comment pk as well
                     $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').editable('option', 'pk', response.encrypted_id);
                     $(this).closest('div.row').find('a.editable[data-name="approval_comment"]').attr('data-pk',response.encrypted_id);
-                    
+
                     //Trigger Single Value Save as well
                     presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id})
                 }
-                return true;        
+                return true;
             });
         }
         else
@@ -320,20 +320,20 @@ function editableElement($element)
                     presenceChannelCurrent.trigger('client-editable-save',{user: presenceChannelCurrent.members.me, name: $(this).attr('data-name'),pk: $(this).attr('data-pk'), newValue: params.newValue, id: this.id});
                 }
                 return true;
-            });            
+            });
         }
-    });    
+    });
 }
 
 (window.pr_edit = function () {
-    
+
     $(".product-filter a").on('click',function() {
             var selText = $(this).text();
             var $this = $(this);
             $this.parents('.btn-group').find('.dropdown-toggle').html(selText + ' <span class="caret"></span>');
             var filter = $this.attr("data-approvalstatus");
             $this.parents('.dropdown-menu').find('li').removeClass('active');
-            
+
             if(typeof filter !== "undefined")
             {
                 $('tr.fieldset-product').hide();
@@ -344,10 +344,10 @@ function editableElement($element)
                 $('tr.fieldset-product').show();
             }
     });
-    
+
     //Ribbon Buttons
     $('a.btn-ribbon-cancel').on('click',function(e){
-        e.preventDefault();            
+        e.preventDefault();
         var $this = $(this);
         $.SmartMessageBox({
                 title : "<i class='fa fa-times txt-color-red'></i> <span class='txt-color-red'><strong>Are you sure you wish to cancel this Product Returns?</strong></span> ?",
@@ -376,13 +376,13 @@ function editableElement($element)
                         {
                             return xhr.responseText;
                         }
-                    });                        
+                    });
                 }
 
         });
         return false;
     });
-    
+
     //Help button
         $('a.btn-help').on('click',function(e){
         e.preventDefault();
@@ -401,7 +401,7 @@ function editableElement($element)
 			icon : "fa fa-question"
 		});
                 $this.removeAttr('disabled');
-                $this.removeClass('loading-animation');                
+                $this.removeClass('loading-animation');
             },
             error:function(xhr, status, error)
             {
@@ -410,13 +410,13 @@ function editableElement($element)
 			content : xhr.responseText,
 			color : "#5384AF",
 			icon : "fa fa-question"
-		});                
+		});
                 $this.removeAttr('disabled');
                 $this.removeClass('loading-animation');
             }
         });
     });
-    
+
     $('a.btn-force-update').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
@@ -434,7 +434,7 @@ function editableElement($element)
 			icon : "fa fa-check"
 		});
                 $this.removeAttr('disabled');
-                $this.removeClass('loading-animation');                
+                $this.removeClass('loading-animation');
             },
             error:function(xhr, status, error)
             {
@@ -443,10 +443,10 @@ function editableElement($element)
                 return xhr.responseText;
             }
         });
-    });     
-    
+    });
+
     //Mark as important button
-    
+
     $('a.btn-mark-important').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
@@ -480,7 +480,7 @@ function editableElement($element)
                             }
                             else
                             {
-                                $this.attr('data-original-title',"Unmark as important");                                
+                                $this.attr('data-original-title',"Unmark as important");
                                 $this.children('i').addClass('fa-exclamation-triangle');
                                 $this.children('i').removeClass('fa-exclamation');
                                 $this.tooltip();
@@ -492,23 +492,23 @@ function editableElement($element)
                             $this.removeAttr('disabled');
                             return xhr.responseText;
                         }
-                    });                        
+                    });
                 }
 
         });
-        return false;        
+        return false;
     });
-    
+
     //Bind pusher channel & events
     pusherSubscribeCurrentPresenceChannel(true,true);
 
     //Turn on inline Mode
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "put"};
-    
+
     //Enable X-Editable
     editableElement($('.editable:not(.dummy)'));
-    
+
     //Multi
     $('.product-editable, .pickup-editable, .erporder-editable, .creditnote-editable').on('save',function(e,params){
         var $this = $(this);
@@ -556,9 +556,9 @@ function editableElement($element)
             {
                 $(this).parents('.multi').find('div.loading-overlay').remove();
             }
-        }        
+        }
     });
-    
+
     /*
      * Add New
      */
@@ -574,7 +574,7 @@ function editableElement($element)
                 {
                     $editableContainer.prev().editable('hide');
                 }
-            }            
+            }
             addMulti($dummy);
         }
         else
@@ -582,7 +582,7 @@ function editableElement($element)
             messenger_notiftop('Error: Cannot add new record','error');
         }
     });
-    
+
     $('.jarviswidget').on('click','.multi .btn-delete',function(){
         var $this = $(this);
         if(confirm('Are you sure you wish to delete this record?'))
@@ -625,11 +625,11 @@ function editableElement($element)
         }
         return false;
     });
-    
+
     /*
      * Add From Invoice
      */
-     
+
     var $saveProductByInvoiceForm = $('#productFromInvoiceForm').validate({
         ignore: '',
         rules : {
@@ -648,7 +648,7 @@ function editableElement($element)
                 required: 'Please select at least one product'
             }
         },
-        
+
         // Ajax form submition
         submitHandler : function(form) {
                 var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
@@ -689,7 +689,7 @@ function editableElement($element)
                 return false;
         }
     });
-    
+
     $('#invoice_id').select2({
         placeholder: 'Enter an invoice number',
         allowClear: true,
@@ -749,7 +749,7 @@ function editableElement($element)
                 $('#product-list').slideUp('300',function(){
                     $(this).html(html);
                     $('#product_tick_all').on('click',function(){
-                        $('.product_checkbox').prop('checked',this.checked); 
+                        $('.product_checkbox').prop('checked',this.checked);
                     });
                     $(this).on('click','.pointable',function(){
                         var $checkbox = $(this).parent('tr').find('input:checkbox');
@@ -757,7 +757,7 @@ function editableElement($element)
                     });
                     $(this).slideDown('300');
                 });
-               
+
            },
            error: function(xhr)
            {
@@ -767,24 +767,24 @@ function editableElement($element)
            }
         });
     });
-    
+
     $('#qty_pickup_included').on('click',function(){
         if(this.checked)
         {
-            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').show(); 
+            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').show();
         }
         else
         {
-            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').hide(); 
+            $(this).parents('fieldset').find('div[data-qtyincluded="1"]').hide();
         }
     });
-     
+
     $('#productFromInvoiceModal').on('shown.bs.modal', function(){
         $saveProductByInvoiceForm.resetForm();
         $('#product-list').html('<p class="text-center col-xs-12">Product Info will appear here</p>');
         $('#invoice_id').select2('data', null);
     });
-    
+
     /*
      * Dropzone
      */
@@ -845,7 +845,7 @@ function editableElement($element)
                             }
                             else
                             {
-                                $.ajax({    
+                                $.ajax({
                                     type:'DELETE',
                                     url: '/product-returns/upload/'+$(file.previewElement).attr('data-id'),
                                     success:function()
@@ -865,8 +865,8 @@ function editableElement($element)
                                             message: xhr.responseText,
                                             showCloseButton: true
                                         });
-                                    }                                        
-                                });                                        
+                                    }
+                                });
                             }
 
                             return true;
@@ -916,7 +916,7 @@ function editableElement($element)
                                 message: xhr.responseText,
                                 showCloseButton: true
                             });
-                        }                                        
+                        }
                     });
                 }
                 return false;
@@ -954,7 +954,7 @@ function editableElement($element)
                 break;
             case "application/pdf":
                 var icon = '<i class="fa fa-file-pdf-o"></i>';
-                break;                        
+                break;
             default:
                 var icon = '<i class="fa fa-file-o"></i>';
                 break;
@@ -974,7 +974,7 @@ function editableElement($element)
         });
         var res = $.parseJSON(response);
         if(res.success)
-        {   
+        {
             //Add File preview anchor
             $(file.previewElement).find('span.name').wrapInner("<a class='file-view' rel='tooltip' data-original-title='Last update: "+res.updated_on+" &#013; Updated By: "+res.updated_by+"' data-placement='bottom' href='"+res.url+"'/>");
             //Set Doc Id
@@ -1013,7 +1013,7 @@ function editableElement($element)
             type: 'error',
             hideAfter: 0,
             message: 'Upload Failed: "'+file.name+'" - '+errorMsg
-        });            
+        });
     });
 
     theAwesomeDropZoneAP.on('uploadprogress',function(file,progress){
@@ -1028,11 +1028,11 @@ function editableElement($element)
        if(typeof uploadmsg !== "undefined" && progress == 100)
        {
            uploadmsg.hide();
-       }            
+       }
     });
-    
+
     //Drag & Drop File Fix
-    
+
     var dragEle = document.getElementById( "content" );
     new Dragster(dragEle);
     dragEle.addEventListener( "dragster:enter", function (e) {
@@ -1042,58 +1042,58 @@ function editableElement($element)
                 e.target.classList.add( "dragged-over" );
                 break;
             }
-        }        
-        
+        }
+
     }, false );
-    
+
     dragEle.addEventListener( "dragster:leave", function (e) {
         e.target.classList.remove( "dragged-over" );
     }, false );
-    
+
     /*
      * Google Doc Viewer
      */
     $('a.file-view').on('click',function(e){
         e.preventDefault();
         var $this = $(this);
-        //For Images
+        //For images
         if($this.attr('href').indexOf('.jpg') !== -1 || $this.attr('href').indexOf('.jpeg') !== -1 || $this.attr('href').indexOf('.png') !== -1 || $this.attr('href').indexOf('.bmp') !== -1)
         {
             $.colorbox({
-               href: $this.attr('href'),
-               maxHeight:"100%",
-               maxWidth:"90%",
-               innerWidth:"100%",
-               innerHeight:"100%",
-               initialWidth:"64px",
-               initialHeight:"84px",
-               closeButton:true,
-               iframe: false,
+                href: $this.attr('href'),
+                maxHeight:"100%",
+                maxWidth:"90%",
+                innerWidth:"100%",
+                innerHeight:"100%",
+                initialWidth:"64px",
+                initialHeight:"84px",
+                closeButton:true,
+                iframe: false,
             });
         }
         else
         {
             //For Docs
             $.colorbox({
-               href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
-               maxHeight:"100%",
-               maxWidth:"90%",
-               innerWidth:"100%",
-               innerHeight:"100%",
-               initialWidth:"64px",
-               initialHeight:"84px",
-               closeButton:true,
-               iframe: true,
+                href: "http://docs.google.com/viewer?url="+encodeURIComponent($this.attr('href'))+"&embedded=true",
+                maxHeight:"100%",
+                maxWidth:"90%",
+                innerWidth:"100%",
+                innerHeight:"100%",
+                initialWidth:"64px",
+                initialHeight:"84px",
+                closeButton:true,
+                iframe: true,
             });
         }
     });
-    
+
     $.document_.bind('cbox_complete', function () {
         $('html').css({ overflow: 'hidden' });
     }).bind('cbox_closed', function () {
         $('html').css({ overflow: 'auto' });
     });
-    
+
     //Publish button
     $('a.btn-publish').on('click',function(e){
         e.preventDefault();
@@ -1125,20 +1125,20 @@ function editableElement($element)
                     {
                         return xhr.responseText;
                     }
-                });                       
+                });
             }
             else
             {
                 return false;
             }
 
-        });        
+        });
         return false;
-    });    
-    
+    });
+
     //Enable Commenting
     enableComments();
-    
+
     //Hide Loading Message
     messenger_hidenotiftop();
-})();    
+})();

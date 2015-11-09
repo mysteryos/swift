@@ -34,19 +34,19 @@
                     case "image/png":
                     case "image/bmp":
                     case "image/jpg":
-                        echo '<img class="image-view" src="'.$first_doc->getAttachedfiles()["document"]->url().'"/>';
+                        echo '<img class="image-view" src="'.urlencode($first_doc->getAttachedfiles()["document"]->url()).'"/>';
                         break;
                     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                     case "application/vnd.ms-excel":
                     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                     case "application/msword":
-                        echo '<iframe class="document-iframe" src="https://docs.google.com/viewerng/viewer?url='.$first_doc->getAttachedfiles()["document"]->url().'"></iframe>';
+                        echo '<iframe class="document-iframe" src="https://docs.google.com/viewerng/viewer?url='.urlencode($first_doc->getAttachedfiles()["document"]->url()).'"></iframe>';
                         break;
                     case "application/pdf":
-                        echo '<iframe class="document-iframe" src="/pdfviewer/viewer.html?file='.$first_doc->getAttachedfiles()["document"]->url().'"></iframe>';
+                        echo '<iframe class="document-iframe" src="/pdfviewer/viewer.html?file='.urlencode($first_doc->getAttachedfiles()["document"]->url()).'"></iframe>';
                         break;
                     default:
-                        echo '<iframe class="document-iframe" src="https://docs.google.com/viewerng/viewer?url='.$first_doc->getAttachedfiles()["document"]->url().'"></iframe>';
+                        echo '<iframe class="document-iframe" src="https://docs.google.com/viewerng/viewer?url='.urlencode($first_doc->getAttachedfiles()["document"]->url()).'"></iframe>';
                         break;
                 }
                 ?>

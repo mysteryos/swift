@@ -1,12 +1,12 @@
 (window.acp_cheque_sign = function () {
-    
+
     var $pvProcessDoc = $('#pv-process-doc');
     var $pvProcessContainer = $('#pv_process_container');
     var $pvProcessInfo = $('#pv-process-info');
     var $iframe = $('<iframe/>');
     var $noDoc = $('#no-doc');
     var $docBrowser = $('#doc-browser');
-    
+
     //var search
     $('#search-pv').keyup(function(e){
         //ESC Key
@@ -27,19 +27,19 @@
             }).hide();
         }
     });
-    
+
     $pvProcessInfo.on('submit','.pv-form',function(e){
        e.preventDefault();
        return false;
     });
-    
+
     $docBrowser.on('click','li',function(e){
         var $this = $(this);
         if(!$this.hasClass('doc-selected'))
         {
             $this.parents('ul').find('li').removeClass('doc-selected');
             $this.addClass('doc-selected');
-            
+
             var $url = $this.attr('data-href');
             if($pvProcessDoc.find('iframe').length)
             {
@@ -53,25 +53,25 @@
             $pvProcessDoc.append($iframe.attr('src',$url));
         }
     });
-    
+
     //Load doc on click
     $pvProcessInfo.on('click','.invoice-row',function(e){
         var $this = $(this);
         //Highlight selected
         $pvProcessInfo.find('.invoice-row').removeClass('bg-color-yellow');
         $this.addClass('bg-color-yellow');
-        
+
         //Load Up document
         if($this.find('.doc-list').length)
         {
-            if($docBrowser.find('ul.doc-list').length && $docBrowser.find('ul.doc-list')[0].id !== $this.find('.doc-list')[0].id)
+            if($docBrowser.find('ul.doc-list').length === 0 || $docBrowser.find('ul.doc-list')[0].id !== $this.find('.doc-list')[0].id)
             {
                 $docBrowser.html('');
             }
-            
+
             //Move doc list into view
             $this.find('.doc-list').clone(true).removeClass('hide').appendTo($docBrowser);
-            
+
             var $url = $this.find('.doc-list li:first').attr('data-href');
             $noDoc.hide();
             if($pvProcessDoc.find('iframe').length)
@@ -82,7 +82,7 @@
                 }
                 return;
             }
-            
+
             $pvProcessDoc.append($iframe.attr('src',$url));
         }
         else
@@ -91,7 +91,7 @@
             $noDoc.show();
         }
     });
-    
+
     $pvProcessInfo.on('click','.btn-sign-cheque',function(e){
         var $this = $(this);
         $this.addClass('disabled');
@@ -119,11 +119,11 @@
                 $this.addClass('btn-error');
                 $this.removeClass('disabled');
                 $this.removeAttr('disabled');
-                return xhr.responseText;                
+                return xhr.responseText;
             }
         });
     });
-    
+
     //Hide Loading Message
     messenger_hidenotiftop();
-})();    
+})();

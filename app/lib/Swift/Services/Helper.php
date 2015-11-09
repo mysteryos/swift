@@ -52,7 +52,7 @@ class Helper {
             $recent = new SwiftRecent;
             $obj->recent()->save($recent);
         }
- 
+
     }
 
     /*
@@ -88,7 +88,7 @@ class Helper {
         {
             \Log::error('No products were set');
         }
-        
+
     }
 
     /*
@@ -101,12 +101,12 @@ class Helper {
     public function jsonobject_encode(array $array)
     {
         $converted_array = array();
-        
+
         foreach($array as $k=>$v)
         {
             $converted_array[] = array('value'=>$k,'text'=>$v);
         }
-        
+
         return $converted_array;
     }
 
@@ -124,7 +124,7 @@ class Helper {
         $user = User::find($user);
         if($user)
         {
-            
+
             if($user->id == self::getUserId() && $me)
             {
                 return "Me";
@@ -159,7 +159,7 @@ class Helper {
         }
 
         $relstack = array();
-        
+
         foreach($arrayClass as $relation)
         {
             if(strpos($relation,".") === false)
@@ -173,7 +173,7 @@ class Helper {
                     //Stack relation for future usage
                     $relstack[$relation] = $rel;
                 }
-                
+
                 foreach($rel as $r)
                 {
                     $revision = array_merge($revision,$r->revisionHistory()->get()->all());
@@ -191,7 +191,7 @@ class Helper {
                             foreach($relationships as $r)
                             {
                                 $revision = array_merge($revision,$r->revisionHistory()->get()->all());
-                            }   
+                            }
                         }
                         break;
                     }
@@ -201,9 +201,9 @@ class Helper {
         usort($revision,function($a,$b){
             return new \DateTime($b->created_at) > new \DateTime($a->created_at);
         });
-        
+
         return $revision;
-        
+
     }
 
     /*
@@ -219,7 +219,7 @@ class Helper {
         $html = "<a class=\"pjax\" href=\"/order-tracking/view/".(\Crypt::encrypt($order->id))."\" data-original-title=\"Click to view order process\" data-placement=\"placement\" rel=\"bottom\"><i class=\"fa fa-lg- fa-map-marker\"></i>&nbsp;";
         $html.= trim($order->name);
         $html.="</a>";
-        
+
         return $html;
     }
 
@@ -255,10 +255,10 @@ class Helper {
             default:
                 $url ="javascript:void(0);";
         }
-        
+
         if($absoluteaddress)
         {
-           $url = Config::get('app.url').$url; 
+           $url = Config::get('app.url').$url;
         }
         return $url;
     }
@@ -404,7 +404,7 @@ class Helper {
         {
             $numberOfContainers = count($containers);
             $numberOfDays = \Helper::calculateStorageNumberOfDays($storagestart);
-            
+
             if($numberOfContainers > 1)
             {
                 $oneToFour = "27.5";
@@ -417,7 +417,7 @@ class Helper {
                 $fiveToNine = "18.3";
                 $ten = "27.5";
             }
-            
+
             $storageCost = 0;
             if($numberOfDays > 4)
             {
@@ -499,7 +499,7 @@ class Helper {
                                 //from 15th to 21st days = 7 days
                                 $remainderDays -= 7;
                                 $demurrageCost += $twentyCharges['FifteenToTwentyOne']*7;
-                                
+
                                 //22 and upwards
                                 $demurrageCost += $twentyCharges['TwentyTwoAndUpwards'] * $remainderDays;
                             }
@@ -551,7 +551,7 @@ class Helper {
             return $demurrageCost*count($containers);
         }
     }
-    
+
     /*
      * Calculates the number of business days between two dates and it skips the holidays
      *
@@ -624,7 +624,7 @@ class Helper {
 
         return $workingDays;
     }
-    
+
     public function previousBusinessDay(\Carbon\Carbon $date)
     {
         if(!$date->isWeekday())
@@ -640,10 +640,10 @@ class Helper {
                 $date = self::previousBusinessDay($date);
             }
         }
-        
+
         return $date;
     }
-    
+
     public function nextBusinessDay(\Carbon\Carbon $date)
     {
         //is Weekend
@@ -660,8 +660,8 @@ class Helper {
                 $date = self::nextBusinessDay($date);
             }
         }
-        
-        return $date;        
+
+        return $date;
     }
 
     public function dueInDays(\Carbon\Carbon $date)
@@ -691,7 +691,7 @@ class Helper {
         return "(Unknown)";
 
     }
-    
+
     public function systemHealth($lateCount,$totalCount)
     {
         if($totalCount == 0 || $lateCount == 0)
@@ -815,7 +815,7 @@ class Helper {
 
     public function validatePendingPurchaseOrder($poArray=false)
     {
-        
+
         $orphanPending = \SwiftPurchaseOrder::whereNotNull('reference')
                         ->whereNotNull('type')
                         ->where('validated','=',\SwiftPurchaseOrder::VALIDATION_PENDING)
@@ -882,10 +882,10 @@ class Helper {
                         $company_code = $o->purchasable->business_unit;
                         break;
                     case "SwiftACPRequest":
-                        $company_code = $o->purchsable->billable_company_code;
+                        $company_code = $o->purchasable->billable_company_code;
                         break;
                 }
-                
+
                 $po = \JdePurchaseOrder::findByNumberTypeCompany($o->reference, $o->type,$company_code);
                 if($po)
                 {
@@ -946,7 +946,7 @@ class Helper {
             $job->delete();
             return false;
         }
-        
+
         //Create Form
         $pr = new \SwiftPR([
                 'customer_code' => $lines->first()->AN8,
@@ -1011,7 +1011,7 @@ class Helper {
         {
             \Log::error("Failed to save workflow for PR id: ".$pr->id);
         }
-        
+
         $job->delete();
     }
 
@@ -1102,5 +1102,5 @@ class Helper {
         $d = \DateTime::createFromFormat($format, $date);
         return $d && $d->format($format) == $date;
     }
-    
+
 }

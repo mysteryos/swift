@@ -65,7 +65,7 @@
                         <td>
                             @foreach($f->comments as $c)
                                 <div>
-                                    <span title="{{$c->getDate()}}">{{ $c->user->first_name." ".$c->user->last_name }}</span> - 
+                                    <span title="{{$c->getDate()}}">{{ $c->user->first_name." ".$c->user->last_name }}</span> -
                                     <span>{{ nl2br(htmlspecialchars($c->comment, null, 'UTF-8')) }}</span>
                                 </div>
                                 <hr/>
@@ -98,7 +98,7 @@
         @if(count($f->document))
             <ul class="hide doc-list" id="doc-list-{{$f->id}}">
                 @foreach($f->document as $k => $doc)
-                    <li data-href="/pdfviewer/viewer.html?file={{$doc->getAttachedfiles()['document']->url()}}" @if($k===0)class="doc-selected"@endif>
+                    <li data-href="/pdfviewer/viewer.html?file={{urlencode($doc->getAttachedfiles()['document']->url())}}" @if($k===0)class="doc-selected"@endif>
                         <div class="doc-icon">
                                 <?php
                                 switch($doc->getAttachedfiles()['document']->contentType())

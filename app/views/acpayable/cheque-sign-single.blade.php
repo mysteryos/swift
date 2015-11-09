@@ -3,7 +3,7 @@
                         @if(count($pay->acp->document))
                             <ul class="hide doc-list" id="doc-list-{{$pay->id}}">
                                 @foreach($pay->acp->document as $k => $doc)
-                                    <li data-href="/pdfviewer/viewer.html?file={{$doc->getAttachedfiles()['document']->url()}}" @if($k===0)class="doc-selected"@endif>
+                                    <li data-href="/pdfviewer/viewer.html?file={{urlencode($doc->getAttachedfiles()['document']->url())}}" @if($k===0)class="doc-selected"@endif>
                                         <div class="doc-icon">
                                                 <?php
                                                 switch($doc->getAttachedfiles()['document']->contentType())

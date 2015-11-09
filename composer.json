@@ -18,6 +18,7 @@
         "mrjuliuss/syntara": "1.2.*",
         "liebig/cron": "dev-master",
         "codesleeve/laravel-stapler": "dev-master",
+        "codesleeve/stapler": "dev-master",
         "aws/aws-sdk-php": "2.4.*@dev",
         "aws/aws-sdk-php-laravel": "1.*",
         "venturecraft/revisionable": "dev-master",
@@ -40,20 +41,28 @@
 		"setasign/fpdi": "^1.5",
 		"setasign/fpdf": "^1.7"
 	},
-        "repositories": [
-            {
-                "type": "composer",
-                "url": "http://packages.cartalyst.com"
-            },
-            {
-                "type": "vcs",
-                "url": "https://github.com/mysteryos/revisionable/"
-            },
-            {
-                "type": "vcs",
-                "url": "https://github.com/mysteryos/syntara"
-            }
-        ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://packages.cartalyst.com"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/mysteryos/revisionable/"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/mysteryos/syntara"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/mysteryos/laravel-stapler"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/mysteryos/stapler/"
+        }
+    ],
 	"autoload": {
 		"classmap": [
 			"app/commands",
@@ -63,9 +72,9 @@
 			"app/database/seeds",
 			"app/tests/TestCase.php"
 		],
-                "psr-0": {
-                    "Swift": "app/lib/"
-                }
+        "psr-0": {
+            "Swift": "app/lib/"
+        }
 	},
 	"scripts": {
 		"post-install-cmd": [
@@ -83,6 +92,7 @@
 	"config": {
 		"preferred-install": "dist"
 	},
-        "private": true,
-	"minimum-stability": "stable"
+    "private": true,
+	"minimum-stability": "dev",
+    "prefer-stable": true
 }

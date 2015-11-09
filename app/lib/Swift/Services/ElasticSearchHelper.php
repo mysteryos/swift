@@ -48,7 +48,7 @@ class ElasticSearchHelper {
                 \Log::error('ElasticSearchHelper: No context set for the following dataset: '.json_encode($data));
             }
         }
-        $job->delete();        
+        $job->delete();
     }
 
     /*
@@ -85,7 +85,7 @@ class ElasticSearchHelper {
         $params['type'] = $data['context'];
         $model = new $data['class'];
         $form = $model::withTrashed()->find($data['id']);
-        
+
         if(count($form))
         {
             /*
@@ -94,7 +94,7 @@ class ElasticSearchHelper {
             if($data['info-context'] === $data['context'])
             {
                 $params['id'] = $data['id'];
-                $params['body']['doc'][$data['info-context']] = $this->saveFormat($form);                  
+                $params['body']['doc'][$data['info-context']] = $this->saveFormat($form);
             }
             else
             {
@@ -132,7 +132,7 @@ class ElasticSearchHelper {
                     'index' => $params['index'],
                     'type' => $data['context']
                 ]);
-            } catch (Exception $ex) {
+            } catch (\Exception $ex) {
                 if($ex instanceof \Elasticsearch\Common\Exceptions\Missing404Exception || $ex instanceof \Guzzle\Http\Exception\ClientErrorResponseException)
                 {
                     //if not, we set it
@@ -156,11 +156,11 @@ class ElasticSearchHelper {
                     return false;
                 }
             }
-            
+
             \Es::update($params);
         }
     }
-    
+
     /*
      * Iterate through all Es accessors of the model.
      * @param \Illuminate\Database\Eloquent\Model $object
@@ -183,11 +183,11 @@ class ElasticSearchHelper {
             throw New \RuntimeException("Expected type object");
         }
     }
-    
+
     /*
      * Iterates over a collection applying the getEsSaveFormat function
      * @param mixed $object
-     * 
+     *
      * @return array
      */
     public function saveFormat($object)

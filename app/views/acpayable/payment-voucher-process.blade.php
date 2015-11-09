@@ -56,7 +56,7 @@
         </div>
         <div id="pv-process-doc">
             @if($form_count > 0 && count($forms->first()->document) > 0)
-            <iframe src="/pdfviewer/viewer.html?file={{$forms->first()->document->first()->getAttachedfiles()['document']->url()}}"></iframe>
+            <iframe src="/pdfviewer/viewer.html?file={{urlencode($forms->first()->document->first()->getAttachedfiles()['document']->url())}}"></iframe>
             @else
             <iframe></iframe>
             <div id="no-doc">
@@ -68,7 +68,7 @@
                 @if($form_count > 0 && count($forms->first()->document) > 0)
                     <ul class="doc-list" id="doc-list-{{$forms->first()->id}}">
                     @foreach($forms->first()->document as $k => $doc)
-                        <li data-href="/pdfviewer/viewer.html?file={{$doc->getAttachedfiles()['document']->url()}}" @if($k===0)class="doc-selected"@endif>
+                        <li data-href="/pdfviewer/viewer.html?file={{urlencode($doc->getAttachedfiles()['document']->url())}}" @if($k===0)class="doc-selected"@endif>
                             <div class="doc-icon">
                                     <?php
                                     switch($doc->getAttachedfiles()['document']->contentType())
@@ -109,4 +109,4 @@
     <!-- END Payment Voucher -->
 </div>
 
-@stop       
+@stop

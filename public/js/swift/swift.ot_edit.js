@@ -258,7 +258,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         {
             //For Docs
             $.colorbox({
-               href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+               href: "http://docs.google.com/viewer?url="+encodeURIComponent($this.attr('href'))+"&embedded=true",
                maxHeight:"100%",
                maxWidth:"90%",
                innerWidth:"100%",

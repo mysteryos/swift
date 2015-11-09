@@ -8,7 +8,7 @@
                     </div>
                     <div class="col-xs-6">
                         <span class="name" data-dz-name=""><a class="file-view" href="{{$d->getAttachedfiles()['document']->url()}}" rel="tooltip" data-original-title="Last update: {{$d->getAttachedfiles()['document']->updatedAt()}} &#013; Updated By: {{Helper::getUserName($d->user_id,Sentry::getUser())}}" data-placement="bottom">
-                        <?php 
+                        <?php
                         switch($d->getAttachedfiles()['document']->contentType())
                         {
                             case "image/jpeg":
@@ -27,12 +27,12 @@
                                 break;
                             case "application/pdf":
                                 echo '<i class="fa fa-file-pdf-o"></i>';
-                                break;                        
+                                break;
                             default:
                                 echo '<i class="fa fa-file-o"></i>';
-                                break;                
+                                break;
                         }
-                        ?>{{$d->getAttachedfiles()['document']->originalFilename()}}</a> <a class="row-space-left-1" target="_blank" href="http://docs.google.com/viewer?url={{$d->getAttachedfiles()['document']->url()}}" rel="tooltip" data-original-title="Open in new window" data-placement="bottom"><i class="fa fa-external-link"></i></a></span>
+                        ?>{{$d->getAttachedfiles()['document']->originalFilename()}}</a> <a class="row-space-left-1" target="_blank" href="http://docs.google.com/viewer?url={{urlencode($d->getAttachedfiles()['document']->url())}}" rel="tooltip" data-original-title="Open in new window" data-placement="bottom"><i class="fa fa-external-link"></i></a></span>
                         <strong class="error text-danger" data-dz-errormessage=""></strong>
                     </div>
                     <div class="col-xs-4">
@@ -45,14 +45,14 @@
                       <button data-dz-remove="" class="btn btn-danger delete btn-xs">
                         <i class="glyphicon glyphicon-trash"></i>
                       </button>
-                    </div>   
+                    </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-xs-12">
                     <div class="col-xs-10">
                         <i class="fa fa-tags"></i>&nbsp;
-                                <a data-title="Select Tags" data-value="<?php 
+                                <a data-title="Select Tags" data-value="<?php
                                     if(count($d->tag))
                                     {
                                         $tag = array();
@@ -79,7 +79,7 @@
     </div>
     <div class="col-xs-6">
         <div class="row">
-            <div class="col-xs-12">        
+            <div class="col-xs-12">
                 <span class="name" data-dz-name=""></span>
                 <strong class="error text-danger" data-dz-errormessage=""></strong>
             </div>

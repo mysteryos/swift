@@ -1,4 +1,4 @@
-/* 
+/*
  * Name: Accounts Payable View Form
  */
 (window.acp_view = function () {
@@ -12,7 +12,7 @@
         e.preventDefault();
         var $this = $(this);
         $.colorbox({
-           href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+           href: "http://docs.google.com/viewer?url="+encodeURIComponent($this.attr('href'))+"&embedded=true",
            maxHeight:"100%",
            maxWidth:"90%",
            innerWidth:"100%",
@@ -26,21 +26,21 @@
 
     $('#upload-preview #template').hide();
     $('#upload-preview').find('button.btn.delete').hide();
-    
+
     $('#acp-list').on('click','tr[data-url] td',function(){
         $.pjax({
             url: $(this).parent('tr').attr('data-url'),
             container: '#main'
        });
-    });    
-    
+    });
+
     //Enable Commenting
     enableComments();
-    
+
     //Bind pusher channel
-    pusherSubscribeCurrentPresenceChannel(true,true);    
+    pusherSubscribeCurrentPresenceChannel(true,true);
 
     //Hide Loading Message
-    messenger_hidenotiftop(); 
+    messenger_hidenotiftop();
 
 })();

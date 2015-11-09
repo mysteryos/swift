@@ -1,4 +1,4 @@
-/* 
+/*
  * Name: A&P Request View Form
  */
 (window.apr_view = function () {
@@ -8,14 +8,39 @@
     });
 
     //File View
-    $('#apr-docs').on('click','a.file-view',function(e){
-       e.preventDefault();
-       vex.open({
-           className: 'vex-theme-default vex-file-viewer',
-           content:'<div class="row"><div class="col-xs-12 text-align-center">'+$(this).html()+'</div></div><iframe src="http://docs.google.com/viewer?url='+encodeURIComponent($(this).attr('href'))+'&embedded=true" class="file-viewer"></iframe>',
-       }).height($(window).height()).width($(window).width()*0.9);
-
-       return false;
+    $('a.file-view').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        //For images
+        if($this.attr('href').indexOf('.jpg') !== -1 || $this.attr('href').indexOf('.jpeg') !== -1 || $this.attr('href').indexOf('.png') !== -1 || $this.attr('href').indexOf('.bmp') !== -1)
+        {
+            $.colorbox({
+                href: $this.attr('href'),
+                maxHeight:"100%",
+                maxWidth:"90%",
+                innerWidth:"100%",
+                innerHeight:"100%",
+                initialWidth:"64px",
+                initialHeight:"84px",
+                closeButton:true,
+                iframe: false,
+            });
+        }
+        else
+        {
+            //For Docs
+            $.colorbox({
+                href: "http://docs.google.com/viewer?url="+encodeURIComponent($this.attr('href'))+"&embedded=true",
+                maxHeight:"100%",
+                maxWidth:"90%",
+                innerWidth:"100%",
+                innerHeight:"100%",
+                initialWidth:"64px",
+                initialHeight:"84px",
+                closeButton:true,
+                iframe: true,
+            });
+        }
     });
 
     $('#upload-preview #template').hide();
@@ -23,11 +48,11 @@
 
     //Enable Commenting
     enableComments();
-    
+
     //Bind pusher channel
     pusherSubscribeCurrentPresenceChannel(true,true);
 
     //Hide Loading Message
-    messenger_hidenotiftop(); 
+    messenger_hidenotiftop();
 
 })();

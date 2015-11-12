@@ -6,11 +6,11 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
 
 </div>
@@ -24,14 +24,14 @@
     <input type="hidden" id="project-url" value="{{ URL::current() }}"/>
     <input type="hidden" id="project-name" value='<i class="fa-fw fa fa-money"></i> Commisions (ID: {{ $commissions->first()->id }})'/>
     <input type="hidden" id="project-id" value='ot_{{ $commissions->first()->id }}' />
-    
+
     <div class="row">
 	<div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
 		<h1 class="page-title txt-color-blueDark">
 			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-money"></i> 
+			<i class="fa-fw fa fa-money"></i>
 				Commission View
-			<span>&gt;  
+			<span>&gt;
                                 <b>Salesman:</b> {{ \Helper::getUserName($commissions->first()->salesman->user_id,$currentUser) }}
 			</span>
 		</h1>
@@ -47,12 +47,12 @@
             </h1>
         </div>
     </div>
-    
+
     @if(isset($message) && $message !== false)
         <div class="row">
             <article class="col-xs-12">
                 @foreach($message as $m)
-                    <?php 
+                    <?php
                         switch($m['type'])
                         {
                             case 'warning':
@@ -87,7 +87,7 @@
                                     </button>
                                     <i class="fa-fw fa fa-info"></i>
                                     <strong>Info!</strong> ';
-                                break;                        
+                                break;
                         }
                         echo $m['msg']."</div>";
                     ?>
@@ -95,7 +95,7 @@
             </article>
         </div>
     @endif
-    
+
 <!-- widget grid -->
     <section id="widget-grid">
 
@@ -105,13 +105,13 @@
 
 		<!-- NEW COL START -->
 		<article class="col-xs-12">
-			
+
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="commission-view-salesman" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-user"></i> </span>
-                                        <h2>Salesman</h2>			
+                                        <h2>Salesman</h2>
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -128,10 +128,10 @@
                         <!-- end widget -->
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="commission-view-commision-simple" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-money"></i> </span>
-                                        <h2>Commission Simple</h2>			
+                                        <h2>Commission Simple</h2>
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -146,13 +146,13 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
-                        
+
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="commission-view-commision-detailed" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-cogs"></i> </span>
-                                        <h2>Commission Detailed</h2>			
+                                        <h2>Commission Detailed</h2>
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -164,7 +164,7 @@
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->                        
+                        <!-- end widget -->
                 </article>
                 <!-- NEW COL END -->
         </div>

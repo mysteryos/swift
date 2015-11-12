@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
 
 </div>
@@ -26,7 +26,7 @@
                 <div class="row">
 
                         <article class="col-sm-12 col-md-12 col-lg-6">
-                                
+
                                 @if(!$currentUser->isSuperUser())
                                 <!-- new widget -->
                                 <div class="jarviswidget jarviswidget-color-blue" id="dashboard-todolist" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-deletebutton="false">
@@ -51,7 +51,7 @@
                                 </div>
                                 <!-- end widget -->
                                 @endif
-                                
+
                                 @if($isAdmin)
                                 <!-- new widget -->
                                 <div class="jarviswidget jarviswidget-color-blueDark" id="dashboard-latestworkflow" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
@@ -71,10 +71,10 @@
                                                 </div>
                                         </div>
                                         <!-- end widget div -->
-                                </div>                                
+                                </div>
                                 <!-- end widget -->
                                 @endif
-                               
+
                         </article>
 
                         <article class="col-sm-12 col-md-12 col-lg-6">
@@ -82,7 +82,7 @@
                                 <div class="jarviswidget" id="dashboard-stories" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-fullscreenbutton="false" data-widget-togglebutton="false" data-widget-load="/dashboard/stories">
                                     <header>
                                             <span class="widget-icon"> <i class="fa fa-globe"></i> </span>
-                                            <h2>Stories</h2>                               
+                                            <h2>Stories</h2>
                                     </header>
                                             <!-- widget div-->
                                             <div>
@@ -93,7 +93,7 @@
                                             </div>
                                 </div>
                                 <!-- end widget -->
-                                
+
                                 <!-- new widget -->
                                 <div class="jarviswidget jarviswidget-color-greenLight" id="dashboard-syshealth" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false" data-widget-load="/dashboard/latenodes">
 
@@ -112,7 +112,7 @@
                                         </div>
                                         <!-- end widget div -->
                                 </div>
-                                <!-- end widget -->                            
+                                <!-- end widget -->
                         </article>
 
                 </div>

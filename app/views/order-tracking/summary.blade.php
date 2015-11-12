@@ -10,10 +10,10 @@
 <!--            <span id="search" class="btn btn-ribbon hidden-xs" data-title="search"><i class="fa fa-grid"></i> Change Grid</span>
             <span id="add" class="btn btn-ribbon hidden-xs" data-title="add"><i class="fa fa-plus"></i> Add</span>
             <span id="search" class="btn btn-ribbon" data-title="search"><i class="fa fa-search"></i> <span class="hidden-mobile">Search</span></span>-->
-            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($canCreate)
-            <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>                            
-            @endif            
+            <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>
+            @endif
         </div>
 
 </div>
@@ -33,7 +33,7 @@
         @foreach(SwiftOrder::$business_unit as $k => $bu)
             <li class="@if($business_unit == $k){{ "active" }}@endif">
                     <a href="/order-tracking/summary/{{ $k }}" class="pjax">{{ $bu }}</a>
-            </li>                                        
+            </li>
         @endforeach
     </ul>
     <!-- widget grid -->
@@ -47,7 +47,7 @@
                     <header>
                             <span class="widget-icon"> <i class="fa fa-table"></i> </span>
                             <h2>Summary</h2>
-                    </header>                        
+                    </header>
                             <!-- widget div-->
                             <div>
                                     <!-- widget content -->
@@ -56,7 +56,7 @@
                                             @include('order-tracking.summary_table')
                                     </div>
                             </div>
-                </div>                
+                </div>
             </div>
         </div>
     </section>
@@ -64,4 +64,4 @@
 
 </div>
 
-@stop          
+@stop

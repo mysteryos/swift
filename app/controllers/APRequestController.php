@@ -1,24 +1,24 @@
 <?php
 
 class APRequestController extends UserController {
-    
+
     public function __construct(){
         parent::__construct();
         $this->pageName = "A&P Request";
         $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "aprequest";
         $this->permission = $this->data['permission'] = new \Permission\SwiftAPRequest();
     }
-    
+
     public function getIndex()
     {
         //Send back to overview
         return Redirect::to('/'.$this->context.'/overview');
-    }    
-    
+    }
+
     /*
      * Overview
      */
-    
+
     public function getOverview()
     {
         $this->pageTitle = 'Overview';
@@ -29,15 +29,15 @@ class APRequestController extends UserController {
         /*
          * Fetch all data for 'Workspot' box
          */
-        
+
         $aprequest_inprogress = $aprequest_inprogress_important = $aprequest_inprogress_responsible = $aprequest_inprogress_important_responsible = array();
-        
+
         $aprequest_inprogress = \SwiftAPRequest::getInProgress($this->data['inprogress_limit']);
         $aprequest_inprogress_count = \SwiftAPRequest::getInProgressCount();
         $aprequest_inprogress_important = \SwiftAPRequest::getInProgress(0,true);
         $aprequest_inprogress_responsible = \SwiftAPRequest::getInProgressResponsible();
         $aprequest_inprogress_important_responsible = \SwiftAPRequest::getInProgressResponsible(0,true);
-        
+
         $aprequest_inprogress = $aprequest_inprogress->diff($aprequest_inprogress_responsible);
         $aprequest_inprogress_important = $aprequest_inprogress_important->diff($aprequest_inprogress_important_responsible);
 
@@ -64,7 +64,7 @@ class APRequestController extends UserController {
                 $apr->activity = Helper::getMergedRevision($apr->revisionRelations,$apr);
             }
         }
-        
+
         $this->data['inprogress'] = $aprequest_inprogress;
         $this->data['inprogress_responsible'] = $aprequest_inprogress_responsible;
         $this->data['inprogress_important'] = $aprequest_inprogress_important;
@@ -72,14 +72,14 @@ class APRequestController extends UserController {
         /*$this->data['aprequest_storage'] = $storage_array*/
         $this->data['isAdmin'] = $this->currentUser->hasAccess($this->permission->adminPermission);
         $this->adminList();
-        
-        return $this->makeView('aprequest/overview');        
-        
+
+        return $this->makeView('aprequest/overview');
+
     }
-    
+
     /*
      * Name: Form
-     * Description: Fills in 
+     * Description: Fills in
      */
     private function form($id,$edit=false)
     {
@@ -96,12 +96,12 @@ class APRequestController extends UserController {
             /*
              * Set Read
              */
-            
+
             if(!\Flag::isRead($apr))
             {
                 \Flag::toggleRead($apr);
             }
-            
+
             /*
              * Enable Commenting
              */
@@ -112,7 +112,7 @@ class APRequestController extends UserController {
              */
 
             $this->enableSubscription($apr);
-            
+
             /*
              * Data
              */
@@ -144,11 +144,11 @@ class APRequestController extends UserController {
             $this->data['canPublish'] = $this->data['canModifyProduct'] = $this->data['canAddProduct'] = false;
             $this->data['edit'] = $edit;
             $this->data['owner'] = \Helper::getUserName($apr->requester_user_id,$this->currentUser);
-            
+
             /*
              * See if can publish
              */
-            
+
             if($edit === true)
             {
                 if($this->data['current_activity']['status'] == \SwiftWorkflowActivity::INPROGRESS)
@@ -180,7 +180,7 @@ class APRequestController extends UserController {
                                     $this->data['canModifyProduct'] = true;
                                 }
 
-                                if(isset($d->data->manualpublish) && 
+                                if(isset($d->data->manualpublish) &&
                                     !$apr->approval()->where('type','=',\SwiftApproval::APR_REQUESTER)->count() &&
                                     ($this->permission->isAdmin() || $this->data['isCreator']))
                                 {
@@ -225,7 +225,7 @@ class APRequestController extends UserController {
                 }
                 $this->data['product_price_total'] = round($total, 2);
             }
-            
+
             //Save recently viewed form
             \Helper::saveRecent($apr,$this->currentUser);
 
@@ -234,9 +234,9 @@ class APRequestController extends UserController {
         else
         {
             return parent::notfound();
-        }        
+        }
     }
-    
+
     /*
      * GET Pages
      */
@@ -304,25 +304,25 @@ class APRequestController extends UserController {
             return parent::forbidden();
         }
     }
-    
+
     /*
      * Lists all forms
      */
     public function getForms($type='all',$page=1)
     {
         $limitPerPage = 15;
-        
+
         $this->pageTitle = 'Forms';
-        
+
         //Check Edit Access
         $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->permission->editPermission,$this->permission->adminPermission]);
-        
+
         //Check user group
         if(!$this->data['edit_access'] && $type='inprogress')
         {
             $type='all';
-        }        
-        
+        }
+
         $aprequestquery = SwiftAPRequest::query();
 
         /*
@@ -337,8 +337,8 @@ class APRequestController extends UserController {
             {
                 $node_definition_list[$v->id] = $v->label;
             }
-            $this->data['node_definition_list'] = $node_definition_list;            
-        }        
+            $this->data['node_definition_list'] = $node_definition_list;
+        }
 
         /*
          * Category Filter
@@ -347,27 +347,27 @@ class APRequestController extends UserController {
         {
             case 'inprogress':
                 $aprequestquery->whereHas('workflow',function($q){
-                    return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS); 
+                    return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS);
                 });
                 break;
             case 'rejected':
                 $aprequestquery->whereHas('workflow',function($q){
-                   return $q->where('status','=',SwiftWorkflowActivity::REJECTED); 
-                });                
+                   return $q->where('status','=',SwiftWorkflowActivity::REJECTED);
+                });
                 break;
             case 'completed':
                 $aprequestquery->whereHas('workflow',function($q){
-                   return $q->where('status','=',SwiftWorkflowActivity::COMPLETE); 
-                });                
+                   return $q->where('status','=',SwiftWorkflowActivity::COMPLETE);
+                });
                 break;
             case 'starred':
                 $aprequestquery->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
-                });                
+                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE);
+                });
                 break;
             case 'important':
                 $aprequestquery->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::IMPORTANT,'AND'); 
+                   return $q->where('type','=',SwiftFlag::IMPORTANT,'AND');
                 });
                 break;
             case 'mine':
@@ -377,7 +377,7 @@ class APRequestController extends UserController {
                 $aprequestquery->orderBy('updated_at','desc');
                 break;
         }
-        
+
         //Set filters
         if(\Input::has('filter'))
         {
@@ -390,9 +390,9 @@ class APRequestController extends UserController {
             {
                 $filter = array();
             }
-            
+
             $filter[Input::get('filter_name')] = Input::get('filter_value');
-            
+
             /*
              * loop & Apply all filters
              */
@@ -412,7 +412,7 @@ class APRequestController extends UserController {
                         break;
                 }
             }
-            
+
             Session::flash('apr_form_filter',$filter);
 
         }
@@ -420,7 +420,7 @@ class APRequestController extends UserController {
         {
             Session::forget('apr_form_filter');
         }
-        
+
         $formsCount = $aprequestquery->count();
         if($type != 'inprogress')
         {
@@ -434,16 +434,16 @@ class APRequestController extends UserController {
             }
         }
         $forms = $aprequestquery->get();
-        
+
         /*
          * Fetch latest history;
          */
         foreach($forms as $k => &$f)
         {
-            
+
             //Set Current Workflow Activity
-            $f->current_activity = WorkflowActivity::progress($f);            
-            
+            $f->current_activity = WorkflowActivity::progress($f);
+
             //If in progress, we filter
             if($type == 'inprogress')
             {
@@ -462,7 +462,7 @@ class APRequestController extends UserController {
                         }
                     }
                 }
-                
+
                 /*
                  * No Access : We Remove order from list
                  */
@@ -485,7 +485,7 @@ class APRequestController extends UserController {
                     }
                 }
             }
-            
+
             //Set Revision
             $f->revision_latest = Helper::getMergedRevision(array('product'),$f);
 
@@ -494,7 +494,7 @@ class APRequestController extends UserController {
             $f->flag_important = Flag::isImportant($f);
             $f->flag_read = Flag::isRead($f);
         }
-        
+
         //The Data
         $this->data['type'] = $type;
         $this->data['forms'] = $forms;
@@ -503,7 +503,7 @@ class APRequestController extends UserController {
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
-        
+
         return $this->makeView("$this->rootURL/forms");
     }
 
@@ -559,7 +559,7 @@ class APRequestController extends UserController {
     /*
      * POST Create Form
      */
-    
+
     public function postCreate()
     {
         /*
@@ -569,12 +569,12 @@ class APRequestController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         $validator = Validator::make(Input::all(),
                         array('name'=>'required',
                               'customer_code'=>'required')
                     );
-        
+
         if($validator->fails())
         {
             return json_encode(['success'=>0,'errors'=>$validator->errors()]);
@@ -593,7 +593,7 @@ class APRequestController extends UserController {
                                                          'obj_id'=>$aprequest->id,
                                                          'action'=>SwiftStory::ACTION_CREATE,
                                                          'user_id'=>$this->currentUser->id,
-                                                         'context'=>get_class($aprequest)));                    
+                                                         'context'=>get_class($aprequest)));
                     //Success
                     echo json_encode(['success'=>1,'url'=>Helper::generateUrl($aprequest)]);
                 }
@@ -609,7 +609,7 @@ class APRequestController extends UserController {
             }
         }
     }
-    
+
     /*
      * General Info: REST
      */
@@ -617,12 +617,12 @@ class APRequestController extends UserController {
     {
         /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
-        
+
         $aprequest_id = Crypt::decrypt(Input::get('pk'));
         $aprequest = SwiftAPRequest::find($aprequest_id);
         if(count($aprequest))
@@ -630,18 +630,18 @@ class APRequestController extends UserController {
             /*
              * Manual Validation
              */
-            
+
             //Name
             if(\Input::get('name') == 'name' && trim(\Input::get('value')==""))
             {
                 return \Response::make('Please enter a name',400);
             }
-            
+
              if(\Input::get('name') == 'customer_code' && trim(\Input::get('value')==""))
             {
                 return \Response::make('Please enter a customer name',400);
             }
-            
+
             /*
              * Save
              */
@@ -661,19 +661,19 @@ class APRequestController extends UserController {
             return \Response::make('A&P Request form not found',404);
         }
     }
-    
+
     public function putProduct($apr_id)
     {
-        /*  
+        /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
-        
+
         $form = \SwiftAPRequest::find(Crypt::decrypt($apr_id));
-        
+
         /*
          * Manual Validation
          */
@@ -693,7 +693,7 @@ class APRequestController extends UserController {
                         return \Response::make('Please enter a valid numeric value',400);
                     }
                     break;
-            }       
+            }
 
             /*
              * New AP Product
@@ -718,7 +718,7 @@ class APRequestController extends UserController {
                 {
                     return \Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
             else
             {
@@ -731,7 +731,7 @@ class APRequestController extends UserController {
                             \Queue::push('Helper@getProductPrice',array('product_id'=>$APProduct->id,'class'=>get_class($APProduct)));
                             break;
                     }
-                    
+
                     $APProduct->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
                     if($APProduct->save())
                     {
@@ -754,7 +754,7 @@ class APRequestController extends UserController {
             return Response::make('A&P Request form not found',404);
         }
     }
-    
+
     /*
      * Delete Product
      */
@@ -767,7 +767,7 @@ class APRequestController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         $product = SwiftAPProduct::with('aprequest')->find(Crypt::decrypt(Input::get('pk')));
         if(count($product))
         {
@@ -775,16 +775,16 @@ class APRequestController extends UserController {
              * Normal User but not creator = no access
              */
             if($this->currentUser->hasAccess($this->permission->editPermission) &&
-                !$this->currentUser->isSuperUser() && 
+                !$this->currentUser->isSuperUser() &&
                 $product->aprequest->requester_user_id != $this->currentUser->id)
             {
                 return Response::make('Do not delete, that which is not yours',400);
-            }            
-            
+            }
+
             //Check what stage the form is at
             $form = $product->aprequest()->first();
             $progress = WorkflowActivity::progress($form);
-            
+
             /*
              * If Form still in progress
              */
@@ -796,7 +796,7 @@ class APRequestController extends UserController {
                     {
                         /*
                          * At this stage we can delete products
-                         */                        
+                         */
                         $product->approval()->delete();
                         if($product->delete())
                         {
@@ -805,11 +805,11 @@ class APRequestController extends UserController {
                         else
                         {
                             return Response::make('Unable to delete',400);
-                        }                        
+                        }
                     }
                 }
             }
-            
+
             return Response::make('Unable to delete',400);
 
         }
@@ -818,21 +818,21 @@ class APRequestController extends UserController {
             return Response::make('Product not found',404);
         }
     }
-    
+
     public function putErporder($apr_id)
     {
-        /*  
+        /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->ccarePermission]))
         {
             return parent::forbidden();
         }
-        
+
         return $this->process('SwiftErpOrder')->saveByParent(\Crypt::decrypt($apr_id));
-        
+
     }
-    
+
     public function deleteErporder()
     {
         /*
@@ -842,20 +842,20 @@ class APRequestController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         return $this->process('SwiftErpOrder')->delete();
     }
-    
+
     public function putDelivery($apr_id)
     {
-        /*  
+        /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->storePermission]))
         {
             return parent::forbidden();
         }
-        
+
         $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
 /*
          * Manual Validation
@@ -877,7 +877,7 @@ class APRequestController extends UserController {
                     }
                     break;
             }
-            
+
             /*
              * New Erp Order
              */
@@ -895,7 +895,7 @@ class APRequestController extends UserController {
                 {
                     return \Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
             else
             {
@@ -922,9 +922,9 @@ class APRequestController extends UserController {
         else
         {
             return \Response::make('A&P Request form not found',404);
-        }        
+        }
     }
-    
+
     public function deleteDelivery()
     {
         /*
@@ -934,9 +934,9 @@ class APRequestController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         $delivery = SwiftDelivery::find(Crypt::decrypt(Input::get('pk')));
-        
+
         if(count($delivery))
         {
             if($delivery->delete())
@@ -946,30 +946,30 @@ class APRequestController extends UserController {
             else
             {
                 return Response::make('Unable to delete',400);
-            }                        
+            }
         }
         else
         {
             return Response::make('Delivery not found',404);
-        }        
+        }
     }
-    
+
     /*
      * Form approval for creator of request or admin
      */
     public function postFormapproval($apr_id)
     {
-        /*  
+        /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
         }
-        
-        
+
+
         $form = SwiftAPRequest::with('product')->find(Crypt::decrypt($apr_id));
-        
+
         /*
          * Manual Validation
          */
@@ -978,17 +978,17 @@ class APRequestController extends UserController {
             /*
              * Validation
              */
-            
+
             /*
              * Normal User but not creator = no access
              */
             if($this->currentUser->hasAccess($this->permission->editPermission) &&
-                !$this->currentUser->isSuperUser() && 
+                !$this->currentUser->isSuperUser() &&
                 $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
             {
                 return Response::make('Do not publish, that which is not yours',400);
             }
-            
+
             if(!count($form->product))
             {
                 return Response::make('Please add some products to your form',400);
@@ -1004,7 +1004,7 @@ class APRequestController extends UserController {
                     }
                     if((int)$p->reason_code == 0)
                     {
-                        
+
                         return Response::make("Please set a reason for ".trim($p->jdeproduct->DSC1),400);
                     }
                     if((int)$p->quantity <= 0)
@@ -1013,7 +1013,7 @@ class APRequestController extends UserController {
                     }
                 }
             }
-            
+
             $approval = $form->approval()->where('type','=',SwiftApproval::APR_REQUESTER,'AND')->where('approved','=',SwiftApproval::APPROVED)->get();
             if(count($approval))
             {
@@ -1028,9 +1028,9 @@ class APRequestController extends UserController {
                 $approval = new SwiftApproval([
                    'type' => SwiftApproval::APR_REQUESTER,
                    'approval_user_id' => $this->currentUser->id,
-                   'approved' => SwiftApproval::APPROVED 
+                   'approved' => SwiftApproval::APPROVED
                 ]);
-                
+
                 if($form->approval()->save($approval))
                 {
 //                    Queue::push('APRequestHelper@autoexecapproval',array('aprequest_id'=>$form->id));
@@ -1042,28 +1042,28 @@ class APRequestController extends UserController {
                     return Response::make('Failed to approve form',400);
                 }
             }
-        } 
+        }
         else
         {
             return Response::make('A&P Request form not found',404);
         }
     }
-    
+
     /*
      * Approval of products for Cat Man Or Exec
      */
     public function putProductapproval($type,$product_id)
     {
-        /*  
+        /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess(['apr-catman','apr-exec']))
         {
             return parent::forbidden();
         }
-        
+
         $product = \SwiftAPProduct::find(\Crypt::decrypt($product_id));
-        
+
         if(count($product))
         {
             if(\Input::get('name') == "approval_approved" && in_array(\Input::get('value'),array(\SwiftApproval::REJECTED,\SwiftApproval::APPROVED,\SwiftApproval::PENDING)))
@@ -1139,24 +1139,24 @@ class APRequestController extends UserController {
         else
         {
             return \Response::make('Product not found',404);
-        }        
+        }
     }
-    
+
     /*
      * Approval Comment for Exec/Cat Man
      */
     public function putProductapprovalcomment($type,$product_id)
     {
-        /*  
+        /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess(['apr-catman','apr-exec']))
         {
             return parent::forbidden();
         }
-        
+
         $product = \SwiftAPProduct::find(\Crypt::decrypt($product_id));
-        
+
         if(count($product))
         {
             if(\Input::get('name') == "approval_comment")
@@ -1178,10 +1178,10 @@ class APRequestController extends UserController {
                                 {
                                     return \Response::make('Please enter a comment for rejected product',400);
                                 }
-                                
+
                                 //Get Comments
                                 $comment = $approval->comments()->first();
-                                
+
                                 if(count($comment))
                                 {
                                     $comment->comment = trim(\Input::get('value'));
@@ -1219,12 +1219,12 @@ class APRequestController extends UserController {
         else
         {
             return \Response::make('Product not found',404);
-        }        
+        }
     }
-    
+
     public function postUpload($apr_id)
     {
-        
+
         /*
          * Check Permissions
          */
@@ -1232,7 +1232,7 @@ class APRequestController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         $apr = SwiftAPRequest::find(Crypt::decrypt($apr_id));
         /*
          * Manual Validation
@@ -1247,8 +1247,8 @@ class APRequestController extends UserController {
                 {
                     echo json_encode(['success'=>1,
                                     'url'=>$doc->getAttachedFiles()['document']->url(),
-                                    'id'=>Crypt::encrypt($doc->id), 
-                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(), 
+                                    'id'=>Crypt::encrypt($doc->id),
+                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(),
                                     'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
                 }
                 else
@@ -1264,24 +1264,24 @@ class APRequestController extends UserController {
         else
         {
             return Response::make('A&P Request form not found',404);
-        } 
+        }
     }
-    
+
     /*
      * Delete upload
      */
-    
+
     public function deleteUpload($doc_id)
     {
-        
+
         /*
          * Check Permissions
          */
         if(!$this->currentUser->hasAnyAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $doc = SwiftAPDocument::find(Crypt::decrypt($doc_id));
         /*
          * Manual Validation
@@ -1302,11 +1302,11 @@ class APRequestController extends UserController {
             return Response::make('Document not found',404);
         }
     }
-    
+
     /*
      * Tags: REST
      */
-    
+
     public function putTag()
     {
         /*
@@ -1316,7 +1316,7 @@ class APRequestController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         if(Input::get('pk') && !is_numeric(Input::get('pk')))
         {
             $doc = SwiftAPDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
@@ -1422,13 +1422,13 @@ class APRequestController extends UserController {
         {
             return Response::make('Error: Document number invalid',400);
         }
-    }    
-    
-    
+    }
+
+
     /*
      * Cancel Form
      */
-    
+
     public function postCancel($apr_id)
     {
         /*
@@ -1437,23 +1437,23 @@ class APRequestController extends UserController {
         if(!$this->currentUser->hasAccess([$this->permission->adminPermission,$this->permission->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $form = SwiftAPRequest::find(Crypt::decrypt($apr_id));
-        
+
         if(count($form))
         {
-            
+
             /*
              * Normal User but not creator = no access
              */
             if($this->currentUser->hasAccess($this->permission->editPermission) &&
-                !$this->currentUser->isSuperUser() && 
+                !$this->currentUser->isSuperUser() &&
                 $form->revisionHistory()->orderBy('created_at','ASC')->first()->user_id != $this->currentUser->id)
             {
                 return Response::make('Do not cancel, that which is not yours',400);
             }
-            
+
             if(WorkflowActivity::cancel($form))
             {
                 return Response::make('Workflow has been cancelled',200);
@@ -1464,7 +1464,7 @@ class APRequestController extends UserController {
         else
         {
             return Response::make('A&P Request form not found',404);
-        }        
+        }
     }
 
     /*
@@ -1474,29 +1474,29 @@ class APRequestController extends UserController {
     {
         return Flag::set($type,'SwiftAPRequest',$this->permission->adminPermission);
     }
-    
+
     public function getStatistics($productCategory='all')
     {
         $this->pageTitle = "Statistics";
-        
+
         /*
          * Top Stats
          */
         //Top Product For the month
-        
+
         $product_id = SwiftAPProduct::whereHas('approval',function($q){
                             return $q->where('approved','=',SwiftApproval::APPROVED);
                       })->select(DB::raw('TRUNCATE(SUM(price*quantity),0) as price_sum, jde_itm, TRIM(sct_jde.jdeproducts.DSC1) as label'))
                       ->join('sct_jde.jdeproducts','sct_jde.jdeproducts.itm','=','swift_ap_product.jde_itm')
                       ->groupBy('jde_itm')
-                      ->whereBetween('created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                      ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
                       ->orderBy('price_sum','DESC')
                       ->first();
-                      
+
         $this->data['topstat_product'] = $product_id;
 
         //Top Client
-        
+
         $customer_code = SwiftAPProduct::whereHas('approval',function($q){
                             return $q->where('approved','=',SwiftApproval::APPROVED);
                       })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price*quantity),0) as price_sum, swift_ap_request.customer_code'))
@@ -1504,17 +1504,17 @@ class APRequestController extends UserController {
                       ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
                       ->orderBy('price_sum','DESC')
                       ->first();
-        
+
         if(count($customer_code))
         {
             $jdeCustomer = JdeCustomer::where('an8','LIKE','%'.$customer_code->customer_code.'%')->first();
             $customer_code->customer = $jdeCustomer;
         }
-        
+
         $this->data['topstat_customer'] = $customer_code;
-                      
+
         //Top A&P Requester
-        
+
         $requester = SwiftAPProduct::whereHas('approval',function($q){
                             return $q->where('approved','=',SwiftApproval::APPROVED);
                       })->join('swift_ap_request','swift_ap_product.aprequest_id','=','swift_ap_request.id')->select(DB::raw('TRUNCATE(SUM(price*quantity),0) as price_sum, swift_ap_request.requester_user_id'))
@@ -1522,18 +1522,18 @@ class APRequestController extends UserController {
                       ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
                       ->orderBy('price_sum','DESC')
                       ->first();
-                      
+
         if(count($requester))
         {
             $user = Sentry::find($requester->requester_user_id);
             $requester->requester = $user;
         }
-        
+
         $this->data['topstat_requester'] = $requester;
-        
+
         return $this->makeView("$this->rootURL/statistics");
     }
-    
+
     public function postChart()
     {
         /*
@@ -1550,14 +1550,14 @@ class APRequestController extends UserController {
             {
                 return Response::make($e->getMessage(),500);
             }
-            
-            
+
+
             if($dateFrom->diffInDays($dateTo,false) < 0)
             {
                 return Response::make("'From' date must be less than 'To' Date",500);
             }
 
-            
+
             switch(Input::get('type'))
             {
                 case "product":
@@ -1567,7 +1567,7 @@ class APRequestController extends UserController {
                                   })->select(DB::raw('TRUNCATE(SUM(swift_ap_product.price*swift_ap_product.quantity),0) as value, TRIM(sct_jde.jdeproducts.DSC1) as label'))
                                   ->join('sct_jde.jdeproducts','sct_jde.jdeproducts.itm','=','swift_ap_product.jde_itm')
                                   ->groupBy('jde_itm')
-                                  ->whereBetween('created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
+                                  ->whereBetween('swift_ap_product.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
                                   ->orderBy('value','DESC')
                                   ->take(10)->get();
 
@@ -1593,13 +1593,13 @@ class APRequestController extends UserController {
                                   ->groupBy('swift_ap_request.customer_code')
                                   ->whereBetween('swift_ap_request.created_at',array(new DateTime('first day of this month'),new DateTime('last day of this month')))
                                   ->orderBy('value','DESC')
-                                  ->take(10)->get();                    
+                                  ->take(10)->get();
                     break;
             }
             return Response::json($products_chart);
         }
     }
-    
+
     /*
      * Fetch product price based on ITM
      */
@@ -1618,7 +1618,7 @@ class APRequestController extends UserController {
         }
         return Response::make("Product code missing",500);
     }
-    
+
     /*
      * Overview : Ajax Widgets
      */
@@ -1626,30 +1626,30 @@ class APRequestController extends UserController {
     {
         $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
         $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
-        
+
         echo View::make('workflow/overview_latenodes',$this->data)->render();
     }
-    
+
     public function getPendingNodes()
     {
         $this->data['pending_node_activity'] = WorkflowActivity::statusByType($this->context);
-        
+
         echo View::make('workflow/overview_pendingnodes',$this->data)->render();
     }
-    
+
     public function getStories()
     {
         $this->data['stories'] = Story::fetch(Config::get('context')[$this->context]);
         $this->data['dynamicStory'] = false;
-        
+
         echo View::make('story/chapter',$this->data)->render();
     }
-    
+
     public function getMyrequests()
     {
         $this->data['pending_requests'] = SwiftAPRequest::getMyPending();
         $this->data['complete_requests'] = SwiftAPRequest::getMyCompleted(5);
-        
+
         if(!$this->data['pending_requests']->isEmpty() || !$this->data['complete_requests']->isEmpty())
         {
             $this->data['requests_present'] = true;
@@ -1658,7 +1658,7 @@ class APRequestController extends UserController {
                 foreach($apsource as &$apr)
                 {
                     $apr->current_activity = WorkflowActivity::progress($apr,$this->context);
-                    $apr->activity = Helper::getMergedRevision(array('product','product.approval','order','approval','delivery','document'),$apr);                    
+                    $apr->activity = Helper::getMergedRevision(array('product','product.approval','order','approval','delivery','document'),$apr);
                 }
             }
         }
@@ -1666,7 +1666,7 @@ class APRequestController extends UserController {
         {
             $this->data['requests_present'] = false;
         }
-        
+
         echo View::make('aprequest/overview_myrequests',$this->data)->render();
     }
 }

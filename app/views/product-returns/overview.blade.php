@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @include('product-returns.ribbon-create')
         </div>
 
@@ -18,7 +18,7 @@
     <div class="row">
         <div class="col-xs-12">
             <h1 class="pull-left page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i> Overview &nbsp;</h1>
-            <h1 class="pull-right hidden-tablet">Module Health: {{ \Helper::systemHealth($late_node_forms_count,$pending_node_count) }}</h1>      
+            <h1 class="pull-right hidden-tablet">Module Health: {{ \Helper::systemHealth($late_node_forms_count,$pending_node_count) }}</h1>
         </div>
     </div>
     @if($admin_list)
@@ -104,7 +104,7 @@
                     </div>
                 </div>
                 @endif
-                
+
                 @if($permission->isAdmin())
                     <!-- Widget ID (each widget will need unique ID)-->
                     <div class="jarviswidget" id="pr-overview-latetasks" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-load="/{{$rootURL}}/late-nodes">
@@ -129,4 +129,4 @@
 
 </div>
 
-@stop                    
+@stop

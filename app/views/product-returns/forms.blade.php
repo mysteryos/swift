@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
 
 </div>
@@ -16,7 +16,7 @@
 <div id="content" data-js="pr_forms" data-urljs="{{Bust::url('/js/swift/swift.pr_forms.js')}}">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="ribbon-button-alignment page-title">
@@ -119,7 +119,7 @@
                     </ul>
                 </div>
             </div>
-            
+
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
             @include('product-returns.filter-form')
@@ -146,7 +146,7 @@
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">
                         <div class="btn-group">
-                            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
                         </div>
                     </div>
                     @if($count) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">@if($page == 1){{1}}@else{{ (($page-1)*$limit_per_page)+1 }}@endif</span>-<span id="count-end">@if($count < ($page*$limit_per_page)) {{ $count }} @else{{ $page*$limit_per_page }}@endif</span></strong> of <strong><span id="count-total">{{ $count }}</span></strong></span> @endif

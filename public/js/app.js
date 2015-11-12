@@ -15,12 +15,12 @@ $.throttle_delay = 350;
 $.menu_speed = 235;
 
 // Note: You will also need to change this variable in the "variable.less" file.
-$.navbar_height = 49; 
+$.navbar_height = 49;
 
 /*
  * APP DOM REFERENCES
  * Description: Obj DOM reference, please try to avoid changing these
- */	
+ */
 $.root_ = $('body');
 $.document_ = $(document);
 $.left_panel = $('#left-panel');
@@ -38,13 +38,13 @@ $.device = null;
 /*
  * APP CONFIGURATION
  * Description: Enable / disable certain theme features here
- */		
+ */
 $.navAsAjax = false; // Your left nav in your app will no longer fire ajax calls
 
 // Please make sure you have included "jarvis.widget.js" for this below feature to work
 $.enableJarvisWidgets = true;
 
-// Warning: Enabling mobile widgets could potentially crash your webApp if you have too many 
+// Warning: Enabling mobile widgets could potentially crash your webApp if you have too many
 // 			widgets running at once (must have $.enableJarvisWidgets = true)
 $.enableMobileWidgets = true;
 
@@ -52,8 +52,8 @@ $.enableMobileWidgets = true;
 /*
  * DETECT MOBILE DEVICES
  * Description: Detects mobile device - if any of the listed device is detected
- * a class is inserted to $.root_ and the variable $.device is decleard. 
- */	
+ * a class is inserted to $.root_ and the variable $.device is decleard.
+ */
 
 /* so far this is covering most hand held devices */
 var ismobile = (/iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(navigator.userAgent.toLowerCase()));
@@ -68,7 +68,7 @@ if (!ismobile) {
         $.device = "mobile";
 
         // Removes the tap delay in idevices
-        // dependency: js/plugin/fastclick/fastclick.js 
+        // dependency: js/plugin/fastclick/fastclick.js
         //FastClick.attach(document.body);
 }
 
@@ -87,7 +87,7 @@ var pusher = new Pusher(document.getElementById('pusher_app_id').value,{authEndp
 var presenceChannelCurrent = presenceChannelUser = null;
 //List of presence channels subscribed to
 var presenceChannelCurrentSubscriptions = [];
-        
+
 /* ~ END: CHECK MOBILE DEVICE */
 
 /*
@@ -162,15 +162,15 @@ function executePageScript()
             }
             else
             {
-                pageSetUp();                
+                pageSetUp();
                 window[functionName]();
-            }            
+            }
         }
     }
     else
     {
         messenger_hidenotiftop();
-    }    
+    }
 }
 
 /*
@@ -193,7 +193,7 @@ function pusher_user()
             });
             $.notification_count.html(parseInt($.notification_count.html())+1).addClass('bg-color-red');
         });
-        
+
        presenceChannelUser.bind('story_new',function(data){
             if(document.getElementById('timeline-list') !== null)
             {
@@ -201,7 +201,7 @@ function pusher_user()
                 {
                     return false;
                 }
-                
+
                 if($('#timeline-list').find('#post_'+data.id).length == 0)
                 {
                     $('#timeline-list').prepend(data.html);
@@ -230,7 +230,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 }
             }
         });
-        
+
         presenceChannelCurrent.bind('pusher:member_added',function(member){
             if(!$('.whos-online').children('#user_'+member.id).length)
             {
@@ -244,12 +244,12 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 }, true);
             }
         });
-        
+
         presenceChannelCurrent.bind('pusher:member_removed',function(member){
             $('#user_'+member.id).tooltip('destroy');
             $('#user_'+member.id).remove();
         });
-        
+
         presenceChannelCurrent.bind('html-update',function(data){
             var $element = $('#'+data.id);
             if($element.length)
@@ -257,7 +257,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                 $element.html(data.html);
             }
         });
-        
+
         presenceChannelCurrent.bind('message',function(data){
             switch(data.message)
             {
@@ -267,14 +267,14 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                                 content: data.content,
                                 color : "#3276b1",
                                 timeout : 4000
-                    });                    
+                    });
                     break;
                 case 'big':
                     $.SmartMessageBox({
                             title : data.title,
                             content : data.content,
                             buttons : '[Ok]'
-                    }); 
+                    });
                     break;
             }
         });
@@ -296,7 +296,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                     $editableInUse.removeAttr('pusher-user');
                     $editableInUse.editable('enable');
                 }
-            });            
+            });
             presenceChannelCurrent.bind('client-editable-shown',function(data){
                 //An editable has been opened by another user. Lock it down
                 var $element = $("#"+data.id);
@@ -337,7 +337,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                     }
                     else
                     {
-                        $element.editable('setValue',moment(data.newValue, "YYYY-MM-DDTHH:mm:ssZ").toDate(),true);                        
+                        $element.editable('setValue',moment(data.newValue, "YYYY-MM-DDTHH:mm:ssZ").toDate(),true);
                     }
                 }
                 else
@@ -358,10 +358,10 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                             type: 'info',
                             message: avatarHTML(data.user)+" has added "+data.context+" (ID:"+data.pk.id+") - <i>just now</i>",
                             hideAfter: 5
-                        });                        
+                        });
                     }
                 });
-                
+
                 presenceChannelCurrent.bind('client-multi-delete',function(data){
                     var $editable = $('#'+data.id);
                     var $fieldset = $editable.parents('fieldset.multi');
@@ -377,7 +377,7 @@ function pusherSubscribeCurrentPresenceChannel(xeditable,multi_xeditable)
                             $(this).remove();
                         });
                     }
-                });                
+                });
             }
         }
     });
@@ -398,11 +398,11 @@ function jsLoader(files)
             files.splice(key,1);
         }
     });
-    
+
     if(files.length)
     {
         messenger_notiftop('Loading..','info',0);
-        // Load form validation dependency 
+        // Load form validation dependency
         var myqueue = new createjs.LoadQueue(false);
         myqueue.maintainScriptOrder = true;
         myqueue.loadManifest(files);
@@ -466,7 +466,7 @@ if (xhr.readyState == 4)
             alert('Your session has expired. Please login.');
             window.location.href=xhr.getResponseHeader("AJAX-REDIRECT");
         }
-    }    
+    }
 });
 
 /*
@@ -666,7 +666,7 @@ jQuery.fn.doesExist = function() {
 
  /*
          * REMOVE TABLE ROW
-        */ 
+        */
 
         (function() {
                 var $;
@@ -720,7 +720,7 @@ jQuery.fn.doesExist = function() {
                         }
                 });
 
-        }).call(this); 
+        }).call(this);
 
         /* ~ END: TABLE REMOVE ROW */
 /*
@@ -745,9 +745,9 @@ function launchFullscreen(element) {
 		}
 
 	} else {
-		
+
 		$.root_.removeClass("full-screen");
-		
+
 		if (document.exitFullscreen) {
 			document.exitFullscreen();
 		} else if (document.mozCancelFullScreen) {
@@ -793,7 +793,7 @@ function runAllForms() {
 
 // Setup Desktop Widgets
 function setup_widgets_desktop() {
-        
+
 	if ($.fn.jarvisWidgets && $.enableJarvisWidgets) {
 
 		$('#widget-grid').jarvisWidgets({
@@ -866,10 +866,10 @@ function setup_widgets_desktop() {
 			},
 			rtl : false, // best not to toggle this!
 			onChange : function() {
-				
+
 			},
 			onSave : function() {
-				
+
 			},
 			ajaxnav : $.navAsAjax // declears how the localstorage should be saved
 
@@ -923,7 +923,7 @@ function loadScript(scriptName, callback) {
 
 	if (!jsArray[scriptName]) {
 		jsArray[scriptName] = true;
-                
+
 		// adding the script tag to the head as suggested before
 		var body = document.getElementsByTagName('body')[0];
 		var script = document.createElement('script');
@@ -961,15 +961,15 @@ function enableComments()
             tpl: '<li data-value="${name}">${name} <small>${email}</small></li>',
             insert_tpl: '<input type="button" value="@${name}" data-id="${id}" title="${email}" class="usermention btn btn-default btn-xs" />',
             show_the_at: true
-                    
+
         });
-        
+
         //Send Comment
         $commentForm.on('submit',function(e){
             //If comment present
             if($.trim($('#comment-textarea').text()) !== "")
             {
-                
+
                 e.preventDefault();
                 //Serialize form data before sending
                 var $formdata = $commentForm.serialize();
@@ -984,14 +984,14 @@ function enableComments()
                 $comment.find('.usermention').each(function(){
                    $(this).append('<span>'+this.attributes.value.value+'</span>');
                 });
-                
+
                 //Append to formdata
                 $formdata += "&comment="+encodeURIComponent($comment.text());
-                
+
                 //Disable the buttons
                 $('#comment-textarea').attr('disabled','disabled');
                 $('#comment-submit').attr('disabled','disabled');
-                
+
                 //Display Sending Message
                 Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
                     id: 'notif-top',
@@ -1011,18 +1011,18 @@ function enableComments()
                         {
                             presenceChannelCurrent.trigger('client-new-chat',{user: presenceChannelCurrent.members.me, msg: encodeURIComponent($comment.text()), mentions: encodeURIComponent($usermention)});
                         }
-                        
+
                         $('#chat-body').load('/comment/listcomment/'+document.getElementById('commentable_key').value,function(){
                             $('#comment-textarea').html('');
                             $('#comment-textarea').removeAttr('disabled');
-                            $('#comment-submit').removeAttr('disabled');                              
+                            $('#comment-submit').removeAttr('disabled');
                         });
-                  
+
                     },
                     error:function(xhr, status, error)
                     {
                         $('#comment-textarea').removeAttr('disabled');
-                        $('#comment-submit').removeAttr('disabled');                      
+                        $('#comment-submit').removeAttr('disabled');
                         return xhr.responseText;
                     }
                 });
@@ -1034,7 +1034,7 @@ function enableComments()
             }
             return false;
         });
-        
+
         //Pusher Events
         if(presenceChannelCurrent && document.getElementById('channel_name') !== null)
         {
@@ -1048,11 +1048,11 @@ function enableComments()
                         type: 'info',
                         message: avatarHTML(data.user)+" has commented \""+data.msg+"\" - <i>just now</i>",
                         hideAfter: 10
-                    });                      
-                });                
+                    });
+                });
             });
         }
-        
+
         $commentForm.on('click','.delete-comment',function(){
             var $this = $(this);
             if(confirm('Please confirm deletion of comment.'))
@@ -1070,7 +1070,7 @@ function enableComments()
                     success:function()
                     {
                         $this.parents('li.message').slideUp(400,function(){
-                           $(this).remove(); 
+                           $(this).remove();
                         });
                     },
                     error:function(xhr, status, error)
@@ -1079,7 +1079,7 @@ function enableComments()
                     }
                 });
             }
-            return false; 
+            return false;
         });
     }
 }
@@ -1206,17 +1206,17 @@ function loadURL(url, container) {
 		beforeSend : function() {
 			// cog placed
 			container.html('<h1><i class="fa fa-cog fa-spin"></i> Loading...</h1>');
-		
+
 			// Only draw breadcrumb if it is main content material
 			// TODO: see the framerate for the animation in touch devices
-			
+
 			if (container[0] == $("#content")[0]) {
 				drawBreadCrumb();
 				// scroll up
 				$("html").animate({
 					scrollTop : 0
 				}, "fast");
-			} 
+			}
 		},
 		/*complete: function(){
 	    	// Handle the complete event
@@ -1225,13 +1225,13 @@ function loadURL(url, container) {
 		success : function(data) {
 			// cog replaced here...
 			// alert("success")
-			
+
 			container.css({
 				opacity : '0.0'
 			}).html(data).delay(50).animate({
 				opacity : '1.0'
 			}, 300);
-			
+
 
 		},
 		error : function(xhr, ajaxOptions, thrownError) {
@@ -1248,7 +1248,20 @@ function loadURL(url, container) {
 /*
  * Bind links with pjax class
  */
-$.document_.pjax('a.pjax', '#main');
+
+$.document_.on('click','a.pjax',function(e){
+    e.stopPropagation();
+    e.preventDefault();
+    $.pjax({
+        url: this.href,
+        container: '#main'
+    });
+});
+
+$.document_.on('click','a.pjax-refresh',function(e){
+    e.preventDefault();
+    $.pjax.reload('#main');
+});
 
 /*
  * Color box AJAX Universal
@@ -1266,7 +1279,7 @@ $.maindiv.on('click','a.colorbox-ajax',function(){
         transition:"fade",
         iframe: $(this).is('[data-colorbox-iframe]')
     });
-    return false; 
+    return false;
 });
 
 /*
@@ -1277,10 +1290,10 @@ $.document_.on('pjax:success, pjax:end',function(){
     $('.popover, .tooltip').remove();
     //Remove Left over select2 containers
     $('.select2-container').remove();
-    
+
     //Rebuild object
     $.contentdiv = $('#content');
-    
+
     executePageScript();
     //Check Site Version
     if($.root_.attr('data-version') !== document.getElementById('site_version').value)
@@ -1290,7 +1303,7 @@ $.document_.on('pjax:success, pjax:end',function(){
                 content: "Refresh page & apply update? <p class='text-align-right'><a href='javascript:void(0);' onclick='window.location.reload();' class='btn btn-primary btn-sm'>Yes</a> <a href='javascript:void(0);' class='btn btn-danger btn-sm'>No</a></p>",
                 color : "#F89406",
                 icon : "fa fa-bolt"
-        });        
+        });
     }
 });
 
@@ -1320,7 +1333,7 @@ var allBloodhound = new Bloodhound({
             {
                 messenger_notiftop(xhr.responseText,"error",5);
             }
-        }      
+        }
   },
 
 });
@@ -1340,16 +1353,16 @@ $('#search-fld').typeahead(null, {
         '</div>'
       ].join('\n'),
       suggestion: Handlebars.compile('<p><div>{{{highlight}}}</div><div><i class="fa fa-fw {{icon}}" title="{{title}}"/><a href="{{url}}" class="pjax">{{value}}</a></div></p>')
-    }    
+    }
 }).on('typeahead:selected', function(event, selection) {
     $.pjax({
        url:selection.url
     });
 }).on('focus',function(){
     var save_this = $(this);
-    window.setTimeout (function(){ 
-       save_this.select(); 
-    },100);    
+    window.setTimeout (function(){
+       save_this.select();
+    },100);
 });
 
 $('form.header-search').on('submit',function(){
@@ -1397,56 +1410,56 @@ function pageSetUp() {
 
 	if ($.device === "desktop"){
 		// is desktop
-		
+
 		// activate tooltips
 		$("[rel=tooltip]").tooltip();
-	
+
 		// activate popovers
 		$("[rel=popover]").popover();
-	
+
 		// activate popovers with hover states
 		$("[rel=popover-hover]").popover({
 			trigger : "hover"
 		});
-                
+
                 //Abbr TimeStamps
                 $('abbr[data-livestamp]').each(function(){
                     $(this).livestamp(parseInt(this.getAttribute('data-livestamp')));
                 });
-	
+
 		// setup widgets
 		setup_widgets_desktop();
-	
+
 		//setup nav height (dynamic)
 		nav_page_height();
-	
+
                 //set Recent projects
                 maintainRecentProject();
                 $('#clear-project').on('click',function(){
-                   clearRecentProject(); 
+                   clearRecentProject();
                 });
 
 	} else {
-		
+
 		// is mobile
-		
+
 		// activate popovers
 		$("[rel=popover]").popover();
-	
+
 		// activate popovers with hover states
 		$("[rel=popover-hover]").popover({
 			trigger : "hover"
 		});
-                
+
                 //Abbr TimeStamps
                 $('abbr[data-livestamp]').livestamp($(this).attr('data-livestamp'));
-	
+
 		// setup widgets
 		setup_widgets_mobile();
-	
+
 		//setup nav height (dynamic)
 		nav_page_height();
-		
+
 	}
 
 }
@@ -1598,7 +1611,7 @@ $('#refresh').click(function(e) {
 
 // LOGOUT BUTTON
 $('#logout a').on('click',function(e) {
-        e.preventDefault();            
+        e.preventDefault();
         e.stopPropagation();
         //get the link
         var $this = $(this);
@@ -1673,7 +1686,7 @@ function shortcut_buttons_show() {
 function nav_page_height() {
 	var setHeight = $('#main').height();
 	//menuHeight = $.left_panel.height();
-	
+
 	var windowHeight = $(window).height() - $.navbar_height;
 	//set height
 
@@ -1723,7 +1736,7 @@ $.maindiv.on('click','.btn-togglesubscribe',function(e){
     var $this = $(this);
     $this.attr('disabled','disabled');
     $this.addClass('loading-animation');
-    
+
     $.ajax({
         url: $this.attr('data-href'),
         type: 'PUT',
@@ -1737,11 +1750,11 @@ $.maindiv.on('click','.btn-togglesubscribe',function(e){
                     icon : "fa "+(resultJson.result === 1 ? "fa-heart" : "fa-heart-o"),
                     timeout : 3000
             });
-            
+
             $this.find('i.fa').toggle();
-            
+
             $this.removeAttr('disabled');
-            $this.removeClass('loading-animation');                
+            $this.removeClass('loading-animation');
         },
         error:function(xhr, status, error)
         {
@@ -1749,7 +1762,7 @@ $.maindiv.on('click','.btn-togglesubscribe',function(e){
             $this.removeClass('loading-animation');
             return xhr.responseText;
         }
-    });    
+    });
 });
 
 /*
@@ -1844,7 +1857,7 @@ var main = {
     dashboard: function () {
         if(typeof window['dashboard'] === "undefined")
         {
-            jsLoader(['/js/plugin/jquery-infinitescroll/jquery.infinitescroll.min.js', '/js/swift/swift.dashboard.js']);            
+            jsLoader(['/js/plugin/jquery-infinitescroll/jquery.infinitescroll.min.js', '/js/swift/swift.dashboard.js']);
         }
         else
         {
@@ -1852,23 +1865,23 @@ var main = {
             dashboard();
         }
     },
-    
+
     /*
      * Inbox Index JS
      */
-    
+
     inbox: function () {
         // DO NOT REMOVE : GLOBAL FUNCTIONS!
         pageSetUp();
 
         // PAGE RELATED SCRIPTS
-        
+
         /*
          * Fixed table height
          */
 
         tableHeightSize();
-        
+
         $(window).resize(function() {
                 tableHeightSize()
         })
@@ -1884,7 +1897,7 @@ var main = {
                 }
 
         }
-        
+
 	//Gets tooltips activated
 	$("#inbox-table [rel=tooltip]").tooltip();
 
@@ -1927,15 +1940,15 @@ var main = {
 			//$("#compose-mail").show();
 		}
 	}
-        
+
         //Hide Loading Message
         messenger_hidenotiftop();
     },
-    
+
     /*
      * Order Tracking - Summary
      */
-    
+
     ot_summary: function() {
         if(typeof window['ot_summary'] === "undefined")
         {
@@ -1945,7 +1958,7 @@ var main = {
         {
             pageSetUp();
             ot_summary();
-        }        
+        }
     },
     ot_active_charges: function() {
         if(typeof window['ot_active_charges'] === "undefined")
@@ -1956,7 +1969,7 @@ var main = {
         {
             pageSetUp();
             ot_active_charges();
-        }          
+        }
     },
     apr_statistics: function() {
         if(typeof window['apr_statistics'] === "undefined")
@@ -1990,7 +2003,7 @@ var main = {
         {
             pageSetUp();
             acp_forms();
-        }        
+        }
     },
     acp_payment_due: function() {
         if(typeof window['acp_payment_due'] === "undefined")
@@ -2023,7 +2036,7 @@ var main = {
         {
             pageSetUp();
             acp_cheque_assign_exec();
-        }          
+        }
     },
     acp_cheque_dispatch: function() {
         if(typeof window['acp_cheque_dispatch'] === "undefined")
@@ -2034,7 +2047,7 @@ var main = {
         {
             pageSetUp();
             acp_cheque_dispatch();
-        }         
+        }
     },
     pr_forms: function() {
         if(typeof window['pr_forms'] === "undefined")
@@ -2045,6 +2058,6 @@ var main = {
         {
             pageSetUp();
             pr_forms();
-        }         
+        }
     }
 }

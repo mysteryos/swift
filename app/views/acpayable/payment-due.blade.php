@@ -5,7 +5,7 @@
 <!-- RIBBON -->
 <div id="ribbon">
         <div class="ribbon-button-alignment">
-            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
 </div>
 <!-- END RIBBON -->

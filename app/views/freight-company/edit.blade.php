@@ -6,14 +6,12 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax" href="/order-tracking/freightcompany" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
-    
+
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax" href="/order-tracking/freightcompany" rel="tooltip" data-original-title="Back" data-placement="bottom"><i class="fa fa-lg fa-arrow-left"></i></a>
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
-        </div>    
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
+        </div>
 
 </div>
 <!-- END RIBBON -->
@@ -31,9 +29,9 @@
 	<div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
 		<h1 class="page-title txt-color-blueDark">
 			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-map-marker"></i> 
+			<i class="fa-fw fa fa-map-marker"></i>
 				Freight Company
-			<span>&gt;  
+			<span>&gt;
 				ID: {{ $fc->id }}
 			</span>
 		</h1>
@@ -44,7 +42,7 @@
             </h>
         </div>
     </div>
-    
+
 <!-- widget grid -->
     <section id="widget-grid">
 
@@ -53,13 +51,13 @@
 	<div class="row">
 
 		<!-- NEW COL START -->
-		<article class="col-md-8 col-xs-12">    
+		<article class="col-md-8 col-xs-12">
                         <!-- Widget ID (each widget will need unique ID)-->
                         <div class="jarviswidget" id="fc-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 
                                 <header>
                                         <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>General Info </h2>			
+                                        <h2>General Info </h2>
                                 </header>
                                 <!-- widget div-->
                                 <div>
@@ -89,7 +87,7 @@
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget --> 
+                        <!-- end widget -->
                         <!-- Widget ID (each widget will need unique ID)-->
                         <div class="jarviswidget" id="fc-businessInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 
@@ -128,7 +126,7 @@
 
                                 <header>
                                         <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>Contact Info </h2>			
+                                        <h2>Contact Info </h2>
                                 </header>
                                 <!-- widget div-->
                                 <div>
@@ -159,7 +157,7 @@
                                                             <div class="col-md-10">
                                                                 <a href="#" class="editable" data-type="text" data-name="email" data-pk="{{ Crypt::encrypt($fc->id) }}" data-url="/order-tracking/freightcompanyform" data-value="{{ $fc->email }}"></a>
                                                             </div>
-                                                        </div>                                                    
+                                                        </div>
                                                 </fieldset>
                                             </form>
                                         </div>
@@ -167,10 +165,10 @@
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->                        
+                        <!-- end widget -->
                 </article>
                 <!-- COL END -->
-                
+
                 <!-- NEW COL START -->
                 <article class="col-md-4 col-xs-12">
                     <!-- Widget ID (each widget will need unique ID)-->
@@ -178,7 +176,7 @@
 
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-history"></i> </span>
-                                    <h2>Ticker </h2>			
+                                    <h2>Ticker </h2>
                             </header>
                             <!-- widget div-->
                             <div>
@@ -192,14 +190,14 @@
                             </div>
                             <!-- end widget div -->
                     </div>
-                    <!-- end widget --> 
-                    
+                    <!-- end widget -->
+
                     <!-- Widget ID (each widget will need unique ID)-->
                     <div class="jarviswidget" id="fc-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-history"></i> </span>
-                                    <h2>Activity </h2>			
+                                    <h2>Activity </h2>
                             </header>
                             <!-- widget div-->
                             <div>
@@ -213,9 +211,9 @@
                             </div>
                             <!-- end widget div -->
                     </div>
-                    <!-- end widget -->                    
+                    <!-- end widget -->
                 </article>
-                
+
         </div>
         <!-- END ROW -->
 
@@ -224,4 +222,4 @@
 
 </div>
 
-@stop            
+@stop

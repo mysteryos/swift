@@ -15,14 +15,14 @@
 <div id="content" data-js="salesman_lists" data-urljs="{{Bust::url('/js/swift/swift.salesman_lists.js')}}">
     <div class="row">
         <div class="col-md-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Salesman Administration &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Salesman Administration &nbsp;</h1>
         </div>
         <div class="col-md-10 col-lg-10 hidden-mobile">
             <div class="inbox-inline-actions page-title">
                 <div class="btn-group">
-                    <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                    <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
                 </div>
-            </div>            
+            </div>
         </div>
     </div>
     <div class="row">
@@ -30,7 +30,7 @@
             @if($canCreate)
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax"> <strong>Create</strong> </a>                            
+                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax"> <strong>Create</strong> </a>
                     </div>
                 </div>
             @endif
@@ -47,11 +47,11 @@
                             </li>
                             <li @if($department=="active"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/administration/active" class="form-pjax-filter pjax"><i class="fa fa-check"></i>Active</a>
-                            </li>                             
+                            </li>
                     </ul>
                 </div>
             </div>
-            
+
         </div>
         <div class="col-md-10 col-xs-12">
             <div class="row">
@@ -67,7 +67,7 @@
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">
                         <div class="btn-group">
-                            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
                         </div>
                     </div>
                     @if($count) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">@if($page == 1){{1}}@else{{ (($page-1)*$limit_per_page)+1 }}@endif</span>-<span id="count-end">@if($count < ($page*$limit_per_page)) {{ $count }} @else{{ $page*$limit_per_page }}@endif</span></strong> of <strong><span id="count-total">{{ $count }}</span></strong></span> @endif

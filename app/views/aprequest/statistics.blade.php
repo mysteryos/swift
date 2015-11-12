@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
         </div>
 
 </div>
@@ -16,7 +16,7 @@
 <div id="content" data-js="apr_statistics" data-urljs="{{Bust::url('/js/swift/swift.apr_statistics.js')}}">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i> Statistics &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-home"></i> Statistics &nbsp;</h1>
         </div>
     </div>
     <div class="row">
@@ -30,14 +30,14 @@
             <div class="well well-sm">
                 <div class="h4 text-align-center">Top Customer of the month</div>
                 <div class="h5 text-align-center">@if(count($topstat_customer)) {{ $topstat_customer->customer->ALPH }} @else {{ "No top customer" }} @endif - @if(count($topstat_customer)) {{ "Rs ".$topstat_customer->price_sum }} @else {{ "Rs 0" }} @endif</div>
-            </div>            
+            </div>
         </div>
         <div class="col-xs-4">
             <div class="well well-sm">
                 <div class="h4 text-align-center">Top Requester of the month</div>
                 <div class="h5 text-align-center">@if(count($topstat_requester)) {{ $topstat_requester->requester->first_name." ".$topstat_requester->requester->last_name }} @else {{ "No top requester" }} @endif - @if(count($topstat_requester)) {{ "Rs ".$topstat_requester->price_sum }} @else {{ "Rs 0" }} @endif</div>
-            </div>            
-        </div>        
+            </div>
+        </div>
     </div>
 <!-- widget grid -->
     <section id="widget-grid">
@@ -86,7 +86,7 @@
                         </div>
                 </article>
                 <!-- NEW COL END -->
-                
+
 		<!-- NEW COL START -->
 		<article class="col-xs-4">
 			<!-- Widget ID (each widget will need unique ID)-->
@@ -127,7 +127,7 @@
                         </div>
                 </article>
                 <!-- NEW COL END -->
-                
+
                 <!-- NEW COL START -->
 		<article class="col-xs-4">
 			<!-- Widget ID (each widget will need unique ID)-->
@@ -167,8 +167,8 @@
                                 <!-- end widget div -->
                         </div>
                 </article>
-                <!-- NEW COL END -->                 
-                
+                <!-- NEW COL END -->
+
         </div>
         <!-- END ROW -->
 
@@ -177,4 +177,4 @@
 
 </div>
 
-@stop 
+@stop

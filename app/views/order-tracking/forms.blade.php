@@ -19,12 +19,12 @@
 <div id="content" data-js="ot_forms" data-urljs="{{Bust::url('/js/swift/swift.ot_forms.js')}}">
     <div class="row">
         <div class="col-md-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>
         </div>
         <div class="col-md-10 col-lg-10 hidden-mobile">
             <div class="inbox-inline-actions page-title">
                 <div class="btn-group">
-                    <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                    <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
                 </div>
             </div>
         </div>
@@ -34,7 +34,7 @@
             @if($canCreate)
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax"> <strong>Create</strong> </a>                            
+                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax"> <strong>Create</strong> </a>
                     </div>
                 </div>
             @endif
@@ -70,12 +70,12 @@
                             </li>
                             <li @if($type=="recent"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/forms/recent" class="form-pjax-filter pjax"><i class="fa fa-history"></i>Recent</a>
-                            </li>                            
+                            </li>
                     </ul>
 
                 </div>
             </div>
-            
+
         </div>
         <div class="col-md-10 col-xs-12">
             <div class="row">
@@ -86,7 +86,7 @@
                                 <a href="javascript:void(0);"><i>Filter By: </i></a>
                             </li>
                             <li class="dropdown">
-                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','business_unit')) {{ SwiftOrder::$business_unit[Session::get('ot_form_filter')['business_unit']] }} @else {{ "Business Unit" }} @endif<i class="fa fa-angle-down"></i></a>                        
+                                <a data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0);">@if(Helper::sessionHasFilter('ot_form_filter','business_unit')) {{ SwiftOrder::$business_unit[Session::get('ot_form_filter')['business_unit']] }} @else {{ "Business Unit" }} @endif<i class="fa fa-angle-down"></i></a>
                                 <ul class="dropdown-menu">
                                     @foreach(SwiftOrder::$business_unit as $bu_key => $bu_val)
                                         <li @if(Helper::sessionHasFilter('ot_form_filter','business_unit',$bu_key)){{ 'class="active"' }}@endif>
@@ -120,7 +120,7 @@
                     @endif
                     <div class="inbox-inline-actions hidden-desktop hidden-tablet visible-mobile">
                         <div class="btn-group">
-                            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
                         </div>
                     </div>
                     @if($count) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">@if($page == 1){{1}}@else{{ (($page-1)*$limit_per_page)+1 }}@endif</span>-<span id="count-end">@if($count < ($page*$limit_per_page)) {{ $count }} @else{{ $page*$limit_per_page }}@endif</span></strong> of <strong><span id="count-total">{{ $count }}</span></strong></span> @endif
@@ -128,7 +128,7 @@
             </div>
             <div class="row">
                 <div class="col-xs-12 table-wrap custom-scroll animated fast fadeInRight">
-                    @include('order-tracking.forms-list',array('orders'=>$orders))                    
+                    @include('order-tracking.forms-list',array('orders'=>$orders))
                 </div>
             </div>
         </div>

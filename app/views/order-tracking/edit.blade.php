@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if(isset($isSubscribed))
                 <button class="btn btn-default btn-togglesubscribe" data-href="{{$subscriptionUrl}}">
@@ -20,7 +20,7 @@
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($edit)<a class="btn btn-default btn-help" data-href="/order-tracking/help/{{ urlencode($order->encrypted_id) }}" rel="tooltip" data-original-title="Help" data-placement="bottom"><i class="fa fa-lg fa-question"></i></a>@endif
             @if(isset($isSubscribed))
                 <button class="btn btn-default btn-togglesubscribe" data-href="{{$subscriptionUrl}}">
@@ -55,9 +55,9 @@
 	<div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
 		<h1 class="page-title txt-color-blueDark">
 			<!-- PAGE HEADER -->
-			<i class="fa-fw fa fa-map-marker"></i> 
+			<i class="fa-fw fa fa-map-marker"></i>
 				Order Process
-			<span>&gt;  
+			<span>&gt;
 				Form ID: #{{ $order->id }}
 			</span>
 		</h1>
@@ -77,7 +77,7 @@
         <div class="row">
             <article class="col-xs-12">
                 @foreach($message as $m)
-                    <?php 
+                    <?php
                         switch($m['type'])
                         {
                             case 'warning':
@@ -112,7 +112,7 @@
                                     </button>
                                     <i class="fa-fw fa fa-info"></i>
                                     <strong>Info!</strong> ';
-                                break;                        
+                                break;
                         }
                         echo $m['msg']."</div>";
                     ?>
@@ -120,7 +120,7 @@
             </article>
         </div>
     @endif
-    
+
 <!-- widget grid -->
     <section id="widget-grid">
 
@@ -130,13 +130,13 @@
 
 		<!-- NEW COL START -->
 		<article class="col-lg-8 col-xs-12">
-			
+
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="ot-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                    <h2>General Info </h2>			
+                    <h2>General Info </h2>
 				</header>
                 <!-- widget div-->
 				<div>
@@ -151,7 +151,7 @@
                 <!-- end widget div -->
             </div>
             <!-- end widget -->
-                        
+
             <!-- Widget Purchase Order-->
 			<div class="jarviswidget" id="ot-purchaseOrder" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -176,7 +176,7 @@
                             @else
                                 @include('order-tracking.edit_purchaseorder')
                             @endif
-                            @include('order-tracking.edit_purchaseorder',array('dummy'=>true,'p'=>null))                                                
+                            @include('order-tracking.edit_purchaseorder',array('dummy'=>true,'p'=>null))
                         </form>
                     </div>
                     <!-- end widget content -->
@@ -184,7 +184,7 @@
                 <!-- end widget div -->
             </div>
             <!-- end widget -->
-                        
+
             <!-- Widget Freight Start-->
 			<div class="jarviswidget" id="ot-freight" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -216,8 +216,8 @@
                 </div>
                 <!-- end widget div -->
             </div>
-            <!-- end widget freight -->                        
-                        
+            <!-- end widget freight -->
+
             <!-- Widget Shipment Start-->
 			<div class="jarviswidget" id="ot-shipment" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -250,7 +250,7 @@
                 <!-- end widget div -->
             </div>
             <!-- end widget shipment -->
-                        
+
             <!-- Widget Storage Start -->
 			<div class="jarviswidget" id="ot-storage" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -283,7 +283,7 @@
                 <!-- end widget div -->
             </div>
             <!-- end widget Storage -->
-                        
+
             <!-- Widget Customs START-->
 			<div class="jarviswidget" id="ot-customs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -315,8 +315,8 @@
                 </div>
                 <!-- end widget div -->
             </div>
-            <!-- end widget customs -->                        
-                        
+            <!-- end widget customs -->
+
             <!-- Widget Reception start-->
 			<div class="jarviswidget" id="ot-reception" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -348,7 +348,7 @@
                 </div>
                 <!-- end widget div -->
             </div>
-            <!-- end widget reception -->                         
+            <!-- end widget reception -->
         </article>
         <!-- NEW COL END -->
 
@@ -371,19 +371,19 @@
 					<div class="widget-body">
                         <div id="upload-preview">
                             @include('order-tracking.upload',array('doc'=>$order->document,'tags'=>$tags,'dummy'=>true))
-                        </div>                                                
+                        </div>
                     </div>
                     <!-- end widget content -->
                 </div>
                 <!-- end widget div -->
             </div>
             <!-- end widget -->
-                        
+
             <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="ot-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
 					<span class="widget-icon"> <i class="fa fa-comment"></i> </span>
-                    <h2>Chat </h2>			
+                    <h2>Chat </h2>
 				</header>
                 <!-- widget div-->
 				<div>
@@ -422,7 +422,7 @@
 			<div class="jarviswidget" id="ot-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
 					<span class="widget-icon"> <i class="fa fa-history"></i> </span>
-                    <h2>Activity </h2>			
+                    <h2>Activity </h2>
 				</header>
                 <!-- widget div-->
 				<div>
@@ -436,7 +436,7 @@
                 </div>
                 <!-- end widget div -->
             </div>
-            <!-- end widget -->                        
+            <!-- end widget -->
         </article>
         <!-- NEW COL END -->
         </div>

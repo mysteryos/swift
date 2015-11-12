@@ -19,14 +19,14 @@
 <div id="content" data-js="apr_forms" data-urljs="{{Bust::url('/js/swift/swift.apr_forms.js')}}">
     <div class="row">
         <div class="col-md-4 col-lg-2 col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-file-text-o"></i> Forms &nbsp;</h1>
         </div>
         <div class="col-md-8 col-lg-10 hidden-mobile">
             <div class="inbox-inline-actions page-title">
                 <div class="btn-group">
-                    <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                    <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
                 </div>
-            </div>            
+            </div>
         </div>
     </div>
     <div class="row">
@@ -34,7 +34,7 @@
             @if($permission->canCreate())
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$permission->canCreate()){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                        <a href="/{{ $rootURL }}/create" class="btn btn-primary btn-block pjax @if(!$permission->canCreate()){{ "disabled" }}@endif"> <strong>Create</strong> </a>
                     </div>
                 </div>
             @endif
@@ -45,7 +45,7 @@
                     <ul class="inbox-menu-lg">
                             <li @if($type=="inprogress"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/forms/inprogress" class="form-pjax-filter pjax"><i class="fa fa-clock-o"></i>In Progress</a>
-                            </li>                        
+                            </li>
                             <li @if($type=="all"){{"class=\"active\""}}@endif >
                                     <a href="/{{ $rootURL }}/forms/all" class="form-pjax-filter pjax"><i class="fa fa-file-text-o"></i>All</a>
                             </li>
@@ -75,7 +75,7 @@
 
                 </div>
             </div>
-            
+
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="row">
@@ -118,7 +118,7 @@
             </div>
             <div class="row">
                 <div class="col-xs-12 table-wrap custom-scroll animated fast fadeInRight">
-                    @include('aprequest.forms-list',array('forms'=>$forms))                    
+                    @include('aprequest.forms-list',array('forms'=>$forms))
                 </div>
             </div>
         </div>

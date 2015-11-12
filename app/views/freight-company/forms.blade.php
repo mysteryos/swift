@@ -19,7 +19,7 @@
 <div id="content" data-js="fc_forms" data-urljs="{{Bust::url('/js/swift/swift.fc_forms.js')}}">
     <div class="row">
         <div class="col-xs-12">
-            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-building"></i> Freight Company &nbsp;</h1>            
+            <h1 class="page-title txt-color-blueDark hidden-tablet"><i class="fa fa-fw fa-building"></i> Freight Company &nbsp;</h1>
         </div>
     </div>
     <div class="row">
@@ -27,13 +27,13 @@
             @if($canCreate)
                 <div class="row">
                     <div class="col-xs-12">
-                        <a href="/order-tracking/createfreightcompanyform" class="btn btn-primary btn-block pjax @if(!$canCreate){{ "disabled" }}@endif"> <strong>Create</strong> </a>                            
+                        <a href="/order-tracking/createfreightcompanyform" class="btn btn-primary btn-block pjax @if(!$canCreate){{ "disabled" }}@endif"> <strong>Create</strong> </a>
                     </div>
                 </div>
             @endif
             <div class="row">
                 <div class="col-xs-12 inbox-side-bar">
-                    <h6> Filters <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken"><i class="fa fa-refresh"></i></a></h6>
+                    <h6> Filters <a href="javascript:void(0);" rel="tooltip" title="" data-placement="right" data-original-title="Refresh" class="pull-right txt-color-darken pjax-refresh"><i class="fa fa-refresh"></i></a></h6>
 
                     <ul class="inbox-menu-lg">
                             <li @if($type=="all"){{"class=\"active\""}}@endif >
@@ -51,7 +51,7 @@
                     </ul>
                 </div>
             </div>
-            
+
         </div>
         <div class="col-md-8 col-lg-10 col-xs-12">
             <div class="row">
@@ -67,7 +67,7 @@
                     @endif
                     <div class="inbox-inline-actions">
                         <div class="btn-group">
-                            <a class="btn btn-default pjax" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+                            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
                         </div>
                     </div>
                     @if($count) <span class="pull-right inbox-pagenumber"><strong><span id="count-start">@if($page == 1){{1}}@else{{ $page*$limit_per_page }}@endif</span>-<span id="count-end">@if($count < 30) {{ $count }} @else{{ $page*$limit_per_page }}@endif</span></strong> of <strong><span id="count-total">{{ $count }}</span></strong></span> @endif
@@ -75,7 +75,7 @@
             </div>
             <div class="row">
                 <div class="col-xs-12 table-wrap custom-scroll animated fast fadeInRight">
-                    @include('freight-company.forms-list',array('companies'=>$companies))                    
+                    @include('freight-company.forms-list',array('companies'=>$companies))
                 </div>
             </div>
         </div>

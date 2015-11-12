@@ -5,7 +5,7 @@
 <!-- RIBBON -->
 <div id="ribbon">
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @include('product-returns.ribbon-create')
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-owner/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishPickup)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
@@ -26,7 +26,7 @@
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @include('product-returns.ribbon-create')
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-owner/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishPickup)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/publish-pickup/{{$form->encrypted_id}}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
@@ -87,7 +87,7 @@
             </h1>
         </div>
     </div>
-    
+
     <!-- widget grid -->
     <section id="widget-grid">
 
@@ -162,7 +162,7 @@
                     <!-- end widget div -->
                 </div>
                 <!-- end widget -->
-                
+
                 <!-- Add Product From Invoice Modal -->
                 <div class="modal fade" id="productFromInvoiceModal" tabindex="-1" role="dialog">
                     <div class="modal-dialog">
@@ -267,7 +267,7 @@
                 </div><!-- /.modal -->
             </article>
             <!-- NEW COL END -->
-            
+
             <!-- NEW COL START -->
             <article class="col-lg-8 col-xs-12">
                 <!-- Widget ID (each widget will need unique ID)-->
@@ -337,7 +337,7 @@
                     </div>
                     <!-- end widget -->
                 @endif
-                
+
                 <!-- Widget ID (each widget will need unique ID)-->
                 <div class="jarviswidget" id="pr-credit-note" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
                     <header>
@@ -372,7 +372,7 @@
                 <!-- end widget -->
             </article>
             <!-- NEW COL END -->
-                
+
             <!-- NEW COL START -->
             <article class="col-lg-4 col-xs-12">
                 <!-- Widget ID (each widget will need unique ID)-->
@@ -447,4 +447,4 @@
 
 </div>
 
-@stop                
+@stop

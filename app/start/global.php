@@ -57,7 +57,7 @@ App::error(function(Exception $exception, $code)
  */
 
 App::before(function($request){
-    
+
     if(\Sentry::check() !== false && \Sentry::getUser()->id === \Config::get('website.system_user_id'))
     {
         \Sentry::logout();
@@ -124,3 +124,23 @@ require app_path().'/filters.php';
 */
 
 require app_path().'/events.php';
+
+/*
+ * CodeSleeve
+ */
+
+// Boot stapler:
+\Codesleeve\Stapler\Stapler::boot();
+
+// Set the configuration driver (we're using the default config driver here; if you choose to implement your own you'll need to implement Codesleeve\Stapler\Config\ConfigurableInterface):
+$config = \App::make('Codesleeve\Stapler\Config\NativeConfig');
+\Codesleeve\Stapler\Stapler::setConfigInstance($config);
+
+// Set the location to your application's document root:
+$config->set('stapler.public_path', '/extvol/www/html/scottswift/http/public/upload');
+
+// Set the location to your application's base folder.
+$config->set('stapler.base_path', '/extvol/www/html/scottswift/http/');
+
+$config->set('s3',\Config::get('codesleeve_stapler.s3'));
+$config->set('cloudfront',\Config::get('codesleeve_stapler.cloudfront'));

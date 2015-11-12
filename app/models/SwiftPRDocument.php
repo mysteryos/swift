@@ -10,9 +10,10 @@ class SwiftPRDocument extends SwiftDocument {
                                 'default_url' => '/defaults/:style/missing.png',
                                 'keep_old_files' => true,
                                 'preserve_old_files' => true,
-                                'path' => 'prdocument/:id/:style/:filename'
+                                'path' => 'prdocument/:id/:style/:filename',
+                                'styles' => []
                                 )
-                            );        
+                            );
         parent::__construct($attributes);
-    }    
+    }
 }

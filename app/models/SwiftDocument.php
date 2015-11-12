@@ -8,40 +8,40 @@ use Codesleeve\Stapler\ORM\StaplerableInterface;
 use Codesleeve\Stapler\ORM\EloquentTrait;
 
 class SwiftDocument extends Eloquent implements StaplerableInterface{
-    
+
     use Illuminate\Database\Eloquent\SoftDeletingTrait;
-    
+
     use EloquentTrait;
-    
+
     use \Venturecraft\Revisionable\RevisionableTrait;
-    
+
     protected $table = "swift_document";
-    
+
     protected $guarded = array('id');
-    
+
     protected $fillable = ["document_file_name","document_file_size","document_content_type","document_updated_at","user_id"];
-    
+
     public $timestamps = true;
-    
+
     protected $dates = ['deleted_at'];
-    
+
     /* Revisionable */
-    
+
     protected $revisionEnabled = true;
-    
+
     protected $keepRevisionOf = array(
         'document_file_name',
     );
-    
+
     protected $revisionFormattedFieldNames = array(
         'document_file_name' => 'Document',
-    );    
-    
+    );
+
     public $revisionClassName = "Document";
-    public $revisionPrimaryIdentifier = "document_file_name";    
+    public $revisionPrimaryIdentifier = "document_file_name";
     public $keepCreateRevision = true;
     public $softDelete = true;
-    
+
     public function __construct(array $attributes = array())
     {
         if(!empty($attributes))
@@ -57,19 +57,20 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
                 'url' => '/upload/:attachment/:id/:filename',
                 'default_url' => '/defaults/:style/missing.png',
                 'keep_old_files' => true,
-                'preserve_old_files' => true
-            ]);            
+                'preserve_old_files' => true,
+                'styles' => []
+            ]);
         }
          parent::__construct();
     }
-    
+
     /*
      * Event Observers
      */
-    
+
     public static function boot() {
         parent:: boot();
-        
+
         /*
          * Set User Id on create
          */
@@ -78,11 +79,11 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
         });
 
         static::bootStapler();
-        
+
         static::bootRevisionable();
-        
+
     }
-    
+
     /*
      * relationships
      */
@@ -90,24 +91,24 @@ class SwiftDocument extends Eloquent implements StaplerableInterface{
     {
         return $this->belongsTo('SwiftOrder', 'document_id','id');
     }
-    
+
     public function aprequest()
     {
         return $this->belongsTo('SwiftAPRequest', 'document_id','id');
-    }    
-    
+    }
+
     /*
      * Morph
      */
-    
+
     public function document()
     {
         return $this->morphTo();
     }
-    
+
     public function tag()
     {
         return $this->morphMany('SwiftTag','taggable');
     }
- 
+
 }

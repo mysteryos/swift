@@ -6,12 +6,12 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore-scheme" }}@else{{ "delete-scheme" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($isAdmin)<a class="btn btn-default btn-delete" href="/{{ $rootURL }}/@if($form->deleted_at !== null){{ "restore-scheme" }}@else{{ "delete-scheme" }}@endif/{{ urlencode(Crypt::encrypt($form->id)) }}" rel="tooltip" data-original-title="@if($form->deleted_at !== null) {{ "Restore" }} @else {{ "Delete" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($form->deleted_at !== null) {{ "fa-undo" }} @else {{ "fa-trash-o" }} @endif"></i></a>@endif
         </div>
 
@@ -43,12 +43,12 @@
             </h1>
         </div>
     </div>
-    
+
     @if(isset($message) && $message !== false)
         <div class="row">
             <article class="col-xs-12">
                 @foreach($message as $m)
-                    <?php 
+                    <?php
                         switch($m['type'])
                         {
                             case 'warning':
@@ -83,7 +83,7 @@
                                     </button>
                                     <i class="fa-fw fa fa-info"></i>
                                     <strong>Info!</strong> ';
-                                break;                        
+                                break;
                         }
                         echo $m['msg']."</div>";
                     ?>
@@ -91,7 +91,7 @@
             </article>
         </div>
     @endif
-    
+
 <!-- widget grid -->
     <section id="widget-grid">
 
@@ -101,13 +101,13 @@
 
 		<!-- NEW COL START -->
 		<article class="col-lg-8 col-xs-12">
-                    
+
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="salescommission-scheme-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>General Info </h2>			
+                                        <h2>General Info </h2>
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -122,7 +122,7 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
-                        
+
                         @if($form->type === \SwiftSalesCommissionScheme::KEYACCOUNT_DYNAMIC_PRODUCTCATEGORY)
                             <!-- Widget Products-->
                             <div class="jarviswidget" id="salescommission-scheme-products" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
@@ -157,7 +157,7 @@
                             </div>
                             <!-- end widget -->
                         @endif
-                        
+
                         @if($form->type === \SwiftSalesCommissionScheme::KEYACCOUNT_FLAT_SALES_PRODUCTCATEGORY)
                             <!-- Widget Products-->
                             <div class="jarviswidget" id="salescommission-scheme-product-category" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
@@ -191,8 +191,8 @@
                                     <!-- end widget div -->
                             </div>
                             <!-- end widget -->
-                        @endif                        
-                        
+                        @endif
+
                         <!-- Widget Rates-->
 			<div class="jarviswidget" id="salescommission-scheme-rates" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -225,7 +225,7 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
-                        
+
                         <!-- Widget Rates-->
 			<div class="jarviswidget" id="salescommission-scheme-salesman" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 				<header>
@@ -257,19 +257,19 @@
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->                        
+                        <!-- end widget -->
                 </article>
                 <!-- NEW COL END -->
-                
+
                 <!-- NEW COL START -->
-                <article class="col-lg-4 col-xs-12">                
-                
+                <article class="col-lg-4 col-xs-12">
+
                     <!-- Widget ID (each widget will need unique ID)-->
                     <div class="jarviswidget" id="salescommission-scheme-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 
                            <header>
                                    <span class="widget-icon"> <i class="fa fa-comment"></i> </span>
-                                   <h2>Chat </h2>			
+                                   <h2>Chat </h2>
                            </header>
                            <!-- widget div-->
                            <div>
@@ -282,13 +282,13 @@
                            <!-- end widget div -->
                     </div>
                     <!-- end widget -->
-                    
+
                     <!-- Widget ID (each widget will need unique ID)-->
                     <div class="jarviswidget" id="salescommission-scheme-actionlog" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
 
                             <header>
                                     <span class="widget-icon"> <i class="fa fa-history"></i> </span>
-                                    <h2>Activity </h2>			
+                                    <h2>Activity </h2>
                             </header>
                             <!-- widget div-->
                             <div>
@@ -302,8 +302,8 @@
                             </div>
                             <!-- end widget div -->
                     </div>
-                    <!-- end widget -->                    
-                    
+                    <!-- end widget -->
+
                 </article>
                 <!-- NEW COL END -->
         </div>

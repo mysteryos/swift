@@ -6,7 +6,7 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($canPublish)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapproval/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if(isset($isSubscribed))
                 <button class="btn btn-default btn-togglesubscribe" data-href="{{$subscriptionUrl}}">
@@ -20,7 +20,7 @@
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($canPublish)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapproval/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if(isset($isSubscribed))
                 <button class="btn btn-default btn-togglesubscribe" data-href="{{$subscriptionUrl}}">
@@ -76,7 +76,7 @@
             </h1>
         </div>
     </div>
-    
+
     <!-- widget grid -->
     <section id="widget-grid">
 
@@ -86,13 +86,13 @@
 
 		<!-- NEW COL START -->
 		<article class="col-lg-8 col-xs-12">
-			
+
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="apr-generalInfo" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
-                                        <h2>General Info </h2>			
+                                        <h2>General Info </h2>
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -107,10 +107,10 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
-                        
+
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="apr-products" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-gift"></i> </span>
                                         <h2>Products</h2>
@@ -140,14 +140,14 @@
                                                                 </li>
                                                         </ul>
                                                 </div>
-                                        </div>                                        
+                                        </div>
 				</header>
                                 <!-- widget div-->
 				<div>
 					<!-- widget content -->
 					<div class="widget-body">
                                             <div class="well well-sm text-center">
-                                                Total cost of products: Rs <span id="totaloftotalprice">{{ $product_price_total or 0 }}</span>                                                
+                                                Total cost of products: Rs <span id="totaloftotalprice">{{ $product_price_total or 0 }}</span>
                                             </div>
                                             <form class="form-horizontal">
                                                     @if(count($form->product))
@@ -158,7 +158,7 @@
                                                     @else
                                                         @include('aprequest.edit_product')
                                                     @endif
-                                                    @include('aprequest.edit_product',array('dummy'=>true,'p'=>null))                                                
+                                                    @include('aprequest.edit_product',array('dummy'=>true,'p'=>null))
                                             </form>
                                         </div>
                                         <!-- end widget content -->
@@ -166,10 +166,10 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
-                        
+
 			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="apr-erporder" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-shopping-cart"></i> </span>
                                         <h2>JDE Order </h2>
@@ -177,7 +177,7 @@
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                                             </div>
-                                        @endif                                        
+                                        @endif
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -200,10 +200,10 @@
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
-                        
+
  			<!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="apr-delivery" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-shopping-cart"></i> </span>
                                         <h2>Delivery </h2>
@@ -211,7 +211,7 @@
                                             <div class="widget-toolbar" role="menu">
                                                 <a class="btn btn-primary btn-add-new" href="javascript:void(0);"><i class="fa fa-plus"></i> Add</a>
                                             </div>
-                                        @endif                                        
+                                        @endif
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -226,22 +226,22 @@
                                                     @else
                                                         @include('aprequest.edit_delivery')
                                                     @endif
-                                                    @include('aprequest.edit_delivery',array('dummy'=>true,'d'=>null))                                                
+                                                    @include('aprequest.edit_delivery',array('dummy'=>true,'d'=>null))
                                             </form>
                                         </div>
                                         <!-- end widget content -->
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->                       
+                        <!-- end widget -->
                 </article>
                 <!-- NEW COL END -->
-                
+
                 <!-- NEW COL START -->
                 <article class="col-lg-4 col-xs-12">
                         <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="apr-docs" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-file-o"></i> </span>
                                         <h2>Docs </h2>
@@ -257,20 +257,20 @@
 					<div class="widget-body">
                                             <div id="upload-preview">
                                                 @include('aprequest.upload',array('doc'=>$form->document,'tags'=>$tags,'dummy'=>true))
-                                            </div>                                                
+                                            </div>
                                         </div>
                                         <!-- end widget content -->
                                 </div>
                                 <!-- end widget div -->
                         </div>
                         <!-- end widget -->
-                        
+
                          <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="apr-swiftchat" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-comment"></i> </span>
-                                        <h2>Chat </h2>			
+                                        <h2>Chat </h2>
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -282,14 +282,14 @@
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->                          
-                        
+                        <!-- end widget -->
+
                         <!-- Widget ID (each widget will need unique ID)-->
 			<div class="jarviswidget" id="apr-activity" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
-				
+
 				<header>
 					<span class="widget-icon"> <i class="fa fa-history"></i> </span>
-                                        <h2>Activity </h2>			
+                                        <h2>Activity </h2>
 				</header>
                                 <!-- widget div-->
 				<div>
@@ -303,7 +303,7 @@
                                 </div>
                                 <!-- end widget div -->
                         </div>
-                        <!-- end widget -->                        
+                        <!-- end widget -->
                 </article>
                 <!-- NEW COL END -->
         </div>
@@ -314,4 +314,4 @@
 
 </div>
 
-@stop                
+@stop

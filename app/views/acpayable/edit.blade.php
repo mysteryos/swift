@@ -6,10 +6,10 @@
 <div id="ribbon">
 
         <div class="ribbon-button-alignment hidden-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($permission->canCreate())
             <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>
-            @endif 
+            @endif
             @if($publishOwner)<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalowner/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             @if($publishAccounting && $current_activity['status'] === SwiftWorkflowActivity::INPROGRESS && ($permission->isAccountingDept() || $permission->isAdmin()))<a class="btn btn-default btn-publish" href="/{{ $rootURL }}/formapprovalaccounting/{{ $form->encrypted_id }}" rel="tooltip" data-original-title="Publish Form" data-placement="bottom"><i class="fa fa-share fa-lg"></i></a>@endif
             <a class="btn btn-default btn-ribbon-share colorbox-ajax" rel="tooltip" data-original-title="Share" data-placement="bottom" href="{{\Helper::generateShareUrl($form)}}"><i class="fa fa-lg fa-reply-all"></i></a>
@@ -20,7 +20,7 @@
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">
-            <a class="btn btn-default pjax btn-ribbon-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" href="{{ URL::current() }}"><i class="fa fa-lg fa-refresh"></i></a>
+            <a class="btn btn-default pjax-refresh" rel="tooltip" data-original-title="Refresh" data-placement="bottom" id="btn-ribbon-refresh" href="javascript:void(0);"><i class="fa fa-lg fa-refresh"></i></a>
             @if($permission->canCreate())
             <a href="/{{ $rootURL }}/create" class="btn btn-default pjax" rel="tooltip" data-original-title="Create" data-placement="bottom"><i class="fa fa-lg fa-file"></i></a>
             @endif
@@ -333,7 +333,7 @@
                 </div>
                 <!-- end widget -->
                 @endif
-                
+
             </article>
             <!-- NEW COL END -->
 
@@ -429,4 +429,4 @@
 
 </div>
 
-@stop                
+@stop

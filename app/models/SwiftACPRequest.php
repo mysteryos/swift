@@ -4,7 +4,7 @@
  *
  * @author kpudaruth
  */
-class SwiftACPRequest extends Eloquent 
+class SwiftACPRequest extends Eloquent
 {
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
@@ -16,13 +16,13 @@ class SwiftACPRequest extends Eloquent
     public $readableName = "Accounts Payable";
 
     protected $table = "scott_swift.swift_acp_request";
-    
+
     protected $fillable = ['description','billable_company_code','owner_user_id','supplier_code','payable_id','payable_type','type'];
 
     protected $appends = ['company_name','supplier_name','amount_due','name'];
 
     protected $with = ['invoice','payment'];
-    
+
     public $dates = ['deleted_at'];
 
     /*
@@ -58,7 +58,7 @@ class SwiftACPRequest extends Eloquent
     ];
 
     /* Elastic Search */
-    
+
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
@@ -68,15 +68,15 @@ class SwiftACPRequest extends Eloquent
     //Info Context
     public $esInfoContext = "acpayable";
     public $esRemove = ['owner_user_id','supplier_name','company_name','amount_due','payable_id','payable_type','type','name'];
-    
+
     /* Revisionable */
-    
+
     protected $revisionEnabled = true;
-    
+
     protected $keepRevisionOf = array(
         'name','description','billable_company_code','supplier_code','type'
     );
-    
+
     protected $revisionFormattedFieldNames = array(
         'name' => 'Name',
         'description' => 'Description',
@@ -84,30 +84,30 @@ class SwiftACPRequest extends Eloquent
         'supplier_code' =>  'Supplier',
         'type' => 'Type'
     );
-    
+
     public $saveCreateRevision = true;
     public $softDelete = true;
     public $revisionClassName =  "Accounts Payable";
     public $revisionPrimaryIdentifier = "id";
 
     public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','creditNote','approvalHod','document'];
-    
+
     /*
      * Event Observers
      */
-    
+
     public static function boot() {
         parent:: boot();
-        
+
         static::bootElasticSearchEvent();
-        
+
         static::bootRevisionable();
 
         static::creating(function($model){
             $model->owner_user_id = \Helper::getUserId();
         });
     }
-    
+
     /*
      * Accessors
      */
@@ -144,16 +144,16 @@ class SwiftACPRequest extends Eloquent
         {
             return $supplier->Supplier_Name." (Code: ".$val.")";
         }
-        
+
         return "(N/A)";
     }
-    
+
     public function getBillableCompanyCodeRevisionAttribute($val)
     {
         $company = \JdeCustomer::where('AN8','=',$val)->first();
         if($company)
         {
-            return $company->ALPH." (Code: ".$val.")";;
+            return $company->ALPH." (Code: ".$val.")";
         }
         return "(N/A)";
     }
@@ -179,25 +179,25 @@ class SwiftACPRequest extends Eloquent
             return 0;
         }
     }
-    
+
     /*
      * Scope
      */
-    
+
     /*
      * Utility
      */
-    
+
     public function getClassName()
     {
         return $this->revisionClassName;
     }
-    
+
     public function getReadableName()
     {
         return $this->name;
     }
-    
+
     public function getIcon()
     {
         return "fa-money";
@@ -211,26 +211,26 @@ class SwiftACPRequest extends Eloquent
     {
         return "acp_".$this->id;
     }
-    
+
     /*
      * Relationship
      */
-    
+
     public function supplier()
     {
         return $this->belongsTo('JdeSupplierMaster','supplier_code','Supplier_Code');
     }
-    
+
     public function company()
     {
         return $this->belongsTo('JdeCustomer','billable_company_code','AN8');
     }
-    
+
     public function owner()
     {
         return $this->belongsTo('User','owner_user_id');
     }
-    
+
     public function invoice()
     {
         return $this->hasOne('SwiftACPInvoice','acp_id');
@@ -240,12 +240,12 @@ class SwiftACPRequest extends Eloquent
     {
         return $this->hasMany('SwiftACPInvoiceExtra','acp_id');
     }
-    
+
     public function payment()
     {
         return $this->hasMany('SwiftACPPayment','acp_id');
     }
-    
+
     public function purchaseOrder()
     {
         return $this->morphMany('SwiftPurchaseOrder','purchasable');
@@ -329,7 +329,7 @@ class SwiftACPRequest extends Eloquent
     {
         return $this->morphTo();
     }
-    
+
 
     /*
      * Query

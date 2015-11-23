@@ -250,6 +250,7 @@
           <root url="file://$MODULE_DIR$/vendor/maxxscho/laravel-tcpdf" />
           <root url="file://$MODULE_DIR$/vendor/nesbot/carbon" />
           <root url="file://$MODULE_DIR$/vendor/venturecraft/revisionable" />
+          <root url="file://$MODULE_DIR$/vendor/codesleeve/laravel-stapler" />
           <root url="file://$MODULE_DIR$/vendor/symfony/routing" />
           <root url="file://$MODULE_DIR$/vendor/doctrine/dbal" />
           <root url="file://$MODULE_DIR$/vendor/anahkiasen/underscore-php" />
@@ -353,6 +354,7 @@
           <root url="file://$MODULE_DIR$/vendor/maxxscho/laravel-tcpdf" />
           <root url="file://$MODULE_DIR$/vendor/nesbot/carbon" />
           <root url="file://$MODULE_DIR$/vendor/venturecraft/revisionable" />
+          <root url="file://$MODULE_DIR$/vendor/codesleeve/laravel-stapler" />
           <root url="file://$MODULE_DIR$/vendor/symfony/routing" />
           <root url="file://$MODULE_DIR$/vendor/doctrine/dbal" />
           <root url="file://$MODULE_DIR$/vendor/anahkiasen/underscore-php" />

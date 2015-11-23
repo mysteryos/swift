@@ -16,10 +16,10 @@ class Helper
      *
      * @return \Carbon\Carbonn
      */
-    
+
     public static function calculateDueDate($paymentTerm,\Carbon\Carbon $invoice_date)
     {
-        
+
     }
 
     public static function getChequeSignUserList(array $permissions)
@@ -37,7 +37,7 @@ class Helper
             }
         }
         asort($chequesign_users);
-        
+
         return $chequesign_users;
     }
 
@@ -106,4 +106,6 @@ class Helper
         //Permission Check - End
         return $hasAccess;
     }
+
+
 }

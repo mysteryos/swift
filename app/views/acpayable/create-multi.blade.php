@@ -4,7 +4,6 @@
 
 <!-- RIBBON -->
 <div id="ribbon">
-
         <div class="ribbon-button-alignment">
             <ol class="breadcrumb">
                 <li>Home</li>
@@ -12,7 +11,6 @@
                 <li>Create Multi</li>
             </ol>
         </div>
-
 </div>
 <!-- END RIBBON -->
 
@@ -55,83 +53,81 @@
                 <div id="multi-dropzone" data-action="/{{$rootURL}}/multi-upload" data-delete="/{{$rootURL}}/multi-upload">
                     @if(count($files))
                         @foreach($files as $f)
-                            @if(\File::exists($f))
-                                <div class="row dz-success" data-url="{{asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME))}}" data-name="{{pathinfo($f,PATHINFO_BASENAME)}}">
-                                    <div class="col-xs-12">
-                                        <div class="hide">
-                                            <span class="preview"><img data-dz-thumbnail=""></span>
+                            <div class="row dz-success" data-url="{{$f->document->url()}}" data-name="{{$f->document_file_name}}" data-id="{{$f->id}}">
+                                <div class="col-xs-12">
+                                    <div class="hide">
+                                        <span class="preview"><img data-dz-thumbnail=""></span>
+                                    </div>
+                                    <div class="col-xs-8">
+                                        <div class="col-xs-12 checkbox">
+                                            <label>
+                                                <input type="checkbox" class="form-group checkbox check-document" value="{{$f->id}}" name="document[]" autocomplete="off" />
+                                                <span class="name" data-dz-name=""><a class="file-view" target="_blank" data-type="{{$f->document_content_type}}" href="{{$f->document->url()}}">
+                                                <?php
+                                                switch($f->document_content_type)
+                                                {
+                                                    case "image/jpeg":
+                                                    case "image/png":
+                                                    case "image/bmp":
+                                                    case "image/jpg":
+                                                        echo '<i class="fa fa-file-image-o row-space-right-1"></i>';
+                                                        break;
+                                                    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                                                    case "application/vnd.ms-excel":
+                                                        echo '<i class="fa fa-file-excel-o row-space-right-1"></i>';
+                                                        break;
+                                                    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                                                    case "application/msword":
+                                                        echo '<i class="fa fa-file-word-o row-space-right-1"></i>';
+                                                        break;
+                                                    case "application/pdf":
+                                                        echo '<i class="fa fa-file-pdf-o row-space-right-1"></i>';
+                                                        break;
+                                                    default:
+                                                        echo '<i class="fa fa-file-o row-space-right-1"></i>';
+                                                        break;
+                                                }
+                                                ?>{{preg_replace('/^\d+_(.*)$/', '$1', $f->document_file_name)}}</a> <a class="row-space-left-1" target="_blank" href="<?php
+                                                switch($f->document_content_type)
+                                                {
+                                                    case "image/jpeg":
+                                                    case "image/png":
+                                                    case "image/bmp":
+                                                    case "image/jpg":
+                                                        echo $f->document->url();
+                                                        break;
+                                                    case "application/pdf":
+                                                        echo "/pdfviewer/viewer.html?file=".urlencode($f->document->url());
+                                                        break;
+                                                    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                                                    case "application/vnd.ms-excel":
+                                                    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                                                    case "application/msword":
+                                                    default:
+                                                        echo "https://docs.google.com/viewerng/viewer?url=".urlencode($f->document->url());
+                                                        break;
+                                                }?>" rel="tooltip" data-original-title="Open in new window" data-placement="bottom"><i class="fa fa-external-link"></i></a></span>
+                                            </label>
                                         </div>
-                                        <div class="col-xs-8">
-                                            <div class="col-xs-12 checkbox">
-                                                <label>
-                                                    <input type="checkbox" class="form-group checkbox check-document" value="{{pathinfo($f,PATHINFO_BASENAME)}}" name="document[]" autocomplete="off" />
-                                                    <span class="name" data-dz-name=""><a class="file-view" target="_blank" data-type="{{\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f)}}" href="{{asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME))}}">
-                                                    <?php
-                                                    switch(\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f))
-                                                    {
-                                                        case "image/jpeg":
-                                                        case "image/png":
-                                                        case "image/bmp":
-                                                        case "image/jpg":
-                                                            echo '<i class="fa fa-file-image-o row-space-right-1"></i>';
-                                                            break;
-                                                        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                                                        case "application/vnd.ms-excel":
-                                                            echo '<i class="fa fa-file-excel-o row-space-right-1"></i>';
-                                                            break;
-                                                        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                                                        case "application/msword":
-                                                            echo '<i class="fa fa-file-word-o row-space-right-1"></i>';
-                                                            break;
-                                                        case "application/pdf":
-                                                            echo '<i class="fa fa-file-pdf-o row-space-right-1"></i>';
-                                                            break;
-                                                        default:
-                                                            echo '<i class="fa fa-file-o row-space-right-1"></i>';
-                                                            break;
-                                                    }
-                                                    ?>{{preg_replace('/^\d+_(.*)$/', '$1', \File::name($f))}}</a> <a class="row-space-left-1" target="_blank" href="<?php
-                                                    switch(\finfo_file(\finfo_open(FILEINFO_MIME_TYPE),$f))
-                                                    {
-                                                        case "image/jpeg":
-                                                        case "image/png":
-                                                        case "image/bmp":
-                                                        case "image/jpg":
-                                                            echo asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME));
-                                                            break;
-                                                        case "application/pdf":
-                                                            echo "/pdfviewer/viewer.html?file=".asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME));
-                                                            break;
-                                                        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                                                        case "application/vnd.ms-excel":
-                                                        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                                                        case "application/msword":
-                                                        default:
-                                                            echo "https://docs.google.com/viewerng/viewer?url=".asset("/".$rootURL."/multi-file/".pathinfo($f,PATHINFO_BASENAME));
-                                                            break;
-                                                    }?>" rel="tooltip" data-original-title="Open in new window" data-placement="bottom"><i class="fa fa-external-link"></i></a></span>
-                                                </label>
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <strong class="error text-danger" data-dz-errormessage=""></strong>
                                             </div>
-                                            <div class="row">
-                                                <div class="col-xs-12">
-                                                    <strong class="error text-danger" data-dz-errormessage=""></strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xs-2">
-                                            <p class="size hide" data-dz-size=""></p>
-                                            <div class="progress progress-striped active hide" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                                              <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xs-2">
-                                          <button data-dz-remove="" class="btn btn-danger delete btn-xs">
-                                            <i class="glyphicon glyphicon-trash"></i>
-                                          </button>
                                         </div>
                                     </div>
+                                    <div class="col-xs-2">
+                                        <p class="size hide" data-dz-size=""></p>
+                                        <div class="progress progress-striped active hide" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                          <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress=""></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-2">
+                                      <button data-dz-remove="" class="btn btn-danger delete btn-xs">
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                      </button>
+                                    </div>
                                 </div>
-                            @endif
+                            </div>
                         @endforeach
                     @endif
                     <div id="template" class="row">
@@ -197,7 +193,7 @@
                         <div class="form-group">
                             <label class="col-md-4 control-label">Invoice Number</label>
                             <div class="col-md-8">
-                                 <input type="text" autocomplete="off" class="form-control" name="invoice_number" placeholder="Type in an invoice number" />
+                                 <input type="text" autocomplete="off" class="form-control" name="invoice_number" id="input_invoice_number" placeholder="Type in an invoice number" />
                             </div>
                         </div>
 
@@ -221,7 +217,7 @@
                                 <div class="col-xs-8 no-padding">
                                     <input type="text" autocomplete="off" class="form-control" name="invoice_due_amount" placeholder="Type in an amount" />
                                 </div>
-                                
+
                             </div>
                         </div>
 
@@ -263,7 +259,7 @@
                         <div class="col-xs-12">
                             <div class="checkbox row-space-left-5">
                                 <label>
-                                    <input type="checkbox" class="checkbox" name="save_one" />
+                                    <input type="checkbox" class="checkbox" name="save_one" id="input_save_one" />
                                     <span>Combine into one form</span>
                                 </label>
                             </div>

@@ -3751,10 +3751,10 @@ class AccountsPayableController extends UserController {
         $this->data['currency'] = \Currency::getAll();
 
         /*
-         * Get File List
+         * Get File List From S3
          */
 
-        $this->data['files'] = \File::files(storage_path().'/tmp/acpayable');
+        $this->data['files'] = SwiftACPTempDocument::getAll();
 
         return $this->makeView('acpayable/create-multi');
     }
@@ -3766,11 +3766,15 @@ class AccountsPayableController extends UserController {
     {
         if(\Input::file('file'))
         {
-            $file = \Input::file('file');
-            $file_name = time()."_".preg_replace("/[^a-z0-9\.]/", "", strtolower($file->getClientOriginalName()));
-            if($file->move(storage_path().'/tmp/acpayable/',$file_name))
+            $acpTempDoc = new \SwiftACPTempDocument();
+            $acpTempDoc->document = \Input::file('file');
+            $acpTempDoc->document_type = 'SwiftACPTempDocument';
+            if($acpTempDoc->save())
             {
-                return \Response::make(json_encode(['success'=>1,'url'=>asset("/".$this->rootURL."/multi-file/".$file_name),'name'=>$file_name]));
+                return \Response::make(json_encode(['success'=>1,
+                                                    'name'=>$acpTempDoc->document_file_name,
+                                                    'id' => $acpTempDoc->id,
+                                                    'url'=>$acpTempDoc->document->url()]));
             }
         }
         else
@@ -3787,46 +3791,21 @@ class AccountsPayableController extends UserController {
      */
     public function deleteMultiUpload()
     {
-        if(\Input::has('file-name'))
+        if(\Input::has('file-id'))
         {
-            if(\File::exists(storage_path().'/tmp/acpayable/'.\Input::get('file-name')))
+            $acpTempDoc = \SwiftACPTempDocument::find(\Input::get('file-id'));
+            if($acpTempDoc)
             {
-                if(\File::delete(storage_path().'/tmp/acpayable/'.\Input::get('file-name')))
-                {
-                    return \Response::make("Success");
-                }
-                else
-                {
-                    return \Response::make("Server Error: Unable to delete",400);
-                }
+                $acpTempDoc->delete();
+                return \Response::make("Success");
             }
             else
             {
-                return \Response::make("File doesn't exist",400);
+                return \Response::make("File not found",400);
             }
         }
 
-        return \Response::make("Please specify a file name",500);
-    }
-
-    /*
-     * Get file contents from local storage
-     */
-    public function getMultiFile($file_name)
-    {
-        if($file_name)
-        {
-            if(\File::exists(storage_path().'/tmp/acpayable/'.$file_name))
-            {
-                return \Response::make(\File::get(storage_path().'/tmp/acpayable/'.$file_name));
-            }
-            else
-            {
-                return \Response::make("File doesn't exist",400);
-            }
-        }
-
-        return \Response::make("Please specify a file name",500);
+        return \Response::make("Please specify a file",500);
     }
 
     public function postSaveMultiForm()
@@ -3966,16 +3945,16 @@ class AccountsPayableController extends UserController {
                      */
                     if(!\Input::has('save_one'))
                     {
-                        $document_name = \Input::get('document')[$loopCount];
-                        if(\File::exists(storage_path().'/tmp/acpayable/'.$document_name))
+                        $document_id = \Input::get('document')[$loopCount];
+                        if($temp_document = \SwiftACPTempDocument::find($document_id))
                         {
                             //Save Document
                             $doc = new \SwiftACPDocument();
-                            $doc->document = storage_path().'/tmp/acpayable/'.$document_name;
+                            $doc->document = $temp_document->document->url(null,'s3');
                             $acp->document()->save($doc);
 
                             //Delete Doc once processed
-                            \File::delete(storage_path().'/tmp/acpayable/'.$document_name);
+                            $temp_document->delete();
                         }
                         else
                         {
@@ -3984,16 +3963,16 @@ class AccountsPayableController extends UserController {
                     }
                     else
                     {
-                        foreach(\Input::get('document') as $document_name)
+                        foreach(\Input::get('document') as $document_id)
                         {
-                            if(\File::exists(storage_path().'/tmp/acpayable/'.$document_name))
+                            if($temp_document = \SwiftACPTempDocument::find($document_id))
                             {
                                 //Save Document
                                 $doc = new \SwiftACPDocument();
-                                $doc->document = storage_path().'/tmp/acpayable/'.$document_name;
+                                $doc->document = $temp_document->document->url(null,'s3');
                                 $acp->document()->save($doc);
                                 //Delete Doc once processed
-                                \File::delete(storage_path().'/tmp/acpayable/'.$document_name);
+                                $temp_document->delete();
                             }
                             else
                             {
@@ -4063,6 +4042,9 @@ class AccountsPayableController extends UserController {
 
                     //Commit DB Transaction
                     \DB::commit();
+
+                    //Update Elasticsearch
+                    \Queue::push('ElasticSearchHelper@indexTask',array('id'=>$acp->esGetId(),'class'=>get_class($acp),'context'=>$acp->esGetContext(),'info-context'=>$acp->esGetInfoContext(),'excludes'=>$acp->esGetRemove()));
                 }
                 catch(\PDOException $e)
                 {

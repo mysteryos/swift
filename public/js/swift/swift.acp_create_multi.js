@@ -8,7 +8,7 @@ function multiShowForm()
     else
     {
         $('#no-form').show();
-        $('#form-container').hide();        
+        $('#form-container').hide();
     }
 }
 
@@ -19,31 +19,31 @@ function multiShowForm()
     var $noDoc = $('#no-doc');
     var $docContainer = $('#doc-container');
     var uploadmsg;
-    
+
     $('#doc-list').resizable({
         containment: "#acp_create_multi_container",
         handles: 'e',
         alsoResizeReverse: "#doc-content",
         minWidth: 300
     }).height($divHeight);
-    
+
     $('#form-content').resizable({
         containment: "#acp_create_multi_container",
         handles: 'e',
         alsoResizeReverse: "#doc-content",
         minWidth: 300
     }).height($divHeight);
-    
+
     $('#doc-content').resizable({
         containment: "#acp_create_multi_container",
         handles: 'e',
         minWidth: 500
     }).height($divHeight);
-    
+
     /*
      * File View Initialize
      */
-    
+
     $('#doc-list').on('click','a.file-view',function(e){
         e.preventDefault();
         var $this = $(this);
@@ -56,14 +56,14 @@ function multiShowForm()
                 case "image/png":
                 case "image/bmp":
                 case "image/jpg":
-                    $appendDoc = '<img style="width:100%;height:auto;" class="image-view" src="'+$this.attr('href')+'"/>';
+                    $appendDoc = '<img style="width:100%;height:auto;" class="image-view" src="'+encodeURIComponent($this.attr('href'))+'"/>';
                     $noDoc.hide();
-                    $docContainer.show().html('').append($appendDoc);                    
+                    $docContainer.show().html('').append($appendDoc);
                     break;
                 case "application/pdf":
-                    $appendDoc = '<iframe class="document-iframe" style="width:100%;height:100%" src="/pdfviewer/viewer.html?file='+$this.attr('href')+'"></iframe>';
+                    $appendDoc = '<iframe class="document-iframe" style="width:100%;height:100%" src="/pdfviewer/viewer.html?file='+encodeURIComponent($this.attr('href'))+'"></iframe>';
                     $noDoc.hide();
-                    $docContainer.show().html('').append($appendDoc);                      
+                    $docContainer.show().html('').append($appendDoc);
                     break;
                 case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                 case "application/vnd.ms-excel":
@@ -71,7 +71,7 @@ function multiShowForm()
                 case "application/msword":
                 default:
                     $.colorbox({
-                        href: "http://docs.google.com/viewer?url="+$this.attr('href')+"&embedded=true",
+                        href: "http://docs.google.com/viewer?url="+encodeURIComponent($this.attr('href'))+"&embedded=true",
                         maxHeight:"100%",
                         maxWidth:"90%",
                         innerWidth:"100%",
@@ -92,26 +92,26 @@ function multiShowForm()
         }
         return false;
     });
-    
+
     /*
      * Checkbox
      */
-    
+
     $('#doc-list').on('click','.check-document',function(e){
         multiShowForm();
     });
-    
+
     $('#check-all-files').on('click',function(e){
         $('#doc-list .check-document').prop('checked',this.checked);
         multiShowForm();
     });
-    
+
     /*
      * Initialize File Upload
      */
     var previewNode = document.querySelector("#template");
     var previewTemplate = previewNode.parentNode.innerHTML;
-    previewNode.style.display = "none";    
+    previewNode.style.display = "none";
     var myDropzone = new Dropzone('div#content', {
                         url: $multiDropzone.attr('data-action'),
                         clickable: '#btn-upload',
@@ -175,7 +175,7 @@ function multiShowForm()
                                             {
                                                 $.ajax({
                                                     type:'DELETE',
-                                                    url: $multiDropzone.attr('data-delete')+'?file-name='+$(file.previewElement).attr('data-name'),
+                                                    url: $multiDropzone.attr('data-delete')+'?file-id='+$(file.previewElement).attr('data-id'),
                                                     success:function()
                                                     {
                                                         deletemsg.update({
@@ -193,8 +193,8 @@ function multiShowForm()
                                                             message: xhr.responseText,
                                                             showCloseButton: true
                                                         });
-                                                    }                                        
-                                                });                                        
+                                                    }
+                                                });
                                             }
 
                                             return true;
@@ -226,7 +226,7 @@ function multiShowForm()
 
                                     $.ajax({
                                         type:'DELETE',
-                                        url: $multiDropzone.attr('data-delete')+'?file-name='+$thisParent.attr('data-name'),
+                                        url: $multiDropzone.attr('data-delete')+'?file-id='+$thisParent.attr('data-id'),
                                         success:function()
                                         {
                                             deletemsg.update({
@@ -244,14 +244,14 @@ function multiShowForm()
                                                 message: xhr.responseText,
                                                 showCloseButton: true
                                             });
-                                        }                                        
+                                        }
                                     });
                                 }
                                 return false;
                             });
                         }
                     });
-    
+
     myDropzone.on("sending", function(file,xhr,formdata) {
         uploadmsg = Messenger({extraClasses: 'messenger-fixed messenger-on-bottom messenger-on-right'}).post({
             message: 'Uploading "'+file.name+'" <div class="progress progress-sm progress-striped active"><div aria-valuetransitiongoal="25" class="progress-bar bg-color-blue" id="upload-progress" style="width: 0%;" aria-valuenow="25"></div> </div>',
@@ -279,7 +279,7 @@ function multiShowForm()
                 break;
             case "application/pdf":
                 var icon = '<i class="fa fa-file-pdf-o row-space-right-1"></i>';
-                break;                        
+                break;
             default:
                 var icon = '<i class="fa fa-file-o row-space-right-1"></i>';
                 break;
@@ -301,20 +301,21 @@ function multiShowForm()
         if(res.success)
         {
             //Set Anchor
-            $(file.previewElement).find('span.name').wrapInner("<a class='file-view' data-type='"+file.type+"' href='"+res.url+"'/>");            
+            $(file.previewElement).find('span.name').wrapInner("<a class='file-view' data-type='"+file.type+"' href='"+res.url+"'/>");
             //Set Doc Id
             $(file.previewElement).attr('data-url',res.url);
             $(file.previewElement).attr('data-name',res.name);
-            $(file.previewElement).find('input.check-document').val(res.name).removeAttr('disabled').show();
+            $(file.previewElement).attr('data-id',res.id);
+            $(file.previewElement).find('input.check-document').val(res.id).removeAttr('disabled').show();
             //CleanUp
-            $(file.previewElement).removeClass('dz-processing').removeAttr('id');            
+            $(file.previewElement).removeClass('dz-processing').removeAttr('id');
         }
         //Hide Progress Bar
         $(file.previewElement).find('div.progress').addClass('hide');
         return file;
     });
-    
-    myDropzone.on("cancelled",function(){
+
+    myDropzone.on("cancelled",function(file){
        if(typeof uploadmsg !== null)
        {
            uploadmsg.hide();
@@ -333,7 +334,7 @@ function multiShowForm()
             type: 'error',
             hideAfter: 0,
             message: 'Upload Failed: "'+file.name+'" - '+errorMsg
-        });            
+        });
     });
 
     myDropzone.on('uploadprogress',function(file,progress){
@@ -348,11 +349,11 @@ function multiShowForm()
        if(typeof uploadmsg !== "undefined" && progress == 100)
        {
            uploadmsg.hide();
-       }            
+       }
     });
-    
+
     //Drag & Drop File Fix
-    
+
     var dragEle = document.getElementById( "content" );
     var dragster = new Dragster(dragEle);
     dragEle.addEventListener( "dragster:enter", function (e) {
@@ -362,26 +363,26 @@ function multiShowForm()
                 e.target.classList.add( "dragged-over" );
                 break;
             }
-        }        
+        }
     }, false );
-    
+
     dragEle.addEventListener( "dragster:leave", function (e) {
         e.target.classList.remove( "dragged-over" );
     }, false );
-    
+
     $('#content').on("drop", function (event) {
         dragster.dragleave(event);
     });
-    
+
     /*
      * Form
      */
-    
+
     /*
      * Clean previous instances of select2
      */
     $('#customercode,#suppliercode,#hodapproval').val('');
-    
+
     /*
      * Select2 instantiation
      */
@@ -433,7 +434,7 @@ function multiShowForm()
                 'left': '0'
             });
     }).on('change',function(){
-        $(this).valid();        
+        $(this).valid();
     });
 
     $('#suppliercode').select2({
@@ -483,9 +484,9 @@ function multiShowForm()
                 'left': '0'
             });
     }).on('change',function(){
-        $(this).valid();        
+        $(this).valid();
     });
-    
+
     $('#hodapproval').select2({
         multiple: true,
         query: function (query){
@@ -498,7 +499,7 @@ function multiShowForm()
             });
 
             query.callback(data);
-        }    
+        }
     }).on('select2-open',function(){
         $('#select2-drop-mask')
         .height($(window).height())
@@ -512,14 +513,14 @@ function multiShowForm()
     }).on('change',function(){
         $(this).valid();
     });
-    
+
     //Datepicker
     $('#invoice_due_date').datepicker({
         dateFormat : 'dd/mm/yy',
         prevText : '<i class="fa fa-chevron-left"></i>',
-        nextText : '<i class="fa fa-chevron-right"></i>',            
+        nextText : '<i class="fa fa-chevron-right"></i>',
     })
-    
+
     //Comments
     $('#comment-textarea').atwho({
         at: "@",
@@ -531,13 +532,13 @@ function multiShowForm()
         insert_tpl: '<input type="button" value="@${name}" data-id="${id}" title="${email}" class="usermention btn btn-default btn-xs" />',
         show_the_at: true
     });
-    
+
     $.validator.addMethod("dateFormat",
         function(value, element) {
             return this.optional(element) || /^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[1,3-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/.test(value);
         },
-    "Please enter a date in the format dd/mm/yyyy.");    
-    
+    "Please enter a date in the format dd/mm/yyyy.");
+
     var multi_form_validator = $('#multi_form').validate({
         ignore: '',
         rules: {
@@ -570,7 +571,7 @@ function multiShowForm()
             'document[]': {
                 required: 'Select a document'
             }
-            
+
         },
         errorPlacement: function(error, element) {
             if (element.attr("name") == "document[]" )
@@ -588,24 +589,24 @@ function multiShowForm()
                 document.getElementById('input_mentions').value = $('#comment-textarea').find('.usermention').map(function(){
                     return $(this).attr('data-id');
                 }).get().join();
-                
+
                 var $comment = $('#comment-textarea').clone();
                 $comment.find('.usermention').each(function(){
                    $(this).append('<span>'+this.attributes.value.value+'</span>');
                 });
-                
+
                 document.getElementById('input_comment').value = $comment.text();
-                
+
                 var savemsg = Messenger({extraClasses:'messenger-on-top messenger-fixed'}).post({
                                 message: 'Saving Accounts Payable form',
                                 type: 'info',
                                 id: 'notif-top'
                               });
-                              
+
                 $formContent.prepend("<div class='loading-overlay'></div>");
-                
+
                 $('#btn-save,#btn-save-publish').attr('disabled','disabled').addClass('disabled');
-                
+
                 $(form).ajaxSubmit({
                         dataType: 'json',
                         success : function(data) {
@@ -613,15 +614,15 @@ function multiShowForm()
                                 type: 'success',
                                 message: 'Save Success!'
                             });
-                            
+
                             $('#btn-save,#btn-save-publish').removeAttr('disabled').removeClass('disabled');
-                            
+
                             $formContent.find('div.loading-overlay').remove();
-                            
+
                             $('input.check-document:checked').each(function(){
                                 $(this).parents('div.dz-success').remove();
                             });
-                            
+
                             if($('div.dz-success').length === 0)
                             {
                                 $('#no-form').show();
@@ -634,26 +635,38 @@ function multiShowForm()
                                 message: xhr.responseText,
                                 hideAfter: 5
                             });
-                            
+
                             $('#btn-save,#btn-save-publish').removeAttr('disabled').removeClass('disabled');
-                            
+
                             $formContent.find('div.loading-overlay').remove();
                         }
                 });
                 return false;
         }
     });
-    
+
     $('#btn-save').on('click',function(e){
+        //Manual check
+        if(document.getElementById('input_save_one').checked === false && $.trim(document.getElementById('input_invoice_number').value) !== "" && $('.check-document:checked:enabled').length >= 2)
+        {
+            alert('Please select only one document if invoice number is specified.');
+            return false;
+        }
         $('#hodapproval').rules('remove');
     });
-    
+
     $('#btn-save-publish').on('click',function(e){
+        if(document.getElementById('input_save_one').checked === false && $.trim(document.getElementById('input_invoice_number').value) !== "" && $('.check-document:checked:enabled').length >= 2)
+        {
+            alert('Please select only one document if invoice number is specified.');
+            return false;
+        }
+
         $('#hodapproval').rules('add',{
             required: true
         });
     });
-    
+
     $('#btn-reset').on('click',function(){
         $('#customercode,#suppliercode,#hodapproval').select2('close').select2("val", "");
         document.getElementById('input_mentions').value = "";
@@ -661,18 +674,18 @@ function multiShowForm()
         document.getElementById('input_comment').value = "";
         $('#invoice_due_date').datepicker('close');
         $.datepicker._clearDate($('#invoice_due_date'));
-        
-        
+
+
         $('#multi_form div').removeClass('has-error');
         multi_form_validator.resetForm();
         multi_form_validator.reset();
         $('#no-form').show();
-        $('#form-container').hide();        
+        $('#form-container').hide();
         return true;
     });
-    
-    
-    
+
+
+
     //Hide Loading Message
-    messenger_hidenotiftop();    
+    messenger_hidenotiftop();
 })();

@@ -1,13 +1,18 @@
 <div class="container">
     <div class="row">
         <div class="col-xs-12 well well-sm">
-            <span class="text-capitalize text-center h4 col-xs-12">Workflow History</span>
+            <span class="text-capitalize text-center h4 col-xs-12">Workflow History @if($currentUser->isSuperUser()){{"(ID: ".$workflow->id.")"}}@endif</span>
         </div>
     </div>
     <div class="row">
         <div class="col-xs-12">
             <table class="table table-bordered">
                 <tr>
+                    @if($currentUser->isSuperUser())
+                        <th>
+                            Id
+                        </th>
+                    @endif
                     <th>
                         Date Updated
                     </th>
@@ -23,6 +28,11 @@
                 </tr>
                 @foreach($workflow->nodes as $n)
                     <tr>
+                        @if($currentUser->isSuperUser())
+                            <td>
+                                {{$n->id}}
+                            </td>
+                        @endif
                         <td>
                             <abbr title="{{date("Y/m/d H:i",strtotime($n->updated_at))}}" data-livestamp="{{strtotime($n->updated_at)}}"></abbr>
                         </td>

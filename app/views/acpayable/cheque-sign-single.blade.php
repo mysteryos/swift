@@ -42,5 +42,20 @@
                     </td>
                     <td>{{$pay->invoice->number}}</td>
                     <td>@if($pay->invoice->date){{$pay->invoice->date->format('d/m/Y')}}@endif</td>
-                    <td>{{$pay->amount_paid}}</td>
+                    <td>
+                        <?php
+                            switch($pay->validated)
+                            {
+                                case SwiftACPPayment::VALIDATION_COMPLETE:
+                                    echo '<i class="fa fa-check row-space-right-1" title="Payment Validation Complete"></i>';
+                                    break;
+                                case SwiftACPPayment::VALIDATION_ERROR:
+                                    echo '<i class="fa fa-times row-space-right-1" title="Payment Validation Error"></i>';
+                                    break;
+                                case SwiftACPPayment::VALIDATION_PENDING:
+                                    echo '<i class="fa fa-question row-space-right-1" title="Payment Validation Pending"></i>';
+                                    break;
+                            }
+                        ?>
+                        {{$pay->amount_paid}}</td>
                 </tr>

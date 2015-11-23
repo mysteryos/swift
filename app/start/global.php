@@ -144,3 +144,4 @@ $config->set('stapler.base_path', '/extvol/www/html/scottswift/http/');
 
 $config->set('s3',\Config::get('codesleeve_stapler.s3'));
 $config->set('cloudfront',\Config::get('codesleeve_stapler.cloudfront'));
+$config->set('maxcdn',\Config::get('codesleeve_stapler.maxcdn'));

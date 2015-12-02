@@ -390,8 +390,10 @@ Class NodeDefinition {
             //Do manual verification of open amount vs amount paid
             $paymentAmount = (float)$acp->payment()->where('validated','=',\SwiftACPPayment::VALIDATION_COMPLETE)->sum('amount');
             $invoice = $acp->invoice()->first();
-            $total_due = (float)$invoice->due_amount + $paymentAmount;
-            if($total_due !== (float)$invoice->open_amount)
+            $total_due = (float)($invoice->due_amount + $paymentAmount);
+            $open_amount = (float)$invoice->open_amount;
+            //Floating point comparison with epsilon
+            if(abs(($total_due-$open_amount)/$open_amount) >= 0.00001)
             {
                 //Update Open Amount Now from Sct JDE
                 JdeReconcialiation::updatePvOpenAmount($acp);

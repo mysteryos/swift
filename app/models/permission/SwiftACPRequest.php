@@ -19,6 +19,7 @@ class SwiftACPRequest extends Permission {
     public $accountingChequeDispatch = "acp-chequedispatch";
     public $accountingChequeSignPermission = "acp-chequesign";
     public $accountingChequeSignExecPermission = "acp-exec";
+    public $auditPermission = "acp-audit";
 
     public function __construct($form=false,$user_id=false)
     {
@@ -69,6 +70,11 @@ class SwiftACPRequest extends Permission {
                                                                     ]);
     }
 
+    public function isAudit()
+    {
+        return $this->currentUser->hasAccess($this->auditPermission);
+    }
+
     public function isHOD()
     {
         return $this->currentUser->hasAccess($this->HODPermission);
@@ -84,7 +90,7 @@ class SwiftACPRequest extends Permission {
         }
 
         //Accounting or Admin has access
-        if($this->isAccountingDept() || $this->isAdmin())
+        if($this->isAccountingDept() || $this->isAdmin() || $this->isAudit())
         {
             $hasAccess = true;
         }

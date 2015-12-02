@@ -8,7 +8,7 @@ class SearchController extends UserController {
         $this->searchPermissions = array(
                                         'order-tracking'=>array('ot-view','ot-admin'),
                                         'aprequest'=>array('apr-view','apr-admin'),
-                                        'acpayable'=>array('acp-admin','acp-edit','acp-hod'),
+                                        'acpayable'=>array('acp-admin','acp-edit','acp-hod','acp-audit'),
 //                                        'supplier'=>array('acp-view'),
                                         'product-returns'=>['pr-view']
                                    );
@@ -20,11 +20,11 @@ class SearchController extends UserController {
                                     'product-returns' => 'Product Returns'
                                 );
     }
-    
+
     /*
      * All Search
      */
-    
+
     private function processSearchResult($queryResponse)
     {
         $result = array();
@@ -93,16 +93,16 @@ class SearchController extends UserController {
 
             }
         }
-        
+
         return $result;
     }
-    
+
     public function getAll($search)
     {
         $params = array();
         $params['index'] = App::environment();
         $params['type'] = array();
-        
+
         /*
          * Check Permissions
          */
@@ -180,13 +180,13 @@ class SearchController extends UserController {
                 \Log::error($e->getMessage());
                 return Response::make("An error occured with the search server.",500);
             }
-            
+
         }
         while (count($result) === 0  && $queryResponse['hits']['total'] > 0);
 
         echo json_encode($result);
     }
-    
+
     public function getAllPrefetch()
     {
         try
@@ -201,31 +201,31 @@ class SearchController extends UserController {
         {
             \Log::error($e->getMessage());
             return Response::make("An error occured with the search server.",500);
-        }        
+        }
 
         echo $this->processSearchResult($queryResponse);
     }
-    
+
     /*
      * Order Tracking Search
      */
     public function getOrderTracking($search)
     {
-        
+
     }
-    
+
     /*
      * Order Tracking Suggest
      */
     public function getOrderTrackingPrefetch()
     {
-        
+
     }
-    
+
     /*
      * Display Search Page
      */
-    
+
     public function getIndex()
     {
         $perpage = 15;
@@ -234,12 +234,12 @@ class SearchController extends UserController {
         $this->data['selected_category'] = Input::get('category','everything');
         $this->data['category'] = $this->searchCategory;
         $this->pageTitle = "Search results for '".$search."'";
-        
-        
+
+
         $params = array();
         $params['index'] = App::environment();
         $params['type'] = array();
-        
+
         /*
          * Check Permissions
          */
@@ -257,16 +257,16 @@ class SearchController extends UserController {
                 }
             }
         }
-        
+
         if(count($params['type']) === 0)
         {
-            $this->data['hits_count'] = 0;         
+            $this->data['hits_count'] = 0;
             $this->data['result'] = array();
             $this->data['query'] = $search;
             $this->data['time_taken'] = 0;
             return $this->makeView('search');
         }
-        
+
         if($this->data['selected_category'] !== "everything" && array_key_exists($this->data['selected_category'],$this->searchCategory))
         {
             unset($params['type']);
@@ -276,7 +276,7 @@ class SearchController extends UserController {
         {
             $this->data['selected_category'] = "everything";
         }
-        
+
         try
         {
             $this->data['selected_category_text'] = $this->data['selected_category'] == "everything" ? "Everything" : ucfirst($this->searchCategory[$this->data['selected_category']]) ;
@@ -318,14 +318,14 @@ class SearchController extends UserController {
             \Log::error($e->getMessage());
             return Response::make("An error occured with the search server.",500);
         }
-        
-        $this->data['hits_count'] = $queryResponse['hits']['total'];         
+
+        $this->data['hits_count'] = $queryResponse['hits']['total'];
         $this->data['result'] = Paginator::make($this->processSearchResult($queryResponse),$this->data['hits_count'],$perpage);
         $this->data['query'] = $search;
         $this->data['time_taken'] = $queryResponse['took']/1000;
 
         return $this->makeView('search');
-        
+
     }
-        
+
 }

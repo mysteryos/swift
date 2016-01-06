@@ -68,7 +68,7 @@ class SearchController extends UserController {
                     case "acpayable":
                         $contextClass = \Config::get('context.'.$line['_type']);
                         $obj = $contextClass::find($line['_id']);
-                        if($obj->permission()->checkAccess())
+                        if($obj && $obj->permission()->checkAccess())
                         {
                             $result[] = array('icon'=>(new $contextClass)->getIcon(),
                                               'title'=> (new $contextClass)->readableName,

@@ -340,7 +340,7 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
     });
 
     //Multi
-    $('.creditnote-editable, .purchaseorder-editable, .invoice-editable, .paymentvoucher-editable, .payment-editable').on('save',function(e,params){
+    $('.creditnote-editable, .purchaseorder-editable, .invoice-editable, .paymentvoucher-editable, .payment-editable, .paymentsuggestion-editable').on('save',function(e,params){
         var $this = $(this);
         //First time save, set primary key
         if(this.getAttribute('data-pk') == "0")

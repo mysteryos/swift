@@ -1,7 +1,7 @@
 <?php
 
 class OrderTrackingController extends UserController {
-    
+
     public function __construct(){
         parent::__construct();
         $this->pageName = "Order Process";
@@ -13,16 +13,16 @@ class OrderTrackingController extends UserController {
 
         $this->isAdmin = $this->data['isAdmin'] = $this->currentUser->hasAccess($this->adminPermission);
     }
-    
+
     public function getIndex()
     {
         return Redirect::to('/'.$this->context.'/overview');
     }
-    
+
     /*
      * Overview
-     */    
-    
+     */
+
     public function getOverview($business_unit=false)
     {
         //Fetch preference from session for business unit filter
@@ -42,32 +42,32 @@ class OrderTrackingController extends UserController {
                 $business_unit = false;
             }
         }
-        
+
         $this->pageTitle = 'Overview';
         $this->data['inprogress_limit'] = 15;
-        
+
         $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order-tracking');
         //All pending nodes with Eta
         $this->data['pending_node_count'] = SwiftNodeActivity::countPendingNodesWithEta('order-tracking');
-        
+
         /*
          * Order in Progress
          */
-        
+
         $order_inprogress = $order_inprogress_important = $order_inprogress_responsible = $order_inprogress_important_responsible = array();
-        
-        $order_inprogress = SwiftOrder::getInProgress($this->data['inprogress_limit'],false,$business_unit);                            
-        
+
+        $order_inprogress = SwiftOrder::getInProgress($this->data['inprogress_limit'],false,$business_unit);
+
         $order_inprogress_important = SwiftOrder::getInProgress(0,true,$business_unit);
-                            
-        $order_inprogress_responsible = SwiftOrder::getInProgressResponsible(0,false,$business_unit); 
-                            
-        $order_inprogress_important_responsible = SwiftOrder::getInProgressResponsible(0,true,$business_unit);                           
-        
+
+        $order_inprogress_responsible = SwiftOrder::getInProgressResponsible(0,false,$business_unit);
+
+        $order_inprogress_important_responsible = SwiftOrder::getInProgressResponsible(0,true,$business_unit);
+
         $order_inprogress = $order_inprogress->diff($order_inprogress_responsible);
         $order_inprogress_important = $order_inprogress_important->diff($order_inprogress_important_responsible);
         $order_inprogress_count = count($order_inprogress);
-                            
+
         if(count($order_inprogress) == 0 || count($order_inprogress_important) == 0 || count($order_inprogress_responsible) == 0 || count($order_inprogress_important_responsible) == 0)
         {
             $this->data['in_progress_present'] = true;
@@ -76,7 +76,7 @@ class OrderTrackingController extends UserController {
         {
             $this->data['in_progress_present'] = false;
         }
-        
+
         foreach(array($order_inprogress,$order_inprogress_responsible,$order_inprogress_important,$order_inprogress_important_responsible) as $orderarray)
         {
             foreach($orderarray as &$o)
@@ -85,19 +85,19 @@ class OrderTrackingController extends UserController {
                 $o->activity = Helper::getMergedRevision($o->revisionRelations,$o);
             }
         }
-        
+
         /*
          * Storage Tracking - SEA
          */
-        
+
         /*$order_storage = SwiftOrder::has('reception','=',0)->with('freight','document','document.tag')->whereHas('workflow',function($q){
                             return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS);
                         })->whereHas('freight',function($q){
                             return $q->where('freight_type','=',SwiftFreight::TYPE_SEA)->where('vessel_name','<>','""')->where('vessel_voyage','<>','""')->where('freight_eta','!=','""');
                         })->get();
-        
+
         $storage_array = array();
-                        
+
         foreach($order_storage as $o)
         {
             $closestFreightByEta = false;
@@ -137,7 +137,7 @@ class OrderTrackingController extends UserController {
                         }
                     }
                 }
-                
+
                 //Got our relevant search, based on date closest to Freight Eta
                 $storage_array[] = array(
                                     'order'=>$o,
@@ -149,7 +149,7 @@ class OrderTrackingController extends UserController {
             }
         }
         */
-        
+
         /*
          * Stories
          */
@@ -159,7 +159,7 @@ class OrderTrackingController extends UserController {
          */
 
         $this->adminList();
-        
+
         $this->data['business_unit'] = $business_unit;
         $this->data['rootURL'] = $this->rootURL;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
@@ -170,32 +170,32 @@ class OrderTrackingController extends UserController {
 
         /*$this->data['order_storage'] = $storage_array*/
         $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
-        
+
         return $this->makeView('order-tracking/overview');
     }
-    
+
     public function getSummary($business_unit=false)
     {
         $this->pageTitle = 'Summary';
-        
+
         $query = SwiftOrder::query();
         if($business_unit !== false)
         {
             $query->whereBusinessUnit($business_unit);
         }
-        
+
         $result = $query->with(['freight','freight.company','customsDeclaration','storage','shipment','purchaseOrder','reception'])->remember(60)->get();
-        
+
         foreach($result as &$r)
         {
             $r->current_activity = WorkflowActivity::progress($r,$this->context);
-            
+
             //define all data variables
-            $r->data_freight_name = 
+            $r->data_freight_name =
             $r->data_vessel_name =
-            $r->data_freight_etd = 
+            $r->data_freight_etd =
             $r->data_freight_eta =
-            $r->data_purchaseOrder = 
+            $r->data_purchaseOrder =
             $r->data_storage_start =
             $r->data_demurrage_start =
             $r->data_customsDeclaration_customs_filled_at =
@@ -204,7 +204,7 @@ class OrderTrackingController extends UserController {
             $r->data_customsDeclaration_customs_cleared_at =
             $r->data_shipment_container_no =
             $r->data_reception_grn = "N/A";
-            
+
             //Freight
             if(count($r->freight))
             {
@@ -224,7 +224,7 @@ class OrderTrackingController extends UserController {
                 {
                     $r->data_freight_name = $freight;
                 }
-                
+
                 $vessel_name = implode(",",
                                     array_filter(
                                         array_map(
@@ -249,7 +249,7 @@ class OrderTrackingController extends UserController {
                 {
                     $r->data_vessel_name = $vessel_name;
                 }
-                
+
                 $etd = implode(",",
                             array_filter(
                                 array_map(function($v)
@@ -274,7 +274,7 @@ class OrderTrackingController extends UserController {
                 {
                     $r->data_freight_etd = $etd;
                 }
-                
+
                 $eta = implode(",",
                             array_filter(
                                 array_map(function($v)
@@ -297,11 +297,11 @@ class OrderTrackingController extends UserController {
                 if($eta !== "")
                 {
                     $r->data_freight_eta = $eta;
-                }                
-                
+                }
+
             }
-            
-             //purchaseOrder           
+
+             //purchaseOrder
             if(count($r->purchaseOrder))
             {
                 $po =   implode(",",
@@ -325,7 +325,7 @@ class OrderTrackingController extends UserController {
             {
                 $r->data_purchaseOrder = "N/A";
             }
-            
+
             //Storage
             if(count($r->storage))
             {
@@ -334,7 +334,7 @@ class OrderTrackingController extends UserController {
                 {
                     $r->data_storage_start = $storage->storage_start->toDateString();
                 }
-                
+
                 if($storage->demurrage_start instanceof \Carbon\Carbon)
                 {
                     $r->data_demurrage_start = $storage->demurrage_start->toDateString();
@@ -349,23 +349,23 @@ class OrderTrackingController extends UserController {
                 {
                     $r->data_customsDeclaration_customs_filled_at = $customs->customs_filled_at->toDateString();
                 }
-                
+
                 if($customs->customs_reference !== "")
                 {
                     $r->data_customsDeclaration_customs_reference = $customs->customs_reference;
                 }
-                
+
                 if($customs->customs_processed_at instanceof \Carbon\Carbon)
                 {
                     $r->data_customsDeclaration_customs_processed_at = $customs->customs_processed_at->toDateString();
                 }
-                
+
                 if($customs->customs_cleared_at instanceof \Carbon\Carbon)
                 {
                     $r->data_customsDeclaration_customs_cleared_at = $customs->customs_cleared_at->toDateString();
                 }
             }
-            
+
             //shipment
             if(count($r->shipment))
             {
@@ -381,13 +381,13 @@ class OrderTrackingController extends UserController {
                                                         }
                                                 )
                                             );
-                                                
+
                 if(!empty($shipment_container_no))
                 {
                     $r->data_shipment_container_no = $shipment_container_no;
                 }
             }
-            
+
             //reception
             if(count($r->reception))
             {
@@ -403,19 +403,19 @@ class OrderTrackingController extends UserController {
                                             }
                                         )
                                     );
-                                    
+
                 if(!empty($reception_grn))
                 {
                     $r->data_reception_grn = $reception_grn;
                 }
             }
         }
-        
+
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
         $this->data['business_unit'] = $business_unit;
         $this->data['rootURL'] = $this->rootURL;
         $this->data['summary_datatable'] = $result;
-        
+
         return $this->makeView('order-tracking/summary');
     }
 
@@ -451,7 +451,7 @@ class OrderTrackingController extends UserController {
                         }
                         return $q;
                     })->get();
-                    
+
         $freightTomorrow = SwiftFreight::where('freight_eta','=',Carbon::now()->addDay()->format('Y-m-d'),'and')
                             ->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,SwiftFreight::TYPE_AIR])
                             ->with(['order','order.workflow'])
@@ -465,7 +465,7 @@ class OrderTrackingController extends UserController {
                                 }
                                 return $q;
                             })->get();
-        
+
 
         $this->pageTitle = 'Transit Foreign Calendar';
 
@@ -474,7 +474,7 @@ class OrderTrackingController extends UserController {
         $this->data['freightToday'] = $freightToday;
         $this->data['freightTomorrow'] = $freightTomorrow;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
-        
+
         return $this->makeView('order-tracking/transit_foreign');
     }
 
@@ -769,10 +769,10 @@ class OrderTrackingController extends UserController {
     /*
      * Private Functions
      */
-    
+
     /*
      * Name: Form
-     * Description: Fills in 
+     * Description: Fills in
      */
     private function form($id,$edit=false)
     {
@@ -787,12 +787,12 @@ class OrderTrackingController extends UserController {
             /*
              * Set Read
              */
-            
+
             if(!Flag::isRead($order))
             {
                 Flag::toggleRead($order);
             }
-            
+
             /*
              * Enable Commenting
              */
@@ -815,7 +815,7 @@ class OrderTrackingController extends UserController {
                     $acp->current_activity = WorkflowActivity::progress($acp,'acpayable');
                 }
             }
-            
+
             /*
              * Data
              */
@@ -838,9 +838,9 @@ class OrderTrackingController extends UserController {
             $this->data['isAdmin'] = $this->currentUser->hasAccess(array($this->adminPermission));
             $this->data['isCreator'] = $this->currentUser->id == $order->revisionHistory()->orderBy('created_at','ASC')->first()->user_id ? true : false;
             //$this->data['message'] = OrderTracking::smartMessage($this->data);
-            
+
             Helper::saveRecent($order,$this->currentUser);
-            
+
             return $this->makeView('order-tracking/edit');
         }
         else
@@ -848,7 +848,7 @@ class OrderTrackingController extends UserController {
             return parent::notfound();
         }
     }
-    
+
     /*
      * GET Pages
      */
@@ -865,7 +865,7 @@ class OrderTrackingController extends UserController {
             return parent::forbidden();
         }
     }
-    
+
     public function getView($id)
     {
         if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
@@ -881,7 +881,7 @@ class OrderTrackingController extends UserController {
             return parent::forbidden();
         }
     }
-    
+
     public function getEdit($id)
     {
         if($this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]))
@@ -897,7 +897,7 @@ class OrderTrackingController extends UserController {
             return parent::forbidden();
         }
     }
-    
+
     public function getActivity($id)
     {
         $order_id = Crypt::decrypt($id);
@@ -910,16 +910,16 @@ class OrderTrackingController extends UserController {
         else
         {
             return parent::notfound();
-        }        
+        }
     }
-    
+
     public function getInbox()
     {
         $this->pageTitle = 'Inbox';
-        
+
         //Fetch list of inbox items
     }
-    
+
     /*
      * Lists all forms
      */
@@ -927,21 +927,21 @@ class OrderTrackingController extends UserController {
     {
         $limitPerPage = 15;
         $this->pageTitle = 'Forms';
-        
+
         //Check Edit Access
-        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);        
-        
+        $this->data['edit_access'] = $this->currentUser->hasAnyAccess([$this->editPermission,$this->adminPermission]);
+
         //Check user group
         if(!$this->data['edit_access'] && $type='inprogress')
         {
             $type='all';
         }
-        
+
         /*
          * Let's Start Order Query
          */
         $orderquery = \SwiftOrder::query();
-        
+
         if($type != 'inprogress')
         {
             //Get node definition list
@@ -951,34 +951,34 @@ class OrderTrackingController extends UserController {
             {
                 $node_definition_list[$v->id] = $v->label;
             }
-            $this->data['node_definition_list'] = $node_definition_list;            
+            $this->data['node_definition_list'] = $node_definition_list;
         }
-        
+
         switch($type)
         {
             case 'inprogress':
                 $orderquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
-                    return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS); 
+                    return $q->where('status','=',SwiftWorkflowActivity::INPROGRESS);
                 });
                 break;
             case 'rejected':
                 $orderquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
-                   return $q->where('status','=',SwiftWorkflowActivity::REJECTED); 
+                   return $q->where('status','=',SwiftWorkflowActivity::REJECTED);
                 });
                 break;
             case 'completed':
                 $orderquery->orderBy('updated_at','desc')->whereHas('workflow',function($q){
-                   return $q->where('status','=',SwiftWorkflowActivity::COMPLETE); 
+                   return $q->where('status','=',SwiftWorkflowActivity::COMPLETE);
                 });
                 break;
             case 'starred':
                 $orderquery->orderBy('updated_at','desc')->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE); 
+                   return $q->where('type','=',SwiftFlag::STARRED,'AND')->where('user_id','=',$this->currentUser->id,'AND')->where('active','=',SwiftFlag::ACTIVE);
                 });
                 break;
             case 'important':
                 $orderquery->orderBy('updated_at','desc')->whereHas('flag',function($q){
-                   return $q->where('type','=',SwiftFlag::IMPORTANT,'AND'); 
+                   return $q->where('type','=',SwiftFlag::IMPORTANT,'AND');
                 });
                 break;
             case 'recent':
@@ -991,11 +991,11 @@ class OrderTrackingController extends UserController {
                 $orderquery->orderBy('updated_at','desc');
                 break;
         }
-        
+
         //Filters
         if(Input::has('filter'))
         {
-            
+
             if(Session::has('ot_form_filter'))
             {
                 $filter = Session::get('ot_form_filter');
@@ -1004,9 +1004,9 @@ class OrderTrackingController extends UserController {
             {
                 $filter = array();
             }
-            
+
             $filter[Input::get('filter_name')] = Input::get('filter_value');
-            
+
             /*
              * loop & Apply all filters
              */
@@ -1032,8 +1032,8 @@ class OrderTrackingController extends UserController {
         {
             Session::forget('ot_form_filter');
         }
-        
-        
+
+
         $orderCount = $orderquery->count();
         if($type != 'inprogress')
         {
@@ -1047,8 +1047,8 @@ class OrderTrackingController extends UserController {
             }
         }
         $orders = $orderquery->get();
-        
-        
+
+
         /*
          * Fetch latest history;
          */
@@ -1056,7 +1056,7 @@ class OrderTrackingController extends UserController {
         {
             //Set Current Workflow Activity
             $o->current_activity = WorkflowActivity::progress($o);
-            
+
             //If in progress, we filter
             if($type == 'inprogress')
             {
@@ -1072,7 +1072,7 @@ class OrderTrackingController extends UserController {
                         break;
                     }
                 }
-                
+
                 /*
                  * No Access : We Remove order from list
                  */
@@ -1097,20 +1097,20 @@ class OrderTrackingController extends UserController {
             }
 
            //Set Revision
-            $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);            
-                        
+            $o->revision_latest = Helper::getMergedRevision(array('reception','purchaseOrder','customsDeclaration','freight','shipment','document'),$o);
+
             //Set Starred/important
             $o->flag_starred = Flag::isStarred($o);
             $o->flag_important = Flag::isImportant($o);
             $o->flag_read = Flag::isRead($o);
 
         }
-        
+
         //The Data
         $this->data['type'] = $type;
         $this->data['isAdmin'] = $this->currentUser->hasAccess([$this->adminPermission]);
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess(array($this->createPermission,$this->adminPermission));
-        
+
         $this->data['orders'] = $orders;
         $this->data['count'] = isset($filter) ? $orderCount : SwiftOrder::count();
         $this->data['page'] = $page;
@@ -1118,28 +1118,28 @@ class OrderTrackingController extends UserController {
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['filter'] = Input::has('filter') ? "?filter=1" : "";
         $this->data['rootURL'] = $this->rootURL;
-        
+
         return $this->makeView('order-tracking/forms');
     }
-    
+
     /*
      * Lists all freight companies
      */
-    
+
     public function getFreightcompany($type='all',$page=1)
     {
         $limitPerPage = 30;
-        
-        $this->pageTitle = 'Freight Company';  
-        
+
+        $this->pageTitle = 'Freight Company';
+
         $companyquery = SwiftFreightCompany::take($limitPerPage)->orderBy('updated_at','desc');
-        
+
         if($page > 1)
         {
             $companyquery->offset(($page-1)*$limitPerPage);
         }
-                
-        
+
+
         switch($type)
         {
             case "local":
@@ -1152,26 +1152,26 @@ class OrderTrackingController extends UserController {
                 $companyquery->where('type','=',SwiftFreightCompany::INTERNATIONAL);
                 break;
         }
-        
+
         $companies = $companyquery->get();
-        
+
         $this->data['companies'] = $companies;
-        $this->data['count'] = $companyquery->count();        
+        $this->data['count'] = $companyquery->count();
         $this->data['page'] = $page;
         $this->data['type'] = $type;
         $this->data['limit_per_page'] = $limitPerPage;
         $this->data['canCreate'] = $this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]);
-        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);    
-        
+        $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
+
         return $this->makeView('freight-company/forms');
     }
-    
+
     public function getCreatefreightcompanyform()
     {
         $this->pageTitle = 'Create';
-        return $this->makeView('freight-company/create');        
+        return $this->makeView('freight-company/create');
     }
-    
+
     public function postFreightcompanyform()
     {
         /*
@@ -1180,15 +1180,15 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess(array($this->adminPermission,$this->editPermission)))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         //Saving new freight companies
         $validator = Validator::make(Input::all(),
                     array('name'=>'required',
                           'type'=>array('required','in:'.implode(',',array_keys(SwiftFreightCompany::$type)))
                         )
                 );
-        
+
         if($validator->fails())
         {
             return json_encode(['success'=>0,'errors'=>$validator->errors()]);
@@ -1205,11 +1205,11 @@ class OrderTrackingController extends UserController {
             else
             {
                 echo "";
-                return false;                
+                return false;
             }
         }
     }
-    
+
     public function putFreightcompanyform()
     {
         /*
@@ -1218,8 +1218,8 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess(array($this->adminPermission,$this->editPermission)))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $fc_id = Crypt::decrypt(Input::get('pk'));
         $fc = SwiftFreightCompany::find($fc_id);
         if(count($fc))
@@ -1227,25 +1227,25 @@ class OrderTrackingController extends UserController {
             /*
              * Manual Validation
              */
-            
+
             //Name
             if(Input::get('name') == 'name' && trim(Input::get('value')==""))
             {
                 return Response::make('Please enter a name',400);
             }
-            
+
             //Business Unit
             if(Input::get('name') == 'type' && !array_key_exists((int)Input::get('value'),SwiftFreightCompany::$type))
             {
                 return Response::make('Please select a valid business unit',400);
             }
-            
+
             //Email
             if(Input::get('name') == 'email' && Input::get('value') != "" && filter_var(Input::get('value'), FILTER_VALIDATE_EMAIL))
             {
                 return Response::make('Please enter a valid email address',400);
             }
-            
+
             /*
              * Save
              */
@@ -1262,14 +1262,14 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Freight Company not found',404);
-        }        
+        }
     }
-    
+
     public function deleteFreightcompanyform($fc_id)
     {
-        
+
     }
-    
+
     public function getFreightcompanyform($id)
     {
         $fc_id = Crypt::decrypt($id);
@@ -1281,19 +1281,19 @@ class OrderTrackingController extends UserController {
             $this->data['type'] = json_encode(Helper::jsonobject_encode(SwiftFreightCompany::$type));
             $this->data['fc'] = $fc;
             $this->data['ticker'] = $fc->freight;
-            
+
             return $this->makeView('freight-company/edit');
         }
         else
         {
             return parent::notfound();
-        }        
+        }
     }
-    
+
     /*
      * POST Create Form
      */
-    
+
     public function postCreate()
     {
         /*
@@ -1303,14 +1303,14 @@ class OrderTrackingController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         $validator = Validator::make(Input::all(),
                     array('name'=>'required',
                           'business_unit'=>array('required','in:'.implode(',',array_keys(SwiftOrder::$business_unit))),
                           'email'=>'email'
                         )
                 );
-        
+
         if($validator->fails())
         {
             return json_encode(['success'=>0,'errors'=>$validator->errors()]);
@@ -1348,7 +1348,7 @@ class OrderTrackingController extends UserController {
             }
         }
     }
-    
+
     /*
      * General Info: REST
      */
@@ -1356,12 +1356,12 @@ class OrderTrackingController extends UserController {
     {
         /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }
-        
+
         $order_id = Crypt::decrypt(Input::get('pk'));
         $order = SwiftOrder::find($order_id);
         if(count($order))
@@ -1369,19 +1369,19 @@ class OrderTrackingController extends UserController {
             /*
              * Manual Validation
              */
-            
+
             //Name
             if(Input::get('name') == 'name' && trim(Input::get('value')==""))
             {
                 return Response::make('Please enter a name',400);
             }
-            
+
             //Business Unit
             if(Input::get('name') == 'business_unit' && !array_key_exists((int)Input::get('value'),SwiftOrder::$business_unit))
             {
                 return Response::make('Please select a valid business unit',400);
             }
-            
+
             /*
              * Save
              */
@@ -1400,7 +1400,7 @@ class OrderTrackingController extends UserController {
             return Response::make('Order process form not found',404);
         }
     }
-    
+
     /*
      * Customs Declaration: REST
      */
@@ -1408,14 +1408,14 @@ class OrderTrackingController extends UserController {
     {
         /*
          * Check Permissions
-         */        
+         */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
         }
-        
+
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
-        
+
         /*
          * Manual Validation
          */
@@ -1435,7 +1435,7 @@ class OrderTrackingController extends UserController {
                         return Response::make('Please enter a numeric value',400);
                     }
                     break;
-            }       
+            }
 
             /*
              * New Customs Declaration
@@ -1454,9 +1454,9 @@ class OrderTrackingController extends UserController {
                 {
                     return Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
-            else 
+            else
             {
                 $customsDeclaration = SwiftCustomsDeclaration::find(Crypt::decrypt(Input::get('pk')));
                 if($customsDeclaration)
@@ -1483,7 +1483,7 @@ class OrderTrackingController extends UserController {
             return Response::make('Order process form not found',404);
         }
     }
-    
+
     public function deleteCustomsdeclaration()
     {
         /*
@@ -1492,8 +1492,8 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $customs_id = Crypt::decrypt(Input::get('pk'));
         $customsDeclaration = SwiftCustomsDeclaration::find($customs_id);
         if(count($customsDeclaration))
@@ -1513,7 +1513,7 @@ class OrderTrackingController extends UserController {
             return Response::make('Customs entry not found',404);
         }
     }
-    
+
     /*
      * Freight: REST
      */
@@ -1525,8 +1525,8 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
         if(count($order))
         {
@@ -1555,7 +1555,7 @@ class OrderTrackingController extends UserController {
                         return Response::make('Please enter a valid date',400);
                     }
                     break;
-            }       
+            }
 
             /*
              * New Freight
@@ -1574,36 +1574,36 @@ class OrderTrackingController extends UserController {
                 {
                     return Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
             else
             {
                 $freight = SwiftFreight::find(Crypt::decrypt(Input::get('pk')));
                 if($freight)
                 {
-                    
+
                     /*
                      * Manual validation
                      */
-                    
+
                     switch(Input::get('name'))
                     {
                         case "freight_etd":
-                            if($freight->freight_eta != "" && 
+                            if($freight->freight_eta != "" &&
                                 DateTime::createFromFormat("d/m/Y", Input::get('value')) > DateTime::createFromFormat("Y-m-d", $freight->freight_eta))
                             {
                                 return Response::make('ETD cannot be more than ETA',400);
                             }
                             break;
                         case "freight_eta":
-                            if($freight->freight_etd != "" && 
+                            if($freight->freight_etd != "" &&
                                 DateTime::createFromFormat("d/m/Y", Input::get('value')) < DateTime::createFromFormat("Y-m-d", $freight->freight_etd))
                             {
                                 return Response::make('ETA cannot be less than ETD',400);
                             }
                             break;
-                    }                    
-                    
+                    }
+
                     $freight->{Input::get('name')} = Input::get('value') == "" ? null : Input::get('value');
                     if($freight->save())
                     {
@@ -1626,18 +1626,18 @@ class OrderTrackingController extends UserController {
             return Response::make('Order process form not found',404);
         }
     }
-    
+
     public function deleteFreight()
     {
-        
+
         /*
          * Check Permissions
          */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $freight_id = Crypt::decrypt(Input::get('pk'));
         $freight = SwiftFreight::find($freight_id);
         if(count($freight))
@@ -1657,11 +1657,11 @@ class OrderTrackingController extends UserController {
             return Response::make('Freight entry not found',400);
         }
     }
-    
+
     /*
      * Shipment: REST
      */
-    
+
     public function putShipment($order_id)
     {
         /*
@@ -1670,8 +1670,8 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
         if(count($order))
         {
@@ -1691,13 +1691,13 @@ class OrderTrackingController extends UserController {
                     {
                         return Response::make('Please enter a valid volume',400);
                     }
-                    
+
                     if(is_numeric(Input::get('value')) && (int)Input::get('value') < 0)
                     {
                         return Response::make('Please enter a positive value',400);
                     }
-                    break;                    
-            }       
+                    break;
+            }
 
             /*
              * New Freight
@@ -1716,7 +1716,7 @@ class OrderTrackingController extends UserController {
                 {
                     return Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
             else
             {
@@ -1743,9 +1743,9 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Order process form not found',404);
-        }        
+        }
     }
-    
+
     public function deleteShipment()
     {
         /*
@@ -1754,8 +1754,8 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $shipment_id = Crypt::decrypt(Input::get('pk'));
         $shipment = SwiftShipment::find($shipment_id);
         if(count($shipment))
@@ -1772,9 +1772,9 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Freight entry not found',400);
-        }        
+        }
     }
-    
+
     public function putStorage($order_id)
     {
         /*
@@ -1783,10 +1783,10 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
-        
+
         if(count($order))
         {
             /*
@@ -1800,11 +1800,11 @@ class OrderTrackingController extends UserController {
                     {
                         return Response::make('Please enter only numbers.',400);
                     }
-                    
+
                     if(is_numeric(Input::get('value')) && (int)Input::get('value') < 0)
                     {
                         return Response::make('Please enter a positive value',400);
-                    }                    
+                    }
                     break;
             }
 
@@ -1824,7 +1824,7 @@ class OrderTrackingController extends UserController {
                 {
                     return Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
             else
             {
@@ -1850,9 +1850,9 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Order process form not found',404);
-        }        
+        }
     }
-    
+
     public function deleteStorage()
     {
         /*
@@ -1861,8 +1861,8 @@ class OrderTrackingController extends UserController {
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $storage_id = Crypt::decrypt(Input::get('pk'));
         $storage = SwiftStorage::find($storage_id);
         if(count($storage))
@@ -1879,23 +1879,23 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Storage entry not found',400);
-        }        
-    }    
-    
+        }
+    }
+
     /*
      * Purchase Order: REST
      */
     public function putPurchaseorder($order_id)
     {
-        
+
         /*
          * Check Permissions
          */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $order = \SwiftOrder::find(Crypt::decrypt($order_id));
         /*
          * Manual Validation
@@ -1943,7 +1943,7 @@ class OrderTrackingController extends UserController {
                 {
                     return \Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
             else
             {
@@ -1966,25 +1966,25 @@ class OrderTrackingController extends UserController {
                 {
                     return \Response::make('Error saving purchase order: Invalid PK',400);
                 }
-            }            
+            }
         }
         else
         {
             return \Response::make('Order process form not found',404);
-        }        
+        }
     }
-    
+
     public function deletePurchaseorder()
     {
-        
+
         /*
          * Check Permissions
          */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $po_id = Crypt::decrypt(Input::get('pk'));
         $po = SwiftPurchaseOrder::find($po_id);
         if(count($po))
@@ -2002,24 +2002,24 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Purchase order entry not found',404);
-        }        
+        }
     }
-    
+
     /*
      * Reception: REST
      */
-    
+
     public function putReception($order_id)
     {
-        
+
         /*
          * Check Permissions
          */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
         /*
          * Manual Validation
@@ -2043,7 +2043,7 @@ class OrderTrackingController extends UserController {
                 {
                     return Response::make('Failed to save. Please retry',400);
                 }
-                
+
             }
             else
             {
@@ -2065,25 +2065,25 @@ class OrderTrackingController extends UserController {
                 {
                     return Response::make('Error saving purchase order: Invalid PK',400);
                 }
-            }            
-        }        
+            }
+        }
         else
         {
             return Response::make('Order process form not found',404);
-        }        
+        }
     }
-    
+
     public function deleteReception()
     {
-        
+
         /*
          * Check Permissions
          */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $reception_id = Crypt::decrypt(Input::get('pk'));
         $reception = SwiftReception::find($reception_id);
         if(count($reception))
@@ -2100,9 +2100,9 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Purchase order entry not found',404);
-        }        
+        }
     }
-    
+
     /*
      * Mark Items
      */
@@ -2110,14 +2110,14 @@ class OrderTrackingController extends UserController {
     {
         return Flag::set($type,'\SwiftOrder',$this->adminPermission);
     }
-    
+
     /*
      * Upload Document
      */
-    
+
     public function postUpload($order_id)
     {
-        
+
         /*
          * Check Permissions
          */
@@ -2125,7 +2125,7 @@ class OrderTrackingController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
         /*
          * Manual Validation
@@ -2142,7 +2142,7 @@ class OrderTrackingController extends UserController {
                                     'url'=>$doc->getAttachedFiles()['document']->url(),
                                     'id'=>Crypt::encrypt($doc->id),
                                     'id_normal'=>$doc->id,
-                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(), 
+                                    'updated_on'=>$doc->getAttachedFiles()['document']->updatedAt(),
                                     'updated_by'=>Helper::getUserName($doc->user_id,$this->currentUser)]);
                 }
                 else
@@ -2158,24 +2158,24 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Order process form not found',404);
-        } 
+        }
     }
-    
+
     /*
      * Delete upload
      */
-    
+
     public function deleteUpload($doc_id)
     {
-        
+
         /*
          * Check Permissions
          */
         if(!$this->currentUser->hasAnyAccess([$this->adminPermission,$this->editPermission]))
         {
             return parent::forbidden();
-        }        
-        
+        }
+
         $doc = SwiftDocument::find(Crypt::decrypt($doc_id));
         /*
          * Manual Validation
@@ -2194,13 +2194,13 @@ class OrderTrackingController extends UserController {
         else
         {
             return Response::make('Document not found',404);
-        } 
+        }
     }
-    
+
     /*
      * Tags: REST
      */
-    
+
     public function putTag()
     {
         /*
@@ -2210,7 +2210,7 @@ class OrderTrackingController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         if(Input::get('pk') && !is_numeric(Input::get('pk')))
         {
             $doc = SwiftDocument::with('tag')->find(Crypt::decrypt(Input::get('pk')));
@@ -2318,14 +2318,14 @@ class OrderTrackingController extends UserController {
             return Response::make('Error: Document number invalid',400);
         }
     }
-    
+
     /*
      * Cancel Workflow
      */
-    
+
     public function postCancel($order_id)
     {
-        
+
         /*
          * Check Permissions
          */
@@ -2333,9 +2333,9 @@ class OrderTrackingController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         $order = SwiftOrder::find(Crypt::decrypt($order_id));
-        
+
         if(count($order))
         {
             //Not Admin and not creator
@@ -2343,7 +2343,7 @@ class OrderTrackingController extends UserController {
             {
                 return Response::make('Operation not allowed',400);
             }
-            
+
             if(WorkflowActivity::cancel($order))
             {
                 return Response::make('Workflow has been cancelled',200);
@@ -2358,18 +2358,18 @@ class OrderTrackingController extends UserController {
             return Response::make('Order process form not found',404);
         }
     }
-    
+
     /*
      * Transit Calendar data by AJAX
      */
-    
+
     public function postTransitcalendarforeign($business_unit=false)
     {
         $startdate = gmdate("Y-m-d",Input::get('start'));
         $enddate = gmdate("Y-m-d",Input::get('end'));
-        
+
         $freight = SwiftFreight::query();
-        
+
         $freight->where('freight_eta','>=',$startdate,'and')
                     ->where('freight_eta','<=',$enddate,'and')
                     ->whereIn('freight_type',[\SwiftFreight::TYPE_SEA,SwiftFreight::TYPE_AIR])
@@ -2381,12 +2381,12 @@ class OrderTrackingController extends UserController {
                         if($business_unit !== false && array_key_exists($business_unit,\SwiftOrder::$business_unit))
                         {
                             $q->where('business_unit','=',$business_unit);
-                        }    
+                        }
                         return $q;
                     });
-        
+
         $freightResult = $freight->get()->all();
-        
+
         if(count($freightResult))
         {
             $freightresponse = array();
@@ -2404,7 +2404,7 @@ class OrderTrackingController extends UserController {
                         $className = "bg-color-blue";
                         break;
                 }
-                
+
                 switch($f->freight_type)
                 {
                     case SwiftFreight::TYPE_AIR:
@@ -2417,10 +2417,10 @@ class OrderTrackingController extends UserController {
                         $vesselIcon = '<i class="fa fa-lg fa-anchor" title="sea"></i>';
                         break;
                     default:
-                        $vesselIcon = '<i class="fa fa-lg fa-question" title="unknown"></i>';  
+                        $vesselIcon = '<i class="fa fa-lg fa-question" title="unknown"></i>';
                         break;
                 }
-                
+
                 $freightresponse[] = array(
                                         'title'=>$f->order->name." (ID: ".$f->order->id.")",
                                         'allDay'=>true,
@@ -2432,7 +2432,7 @@ class OrderTrackingController extends UserController {
                                         'vesselIcon' => $vesselIcon,
                                     );
             }
-            
+
             return Response::json($freightresponse);
         }
         else
@@ -2628,11 +2628,11 @@ class OrderTrackingController extends UserController {
             return Response::make("");
         }
     }
-    
+
     /*
      * Help : AJAX
      */
-    
+
     public function getHelp($id)
     {
         /*
@@ -2642,14 +2642,14 @@ class OrderTrackingController extends UserController {
         {
             return "You don't have access to this resource.";
         }
-        
+
         $needPermission = true;
-        
+
         if($this->currentUser->hasAccess($this->adminPermission))
         {
             $needPermission = false;
         }
-        
+
         $form = SwiftOrder::find(Crypt::decrypt($id));
         if(count($form))
         {
@@ -2660,27 +2660,32 @@ class OrderTrackingController extends UserController {
             return "We can't find the resource that you were looking for.";
         }
     }
-    
+
     public function getLateNodes()
     {
-        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm('order-tracking');
-        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes('order-tracking');
-        
+        $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
+        if($this->data['late_node_forms_count'] <= 50) {
+            $this->data['too_many_late_nodes'] = false;
+            $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
+        } else {
+            $this->data['too_many_late_nodes'] = true;
+        }
+
         echo View::make('workflow/overview_latenodes',$this->data)->render();
     }
-    
+
     public function getPendingNodes()
     {
         $this->data['pending_node_activity'] = WorkflowActivity::statusByType('order-tracking');
-        
+
         echo View::make('workflow/overview_pendingnodes',$this->data)->render();
     }
-    
+
     public function getStories($business_unit=0)
     {
         $this->data['stories'] = Story::fetch(Config::get('context')[$this->context],10,0,$business_unit > 0 ? array(array('business_unit','=',(int)$business_unit)) : array());
         $this->data['dynamicStory'] = OrderTrackingHelper::dynamicStory($business_unit > 0 ? array(array('business_unit','=',$business_unit)) : array());
-        
+
         echo View::make('story/chapter',$this->data)->render();
     }
 }

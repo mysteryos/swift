@@ -289,7 +289,7 @@ class SwiftPR extends Process
         $this->pdf->setFormData($this->form);
         $this->pdf->startPageGroup();
         $this->pdf->AddPage();
-        
+
         //Product Info
         $this->pdfHTML .= "<table border=\"1\" cellpadding=\"1\">
                                 <tr style=\"text-align:center;font-weight: bold;\">
@@ -311,7 +311,7 @@ class SwiftPR extends Process
                                     <td width=\"10%\" height=\"20\"></td>
                                 </tr>";
         }
-        
+
         $this->pdfHTML.= "</table>";
     }
 
@@ -393,7 +393,7 @@ class SwiftPR extends Process
         {
             return \Response::make("Form not found",500);
         }
-        
+
         return \Response::make("Unable to complete action",500);
     }
 
@@ -582,7 +582,7 @@ class SwiftPR extends Process
                 }
                 break;
         }
-        
+
         return true;
     }
 
@@ -695,7 +695,6 @@ class SwiftPR extends Process
             // Rename worksheet
             $objPHPExcel->getActiveSheet()->setTitle('Product Returns');
 
-
             // Set active sheet index to the first sheet, so Excel opens this as the first sheet
             $objPHPExcel->setActiveSheetIndex(0);
 
@@ -709,7 +708,7 @@ class SwiftPR extends Process
                 'Content-Transfer-Encoding' => 'binary',
                 'Cache-Control' => "max-age=0",
                 'Expires' => "Mon, 26 Jul 1997 05:00:00 GMT",
-                'Last-Modified' => gmdate('D, d M Y H:i:s').' GMT',
+                'Last-Modified' => gmdate('D, d M Y H:i:s').' UTC+4',
                 'Pragma' => 'public'
             ]);
         }

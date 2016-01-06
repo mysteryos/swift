@@ -7,14 +7,14 @@
  */
 
 class ProductReturnsController extends UserController {
-    
+
     public function __construct(){
         parent::__construct();
         $this->pageName = "Product Returns";
         $this->rootURL = $this->data['rootURL'] = $this->context = $this->data['context'] = "product-returns";
         $this->permission = $this->data['permission'] = new \Permission\SwiftPR();
     }
-    
+
     public function getIndex()
     {
         return \Redirect::to('/'.$this->rootURL.'/overview');
@@ -176,7 +176,7 @@ class ProductReturnsController extends UserController {
         {
             $query->offset(($page-1)*$limitPerPage);
         }
-        
+
         $forms = $prquery->get();
 
 /*
@@ -226,7 +226,7 @@ class ProductReturnsController extends UserController {
             $f->flag_important = \Flag::isImportant($f);
             $f->flag_read = \Flag::isRead($f);
         }
-        
+
         $this->data['forms'] = $forms;
         $this->data['count'] = $formsCount;
         $this->data['type'] = $type;
@@ -239,7 +239,7 @@ class ProductReturnsController extends UserController {
                                     }));
         $this->data['total_pages'] = ceil($this->data['count']/$limitPerPage);
         $this->data['pageTitle'] = "Forms - ".ucfirst($type);
-        
+
         return $this->makeView('product-returns/forms');
     }
 
@@ -763,7 +763,7 @@ class ProductReturnsController extends UserController {
     {
         return $this->process('SwiftErpOrder')->delete();
     }
-    
+
     /*
      * PUT: Credit Note
      *
@@ -836,16 +836,16 @@ class ProductReturnsController extends UserController {
      */
     public function putProductApproval($type,$product_id)
     {
-        /*  
+        /*
          * Check Permissions
-         */        
+         */
         if(!$this->permission->isRetailMan())
         {
             return parent::forbidden();
         }
-        
+
         $product = \SwiftPRProduct::find(\Crypt::decrypt($product_id));
-        
+
         if($product)
         {
             if(\Input::get('name') == "approval_approved" && in_array(\Input::get('value'),array(\SwiftApproval::REJECTED,\SwiftApproval::APPROVED,\SwiftApproval::PENDING)))
@@ -1022,7 +1022,7 @@ class ProductReturnsController extends UserController {
                 $qty_pickup_included = \Input::has('qty_pickup_included');
 
                 $invoice_lines = \JdeSales::getProducts(\Input::get('invoice_id'));
-                
+
                 foreach($products as $line_number => $jde_itm)
                 {
                     //Check if Valid Product ITM
@@ -1118,7 +1118,7 @@ class ProductReturnsController extends UserController {
                 }
 
                 return \Response::json(["msg"=>"Products added successfully"]);
-                
+
             }
         }
 
@@ -1161,7 +1161,7 @@ class ProductReturnsController extends UserController {
         {
             return parent::forbidden();
         }
-        
+
         return $this->process('SwiftDocument')
                     ->setParentResource(new \SwiftPRDocument)
                     ->delete(\Crypt::decrypt($doc_id));
@@ -1442,8 +1442,13 @@ class ProductReturnsController extends UserController {
     {
         if($this->permission->isAdmin())
         {
-            $this->data['late_node_forms'] = \WorkflowActivity::lateNodeByForm($this->context);
-            $this->data['late_node_forms_count'] = \SwiftNodeActivity::countLateNodes($this->context);
+            $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
+            if($this->data['late_node_forms_count'] <= 50) {
+                $this->data['too_many_late_nodes'] = false;
+                $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
+            } else {
+                $this->data['too_many_late_nodes'] = true;
+            }
 
             echo View::make('workflow/overview_latenodes',$this->data)->render();
         }
@@ -1487,4 +1492,3 @@ class ProductReturnsController extends UserController {
      * AJAX CALLS: End
      */
 }
-    

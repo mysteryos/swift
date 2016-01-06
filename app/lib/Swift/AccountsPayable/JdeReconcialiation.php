@@ -74,7 +74,7 @@ class JdeReconcialiation {
                 ->where('dct','=',$pv->type,'AND')
                 ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')
                 ->first();
-        
+
         if(!$jdePV)
         {
             $pv->validated_msg = "Payment Voucher Number not found in JDE Database";
@@ -102,7 +102,7 @@ class JdeReconcialiation {
         $pv->validated_msg = null;
         $pv->validated = \SwiftACPPaymentVoucher::VALIDATION_COMPLETE;
         $pv->save();
-        
+
         return true;
     }
 
@@ -141,7 +141,7 @@ class JdeReconcialiation {
         {
             throw new \RuntimeException('Eloquent class or object ID missing');
         }
-        
+
         $job->delete();
     }
 
@@ -196,7 +196,7 @@ class JdeReconcialiation {
         $jdePV = \JdePaymentVoucher::where('DOC','=',$pv->number)
                  ->where('dct','=',$pv->type,'AND')
                  ->where('kco','=',sprintf('%05d', $pv->acp->billable_company_code),'AND')->first();
-        
+
         if($jdePV && $pv->validated === \SwiftACPPaymentVoucher::VALIDATION_COMPLETE)
         {
             $pv->load('invoice');
@@ -287,7 +287,7 @@ class JdeReconcialiation {
         return false;
     }
 
-    public static function updatePvOpenAmount($form)
+    public static function updatePvOpenAmount(&$form)
     {
         $form->load(['paymentVoucher','invoice']);
         if($form->paymentVoucher && $form->invoice)

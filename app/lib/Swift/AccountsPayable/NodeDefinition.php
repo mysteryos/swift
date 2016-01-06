@@ -393,7 +393,7 @@ Class NodeDefinition {
             $total_due = (float)($invoice->due_amount + $paymentAmount);
             $open_amount = (float)$invoice->open_amount;
             //Floating point comparison with epsilon
-            if(abs(($total_due-$open_amount)/$open_amount) >= 0.00001)
+            if($open_amount !== 0.0 && abs(($total_due-$open_amount)/$open_amount) >= 0.00001)
             {
                 //Update Open Amount Now from Sct JDE
                 JdeReconcialiation::updatePvOpenAmount($acp);

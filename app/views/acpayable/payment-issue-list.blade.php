@@ -52,21 +52,25 @@
                         @endif
                     </td>
                     <td>
-                        <?php
-                        switch($f->paymentVoucher->validated)
-                        {
-                            case \SwiftACPPaymentVoucher::VALIDATION_PENDING:
-                                echo '<i class="fa fa-question" title="Validation Pending"></i> ';
-                                break;
-                            case \SwiftACPPaymentVoucher::VALIDATION_ERROR:
-                                echo '<i class="fa fa-times" title="Validation Error"></i> ';
-                                break;
-                            case \SwiftACPPaymentVoucher::VALIDATION_COMPLETE:
-                                echo '<i class="fa fa-check" title="Validation Complete"></i> ';
-                                break;
-                        }
-                        ?>
-                        {{$f->paymentVoucher->number}}
+                        @if($f->paymentVoucher)
+                            <?php
+                            switch($f->paymentVoucher->validated)
+                            {
+                                case \SwiftACPPaymentVoucher::VALIDATION_PENDING:
+                                    echo '<i class="fa fa-question" title="Validation Pending"></i> ';
+                                    break;
+                                case \SwiftACPPaymentVoucher::VALIDATION_ERROR:
+                                    echo '<i class="fa fa-times" title="Validation Error"></i> ';
+                                    break;
+                                case \SwiftACPPaymentVoucher::VALIDATION_COMPLETE:
+                                    echo '<i class="fa fa-check" title="Validation Complete"></i> ';
+                                    break;
+                            }
+                            ?>
+                            {{$f->paymentVoucher->number}}
+                        @else
+                            <i class="fa fa-question" title="No Payment Voucher Found"></i> N/A
+                        @endif
                     </td>
                     <td>
                         <span>{{$f->supplier_name}}</span>

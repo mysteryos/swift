@@ -14,10 +14,26 @@ class SwiftACPPayment extends Eloquent
     public $readableName = "Accounts Payable";
 
     protected $table = "swift_acp_payment";
-    
-    protected $fillable = ['status','type','date','amount','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id','cheque_exec_signator_id','currency_code'];
-    
-    protected $dates = ['deleted_at','date','validated_on'];
+
+    protected $fillable = [
+        'status',
+        'type',
+        'date',
+        'amount',
+        'cheque_dispatch',
+        'cheque_dispatch_comment',
+        'payment_number',
+        'batch_number',
+        'cheque_signator_id',
+        'cheque_exec_signator_id',
+        'currency_code'
+    ];
+
+    protected $dates = [
+        'deleted_at',
+        'date',
+        'validated_on'
+    ];
 
     protected $touches = array('acp');
 
@@ -37,7 +53,7 @@ class SwiftACPPayment extends Eloquent
     const STATUS_SIGNED = 3;
     const STATUS_SIGNED_BY_EXEC = 4;
     const STATUS_DISPATCHED = 5;
-    
+
     public static $status = [
         self::STATUS_INPROGRESS => 'In Progress',
         self::STATUS_ISSUED => 'Issued',
@@ -79,13 +95,13 @@ class SwiftACPPayment extends Eloquent
         self::DISPATCH_POSTAL => 'Postal',
         self::DISPATCH_RECEPTION => 'Reception'
     ];
-    
+
     /* Revisionable */
-    
+
     protected $revisionEnabled = true;
-    
+
     protected $keepRevisionOf = array('status','type','date','amount','currency_code','cheque_dispatch','cheque_dispatch_comment','payment_number','batch_number','cheque_signator_id','cheque_exec_signator_id');
-    
+
     protected $revisionFormattedFieldNames = array(
         'id' => 'Id',
         'status' => 'Status',
@@ -100,14 +116,14 @@ class SwiftACPPayment extends Eloquent
         'cheque_exec_signator_id' => 'Executive Cheque Signator',
         'currency_code' => 'Currency'
     );
-    
+
     public $saveCreateRevision = true;
     public $softDelete = true;
     public $revisionClassName = "Payment";
     public $revisionPrimaryIdentifier = "id";
-    
+
     /* Elastic Search */
-    
+
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
@@ -124,22 +140,22 @@ class SwiftACPPayment extends Eloquent
     /*
      * Event Observers
      */
-    
+
     public static function boot() {
         parent:: boot();
-        
+
         static::bootElasticSearchEvent();
-        
+
         static::bootRevisionable();
-    }    
-    
+    }
+
     /*
      * Accessors
      */
 
     public function getChequeDispatchRevisionAttribute($val)
     {
-        if(key_exists($val,self::$dispatch))
+        if(array_key_exists($val,self::$dispatch))
         {
             return self::$dispatch[$val];
         }
@@ -151,7 +167,7 @@ class SwiftACPPayment extends Eloquent
 
     public function getTypeRevisionAttribute($val)
     {
-        if(key_exists($val,self::$type))
+        if(array_key_exists($val,self::$type))
         {
             return self::$type[$val];
         }
@@ -163,7 +179,7 @@ class SwiftACPPayment extends Eloquent
 
     public function getStatusRevisionAttribute($val)
     {
-        if(key_exists($val,self::$status))
+        if(array_key_exists($val,self::$status))
         {
             return self::$status[$val];
         }
@@ -183,7 +199,7 @@ class SwiftACPPayment extends Eloquent
 
         return "";
     }
-    
+
     public function getChequeExecSignatorIdRevisionAttribute($val)
     {
         if((int)$val > 0)
@@ -238,7 +254,7 @@ class SwiftACPPayment extends Eloquent
     {
         return $query->where('type','=',self::TYPE_DIRECTDEBIT);
     }
-    
+
     /*
      * Relationships
      */
@@ -296,7 +312,7 @@ class SwiftACPPayment extends Eloquent
     {
         return "fa-money";
     }
-    
+
     /*
      * Query
      */
@@ -308,5 +324,5 @@ class SwiftACPPayment extends Eloquent
             ->whereNull('deleted_at')
             ->sum('amount');
     }
-    
+
 }

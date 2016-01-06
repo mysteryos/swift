@@ -35,13 +35,13 @@ class AccountsPayableController extends UserController {
         {
             $inprogress = \SwiftACPRequest::getInProgress($this->data['inprogress_limit']);
             $inprogress_count = \SwiftACPRequest::getInProgressCount();
-            $inprogress_important = \SwiftACPRequest::getInProgress(0,true);
+            $inprogress_important = \SwiftACPRequest::getInProgress($this->data['inprogress_limit'],true);
             $inprogress = $inprogress->diff($inprogress_responsible);
             $inprogress_important = $inprogress_important->diff($inprogress_important_responsible);
         }
 
-        $inprogress_responsible = \SwiftACPRequest::getInProgressResponsible();
-        $inprogress_important_responsible = \SwiftACPRequest::getInProgressResponsible(0,true);
+        $inprogress_responsible = \SwiftACPRequest::getInProgressResponsible($this->data['inprogress_limit']);
+        $inprogress_important_responsible = \SwiftACPRequest::getInProgressResponsible($this->data['inprogress_limit'],true);
 
         if(count($inprogress) == 0 || count($inprogress_important) == 0 || count($inprogress_responsible) == 0 || count($inprogress_important_responsible) == 0)
         {
@@ -1554,7 +1554,47 @@ class AccountsPayableController extends UserController {
                 return parent::forbidden();
             }
 
-            return Helper::saveChildModel($acp,"\SwiftPurchaseOrder","purchaseOrder",$this->currentUser,true);
+            if(is_numeric(\Input::get('pk')))
+            {
+                //All Validation Passed, let's save
+                $model_obj = new \SwiftPurchaseOrder();
+                $model_obj->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
+                if(\Input::get('name') === 'reference') {
+                    $model_obj->type = 'ON';
+                }
+
+                if($acp->purchaseOrder()->save($model_obj))
+                {
+                    \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
+                    return \Response::make(json_encode(['encrypted_id'=>\Crypt::encrypt($model_obj->id),'id'=>$model_obj->id]));
+                }
+                else
+                {
+                    return \Response::make('Failed to save. Please retry',400);
+                }
+
+            }
+            else
+            {
+                $model_obj = \SwiftPurchaseOrder::find(\Crypt::decrypt(\Input::get('pk')));
+                if($model_obj)
+                {
+                    $model_obj->{\Input::get('name')} = \Input::get('value') == "" ? null : \Input::get('value');
+                    if($model_obj->save())
+                    {
+                        \Queue::push('WorkflowActivity@updateTask',array('class'=>get_class($acp),'id'=>$acp->id,'user_id'=>$this->currentUser->id));
+                        return \Response::make('Success');
+                    }
+                    else
+                    {
+                        return \Response::make('Failed to save. Please retry',400);
+                    }
+                }
+                else
+                {
+                    return \Response::make('Error saving: Invalid PK',400);
+                }
+            }
         }
         else
         {
@@ -1910,6 +1950,71 @@ class AccountsPayableController extends UserController {
         else
         {
             return Response::make('Payment entry not found',404);
+        }
+    }
+
+    public function putPaymentSuggestion($acp_id)
+    {
+        $acp = \SwiftACPRequest::find(Crypt::decrypt($acp_id));
+
+        if($acp)
+        {
+            switch(\Input::get('name'))
+            {
+                case "type":
+                    if(!array_key_exists(\Input::get('value'),\SwiftACPPayment::$type))
+                    {
+                        return \Response::make('Please enter valid payment suggestion type',400);
+                    }
+                    break;
+                case "amount":
+                    if(\Input::get('value') !== "" && !is_numeric(\Input::get('value'))){
+                        return \Response::make('Please input a numeric value.',400);
+                    }
+
+                    if(is_numeric(\Input::get('value')) && (\Input::get('value') < 0 || \Input::get('value') >100)) {
+                        return \Response::make('Amount must be between 1 - 100.',400);
+                    }
+                    break;
+                default:
+                    return \Response::make('Unknown Field',400);
+                    break;
+            }
+
+            return \Helper::saveChildModel($acp,"\SwiftACPPaymentSuggestion","paymentSuggestion",$this->currentUser,false);
+        }
+        else
+        {
+            return parent::notfound();
+        }
+    }
+
+    public function deletePaymentSuggestion()
+    {
+        $id = \Crypt::decrypt(Input::get('pk'));
+        $paySuggest = \SwiftACPPaymentSuggestion::find($id);
+        if($paySuggest)
+        {
+            /*
+             * Check Permissions
+             */
+            if(!$this->permission->isAccountingDept() && !$this->permission->isAdmin())
+            {
+                return parent::forbidden();
+            }
+
+            if($paySuggest->delete())
+            {
+                return \Response::make('Success');
+            }
+            else
+            {
+                return \Response::make('Unable to delete',400);
+            }
+        }
+        else
+        {
+            return \Response::make('Payment voucher entry not found',404);
         }
     }
 
@@ -3416,8 +3521,13 @@ class AccountsPayableController extends UserController {
      */
     public function getLateNodes()
     {
-        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
         $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
+        if($this->data['late_node_forms_count'] <= 50) {
+            $this->data['too_many_late_nodes'] = false;
+            $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
+        } else {
+            $this->data['too_many_late_nodes'] = true;
+        }
 
         echo View::make('workflow/overview_latenodes',$this->data)->render();
     }

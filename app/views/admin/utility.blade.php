@@ -67,6 +67,17 @@
                     </div>
                 </form>
             </fieldset>
+            <fieldset>
+                <legend>SCT JDE Export for Eezi Order</legend>
+                <div class="row">
+                    <div class="col-xs-8">
+                        <p>Creates an excel sheet with the columns: Product AITM, Product Bar Code, Product Name, Product Base Price & Product Category</p>
+                    </div>
+                    <div class="col-xs-4 text-right">
+                        <a href="{{action('AdminController@getEeziOrderExcel')}}" target="_blank" class="btn btn-lg btn-default">Generate</a>
+                    </div>
+                </div>
+            </fieldset>
         </div>
     </div>
 </div>

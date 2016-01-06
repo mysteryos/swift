@@ -42,7 +42,7 @@ class NodeMail
                     {
                         try
                         {
-                            \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.pr.pending',array('form'=>$mailData,'user'=>$u),function($message) use ($u,$pr){
+                            \Mail::queueOn(\Config::get('queue.connections.sqs-mail.queue'),'emails.pr.pending',array('form'=>$mailData,'user'=>$u),function($message) use ($u,$pr){
                                 $message->from('swift@scott.mu','Scott Swift');
                                 $message->subject(\Config::get('website.name').' - Status update on Product Returns "'.$pr->name.'" #'.$pr->id);
                                 $message->to($u->email);
@@ -66,14 +66,14 @@ class NodeMail
 
         if($owner_user && $owner_user->activated)
         {
-            $pr->current_activity = \WorkflowActivity::progress($workflowActivity);
+            $pr->current_activity = \WorkflowActivity::progress($pr->workflow);
             $mailData = [
                     'name'=>$pr->name,
                     'id'=>$pr->id,
                     'current_activity'=>$pr->current_activity,
                     'url'=>\Helper::generateUrl($pr,true),
                     ];
-            
+
             try
             {
                 \Mail::queueOn('https://sqs.ap-southeast-1.amazonaws.com/731873422349/scott_swift_live_mail','emails.pr.cancelled',array('pr'=>$mailData,'user'=>$owner_user),function($message) use ($owner_user,$pr){

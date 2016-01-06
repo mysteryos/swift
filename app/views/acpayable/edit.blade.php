@@ -77,7 +77,7 @@
         <div class="hidden-xs hidden-sm col-md-4 col-lg-4">
             <h1 class="page-title">
                 <span>Last update was by <?php echo Helper::getUserName($activity[0]->user_id,Sentry::getUser()); ?>, <abbr title="{{date("Y/m/d H:i",strtotime($activity[0]->created_at))}}" data-livestamp="{{strtotime($activity[0]->created_at)}}"></abbr></span>
-            </h>
+            </h1>
         </div>
     </div>
 
@@ -177,7 +177,7 @@
                             <form class="form-horizontal">
                                 @if(count($form->purchaseOrder))
                                     @foreach($form->purchaseOrder as &$p)
-                                        <?php $p->id = Crypt::encrypt($p->id); ?>
+                                        <?php $p->encrypted_id = \Crypt::encrypt($p->id); ?>
                                         @include('acpayable.edit_purchaseorder',array('p'=>$p))
                                     @endforeach
                                 @else
@@ -209,6 +209,30 @@
                                         @include('acpayable.edit_invoice')
                                     @endif
                                     @include('acpayable.edit_invoice',array('dummy'=>true,'i'=>null))
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+
+                <div class="jarviswidget" id="acp-payment-suggestion" data-widget-deletebutton="false" data-widget-editbutton="false" data-widget-custombutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-cog"></i> </span>
+                        <h2>Payment Suggestion</h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form class="form-horizontal">
+                                @if($form->paymentSuggestion)
+                                    <?php $form->paymentSuggestion->encrypted_id = \Crypt::encrypt($form->paymentSuggestion->id); ?>
+                                    @include('acpayable.edit_payment_suggestion',array('paySuggest'=>$form->paymentSuggestion))
+                                @else
+                                    @include('acpayable.edit_payment_suggestion')
+                                @endif
+                                @include('acpayable.edit_payment_suggestion',array('dummy'=>true,'paySuggest'=>null))
                             </form>
                         </div>
                         <!-- end widget content -->

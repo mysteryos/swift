@@ -90,7 +90,7 @@ class SwiftACPRequest extends Eloquent
     public $revisionClassName =  "Accounts Payable";
     public $revisionPrimaryIdentifier = "id";
 
-    public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','creditNote','approvalHod','document'];
+    public $revisionRelations = ['invoice','payment','purchaseOrder','paymentVoucher','paymentSuggestion','creditNote','approvalHod','document'];
 
     /*
      * Event Observers
@@ -244,6 +244,11 @@ class SwiftACPRequest extends Eloquent
     public function payment()
     {
         return $this->hasMany('SwiftACPPayment','acp_id');
+    }
+
+    public function paymentSuggestion()
+    {
+        return $this->hasOne('SwiftACPPaymentSuggestion','acp_id');
     }
 
     public function purchaseOrder()

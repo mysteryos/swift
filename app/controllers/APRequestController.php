@@ -1624,8 +1624,13 @@ class APRequestController extends UserController {
      */
     public function getLateNodes()
     {
-        $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
         $this->data['late_node_forms_count'] = SwiftNodeActivity::countLateNodes($this->context);
+        if($this->data['late_node_forms_count'] <= 50) {
+            $this->data['too_many_late_nodes'] = false;
+            $this->data['late_node_forms'] = WorkflowActivity::lateNodeByForm($this->context);
+        } else {
+            $this->data['too_many_late_nodes'] = true;
+        }
 
         echo View::make('workflow/overview_latenodes',$this->data)->render();
     }

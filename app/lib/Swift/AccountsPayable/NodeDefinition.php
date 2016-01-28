@@ -386,6 +386,9 @@ Class NodeDefinition {
                 $returnReasonList['payment_error'] = "Payment errors have been found. See payment section";
             }
 
+            //Update Open Amount Now from Sct JDE
+            JdeReconcialiation::updatePvOpenAmount($acp);
+
             //Payment voucher & Payment checks out
             //Do manual verification of open amount vs amount paid
             $paymentAmount = (float)$acp->payment()->where('validated','=',\SwiftACPPayment::VALIDATION_COMPLETE)->sum('amount');

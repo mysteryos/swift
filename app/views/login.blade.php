@@ -33,38 +33,38 @@
                 </span>
 			</div>
 		</header>
-                
+
 		<div id="main" role="main">
 
 			<!-- MAIN CONTENT -->
 			<div id="content" class="container">
-                                @if(isset($msgalert))
-                                    <div class="row">
-                                        <div class="col-xs-12">
-                                            @if($msgalert['status']==1)
-                                                <div class="alert alert-danger fade in">
-                                                        <i class="fa-fw fa fa-times"></i>
-                                                        <strong>Error!</strong> {{ $msgalert['msg'] }}
-                                                </div>
-                                            @elseif($msgalert['status']==2)
-                                                <div class="alert alert-warning fade in">
-                                                        <i class="fa-fw fa fa-warning"></i>
-                                                        <strong>Warning</strong> {{ $msgalert['msg'] }}
-                                                </div>                                                
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endif
-                                @if(Session::has('expired'))
-                                    <div class="row">
-                                        <div class="col-xs-12">
-                                                <div class="alert alert-info fade in">
-                                                        <i class="fa-fw fa fa-info"></i>
-                                                        <strong>Info!</strong> Your session has expired. Please login to continue.
-                                                </div>                                            
-                                        </div>                                    
-                                    </div>
-                                @endif
+				@if(isset($msgalert))
+					<div class="row">
+						<div class="col-xs-12">
+							@if($msgalert['status']==1)
+								<div class="alert alert-danger fade in">
+										<i class="fa-fw fa fa-times"></i>
+										<strong>Error!</strong> {{ $msgalert['msg'] }}
+								</div>
+							@elseif($msgalert['status']==2)
+								<div class="alert alert-warning fade in">
+										<i class="fa-fw fa fa-warning"></i>
+										<strong>Warning</strong> {{ $msgalert['msg'] }}
+								</div>
+							@endif
+						</div>
+					</div>
+				@endif
+				@if(Session::has('expired'))
+					<div class="row">
+						<div class="col-xs-12">
+								<div class="alert alert-info fade in">
+										<i class="fa-fw fa fa-info"></i>
+										<strong>Info!</strong> Your session has expired. Please login to continue.
+								</div>
+						</div>
+					</div>
+				@endif
 				<div class="row">
 					<div class="col-xs-12 col-sm-12 col-md-7 col-lg-8 hidden-xs hidden-sm">
 						<h1 class="txt-color-red login-header-big">Scott Swift</h1>
@@ -107,7 +107,7 @@
                                     </ul>
                                 </fieldset>
                                 <footer>
-                                    By signing in, you agree to our terms & conditions.
+                                    By signing in, you agree to <a href="{{action('TOSController@terms')}}" target="_blank">our terms & conditions.</a>
                                 </footer>
                             </div>
 						</div>

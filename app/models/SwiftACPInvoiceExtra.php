@@ -11,11 +11,11 @@ class SwiftACPInvoiceExtra extends Eloquent
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
-    
+
     protected $table = "scott_swift.swift_acp_invoice_extra";
-    
+
     protected $fillable = ['number','date','date_received','due_date','due_amount','currency_code','gl_code'];
-    
+
     protected $dates = ['deleted_at','date','due_date','date_received'];
 
     protected $touches = array('acp');
@@ -28,11 +28,11 @@ class SwiftACPInvoiceExtra extends Eloquent
     ];
 
     /* Revisionable */
-    
+
     protected $revisionEnabled = true;
-    
+
     protected $keepRevisionOf = array('date_received','date','due_date','due_amount','currency_code','gl_code','open_amount');
-    
+
     protected $revisionFormattedFieldNames = array(
         'id' => 'ID',
         'date_received' => 'Date Received',
@@ -43,14 +43,14 @@ class SwiftACPInvoiceExtra extends Eloquent
         'gl_code' => 'GL Code',
         'open_amount' => 'Open Amount'
     );
-    
+
     public $saveCreateRevision = true;
     public $softDelete = true;
     public $revisionClassName =  "Invoice Extra";
     public $revisionPrimaryIdentifier = "id";
-    
+
     /* Elastic Search */
-    
+
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
@@ -75,18 +75,18 @@ class SwiftACPInvoiceExtra extends Eloquent
         self::TYPE_LOCAL => 'Local',
         self::TYPE_FOREIGN => 'Foreign'
     ];
-    
-    
+
+
     /*
      * Event Observers
      */
-    
+
     public static function boot()
     {
         parent:: boot();
-        
+
         static::bootElasticSearchEvent();
-        
+
         static::bootRevisionable();
 
         static::creating(function($model){
@@ -96,7 +96,7 @@ class SwiftACPInvoiceExtra extends Eloquent
             }
         });
     }
-    
+
     /*
      * Accessors
      */
@@ -136,7 +136,7 @@ class SwiftACPInvoiceExtra extends Eloquent
 
         return number_format($this->open_amount);
     }
-    
+
     /*
      * Scope
      */
@@ -150,7 +150,7 @@ class SwiftACPInvoiceExtra extends Eloquent
     {
         return $q->whereNotNull('currency_code')->where('currency_code','!=','MUR','AND');
     }
-    
+
     /*
      * Relationships
      */
@@ -159,7 +159,7 @@ class SwiftACPInvoiceExtra extends Eloquent
     {
         return $this->belongsTo('SwiftACPRequest','acp_id');
     }
-    
+
     public function currency()
     {
         return $this->belongsTo('Currency','currency_code');
@@ -168,5 +168,5 @@ class SwiftACPInvoiceExtra extends Eloquent
     /*
      * Query
      */
-    
+
 }

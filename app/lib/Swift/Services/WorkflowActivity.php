@@ -9,7 +9,7 @@ Use \SwiftWorkflowType;
 Use \Sentry;
 
 class WorkflowActivity {
-    
+
     /*
      * Create Workflow Activity In Database
      *
@@ -34,35 +34,35 @@ class WorkflowActivity {
         {
             throw new \RuntimeException("Data type 'object' expected.");
         }
-        
+
         $workflowType = SwiftWorkflowType::getByName((string)$workflow_name);
-        
+
         /*
          * Verifying Start Workflow Access
          */
-        
+
         if(!$this->nodeActivity->hasStartAccess($workflow_name))
         {
             //No Access
             throw new \UnexpectedValueException("User doesn't have access to current operation");
         }
-        
+
         /*
          * Check if workflow already exists
          */
-        
+
         if(count($relation_object->workflow))
         {
             throw new \Exception("Workflow activity already exists");
         }
-        
+
         //Start a new activity
         $wa = new SwiftWorkflowActivity(['workflow_type_id'=>$workflowType->id,'status'=>\SwiftWorkflowActivity::INPROGRESS]);
-        
+
         return $relation_object->workflow()->save($wa);
-        
+
     }
-    
+
     /*
      * Update Workflow Activity & Node Activity Tables
      *
@@ -71,7 +71,7 @@ class WorkflowActivity {
      *
      * @return boolean
      */
-    
+
     public function update($relation_object,$workflow_name=false)
     {
         //Check if relation is indeed an object
@@ -87,7 +87,7 @@ class WorkflowActivity {
         }
 
         $this->nodeActivity->user_id = $this->user_id;
-        
+
         //Go Fetch!
         $workflow = $relation_object->workflow()->first();
         if(!count($workflow))
@@ -155,9 +155,9 @@ class WorkflowActivity {
                                 $processedNodes[] = $l;
                                 continue;
                             }
-                            
+
                             $processedNodes[] = $l;
-                            
+
                             $this->nodeActivity->process($l,SwiftNodeActivity::$FLOW_FORWARD);
                         }
                     }
@@ -200,7 +200,7 @@ class WorkflowActivity {
                               })
                               ->where('user_id','!=',0,'AND')
                               ->count();
-                              
+
             if($endNodePresent)
             {
                 $workflow->status = SwiftWorkflowActivity::COMPLETE;
@@ -211,7 +211,7 @@ class WorkflowActivity {
                                                      'context'=>get_class($relation_object),
                                                      'action'=>\SwiftStory::ACTION_COMPLETE));
             }
-            
+
             //If Timestamp on workflow Activity changes, Node Activity updates have occured
             //Hence we call pusher to push the update to the UI
             $workflowUpdated = $relation_object->workflow()->first();
@@ -224,13 +224,13 @@ class WorkflowActivity {
                     $pusher = new \Pusher(\Config::get('pusher.app_key'), \Config::get('pusher.app_secret'), \Config::get('pusher.app_id'));
                     $pusher->trigger('presence-'.$relation_object->channelName(), 'html-update', array('id'=>'workflow_status','html'=>$progressHTML));
                 }
-                
+
                 //Deferred mail send to allow for auto processing of pending nodes - Avoid useless mailing for already completed steps
                 //Send Mail For pending Nodes
                 $this->nodeActivity->mail($workflowUpdated);
             }
         }
-        
+
         return true;
     }
 
@@ -253,7 +253,7 @@ class WorkflowActivity {
         {
            $this->user_id = $data['user_id'];
         }
-        
+
         if(isset($data['class']) && isset($data['id']))
         {
             $eloqentClass = new $data['class'];
@@ -266,7 +266,7 @@ class WorkflowActivity {
         }
         $job->delete();
     }
-    
+
     /*
      * Get Current Progress - Checks on a workflow activity and builds a status string with an array of current pending nodes
      *
@@ -274,7 +274,7 @@ class WorkflowActivity {
      *
      * @return array
      */
-    
+
     public function progress($relation_object)
     {
         //Check if relation is indeed an object
@@ -282,7 +282,7 @@ class WorkflowActivity {
         {
             throw new \RuntimeException("Data type 'object' expected.");
         }
-        
+
         if($relation_object instanceof \SwiftWorkflowActivity)
         {
             $workflow = $relation_object;
@@ -292,22 +292,22 @@ class WorkflowActivity {
         {
             $workflow = $relation_object->workflow()->first();
         }
-        
+
         if(!count($workflow))
         {
             return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');
         }
-        
+
         if($workflow->status == SwiftWorkflowActivity::COMPLETE)
         {
             return array('label'=>'Complete','status'=>SwiftWorkflowActivity::COMPLETE,'status_class'=>'color-green');
         }
-        
+
         if($workflow->status == SwiftWorkflowActivity::REJECTED)
         {
             return array('label'=>'Rejected','status'=>SwiftWorkflowActivity::REJECTED,'status_class'=>'color-red');
         }
-        
+
         $nodeInProgress = $this->nodeActivity->inProgress($workflow->id);
         if(!count($nodeInProgress))
         {
@@ -337,7 +337,7 @@ class WorkflowActivity {
                 $definition_array[] = $n->definition;
                 $definition_name_array[] = $n->definition->name;
             }
-            
+
             return array('label'=>implode(" / ",$label),
                         'status'=>SwiftWorkflowActivity::INPROGRESS,
                         'status_class'=>'color-orange',
@@ -345,11 +345,11 @@ class WorkflowActivity {
                         'definition_obj'=>$definition_array,
                         'definition_name' => $definition_name_array);
         }
-        
-        return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');        
+
+        return array('label'=>"Unknown",'status'=>"unknown",'status_class'=>'color-red');
     }
-    
-    
+
+
     /*
      * Provides useful information as to how to move the workflow to the next step - Polls information from NodeDefinition classes mostly
      *
@@ -365,13 +365,13 @@ class WorkflowActivity {
         {
             throw new \RuntimeException("Data type 'object' expected.");
         }
-        
+
         $workflow = $relation_object->workflow()->first();
         if(!count($workflow))
         {
             return \Response::make("No workflow found :( Contact your administrator",500);
         }
-        
+
         switch($workflow->status)
         {
             case SwiftWorkflowActivity::COMPLETE:
@@ -488,13 +488,13 @@ class WorkflowActivity {
         {
             throw new \RuntimeException("Data type 'object' expected.");
         }
-        
+
         $workflow = $relation_object->workflow()->first();
         if(!count($workflow))
         {
             throw new \Exception ("Workflow activity not found");
         }
-        
+
         $workflow = $relation_object->workflow()->first();
         if($workflow->status === SwiftWorkflowActivity::INPROGRESS)
         {
@@ -509,15 +509,54 @@ class WorkflowActivity {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
+    /*
+     * Cancels a workflow activity. Sets its status to rejected in its table
+     *
+     * @param mixed $relation_object
+     *
+     * @return boolean
+     */
+    public function complete($relation_object)
+    {
+        //Check if relation is indeed an object
+        if(!is_object($relation_object))
+        {
+            throw new \RuntimeException("Data type 'object' expected.");
+        }
+
+        $workflow = $relation_object->workflow()->first();
+        if(!count($workflow))
+        {
+            throw new \Exception ("Workflow activity not found");
+        }
+
+        $workflow = $relation_object->workflow()->first();
+        if($workflow->status === SwiftWorkflowActivity::INPROGRESS)
+        {
+            $workflow->status = SwiftWorkflowActivity::COMPLETE;
+            if($workflow->save())
+            {
+                \Queue::push('Story@relateTask',array('obj_class'=>get_class($workflow),
+                    'obj_id'=>$workflow->id,
+                    'user_id'=>$this->user_id,
+                    'context'=>get_class($relation_object),
+                    'action'=>\SwiftStory::ACTION_COMPLETE));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /*
      * Returns list of all nodes pending of workflow type
      *
      * @param string|array $workflowTypes
-     * 
+     *
      * @return boolean|\Illuminate\Support\Collection
      */
     public function statusByType($workflowTypes)
@@ -543,7 +582,7 @@ class WorkflowActivity {
                        if($u->isSuperUser() || !$u->activated)
                        {
                            unset($users[$i]);
-                       }                    
+                       }
                     }
 
                     if(!empty($users))
@@ -554,7 +593,7 @@ class WorkflowActivity {
             }
             return $nodeActivities;
         }
-        
+
         return false;
     }
 
@@ -594,10 +633,10 @@ class WorkflowActivity {
                         $activity->users = $users;
                     }
                 }
-                
+
                 $activity->dueSince = \Helper::nextBusinessDay($activity->updated_at->addDays($activity->definition->eta));
             }
-            
+
             if(!$nodeActivities->isEmpty())
             {
                 return $nodeActivities;

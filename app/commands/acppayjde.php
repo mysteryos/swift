@@ -77,7 +77,7 @@ class acppayjde extends ScheduledCommand {
    public function schedule(Schedulable $scheduler)
    {
        //Every Day at 6:30a.m
-       return $scheduler->daily()->hours(6)->minutes(30);
+       return $scheduler->daily()->hours(7)->minutes(0);
    }
 
 	/**

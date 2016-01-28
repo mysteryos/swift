@@ -6,13 +6,13 @@ class UserController extends Controller {
     public $pageTitle;
 
     public $data = array();
-        
+
 	/**
 	 * Setup the layout used by the controller.
 	 *
 	 * @return void
 	 */
-        
+
     public function __construct()
     {
         //Register Base JS/CSS files

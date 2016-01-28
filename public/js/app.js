@@ -1354,10 +1354,6 @@ $('#search-fld').typeahead(null, {
       ].join('\n'),
       suggestion: Handlebars.compile('<p><div>{{{highlight}}}</div><div><i class="fa fa-fw {{icon}}" title="{{title}}"/><a href="{{url}}" class="pjax">{{value}}</a></div></p>')
     }
-}).on('typeahead:selected', function(event, selection) {
-    $.pjax({
-       url:selection.url
-    });
 }).on('focus',function(){
     var save_this = $(this);
     window.setTimeout (function(){

@@ -11,11 +11,11 @@ class SwiftACPPaymentVoucher extends Eloquent
     use \Illuminate\Database\Eloquent\SoftDeletingTrait;
     use \Venturecraft\Revisionable\RevisionableTrait;
     use \Swift\ElasticSearchEventTrait;
-    
+
     protected $table = "scott_swift.swift_acp_payment_voucher";
-    
+
     protected $fillable = ['number','type','validated'];
-    
+
     protected $dates = ['deleted_at'];
 
     protected $touches = array('acp');
@@ -47,23 +47,23 @@ class SwiftACPPaymentVoucher extends Eloquent
     const TYPE_PD = 'PD';
 
     /* Revisionable */
-    
+
     protected $revisionEnabled = true;
-    
+
     protected $keepRevisionOf = array('number');
-    
+
     protected $revisionFormattedFieldNames = array(
         'number' => 'PV number',
         'type' => 'Type'
     );
-    
+
     public $saveCreateRevision = true;
     public $softDelete = true;
     public $revisionClassName =  "Accounts Payable Payment Voucher";
     public $revisionPrimaryIdentifier = "number";
-    
+
     /* Elastic Search */
-    
+
     //Indexing Enabled
     public $esEnabled = true;
     //Context for Indexing
@@ -76,16 +76,16 @@ class SwiftACPPaymentVoucher extends Eloquent
     {
         return $this->acp;
     }
-    
+
     /*
      * Event Observers
      */
-    
+
     public static function boot() {
         parent:: boot();
-        
+
         static::bootElasticSearchEvent();
-        
+
         static::bootRevisionable();
         static::updating(function($model){
             $dirty = $model->getDirty();
@@ -95,16 +95,16 @@ class SwiftACPPaymentVoucher extends Eloquent
                 $model->validated_msg = "";
             }
         });
-    }    
-    
+    }
+
     /*
      * Accessors
      */
-    
+
     /*
      * Scope
      */
-    
+
     /*
      * Relationships
      */
@@ -118,9 +118,9 @@ class SwiftACPPaymentVoucher extends Eloquent
     {
         return $this->hasOne('SwiftACPInvoice','acp_id','acp_id');
     }
-    
+
     /*
      * Query
      */
-    
+
 }

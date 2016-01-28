@@ -167,6 +167,7 @@ class JdeReconcialiation {
         }
 
         $jdePay = \JdePaymentHeader::where('docm','=',$pay->payment_number)
+                  ->where('paap','!=','0.00')
                   ->first();
 
         if(!$jdePay)

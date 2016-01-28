@@ -3313,6 +3313,38 @@ class AccountsPayableController extends UserController {
     }
 
     /*
+     * Mark Workflow as complete
+     */
+    public function postComplete($id)
+    {
+        /*
+         * Check Permissions
+         */
+        if(!$this->permission->isAdmin())
+        {
+            return parent::forbidden();
+        }
+
+        $acp = \SwiftACPRequest::find(Crypt::decrypt($id));
+
+        if(count($acp))
+        {
+            if(\WorkflowActivity::complete($acp))
+            {
+                return \Response::make('Workflow has been completed',200);
+            }
+            else
+            {
+                return \Response::make('Unable to complete workflow: Save failed',400);
+            }
+        }
+        else
+        {
+            return \Response::make('Accounts payable form not found',404);
+        }
+    }
+
+    /*
      * Mark Items
      */
     public function putMark($type)

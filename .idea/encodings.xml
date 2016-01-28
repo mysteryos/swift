@@ -3,5 +3,6 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/app/lib/Swift/AccountsPayable/NodeDefinition.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/views/order-tracking/upload.blade.php" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

@@ -26,46 +26,46 @@ Route::group(array('before' => array('auth')), function()
     {
         Route::controller('admin','AdminController');
     });
-    
+
     //Logout Requests
     Route::get('/logout',array('as'=>'logout','uses'=>'LoginController@getLogout'));
-    
+
     //Dashboard
     Route::controller('dashboard', 'DashboardController');
-    
+
     //Inbox
     Route::controller('inbox','InboxController');
-    
+
     //Order Tracking
     Route::controller('order-tracking','OrderTrackingController');
-    
+
     //Nespresso CRM
     Route::controller('nespresso-crm','NespressoCrmController');
-    
+
     //A&P request
     Route::controller('aprequest','APRequestController');
-    
+
     //Ajax Search
     Route::controller('ajaxsearch','AjaxSearchController');
-    
+
     //Pusher
     Route::controller('pusher','PusherController');
-    
+
     //Comment
     Route::controller('comment','CommentController');
-    
+
     //search
     Route::controller('search','SearchController');
-    
+
     //Notification
     Route::controller('notification','NotificationController');
-    
+
     //Subscription
     Route::controller('subscription','SubscriptionController');
-    
+
     //Sales Commission
     Route::controller('sales-commission','SalesCommissionController');
-    
+
     //Salesman
     Route::controller('salesman','SalesmanController');
 
@@ -89,7 +89,7 @@ Route::group(array('before' => array('auth')), function()
 
     //Settings
     Route::controller('setting','SettingController');
-    
+
 });
 
 /*
@@ -103,3 +103,10 @@ Route::controller('login','LoginController');
  */
 
 Route::get('404','UserController@notfound');
+
+/*
+ * Terms & Conditions
+ */
+
+Route::get('terms','TOSController@terms');
+Route::get('privacy','TOSController@privacy');

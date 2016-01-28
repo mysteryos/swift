@@ -17,6 +17,7 @@
             @if($permission->isAdmin())<a class="btn btn-default btn-mark-important" href="/{{ $rootURL }}/mark/{{ SwiftFlag::IMPORTANT }}?id={{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="@if($flag_important) {{ "Unmark as important" }} @else {{ "Mark as important" }} @endif" data-placement="bottom"><i class="fa fa-lg @if($flag_important) {{ "fa-exclamation-triangle" }} @else {{ "fa-exclamation" }} @endif"></i></a>@endif
             @if($currentUser->isSuperUser() || $permission->isAdmin())<a class="btn btn-default btn-force-update" data-href="/workflow/force-update/{{$context}}/{{ urlencode($form->encrypted_id) }}" rel="tooltip" data-original-title="Force Workflow Update" data-placement="bottom"><i class="fa fa-lg fa-rocket"></i></a>@endif
             @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $permission->isAdmin())<a class="btn btn-default btn-ribbon-cancel" rel="tooltip" data-original-title="Cancel" data-placement="bottom" href="/{{ $rootURL }}/cancel/{{ $form->encrypted_id }}"><i class="fa fa-lg fa-times"></i></a>@endif
+            @if($current_activity['status']==SwiftWorkflowActivity::INPROGRESS && $permission->isAdmin())<a class="btn btn-default btn-ribbon-complete" rel="tooltip" data-original-title="Complete Form" data-placement="bottom" href="/{{ $rootURL }}/complete/{{ $form->encrypted_id }}"><i class="fa fa-lg fa-check-circle"></i></a>@endif
         </div>
         <div class="pull-right hidden-xs whos-online"></div>
         <div class="ribbon-button-alignment-xs visible-xs">

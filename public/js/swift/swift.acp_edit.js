@@ -108,6 +108,43 @@ function addEditablePk($fieldset,$encryptedPk,$pk)
         return false;
     });
 
+    $('a.btn-ribbon-complete').on('click',function(e){
+        e.preventDefault();
+        var $this = $(this);
+        $.SmartMessageBox({
+            title : "<i class='fa fa-check txt-color-green'></i> <span class='txt-color-green'><strong>Are you sure you wish to complete '"+document.getElementById('project-name').value+"' ?</strong></span> ?",
+            content : "Once the form is completed, all steps will be flagged as complete.",
+            buttons : '[No][Yes]'
+
+        }, function(ButtonPressed) {
+            if (ButtonPressed == "Yes") {
+                Messenger({extraClasses:'messenger-on-top messenger-fixed'}).run({
+                        id: 'notif-top',
+                        errorMessage: 'Error completing accounts payable',
+                        successMessage: 'Accounts payable has been completed',
+                        progressMessage: 'Please Wait...',
+                        action: $.ajax,
+                    },
+                    {
+                        type:'POST',
+                        url: $this.attr('href'),
+                        success:function()
+                        {
+                            window.setTimeout(function(){
+                                $('a.btn-ribbon-refresh').click();
+                            },'2000');
+                        },
+                        error:function(xhr, status, error)
+                        {
+                            return xhr.responseText;
+                        }
+                    });
+            }
+
+        });
+        return false;
+    });
+
     //Mark as important button
 
     $('a.btn-mark-important').on('click',function(e){
